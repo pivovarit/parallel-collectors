@@ -28,7 +28,7 @@ public final class ParallelCollectors {
     }
 
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> toCollectionInParallel(Supplier<R> collection, Executor executor, int parallelism) {
-        return new ParallelCollectionCollector<>(executor, collection);
+        return new ParallelMappingCollector<>(Supplier::get, executor, collection);
     }
 
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> toListInParallel(Executor executor) {
@@ -40,7 +40,7 @@ public final class ParallelCollectors {
     }
 
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> toListInParallel(Executor executor, int parallelism) {
-        return new ParallelCollectionCollector<>(executor, ArrayList::new);
+        return new ParallelMappingCollector<>(Supplier::get, executor, ArrayList::new);
     }
 
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> toSetInParallel(Executor executor) {
@@ -52,6 +52,6 @@ public final class ParallelCollectors {
     }
 
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> toSetInParallel(Executor executor, int parallelism) {
-        return new ParallelCollectionCollector<>(executor, HashSet::new);
+        return new ParallelMappingCollector<>(Supplier::get, executor, HashSet::new);
     }
 }
