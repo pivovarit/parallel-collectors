@@ -1,4 +1,4 @@
-package com.pivovarit.utils;
+package com.pivovarit.collectors;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
