@@ -17,13 +17,13 @@ import java.util.stream.Collector;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
-class ParallelCollectionCollector<T, C extends Collection<T>>
-  implements Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> {
+class ParallelCollectionCollector<T, R extends Collection<T>>
+  implements Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> {
 
     private final Executor executor;
-    private final Supplier<C> collectionSupplier;
+    private final Supplier<R> collectionSupplier;
 
-    ParallelCollectionCollector(Executor executor, Supplier<C> collection) {
+    ParallelCollectionCollector(Executor executor, Supplier<R> collection) {
         this.executor = executor;
         this.collectionSupplier = collection;
     }
@@ -47,7 +47,7 @@ class ParallelCollectionCollector<T, C extends Collection<T>>
     }
 
     @Override
-    public Function<List<CompletableFuture<T>>, CompletableFuture<C>> finisher() {
+    public Function<List<CompletableFuture<T>>, CompletableFuture<R>> finisher() {
         return futures -> futures.stream()
           .reduce(completedFuture(collectionSupplier.get()),
             accumulatingResults(),
@@ -59,14 +59,14 @@ class ParallelCollectionCollector<T, C extends Collection<T>>
         return EnumSet.of(Characteristics.UNORDERED);
     }
 
-    private BinaryOperator<CompletableFuture<C>> mergingPartialResults() {
+    private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
         return (f1, f2) -> f1.thenCombine(f2, (left, right) -> {
             left.addAll(right);
             return left;
         });
     }
 
-    private BiFunction<CompletableFuture<C>, CompletableFuture<T>, CompletableFuture<C>> accumulatingResults() {
+    private static <T1, R1 extends Collection<T1> > BiFunction<CompletableFuture<R1>, CompletableFuture<T1>, CompletableFuture<R1>> accumulatingResults() {
         return (list, object) -> list.thenCombine(object, (left, right) -> {
             left.add(right);
             return left;
