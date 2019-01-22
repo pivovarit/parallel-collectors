@@ -16,7 +16,7 @@
     <packaging>jar</packaging>
 
     <name>parallel-stream-api-utils</name>
-    <description></description>
+    <description>A set of utilities for parallel collection processing in Java</description>
 
     <licenses>
         <license>
@@ -25,6 +25,13 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>5.3.2</junit.version>
+        <assertj.version>3.8.0</assertj.version>
+        <awaitility.version>3.1.5</awaitility.version>
+    </properties>
 
     <scm>
         <developerConnection>https://github.com/pivovarit/parallel-stream-api-utils.git</developerConnection>
@@ -42,13 +49,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
                 <configuration>
-                    <fork>true</fork>
-                    <maxmem>512m</maxmem>
-                    <meminitial>256m</meminitial>
-                    <encoding>UTF-8</encoding>
-                    <release>8</release>
-                    <debug>true</debug>
-                    <debuglevel>lines,vars,source</debuglevel>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
 
@@ -186,9 +188,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
