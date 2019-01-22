@@ -6,8 +6,8 @@ import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-public final class Collectors {
-    private Collectors() {
+public final class ParallelCollectors {
+    private ParallelCollectors() {
     }
 
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
