@@ -51,13 +51,6 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <fork>true</fork>
-                    <maxmem>512m</maxmem>
-                    <meminitial>256m</meminitial>
-                    <encoding>UTF-8</encoding>
-                    <release>8</release>
-                    <debug>true</debug>
-                    <debuglevel>lines,vars,source</debuglevel>
                 </configuration>
             </plugin>
 
