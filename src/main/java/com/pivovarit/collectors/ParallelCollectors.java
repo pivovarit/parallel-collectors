@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,10 @@ public final class ParallelCollectors {
 
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
         return supplier;
+    }
+
+    public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> toCollectionInParallel(Supplier<R> collection, Executor executor) {
+        return new ParallelCollectionCollector<>(executor, collection);
     }
 
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> toListInParallel(Executor executor) {
