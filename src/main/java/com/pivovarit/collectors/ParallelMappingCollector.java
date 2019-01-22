@@ -17,29 +17,31 @@ import java.util.stream.Collector;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
-class ParallelCollectionCollector<T, R extends Collection<T>>
-  implements Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> {
+class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
+  implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
 
     private final Executor executor;
-    private final Supplier<R> collectionSupplier;
+    private final Supplier<R2> collectionSupplier;
+    private final Function<T, R1> operation;
 
-    ParallelCollectionCollector(Executor executor, Supplier<R> collection) {
+    ParallelMappingCollector(Function<T, R1> operation, Executor executor, Supplier<R2> collection) {
         this.executor = executor;
         this.collectionSupplier = collection;
+        this.operation = operation;
     }
 
     @Override
-    public Supplier<List<CompletableFuture<T>>> supplier() {
+    public Supplier<List<CompletableFuture<R1>>> supplier() {
         return ArrayList::new;
     }
 
     @Override
-    public BiConsumer<List<CompletableFuture<T>>, Supplier<T>> accumulator() {
-        return (processing, supplier) -> processing.add(supplyAsync(supplier, executor));
+    public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
+        return (processing, e) -> processing.add(supplyAsync(() -> operation.apply(e), executor));
     }
 
     @Override
-    public BinaryOperator<List<CompletableFuture<T>>> combiner() {
+    public BinaryOperator<List<CompletableFuture<R1>>> combiner() {
         return (left, right) -> {
             left.addAll(right);
             return left;
@@ -47,7 +49,7 @@ class ParallelCollectionCollector<T, R extends Collection<T>>
     }
 
     @Override
-    public Function<List<CompletableFuture<T>>, CompletableFuture<R>> finisher() {
+    public Function<List<CompletableFuture<R1>>, CompletableFuture<R2>> finisher() {
         return futures -> futures.stream()
           .reduce(completedFuture(collectionSupplier.get()),
             accumulatingResults(),
