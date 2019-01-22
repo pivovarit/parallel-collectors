@@ -31,6 +31,7 @@
         <junit.version>5.3.2</junit.version>
         <assertj.version>3.8.0</assertj.version>
         <awaitility.version>3.1.5</awaitility.version>
+        <quickcheck.version>0.8.2</quickcheck.version>
     </properties>
 
     <scm>
@@ -197,6 +198,18 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-core</artifactId>
+            <version>${quickcheck.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.pholser</groupId>
+            <artifactId>junit-quickcheck-generators</artifactId>
+            <version>${quickcheck.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

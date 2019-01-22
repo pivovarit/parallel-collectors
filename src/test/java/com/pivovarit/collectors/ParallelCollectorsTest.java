@@ -1,7 +1,10 @@
 package com.pivovarit.collectors;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.generator.InRange;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.junit.After;
+import org.junit.runner.RunWith;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -18,17 +21,19 @@ import static com.pivovarit.collectors.ParallelCollectors.toSetInParallel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
-class ParallelCollectorsTest {
+@RunWith(JUnitQuickcheck.class)
+public class ParallelCollectorsTest {
+
+    private static final int TRIALS = 10;
 
     private ExecutorService executor;
 
-    @Test
-    void shouldCollectToListWithFullParallelism() {
+    @Property(trials = TRIALS)
+    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 1, maxInt = 100) int collectionSize) {
         // given
-        int collectionSize = 200;
         executor = Executors.newFixedThreadPool(collectionSize);
 
-        List<Integer> result = assertTimeout(Duration.ofMillis(1100), () ->
+        List<Integer> result = assertTimeout(Duration.ofMillis(130), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
             .collect(toListInParallel(executor))
@@ -37,13 +42,12 @@ class ParallelCollectorsTest {
         assertThat(result).hasSize(collectionSize);
     }
 
-    @Test
-    void shouldCollectToSetWithFullParallelism() {
+    @Property(trials = TRIALS)
+    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 1, maxInt = 100) int collectionSize) {
         // given
-        int collectionSize = 200;
         executor = Executors.newFixedThreadPool(collectionSize);
 
-        Set<Integer> result = assertTimeout(Duration.ofMillis(1100), () ->
+        Set<Integer> result = assertTimeout(Duration.ofMillis(130), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
             .collect(toSetInParallel(executor))
@@ -52,13 +56,12 @@ class ParallelCollectorsTest {
         assertThat(result).hasSize(1);
     }
 
-    @Test
-    void shouldCollectToCollectionWithFullParallelism() {
+    @Property(trials = TRIALS)
+    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 1, maxInt = 100) int collectionSize) {
         // given
-        int collectionSize = 200;
         executor = Executors.newFixedThreadPool(collectionSize);
 
-        List<Integer> result = assertTimeout(Duration.ofMillis(1100), () ->
+        List<Integer> result = assertTimeout(Duration.ofMillis(130), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
             .collect(toCollectionInParallel(ArrayList::new, executor))
@@ -67,8 +70,8 @@ class ParallelCollectorsTest {
         assertThat(result).hasSize(collectionSize);
     }
 
-    @AfterEach
-    void after() {
+    @After
+    public void after() {
         if (executor != null) {
             executor.shutdown();
         }
@@ -76,7 +79,7 @@ class ParallelCollectorsTest {
 
     private static int blockingFoo() {
         try {
-            Thread.sleep(1000);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
