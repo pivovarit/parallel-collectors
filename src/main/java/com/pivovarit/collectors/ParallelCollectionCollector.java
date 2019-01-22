@@ -1,4 +1,4 @@
-package com.pivovarit.utils;
+package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,7 +14,7 @@ import java.util.stream.Collector;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
-public class ParallelCollectionCollector<T>
+class ParallelCollectionCollector<T>
   implements Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> {
 
     private final Executor executor;
