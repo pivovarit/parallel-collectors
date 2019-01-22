@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -24,6 +25,7 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
     private final Supplier<R2> collectionSupplier;
     private final Function<T, R1> operation;
     private final int parallelism;
+    private final AtomicLong inFlight = new AtomicLong(0);
 
     ParallelMappingCollector(Function<T, R1> operation, Executor executor, Supplier<R2> collection, int parallelism) {
         this.executor = executor;
