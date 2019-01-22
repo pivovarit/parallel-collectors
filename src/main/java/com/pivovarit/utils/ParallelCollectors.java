@@ -20,7 +20,7 @@ public final class ParallelCollectors {
         return new ParallelCollectionCollector<>(executor);
     }
 
-    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> toListInParallel(int parallelism, Executor executor) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> toListInParallel(Executor executor, int parallelism) {
         return null; // TODO
     }
 
@@ -28,7 +28,7 @@ public final class ParallelCollectors {
         return null; // TODO
     }
 
-    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> toCollectionInParallel(Supplier<Collection> collection, int parallelism, Executor executor) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> toCollectionInParallel(Supplier<Collection> collection, Executor executor, int parallelism) {
         return null; // TODO
     }
 
@@ -36,7 +36,7 @@ public final class ParallelCollectors {
         return null; // TODO
     }
 
-    public static <T> Collector<Supplier<T>, Stream<CompletableFuture<T>>, CompletableFuture<List<T>>> toStreamInParallel(int parallelism, Executor executor) {
+    public static <T> Collector<Supplier<T>, Stream<CompletableFuture<T>>, CompletableFuture<List<T>>> toStreamInParallel(Executor executor, int parallelism) {
         return null; // TODO
     }
 }
