@@ -8,8 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static com.pivovarit.utils.Collectors.supplier;
-import static com.pivovarit.utils.Collectors.toListInParallel;
+import static com.pivovarit.utils.ParallelCollectors.supplier;
+import static com.pivovarit.utils.ParallelCollectors.toListInParallel;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 class ParallelCollectionCollectorTest {
