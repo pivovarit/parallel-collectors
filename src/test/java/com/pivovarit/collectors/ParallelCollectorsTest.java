@@ -25,13 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 public class ParallelCollectorsTest {
 
     private static final int TRIALS = 10;
-    private static final int BLOCKING_MILLIS = 100;
+    private static final int BLOCKING_MILLIS = 200;
     private static final int TIMEOUT = (int) (BLOCKING_MILLIS * 1.5);
 
     private ExecutorService executor;
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 1, maxInt = 100) int collectionSize) {
+    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 10, maxInt = 100) int collectionSize) {
         // given
         executor = Executors.newFixedThreadPool(collectionSize);
 
@@ -45,7 +45,7 @@ public class ParallelCollectorsTest {
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 1, maxInt = 100) int collectionSize) {
+    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 10, maxInt = 100) int collectionSize) {
         // given
         executor = Executors.newFixedThreadPool(collectionSize);
 
@@ -59,7 +59,7 @@ public class ParallelCollectorsTest {
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 1, maxInt = 100) int collectionSize) {
+    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 10, maxInt = 100) int collectionSize) {
         // given
         executor = Executors.newFixedThreadPool(collectionSize);
 
