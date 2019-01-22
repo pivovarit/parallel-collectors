@@ -25,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 public class ParallelCollectorsTest {
 
     private static final int TRIALS = 10;
+    private static final int BLOCKING_MILLIS = 100;
+    private static final int TIMEOUT = (int) (BLOCKING_MILLIS * 1.5);
 
     private ExecutorService executor;
 
@@ -33,7 +35,7 @@ public class ParallelCollectorsTest {
         // given
         executor = Executors.newFixedThreadPool(collectionSize);
 
-        List<Integer> result = assertTimeout(Duration.ofMillis(130), () ->
+        List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
             .collect(toListInParallel(executor))
@@ -47,7 +49,7 @@ public class ParallelCollectorsTest {
         // given
         executor = Executors.newFixedThreadPool(collectionSize);
 
-        Set<Integer> result = assertTimeout(Duration.ofMillis(130), () ->
+        Set<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
             .collect(toSetInParallel(executor))
@@ -61,7 +63,7 @@ public class ParallelCollectorsTest {
         // given
         executor = Executors.newFixedThreadPool(collectionSize);
 
-        List<Integer> result = assertTimeout(Duration.ofMillis(130), () ->
+        List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
             .collect(toCollectionInParallel(ArrayList::new, executor))
@@ -79,7 +81,7 @@ public class ParallelCollectorsTest {
 
     private static int blockingFoo() {
         try {
-            Thread.sleep(100);
+            Thread.sleep(BLOCKING_MILLIS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
