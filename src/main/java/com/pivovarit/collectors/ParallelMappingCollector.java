@@ -17,14 +17,14 @@ import java.util.stream.Collector;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
-class ParallelCollectionMappingCollector<T1, T2, R extends Collection<T2>>
+class ParallelMappingCollector<T1, T2, R extends Collection<T2>>
   implements Collector<T1, List<CompletableFuture<T2>>, CompletableFuture<R>> {
 
     private final Executor executor;
     private final Supplier<R> collectionSupplier;
     private final Function<T1, T2> operation;
 
-    ParallelCollectionMappingCollector(Function<T1, T2> operation, Executor executor, Supplier<R> collection) {
+    ParallelMappingCollector(Function<T1, T2> operation, Executor executor, Supplier<R> collection) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
