@@ -11,6 +11,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 public final class ParallelCollectors {
     private ParallelCollectors() {
     }
