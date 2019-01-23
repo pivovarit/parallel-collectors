@@ -14,10 +14,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.ParallelCollectors.toCollectionInParallel;
-import static com.pivovarit.collectors.ParallelCollectors.toListInParallel;
-import static com.pivovarit.collectors.ParallelCollectors.toSetInParallel;
+import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -41,7 +40,7 @@ public class ParallelCollectorsMappingTest {
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> 42)
             .limit(collectionSize)
-            .collect(toListInParallel(i -> blockingFoo(), executor))
+            .collect(inParallelToList(i -> blockingFoo(), executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);
@@ -55,7 +54,7 @@ public class ParallelCollectorsMappingTest {
         Set<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> 42)
             .limit(collectionSize)
-            .collect(toSetInParallel(i -> blockingFoo(), executor))
+            .collect(inParallelToSet(i -> blockingFoo(), executor))
             .join());
 
         assertThat(result).hasSize(1);
@@ -69,7 +68,7 @@ public class ParallelCollectorsMappingTest {
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> 42)
             .limit(collectionSize)
-            .collect(toCollectionInParallel(i -> blockingFoo(), ArrayList::new, executor))
+            .collect(inParallelToCollection(i -> blockingFoo(), ArrayList::new, executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);

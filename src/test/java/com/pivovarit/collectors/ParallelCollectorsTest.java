@@ -15,9 +15,9 @@ import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.ParallelCollectors.toCollectionInParallel;
-import static com.pivovarit.collectors.ParallelCollectors.toListInParallel;
-import static com.pivovarit.collectors.ParallelCollectors.toSetInParallel;
+import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -41,7 +41,7 @@ public class ParallelCollectorsTest {
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(toListInParallel(executor))
+            .collect(ParallelCollectors.inParallelToList(executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);
@@ -55,7 +55,7 @@ public class ParallelCollectorsTest {
         Set<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(toSetInParallel(executor))
+            .collect(ParallelCollectors.inParallelToSet(executor))
             .join());
 
         assertThat(result).hasSize(1);
@@ -69,7 +69,7 @@ public class ParallelCollectorsTest {
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(toCollectionInParallel(ArrayList::new, executor))
+            .collect(ParallelCollectors.inParallelToCollection(ArrayList::new, executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);
