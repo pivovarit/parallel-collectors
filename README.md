@@ -3,8 +3,6 @@
 [![Build Status](https://travis-ci.org/pivovarit/parallel-collectors.svg?branch=master)](https://travis-ci.org/pivovarit/parallel-collectors)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
-# Under Development - stay tuned!
-
 # Parallel Collection Processing
 
 ## Rationale
@@ -21,7 +19,7 @@ None - the library is implemented using core Java libraries.
 
 ## Version history
 
-### 0.0.1-SNAPSHOT (23-01-2010)
+### TODO 0.0.1-SNAPSHOT (23-01-2010)
 
 * MVP
 
