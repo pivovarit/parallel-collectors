@@ -17,6 +17,9 @@ import java.util.stream.Collector;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
   implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
 

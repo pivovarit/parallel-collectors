@@ -21,6 +21,9 @@ import static com.pivovarit.collectors.ParallelCollectors.toSetInParallel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 @RunWith(JUnitQuickcheck.class)
 public class ParallelCollectorsTest {
 
