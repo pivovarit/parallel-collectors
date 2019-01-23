@@ -16,7 +16,7 @@ It features static factory methods like:
 - `inParallelToSet()`
 - `inParallelToCollection()`
 
-along with customizable overloads which can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors` would be used. It's obligatory to supply custom `Executor` instance.
+Above (along with customizable overloads) can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. It's obligatory to supply custom `Executor` instance and manage its own lifecycle.
 
 ### Examples
 
