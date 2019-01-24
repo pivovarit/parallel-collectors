@@ -48,6 +48,7 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
             try {
                 permits.acquire();
             } catch (InterruptedException e1) {
+                permits.release();
                 Thread.currentThread().interrupt();
             }
 
