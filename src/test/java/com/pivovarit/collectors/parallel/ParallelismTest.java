@@ -18,6 +18,7 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
+import static com.pivovarit.collectors.TimeUtils.time;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -100,13 +101,6 @@ public class ParallelismTest {
         }
 
         return 42;
-    }
-
-    private static long time(Runnable runnable) {
-        Instant start = Instant.now();
-        runnable.run();
-        Instant end = Instant.now();
-        return Duration.between(start, end).toMillis();
     }
 
     private static long expectedDuration(long parallelism, long unitsOfWork) {
