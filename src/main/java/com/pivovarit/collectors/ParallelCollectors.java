@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -37,6 +40,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
+        requireNonNull(supplier);
         return supplier;
     }
 
@@ -58,6 +62,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor) {
+        requireNonNull(collection);
+        requireNonNull(executor);
         return new ParallelCollector<>(Supplier::get, collection, executor);
     }
 
@@ -71,6 +77,9 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism) {
+        requireNonNull(collection);
+        requireNonNull(executor);
+        assertParallelismValid(parallelism);
         return new ThrottledParallelCollector<>(Supplier::get, collection, executor, assertParallelismValid(parallelism));
     }
 
@@ -90,6 +99,9 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor) {
+        requireNonNull(collection);
+        requireNonNull(executor);
+        requireNonNull(operation);
         return new ParallelCollector<>(operation, collection, executor);
     }
 
@@ -105,7 +117,11 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism) {
-        return new ParallelCollector<>(operation, collection, executor);
+        requireNonNull(collection);
+        requireNonNull(executor);
+        requireNonNull(operation);
+        assertParallelismValid(parallelism);
+        return new ThrottledParallelCollector<>(operation, collection, executor, parallelism);
     }
 
     /**
@@ -123,6 +139,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
+        requireNonNull(executor);
         return new ParallelCollector<>(Supplier::get, ArrayList::new, executor);
     }
 
@@ -134,6 +151,8 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
+        requireNonNull(executor);
+        assertParallelismValid(parallelism);
         return new ThrottledParallelCollector<>(Supplier::get, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
 
@@ -153,6 +172,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
+        requireNonNull(executor);
+        requireNonNull(operation);
         return new ParallelCollector<>(operation, ArrayList::new, executor);
     }
 
@@ -166,6 +187,9 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor, int parallelism) {
+        requireNonNull(executor);
+        requireNonNull(operation);
+        assertParallelismValid(parallelism);
         return new ThrottledParallelCollector<>(operation, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
 
@@ -184,6 +208,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
+        requireNonNull(executor);
         return new ParallelCollector<>(Supplier::get, HashSet::new, executor);
     }
 
@@ -195,6 +220,8 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
+        requireNonNull(executor);
+        assertParallelismValid(parallelism);
         return new ThrottledParallelCollector<>(Supplier::get, HashSet::new, executor, assertParallelismValid(parallelism));
     }
 
@@ -214,6 +241,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor) {
+        requireNonNull(executor);
+        requireNonNull(operation);
         return new ParallelCollector<>(operation, HashSet::new, executor);
     }
 
@@ -227,6 +256,9 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor, int parallelism) {
+        requireNonNull(executor);
+        requireNonNull(operation);
+        assertParallelismValid(parallelism);
         return new ThrottledParallelCollector<>(operation, HashSet::new, executor, parallelism);
     }
 
