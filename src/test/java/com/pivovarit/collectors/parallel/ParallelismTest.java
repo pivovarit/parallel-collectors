@@ -27,6 +27,7 @@ import static org.assertj.core.data.Percentage.withPercentage;
 public class ParallelismTest {
 
     private static final int BLOCKING_MILLIS = 100;
+    private static final int CONSTANT_DELAY = 70;
 
     private ExecutorService executor;
 
@@ -45,7 +46,7 @@ public class ParallelismTest {
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(expectedDuration, withPercentage(20));
+          .isLessThan(expectedDuration + CONSTANT_DELAY);
     }
 
     @Property
@@ -63,7 +64,7 @@ public class ParallelismTest {
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(expectedDuration, withPercentage(20));
+          .isLessThan(expectedDuration + CONSTANT_DELAY);
     }
 
     @Property
@@ -81,7 +82,7 @@ public class ParallelismTest {
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(expectedDuration, withPercentage(20));
+          .isLessThan(expectedDuration + CONSTANT_DELAY);
     }
 
     @After
