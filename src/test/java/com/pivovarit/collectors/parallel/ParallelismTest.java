@@ -26,7 +26,7 @@ import static org.assertj.core.data.Percentage.withPercentage;
 @RunWith(JUnitQuickcheck.class)
 public class ParallelismTest {
 
-    private static final int BLOCKING_MILLIS = 50;
+    private static final int BLOCKING_MILLIS = 100;
 
     private ExecutorService executor;
 
