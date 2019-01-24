@@ -18,6 +18,22 @@ public final class ParallelCollectors {
     private ParallelCollectors() {
     }
 
+    /**
+     * A convenience method for constructing Lambda Expression-based {@link Supplier} instances from another Lambda Expression
+     * to be used in conjuction with other static factory methods found in {@link ParallelCollectors}
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>Stream.of(1,2,3)
+     * .map(i -> supplier(() -> blockingIO()))
+     * .collect(inParallelToList(executor));
+     * </pre>
+     *
+     * @param supplier a lambda expression to be converted into a type-safe {@code Supplier<T>} instance
+     * @param <T>      value calculated by provided {@code Supplier<T>}
+     * @return a type-safe {@code Supplier<T>} instance constructed from the supplier {@code Supplier<T>}
+     * @since 0.0.1
+     */
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
         return supplier;
     }
