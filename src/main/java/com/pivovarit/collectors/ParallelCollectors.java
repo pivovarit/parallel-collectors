@@ -62,6 +62,19 @@ public final class ParallelCollectors {
     }
 
     /**
+     * TODO
+     * @param collection
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <R>
+     * @return
+     */
+    public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism) {
+        return new ParallelMappingCollector<>(Supplier::get, collection, executor, parallelism);
+    }
+
+    /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
      * <br><br>
@@ -77,6 +90,21 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor) {
+        return new ParallelMappingCollector<>(operation, collection, executor);
+    }
+
+    /**
+     * TODO
+     * @param operation
+     * @param collection
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <R>
+     * @param <C>
+     * @return
+     */
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism) {
         return new ParallelMappingCollector<>(operation, collection, executor);
     }
 
@@ -99,6 +127,17 @@ public final class ParallelCollectors {
     }
 
     /**
+     * TODO
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @return
+     */
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
+        return new ParallelMappingCollector<>(Supplier::get, ArrayList::new, executor, parallelism);
+    }
+
+    /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
@@ -115,6 +154,19 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
         return new ParallelMappingCollector<>(operation, ArrayList::new, executor);
+    }
+
+    /**
+     * TODO
+     * @param operation
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <R>
+     * @return
+     */
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor, int parallelism) {
+        return new ParallelMappingCollector<>(operation, ArrayList::new, executor, parallelism);
     }
 
     /**
@@ -136,6 +188,17 @@ public final class ParallelCollectors {
     }
 
     /**
+     * TODO
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @return
+     */
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
+        return new ParallelMappingCollector<>(Supplier::get, HashSet::new, executor, parallelism);
+    }
+
+    /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
      *
@@ -152,5 +215,18 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor) {
         return new ParallelMappingCollector<>(operation, HashSet::new, executor);
+    }
+
+    /**
+     * TODO
+     * @param operation
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <R>
+     * @return
+     */
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor, int parallelism) {
+        return new ParallelMappingCollector<>(operation, HashSet::new, executor, parallelism);
     }
 }
