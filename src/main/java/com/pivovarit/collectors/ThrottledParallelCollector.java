@@ -51,12 +51,6 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
         return (acc, e) -> {
             try {
                 permits.acquire();
-            } catch (InterruptedException e1) {
-                permits.release();
-                Thread.currentThread().interrupt();
-            }
-
-            try {
                 acc.add(supplyAsync(() -> {
                     try {
                         return operation.apply(e);
@@ -64,6 +58,9 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
                         permits.release();
                     }
                 }, executor));
+            } catch (InterruptedException e1) {
+                permits.release();
+                Thread.currentThread().interrupt();
             } catch (RejectedExecutionException ex) {
                 permits.release();
                 throw ex;
