@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -26,21 +27,20 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
     private final Executor executor;
     private final Supplier<R2> collectionSupplier;
     private final Function<T, R1> operation;
-    private final int parallelism;
-    private volatile int running = 0;
+    private final Semaphore permits;
 
     ParallelMappingCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
-        this.parallelism = Integer.MAX_VALUE;
+        this.permits = new Semaphore(Integer.MAX_VALUE);
     }
 
     ParallelMappingCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor, int parallelism) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
-        this.parallelism = parallelism;
+        this.permits = new Semaphore(parallelism);
     }
 
     @Override
@@ -50,7 +50,22 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
-        return (processing, e) -> processing.add(supplyAsync(() -> operation.apply(e), executor));
+        return (processing, e) -> {
+            try {
+                permits.acquire();
+            } catch (InterruptedException e1) {
+                Thread.currentThread().interrupt();
+            }
+
+            processing.add(supplyAsync(() -> operation.apply(e), executor)
+              .thenApply(r1 -> {
+                  try {
+                      return r1;
+                  } finally {
+                      permits.release();
+                  }
+              }));
+        };
     }
 
     @Override
@@ -81,7 +96,7 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
         });
     }
 
-    private static <T1, R1 extends Collection<T1> > BiFunction<CompletableFuture<R1>, CompletableFuture<T1>, CompletableFuture<R1>> accumulatingResults() {
+    private static <T1, R1 extends Collection<T1>> BiFunction<CompletableFuture<R1>, CompletableFuture<T1>, CompletableFuture<R1>> accumulatingResults() {
         return (list, object) -> list.thenCombine(object, (left, right) -> {
             left.add(right);
             return left;
