@@ -18,6 +18,22 @@ public final class ParallelCollectors {
     private ParallelCollectors() {
     }
 
+    /**
+     * A convenience method for constructing Lambda Expression-based {@link Supplier} instances from another Lambda Expression
+     * to be used in conjuction with other static factory methods found in {@link ParallelCollectors}
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>Stream.of(1,2,3)
+     * .map(i -> supplier(() -> blockingIO()))
+     * .collect(inParallelToList(executor));
+     * </pre>
+     *
+     * @param supplier a lambda expression to be converted into a type-safe {@code Supplier<T>} instance
+     * @param <T>      value calculated by provided {@code Supplier<T>}
+     * @return a type-safe {@code Supplier<T>} instance constructed from the supplier {@code Supplier<T>}
+     * @since 0.0.1
+     */
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
         return supplier;
     }
@@ -34,6 +50,21 @@ public final class ParallelCollectors {
         return new ParallelMappingCollector<>(Supplier::get, executor, ArrayList::new);
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     *
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     * .collect(inParallelToList(i -> foo(), executor));
+     * </pre>
+     *
+     * @param operation a transformation to be performed in parallel
+     * @param executor  a custom {@code Executor} which will be used to run parallel computations on
+     * @since 0.0.1
+     */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
         return new ParallelMappingCollector<>(operation, executor, ArrayList::new);
     }
