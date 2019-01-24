@@ -50,6 +50,21 @@ public final class ParallelCollectors {
         return new ParallelMappingCollector<>(Supplier::get, executor, ArrayList::new);
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     *
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     * .collect(inParallelToList(i -> foo(), executor));
+     * </pre>
+     *
+     * @param operation a transformation to be performed in parallel
+     * @param executor  a custom {@code Executor} which will be used to run parallel computations on
+     * @since 0.0.1
+     */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
         return new ParallelMappingCollector<>(operation, executor, ArrayList::new);
     }
