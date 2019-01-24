@@ -30,7 +30,11 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
     private final Function<T, R1> operation;
     private final Semaphore permits;
 
-    ThrottledParallelCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor, int parallelism) {
+    ThrottledParallelCollector(
+      Function<T, R1> operation,
+      Supplier<R2> collection,
+      Executor executor,
+      int parallelism) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
@@ -47,11 +51,6 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
         return (acc, e) -> {
             try {
                 permits.acquire();
-            } catch (InterruptedException e1) {
-                Thread.currentThread().interrupt();
-            }
-
-            try {
                 acc.add(supplyAsync(() -> {
                     try {
                         return operation.apply(e);
@@ -59,6 +58,9 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
                         permits.release();
                     }
                 }, executor));
+            } catch (InterruptedException e1) {
+                permits.release();
+                Thread.currentThread().interrupt();
             } catch (RejectedExecutionException ex) {
                 permits.release();
                 throw ex;

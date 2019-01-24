@@ -27,7 +27,10 @@ class ParallelCollector<T, R1, R2 extends Collection<R1>>
     private final Supplier<R2> collectionSupplier;
     private final Function<T, R1> operation;
 
-    ParallelCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor) {
+    ParallelCollector(
+      Function<T, R1> operation,
+      Supplier<R2> collection,
+      Executor executor) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
