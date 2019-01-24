@@ -57,7 +57,7 @@ public final class ParallelCollectors {
      * </pre>
      *
      * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
-     * @param executor   a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor   the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor) {
@@ -67,13 +67,16 @@ public final class ParallelCollectors {
     }
 
     /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements.
+     * <br><br>
+     * Example:
+     * <br><br>
      * TODO
-     * @param collection
-     * @param executor
-     * @param parallelism
-     * @param <T>
-     * @param <R>
-     * @return
+     *
+     * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
+     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism) {
         requireNonNull(collection);
@@ -94,7 +97,7 @@ public final class ParallelCollectors {
      *
      * @param operation  a transformation to be performed in parallel
      * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
-     * @param executor   a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor   the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor) {
@@ -105,15 +108,17 @@ public final class ParallelCollectors {
     }
 
     /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
      * TODO
-     * @param operation
-     * @param collection
-     * @param executor
-     * @param parallelism
-     * @param <T>
-     * @param <R>
-     * @param <C>
-     * @return
+     *
+     * @param operation   a transformation to be performed in parallel
+     * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
+     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism) {
         requireNonNull(collection);
@@ -134,7 +139,7 @@ public final class ParallelCollectors {
      * .collect(inParallelToList(executor));
      * </pre>
      *
-     * @param executor a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
@@ -143,11 +148,15 @@ public final class ParallelCollectors {
     }
 
     /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
      * TODO
-     * @param executor
-     * @param parallelism
-     * @param <T>
-     * @return
+     *
+     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
         requireNonNull(executor);
@@ -167,7 +176,7 @@ public final class ParallelCollectors {
      * </pre>
      *
      * @param operation a transformation to be performed in parallel
-     * @param executor  a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor  the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
@@ -177,13 +186,16 @@ public final class ParallelCollectors {
     }
 
     /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
      * TODO
-     * @param operation
-     * @param executor
-     * @param parallelism
-     * @param <T>
-     * @param <R>
-     * @return
+     *
+     * @param operation   a transformation to be performed in parallel
+     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor, int parallelism) {
         requireNonNull(executor);
@@ -203,7 +215,7 @@ public final class ParallelCollectors {
      * .collect(inParallelToSet(executor));
      * </pre>
      *
-     * @param executor a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
@@ -212,11 +224,15 @@ public final class ParallelCollectors {
     }
 
     /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
      * TODO
-     * @param executor
-     * @param parallelism
-     * @param <T>
-     * @return
+     *
+     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
         requireNonNull(executor);
@@ -236,7 +252,7 @@ public final class ParallelCollectors {
      * </pre>
      *
      * @param operation a transformation to be performed in parallel
-     * @param executor  a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor  the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor) {
@@ -246,13 +262,16 @@ public final class ParallelCollectors {
     }
 
     /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
      * TODO
-     * @param operation
-     * @param executor
-     * @param parallelism
-     * @param <T>
-     * @param <R>
-     * @return
+     *
+     * @param operation   a transformation to be performed in parallel
+     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor, int parallelism) {
         requireNonNull(executor);
