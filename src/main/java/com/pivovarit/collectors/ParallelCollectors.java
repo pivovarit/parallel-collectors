@@ -40,6 +40,23 @@ public final class ParallelCollectors {
         return supplier;
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
+     * <br><br>
+     * {@link Collector} is accepting {@link Supplier} instances so tasks need to be prepared beforehand and represented as {@link Supplier} implementations
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     * .map(i -> supplier(() -> foo(i)))
+     * .collect(inParallelToCollection(TreeSet::new, executor));
+     * </pre>
+     *
+     * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
+     * @param executor   a custom {@code Executor} which will be used to run parallel computations on
+     * @since 0.0.1
+     */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor) {
         return new ParallelMappingCollector<>(Supplier::get, executor, collection);
     }
