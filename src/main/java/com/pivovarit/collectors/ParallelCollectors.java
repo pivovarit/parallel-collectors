@@ -5,17 +5,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Stream;
 
 /**
+ * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
+ *
  * @author Grzegorz Piwowarek
  */
 public final class ParallelCollectors {
