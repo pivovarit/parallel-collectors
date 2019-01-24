@@ -1,4 +1,4 @@
-package com.pivovarit.collectors;
+package com.pivovarit.collectors.parallel;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
@@ -24,23 +24,23 @@ import static org.assertj.core.data.Percentage.withPercentage;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class ParallelCollectorsParallelismTest {
+public class ParallelismTest {
 
-    private static final int TRIALS = 5;
+    private static final int TRIALS = 20;
     private static final int BLOCKING_MILLIS = 100;
 
     private ExecutorService executor;
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int collectionSize) {
+    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2 , maxInt = 10) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
-        int expectedDuration = collectionSize * BLOCKING_MILLIS;
+        executor = Executors.newFixedThreadPool(unitsOfWork);
+        long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
 
         long duration = time(() -> {
             Stream.generate(() -> supplier(() -> blockingFoo()))
-              .limit(collectionSize)
-              .collect(inParallelToList(executor, 1))
+              .limit(unitsOfWork)
+              .collect(inParallelToList(executor, parallelism))
               .join();
         });
 
@@ -50,39 +50,39 @@ public class ParallelCollectorsParallelismTest {
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int collectionSize) {
+    public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
-        int expectedDuration = collectionSize * BLOCKING_MILLIS;
+        executor = Executors.newFixedThreadPool(unitsOfWork);
+        long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
 
         long duration = time(() -> {
             Stream.generate(() -> supplier(() -> blockingFoo()))
-              .limit(collectionSize)
-              .collect(inParallelToSet(executor, 1))
+              .limit(unitsOfWork)
+              .collect(inParallelToSet(executor, parallelism))
               .join();
         });
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(collectionSize * BLOCKING_MILLIS, withPercentage(20));
+          .isCloseTo(expectedDuration, withPercentage(20));
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int collectionSize) {
+    public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
-        int expectedDuration = collectionSize * BLOCKING_MILLIS;
+        executor = Executors.newFixedThreadPool(unitsOfWork);
+        long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
 
         long duration = time(() -> {
             Stream.generate(() -> supplier(() -> blockingFoo()))
-              .limit(collectionSize)
-              .collect(inParallelToCollection(ArrayList::new, executor, 1))
+              .limit(unitsOfWork)
+              .collect(inParallelToCollection(ArrayList::new, executor, parallelism))
               .join();
         });
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(collectionSize * BLOCKING_MILLIS, withPercentage(20));
+          .isCloseTo(expectedDuration, withPercentage(20));
     }
 
     @After
@@ -107,5 +107,15 @@ public class ParallelCollectorsParallelismTest {
         runnable.run();
         Instant end = Instant.now();
         return Duration.between(start, end).toMillis();
+    }
+
+    private static long expectedDuration(long parallelism, long unitsOfWork) {
+        if (unitsOfWork < parallelism) {
+            return 1;
+        } else if (unitsOfWork % parallelism == 0) {
+            return unitsOfWork / parallelism;
+        } else {
+            return unitsOfWork / parallelism + 1;
+        }
     }
 }

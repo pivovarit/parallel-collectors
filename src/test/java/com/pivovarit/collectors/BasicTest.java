@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -24,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class ParallelCollectorsMappingTest {
+public class BasicTest {
 
     private static final int TRIALS = 10;
     private static final int BLOCKING_MILLIS = 200;
@@ -38,9 +39,9 @@ public class ParallelCollectorsMappingTest {
         executor = Executors.newFixedThreadPool(collectionSize);
 
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
-          Stream.generate(() -> 42)
+          Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(inParallelToList(i -> blockingFoo(), executor))
+            .collect(inParallelToList(executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);
@@ -52,9 +53,9 @@ public class ParallelCollectorsMappingTest {
         executor = Executors.newFixedThreadPool(collectionSize);
 
         Set<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
-          Stream.generate(() -> 42)
+          Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(inParallelToSet(i -> blockingFoo(), executor))
+            .collect(inParallelToSet(executor))
             .join());
 
         assertThat(result).hasSize(1);
@@ -66,9 +67,9 @@ public class ParallelCollectorsMappingTest {
         executor = Executors.newFixedThreadPool(collectionSize);
 
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
-          Stream.generate(() -> 42)
+          Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(inParallelToCollection(i -> blockingFoo(), ArrayList::new, executor))
+            .collect(inParallelToCollection(ArrayList::new, executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);
