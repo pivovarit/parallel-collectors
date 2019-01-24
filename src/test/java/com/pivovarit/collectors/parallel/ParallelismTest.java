@@ -7,18 +7,21 @@ import org.assertj.core.data.Offset;
 import org.junit.After;
 import org.junit.runner.RunWith;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.TimeUtils.time;
+import static com.pivovarit.collectors.TimeUtils.timed;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -38,14 +41,7 @@ public class ParallelismTest {
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
-        long duration = time(() -> {
-            Stream.generate(() -> supplier(() -> sleep(BLOCKING_MILLIS)))
-              .limit(unitsOfWork)
-              .collect(inParallelToList(executor, parallelism))
-              .join();
-        });
-
-        assertThat(duration)
+        assertThat(timed(collectWith(inParallelToList(executor, parallelism), unitsOfWork)))
           .isGreaterThanOrEqualTo(expectedDuration)
           .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
     }
@@ -56,14 +52,7 @@ public class ParallelismTest {
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
-        long duration = time(() -> {
-            Stream.generate(() -> supplier(() -> sleep(BLOCKING_MILLIS)))
-              .limit(unitsOfWork)
-              .collect(inParallelToSet(executor, parallelism))
-              .join();
-        });
-
-        assertThat(duration)
+        assertThat(timed(collectWith(inParallelToSet(executor, parallelism), unitsOfWork)))
           .isGreaterThanOrEqualTo(expectedDuration)
           .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
     }
@@ -74,14 +63,7 @@ public class ParallelismTest {
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
-        long duration = time(() -> {
-            Stream.generate(() -> supplier(() -> sleep(BLOCKING_MILLIS)))
-              .limit(unitsOfWork)
-              .collect(inParallelToCollection(ArrayList::new, executor, parallelism))
-              .join();
-        });
-
-        assertThat(duration)
+        assertThat(timed(collectWith(inParallelToCollection(ArrayList::new, executor, parallelism), unitsOfWork)))
           .isGreaterThanOrEqualTo(expectedDuration)
           .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
     }
@@ -93,14 +75,14 @@ public class ParallelismTest {
         }
     }
 
-    private static int sleep(long sleepTime) {
+    private static Long sleep() {
         try {
-            Thread.sleep(sleepTime);
+            Thread.sleep(ParallelismTest.BLOCKING_MILLIS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        return 42;
+        return 42L;
     }
 
     private static long expectedDuration(long parallelism, long unitsOfWork) {
@@ -111,5 +93,12 @@ public class ParallelismTest {
         } else {
             return (unitsOfWork / parallelism + 1) * BLOCKING_MILLIS;
         }
+    }
+
+    private static <T, R extends Collection<T>> Runnable collectWith(Collector<Supplier<Long>, List<CompletableFuture<T>>, CompletableFuture<R>> collector, int unitsOfWork) {
+        return () -> Stream.generate(() -> supplier(() -> sleep()))
+          .limit(unitsOfWork)
+          .collect(collector)
+          .join();
     }
 }
