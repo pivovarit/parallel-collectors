@@ -14,10 +14,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -41,7 +41,7 @@ public class ParallelCollectorsTest {
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(ParallelCollectors.inParallelToList(executor))
+            .collect(inParallelToList(executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);
@@ -55,7 +55,7 @@ public class ParallelCollectorsTest {
         Set<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(ParallelCollectors.inParallelToSet(executor))
+            .collect(inParallelToSet(executor))
             .join());
 
         assertThat(result).hasSize(1);
@@ -69,7 +69,7 @@ public class ParallelCollectorsTest {
         List<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(collectionSize)
-            .collect(ParallelCollectors.inParallelToCollection(ArrayList::new, executor))
+            .collect(inParallelToCollection(ArrayList::new, executor))
             .join());
 
         assertThat(result).hasSize(collectionSize);
