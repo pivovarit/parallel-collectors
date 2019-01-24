@@ -3,6 +3,7 @@ package com.pivovarit.collectors.parallel;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.assertj.core.data.Offset;
 import org.junit.After;
 import org.junit.runner.RunWith;
 
@@ -26,8 +27,8 @@ import static org.assertj.core.data.Percentage.withPercentage;
 @RunWith(JUnitQuickcheck.class)
 public class ParallelismTest {
 
-    private static final int BLOCKING_MILLIS = 100;
-    private static final int CONSTANT_DELAY = 70;
+    private static final long BLOCKING_MILLIS = 100;
+    private static final long CONSTANT_DELAY = 70;
 
     private ExecutorService executor;
 
@@ -46,7 +47,7 @@ public class ParallelismTest {
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isLessThan(expectedDuration + CONSTANT_DELAY);
+          .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
     }
 
     @Property
@@ -64,7 +65,7 @@ public class ParallelismTest {
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isLessThan(expectedDuration + CONSTANT_DELAY);
+          .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
     }
 
     @Property
@@ -82,7 +83,7 @@ public class ParallelismTest {
 
         assertThat(duration)
           .isGreaterThanOrEqualTo(expectedDuration)
-          .isLessThan(expectedDuration + CONSTANT_DELAY);
+          .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
     }
 
     @After
