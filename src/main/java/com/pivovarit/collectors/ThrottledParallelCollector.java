@@ -43,14 +43,14 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
-        return (processing, e) -> {
+        return (acc, e) -> {
             try {
                 permits.acquire();
             } catch (InterruptedException e1) {
                 Thread.currentThread().interrupt();
             }
 
-            processing.add(supplyAsync(() -> operation.apply(e), executor)
+            acc.add(supplyAsync(() -> operation.apply(e), executor)
               .thenApply(r1 -> {
                   try {
                       return r1;
