@@ -5,11 +5,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 /**
  * @author Grzegorz Piwowarek
@@ -32,6 +36,7 @@ public final class ParallelCollectors {
      * @param supplier a lambda expression to be converted into a type-safe {@code Supplier<T>} instance
      * @param <T>      value calculated by provided {@code Supplier<T>}
      * @return a type-safe {@code Supplier<T>} instance constructed from the supplier {@code Supplier<T>}
+     *
      * @since 0.0.1
      */
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
@@ -42,6 +47,22 @@ public final class ParallelCollectors {
         return new ParallelMappingCollector<>(Supplier::get, executor, collection);
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     * .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor));
+     * </pre>
+     *
+     * @param operation a transformation to be performed in parallel
+     * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
+     * @param executor a custom {@code Executor} which will be used to run parallel computations on
+     *
+     * @since 0.0.1
+     */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor) {
         return new ParallelMappingCollector<>(operation, executor, collection);
     }
@@ -62,7 +83,8 @@ public final class ParallelCollectors {
      * </pre>
      *
      * @param operation a transformation to be performed in parallel
-     * @param executor  a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor a custom {@code Executor} which will be used to run parallel computations on
+     *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
@@ -85,7 +107,8 @@ public final class ParallelCollectors {
      * </pre>
      *
      * @param operation a transformation to be performed in parallel
-     * @param executor  a custom {@code Executor} which will be used to run parallel computations on
+     * @param executor a custom {@code Executor} which will be used to run parallel computations on
+     *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor) {
