@@ -30,7 +30,11 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
     private final Function<T, R1> operation;
     private final Semaphore permits;
 
-    ThrottledParallelCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor, int parallelism) {
+    ThrottledParallelCollector(
+      Function<T, R1> operation,
+      Supplier<R2> collection,
+      Executor executor,
+      int parallelism) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
