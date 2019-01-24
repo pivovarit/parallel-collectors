@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -50,13 +51,18 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
                 Thread.currentThread().interrupt();
             }
 
-            acc.add(supplyAsync(() -> {
-                try {
-                    return operation.apply(e);
-                } finally {
-                    permits.release();
-                }
-            }, executor));
+            try {
+                acc.add(supplyAsync(() -> {
+                    try {
+                        return operation.apply(e);
+                    } finally {
+                        permits.release();
+                    }
+                }, executor));
+            } catch (RejectedExecutionException ex) {
+                permits.release();
+                throw ex;
+            }
         };
     }
 
