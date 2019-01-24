@@ -26,13 +26,12 @@ import static org.assertj.core.data.Percentage.withPercentage;
 @RunWith(JUnitQuickcheck.class)
 public class ParallelismTest {
 
-    private static final int TRIALS = 20;
-    private static final int BLOCKING_MILLIS = 100;
+    private static final int BLOCKING_MILLIS = 50;
 
     private ExecutorService executor;
 
-    @Property(trials = TRIALS)
-    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2 , maxInt = 10) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    @Property
+    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2 , maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
@@ -49,8 +48,8 @@ public class ParallelismTest {
           .isCloseTo(expectedDuration, withPercentage(20));
     }
 
-    @Property(trials = TRIALS)
-    public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    @Property
+    public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
@@ -67,8 +66,8 @@ public class ParallelismTest {
           .isCloseTo(expectedDuration, withPercentage(20));
     }
 
-    @Property(trials = TRIALS)
-    public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    @Property
+    public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
