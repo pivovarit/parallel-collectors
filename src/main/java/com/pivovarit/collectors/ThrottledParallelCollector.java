@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -20,17 +21,19 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
+class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
   implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
 
     private final Executor executor;
     private final Supplier<R2> collectionSupplier;
     private final Function<T, R1> operation;
+    private final Semaphore permits;
 
-    ParallelMappingCollector(Function<T, R1> operation, Executor executor, Supplier<R2> collection) {
+    ThrottledParallelCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor, int parallelism) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
+        this.permits = new Semaphore(parallelism);
     }
 
     @Override
@@ -40,7 +43,21 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
-        return (processing, e) -> processing.add(supplyAsync(() -> operation.apply(e), executor));
+        return (acc, e) -> {
+            try {
+                permits.acquire();
+            } catch (InterruptedException e1) {
+                Thread.currentThread().interrupt();
+            }
+
+            acc.add(supplyAsync(() -> {
+                try {
+                    return operation.apply(e);
+                } finally {
+                    permits.release();
+                }
+            }, executor));
+        };
     }
 
     @Override
@@ -71,7 +88,7 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
         });
     }
 
-    private static <T1, R1 extends Collection<T1> > BiFunction<CompletableFuture<R1>, CompletableFuture<T1>, CompletableFuture<R1>> accumulatingResults() {
+    private static <T1, R1 extends Collection<T1>> BiFunction<CompletableFuture<R1>, CompletableFuture<T1>, CompletableFuture<R1>> accumulatingResults() {
         return (list, object) -> list.thenCombine(object, (left, right) -> {
             left.add(right);
             return left;
