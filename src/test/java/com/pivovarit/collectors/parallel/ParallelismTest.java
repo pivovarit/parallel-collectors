@@ -19,7 +19,6 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.Percentage.withPercentage;
 
 /**
  * @author Grzegorz Piwowarek
@@ -27,8 +26,8 @@ import static org.assertj.core.data.Percentage.withPercentage;
 @RunWith(JUnitQuickcheck.class)
 public class ParallelismTest {
 
-    private static final long BLOCKING_MILLIS = 100;
-    private static final long CONSTANT_DELAY = 70;
+    private static final long BLOCKING_MILLIS = 50;
+    private static final long CONSTANT_DELAY = 75;
 
     private ExecutorService executor;
 
@@ -36,10 +35,10 @@ public class ParallelismTest {
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2 , maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
-        long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
+        long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
         long duration = time(() -> {
-            Stream.generate(() -> supplier(() -> blockingFoo()))
+            Stream.generate(() -> supplier(() -> sleep(BLOCKING_MILLIS)))
               .limit(unitsOfWork)
               .collect(inParallelToList(executor, parallelism))
               .join();
@@ -54,10 +53,10 @@ public class ParallelismTest {
     public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
-        long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
+        long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
         long duration = time(() -> {
-            Stream.generate(() -> supplier(() -> blockingFoo()))
+            Stream.generate(() -> supplier(() -> sleep(BLOCKING_MILLIS)))
               .limit(unitsOfWork)
               .collect(inParallelToSet(executor, parallelism))
               .join();
@@ -72,10 +71,10 @@ public class ParallelismTest {
     public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
-        long expectedDuration = BLOCKING_MILLIS * expectedDuration(parallelism, unitsOfWork);
+        long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
         long duration = time(() -> {
-            Stream.generate(() -> supplier(() -> blockingFoo()))
+            Stream.generate(() -> supplier(() -> sleep(BLOCKING_MILLIS)))
               .limit(unitsOfWork)
               .collect(inParallelToCollection(ArrayList::new, executor, parallelism))
               .join();
@@ -93,9 +92,9 @@ public class ParallelismTest {
         }
     }
 
-    private static int blockingFoo() {
+    private static int sleep(long sleepTime) {
         try {
-            Thread.sleep(BLOCKING_MILLIS);
+            Thread.sleep(sleepTime);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -112,11 +111,11 @@ public class ParallelismTest {
 
     private static long expectedDuration(long parallelism, long unitsOfWork) {
         if (unitsOfWork < parallelism) {
-            return 1;
+            return BLOCKING_MILLIS;
         } else if (unitsOfWork % parallelism == 0) {
-            return unitsOfWork / parallelism;
+            return (unitsOfWork / parallelism) * BLOCKING_MILLIS;
         } else {
-            return unitsOfWork / parallelism + 1;
+            return (unitsOfWork / parallelism + 1) * BLOCKING_MILLIS;
         }
     }
 }
