@@ -80,6 +80,20 @@ public final class ParallelCollectors {
         return new ParallelMappingCollector<>(operation, executor, collection);
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     * .map(i -> supplier(() -> foo(i)))
+     * .collect(inParallelToList(executor));
+     * </pre>
+     *
+     * @param executor a custom {@code Executor} which will be used to run parallel computations on
+     * @since 0.0.1
+     */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
         return new ParallelMappingCollector<>(Supplier::get, executor, ArrayList::new);
     }
@@ -103,6 +117,20 @@ public final class ParallelCollectors {
         return new ParallelMappingCollector<>(operation, executor, ArrayList::new);
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these elements
+     * <br><br>
+     * Example:
+     * <br><br>
+     * <pre>CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
+     * .map(i -> supplier(() -> foo(i)))
+     * .collect(inParallelToSet(executor));
+     * </pre>
+     *
+     * @param executor a custom {@code Executor} which will be used to run parallel computations on
+     * @since 0.0.1
+     */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
         return new ParallelMappingCollector<>(Supplier::get, executor, HashSet::new);
     }
