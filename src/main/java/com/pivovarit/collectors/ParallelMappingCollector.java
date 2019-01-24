@@ -26,11 +26,21 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
     private final Executor executor;
     private final Supplier<R2> collectionSupplier;
     private final Function<T, R1> operation;
+    private final int parallelism;
+    private volatile int running = 0;
 
-    ParallelMappingCollector(Function<T, R1> operation, Executor executor, Supplier<R2> collection) {
+    ParallelMappingCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
+        this.parallelism = Integer.MAX_VALUE;
+    }
+
+    ParallelMappingCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor, int parallelism) {
+        this.executor = executor;
+        this.collectionSupplier = collection;
+        this.operation = operation;
+        this.parallelism = parallelism;
     }
 
     @Override
