@@ -58,7 +58,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor) {
-        return new ParallelMappingCollector<>(Supplier::get, collection, executor);
+        return new ParallelCollector<>(Supplier::get, collection, executor);
     }
 
     /**
@@ -71,7 +71,7 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism) {
-        return new ParallelMappingCollector<>(Supplier::get, collection, executor, parallelism);
+        return new ThrottledParallelCollector<>(Supplier::get, collection, executor, parallelism);
     }
 
     /**
@@ -90,7 +90,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor) {
-        return new ParallelMappingCollector<>(operation, collection, executor);
+        return new ParallelCollector<>(operation, collection, executor);
     }
 
     /**
@@ -105,7 +105,7 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism) {
-        return new ParallelMappingCollector<>(operation, collection, executor);
+        return new ParallelCollector<>(operation, collection, executor);
     }
 
     /**
@@ -123,7 +123,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
-        return new ParallelMappingCollector<>(Supplier::get, ArrayList::new, executor);
+        return new ParallelCollector<>(Supplier::get, ArrayList::new, executor);
     }
 
     /**
@@ -134,7 +134,7 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
-        return new ParallelMappingCollector<>(Supplier::get, ArrayList::new, executor, parallelism);
+        return new ThrottledParallelCollector<>(Supplier::get, ArrayList::new, executor, parallelism);
     }
 
     /**
@@ -153,7 +153,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
-        return new ParallelMappingCollector<>(operation, ArrayList::new, executor);
+        return new ParallelCollector<>(operation, ArrayList::new, executor);
     }
 
     /**
@@ -166,7 +166,7 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor, int parallelism) {
-        return new ParallelMappingCollector<>(operation, ArrayList::new, executor, parallelism);
+        return new ThrottledParallelCollector<>(operation, ArrayList::new, executor, parallelism);
     }
 
     /**
@@ -184,7 +184,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
-        return new ParallelMappingCollector<>(Supplier::get, HashSet::new, executor);
+        return new ParallelCollector<>(Supplier::get, HashSet::new, executor);
     }
 
     /**
@@ -195,7 +195,7 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
-        return new ParallelMappingCollector<>(Supplier::get, HashSet::new, executor, parallelism);
+        return new ThrottledParallelCollector<>(Supplier::get, HashSet::new, executor, parallelism);
     }
 
     /**
@@ -214,7 +214,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor) {
-        return new ParallelMappingCollector<>(operation, HashSet::new, executor);
+        return new ParallelCollector<>(operation, HashSet::new, executor);
     }
 
     /**
@@ -227,6 +227,6 @@ public final class ParallelCollectors {
      * @return
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor, int parallelism) {
-        return new ParallelMappingCollector<>(operation, HashSet::new, executor, parallelism);
+        return new ThrottledParallelCollector<>(operation, HashSet::new, executor, parallelism);
     }
 }

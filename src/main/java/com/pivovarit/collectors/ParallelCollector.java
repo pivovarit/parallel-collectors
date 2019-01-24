@@ -21,26 +21,17 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
+class ParallelCollector<T, R1, R2 extends Collection<R1>>
   implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
 
     private final Executor executor;
     private final Supplier<R2> collectionSupplier;
     private final Function<T, R1> operation;
-    private final Semaphore permits;
 
-    ParallelMappingCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor) {
+    ParallelCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor) {
         this.executor = executor;
         this.collectionSupplier = collection;
         this.operation = operation;
-        this.permits = new Semaphore(Integer.MAX_VALUE);
-    }
-
-    ParallelMappingCollector(Function<T, R1> operation, Supplier<R2> collection, Executor executor, int parallelism) {
-        this.executor = executor;
-        this.collectionSupplier = collection;
-        this.operation = operation;
-        this.permits = new Semaphore(parallelism);
     }
 
     @Override
@@ -50,22 +41,7 @@ class ParallelMappingCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
-        return (processing, e) -> {
-            try {
-                permits.acquire();
-            } catch (InterruptedException e1) {
-                Thread.currentThread().interrupt();
-            }
-
-            processing.add(supplyAsync(() -> operation.apply(e), executor)
-              .thenApply(r1 -> {
-                  try {
-                      return r1;
-                  } finally {
-                      permits.release();
-                  }
-              }));
-        };
+        return (processing, e) -> processing.add(supplyAsync(() -> operation.apply(e), executor));
     }
 
     @Override
