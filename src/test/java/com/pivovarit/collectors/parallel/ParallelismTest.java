@@ -10,6 +10,8 @@ import org.junit.runner.RunWith;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,9 +43,16 @@ public class ParallelismTest {
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
-        assertThat(timed(collectWith(inParallelToList(executor, parallelism), unitsOfWork)))
-          .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+        Map.Entry<List<Long>, Long> result = timed(collectWith(inParallelToList(executor, parallelism), unitsOfWork));
+
+        assertThat(result)
+          .satisfies(e -> {
+              assertThat(e.getValue())
+                .isGreaterThanOrEqualTo(expectedDuration)
+                .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+
+              assertThat(e.getKey()).hasSize(unitsOfWork);
+          });
     }
 
     @Property
@@ -51,10 +60,17 @@ public class ParallelismTest {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
+        Map.Entry<Set<Long>, Long> result = timed(collectWith(inParallelToSet(executor, parallelism), unitsOfWork));
 
-        assertThat(timed(collectWith(inParallelToSet(executor, parallelism), unitsOfWork)))
-          .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+        assertThat(result)
+          .satisfies(e -> {
+              assertThat(e.getValue())
+                .isGreaterThanOrEqualTo(expectedDuration)
+                .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+
+              assertThat(e.getKey()).hasSize(1);
+          });
+
     }
 
     @Property
@@ -63,9 +79,16 @@ public class ParallelismTest {
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
-        assertThat(timed(collectWith(inParallelToCollection(ArrayList::new, executor, parallelism), unitsOfWork)))
-          .isGreaterThanOrEqualTo(expectedDuration)
-          .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+        Map.Entry<List<Long>, Long> result = timed(collectWith(inParallelToCollection(ArrayList::new, executor, parallelism), unitsOfWork));
+
+        assertThat(result)
+          .satisfies(e -> {
+              assertThat(e.getValue())
+                .isGreaterThanOrEqualTo(expectedDuration)
+                .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+
+              assertThat(e.getKey()).hasSize(unitsOfWork);
+          });
     }
 
     @After
@@ -95,7 +118,7 @@ public class ParallelismTest {
         }
     }
 
-    private static <T, R extends Collection<T>> Runnable collectWith(Collector<Supplier<Long>, List<CompletableFuture<T>>, CompletableFuture<R>> collector, int unitsOfWork) {
+    private static <T, R extends Collection<T>> Supplier<R> collectWith(Collector<Supplier<Long>, List<CompletableFuture<T>>, CompletableFuture<R>> collector, int unitsOfWork) {
         return () -> Stream.generate(() -> supplier(() -> sleep()))
           .limit(unitsOfWork)
           .collect(collector)
