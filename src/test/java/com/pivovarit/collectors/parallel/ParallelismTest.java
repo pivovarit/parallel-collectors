@@ -101,7 +101,7 @@ public class ParallelismTest {
         CompletableFuture<ArrayList<Long>> result = assertTimeout(ofMillis(200), () ->
           Stream.generate(() -> supplier(() -> {
               try {
-                  Thread.sleep(1000);
+                  Thread.sleep(Integer.MAX_VALUE);
               } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
               }
