@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -20,6 +21,7 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
+import static java.time.Duration.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -36,47 +38,47 @@ public class BasicTest {
     private ExecutorService executor;
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 100, maxInt = 1000) int collectionSize) {
+    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
+        executor = Executors.newFixedThreadPool(concurrencyLevel);
 
-        List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+        List<String> result = assertTimeout(ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
-            .limit(collectionSize)
+            .limit(concurrencyLevel)
             .collect(inParallelToList(executor))
             .join());
 
         assertThat(result)
-          .hasSize(collectionSize)
+          .hasSize(concurrencyLevel)
           .hasSameSizeAs(new HashSet<>(result));
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 100, maxInt = 1000) int collectionSize) {
+    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
+        executor = Executors.newFixedThreadPool(concurrencyLevel);
 
-        Set<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+        Set<String> result = assertTimeout(ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
-            .limit(collectionSize)
+            .limit(concurrencyLevel)
             .collect(inParallelToSet(executor))
             .join());
 
-        assertThat(result).hasSize(collectionSize);
+        assertThat(result).hasSize(concurrencyLevel);
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 100, maxInt = 1000) int collectionSize) {
+    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
+        executor = Executors.newFixedThreadPool(concurrencyLevel);
 
-        List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+        List<String> result = assertTimeout(ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
-            .limit(collectionSize)
+            .limit(concurrencyLevel)
             .collect(inParallelToCollection(ArrayList::new, executor))
             .join());
 
-        assertThat(result).hasSize(collectionSize)
+        assertThat(result).hasSize(concurrencyLevel)
           .hasSameSizeAs(new HashSet<>(result));
     }
 

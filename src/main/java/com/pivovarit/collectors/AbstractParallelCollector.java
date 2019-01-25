@@ -3,7 +3,6 @@ package com.pivovarit.collectors;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -21,14 +20,14 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelCollector<T, R1, R2 extends Collection<R1>>
+abstract class AbstractParallelCollector<T, R1, R2 extends Collection<R1>>
   implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
 
-    private final Executor executor;
-    private final Supplier<R2> collectionSupplier;
-    private final Function<T, R1> operation;
+    final Executor executor;
+    final Function<T, R1> operation;
+    final Supplier<R2> collectionSupplier;
 
-    ParallelCollector(
+    AbstractParallelCollector(
       Function<T, R1> operation,
       Supplier<R2> collection,
       Executor executor) {
@@ -39,7 +38,7 @@ class ParallelCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public Supplier<List<CompletableFuture<R1>>> supplier() {
-        return () -> Collections.synchronizedList(new ArrayList<>());
+        return () -> Collections.synchronizedList(new ArrayList<>()); // TODO benchmark against LinkedList
     }
 
     @Override
@@ -64,9 +63,7 @@ class ParallelCollector<T, R1, R2 extends Collection<R1>>
     }
 
     @Override
-    public Set<Characteristics> characteristics() {
-        return EnumSet.of(Characteristics.UNORDERED);
-    }
+    public abstract Set<Characteristics> characteristics();
 
     private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
         return (f1, f2) -> f1.thenCombine(f2, (left, right) -> {
