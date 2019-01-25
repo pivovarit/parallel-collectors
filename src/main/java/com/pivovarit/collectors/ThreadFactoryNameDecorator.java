@@ -5,21 +5,21 @@ import java.util.concurrent.ThreadFactory;
 
 class ThreadFactoryNameDecorator implements ThreadFactory {
     private final ThreadFactory defaultThreadFactory;
-    private final String suffix;
+    private final String prefix;
 
-    ThreadFactoryNameDecorator(String suffix) {
-        this(Executors.defaultThreadFactory(), suffix);
+    ThreadFactoryNameDecorator(String prefix) {
+        this(Executors.defaultThreadFactory(), prefix);
     }
 
-    ThreadFactoryNameDecorator(ThreadFactory threadFactory, String suffix) {
+    ThreadFactoryNameDecorator(ThreadFactory threadFactory, String prefix) {
         this.defaultThreadFactory = threadFactory;
-        this.suffix = suffix;
+        this.prefix = prefix;
     }
 
     @Override
     public Thread newThread(Runnable task) {
         Thread thread = defaultThreadFactory.newThread(task);
-        thread.setName(thread.getName() + "-" + suffix);
+        thread.setName(prefix + "-" + thread.getName());
         return thread;
     }
 }
