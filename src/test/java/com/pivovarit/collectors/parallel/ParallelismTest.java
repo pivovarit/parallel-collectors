@@ -13,8 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
@@ -37,12 +38,12 @@ public class ParallelismTest {
     private static final long BLOCKING_MILLIS = 50;
     private static final long CONSTANT_DELAY = 75;
 
-    private ExecutorService executor;
+    private ThreadPoolExecutor executor;
 
     @Property
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
-        executor = Executors.newFixedThreadPool(unitsOfWork);
+        executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
         Map.Entry<List<Long>, Long> result = timed(collectWith(inParallelToList(executor, parallelism), unitsOfWork));
@@ -60,7 +61,7 @@ public class ParallelismTest {
     @Property
     public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
-        executor = Executors.newFixedThreadPool(unitsOfWork);
+        executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
         Map.Entry<Set<Long>, Long> result = timed(collectWith(inParallelToSet(executor, parallelism), unitsOfWork));
 
@@ -77,7 +78,7 @@ public class ParallelismTest {
     @Property
     public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
-        executor = Executors.newFixedThreadPool(unitsOfWork);
+        executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
 
         Map.Entry<List<Long>, Long> result = timed(collectWith(inParallelToCollection(ArrayList::new, executor, parallelism), unitsOfWork));
@@ -95,7 +96,7 @@ public class ParallelismTest {
     @Property
     public void shouldReturnImmediately(@InRange(minInt = 4, maxInt = 20) int concurrencyLevel) {
         // given
-        executor = Executors.newFixedThreadPool(concurrencyLevel);
+        executor = threadPoolExecutor(concurrencyLevel);
 
         CompletableFuture<ArrayList<Long>> result = assertTimeout(ofMillis(200), () ->
           Stream.generate(() -> supplier(() -> sleep()))
@@ -135,5 +136,11 @@ public class ParallelismTest {
           .limit(unitsOfWork)
           .collect(collector)
           .join();
+    }
+
+    private static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
+        return new ThreadPoolExecutor(unitsOfWork, unitsOfWork,
+          0L, TimeUnit.MILLISECONDS,
+          new LinkedBlockingQueue<>());
     }
 }
