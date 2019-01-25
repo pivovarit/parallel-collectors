@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 public class ParallelismTest {
 
     private static final long BLOCKING_MILLIS = 50;
-    private static final long CONSTANT_DELAY = 75;
+    private static final long CONSTANT_DELAY = 100;
 
     private ThreadPoolExecutor executor;
 
@@ -94,14 +94,24 @@ public class ParallelismTest {
     }
 
     @Property
-    public void shouldReturnImmediately(@InRange(minInt = 4, maxInt = 20) int concurrencyLevel) {
+    public void shouldReturnImmediatelyAndNotPolluteExecutor(@InRange(minInt = 4, maxInt = 20) int concurrencyLevel) {
         // given
         executor = threadPoolExecutor(concurrencyLevel);
 
         CompletableFuture<ArrayList<Long>> result = assertTimeout(ofMillis(200), () ->
-          Stream.generate(() -> supplier(() -> sleep()))
+          Stream.generate(() -> supplier(() -> {
+              try {
+                  Thread.sleep(1000);
+              } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+              }
+
+              return 42L;
+          }))
             .limit(concurrencyLevel)
-            .collect(inParallelToCollection(ArrayList::new, executor, 1)));
+            .collect(inParallelToCollection(ArrayList::new, executor, 2)));
+
+        assertThat(executor.getActiveCount()).isLessThanOrEqualTo(2);
     }
 
     @After

@@ -4,16 +4,18 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * @author Grzegorz Piwowarek
@@ -22,6 +24,9 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
   implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
 
     private final Semaphore permits;
+    private final BlockingQueue<Supplier<R1>> taskQueue = new LinkedBlockingQueue<>();
+    private final ConcurrentLinkedQueue<CompletableFuture<R1>> pending = new ConcurrentLinkedQueue<>();
+    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor();
 
     ThrottledParallelCollector(
       Function<T, R1> operation,
@@ -30,32 +35,49 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
       int parallelism) {
         super(operation, collection, executor);
         this.permits = new Semaphore(parallelism);
+
+        dispatcher.execute(() -> {
+            while (true) {
+                try {
+                    permits.acquire();
+                    Supplier<R1> task = taskQueue.take();
+                    CompletableFuture.supplyAsync(task, executor)
+                      .thenAccept(result -> pending.poll().complete(result));
+                } catch (InterruptedException e) {
+                    permits.release();
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
     }
 
     @Override
     public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
         return (acc, e) -> {
-            try {
-                acc.add(supplyAsync(() -> {
-                    try {
-                        permits.acquire();
-                        return operation.apply(e);
-                    } catch (InterruptedException e1) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException("thread was interrupted", e1);
-                    } finally {
-                        permits.release();
-                    }
-                }, executor));
-            } catch (RejectedExecutionException ex) {
-                permits.release();
-                throw ex;
-            }
+            CompletableFuture<R1> future = new CompletableFuture<>();
+            acc.add(future);
+            pending.add(future);
+            taskQueue.add(() -> {
+                try {
+                    return operation.apply(e);
+                } finally {
+                    permits.release();
+                }
+            });
         };
     }
 
     @Override
     public Set<Characteristics> characteristics() {
         return EnumSet.of(Characteristics.UNORDERED);
+    }
+
+    @Override
+    public Function<List<CompletableFuture<R1>>, CompletableFuture<R2>> finisher() {
+        return super.finisher()
+          .andThen(f -> {
+              dispatcher.shutdown();
+              return f;
+          });
     }
 }
