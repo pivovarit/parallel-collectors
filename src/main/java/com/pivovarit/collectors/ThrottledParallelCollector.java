@@ -1,7 +1,9 @@
 package com.pivovarit.collectors;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
@@ -50,5 +52,10 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
                 throw ex;
             }
         };
+    }
+
+    @Override
+    public Set<Characteristics> characteristics() {
+        return EnumSet.of(Characteristics.UNORDERED);
     }
 }

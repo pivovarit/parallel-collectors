@@ -64,9 +64,7 @@ abstract class AbstractParallelCollector<T, R1, R2 extends Collection<R1>>
     }
 
     @Override
-    public Set<Characteristics> characteristics() {
-        return EnumSet.of(Characteristics.UNORDERED);
-    }
+    public abstract Set<Characteristics> characteristics();
 
     private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
         return (f1, f2) -> f1.thenCombine(f2, (left, right) -> {
