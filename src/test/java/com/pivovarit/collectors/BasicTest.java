@@ -32,13 +32,14 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 public class BasicTest {
 
     private static final int TRIALS = 10;
+    private static final int MAX_CONCURRENCY_LEVEL = 200;
     private static final int BLOCKING_MILLIS = 200;
     private static final int TIMEOUT = BLOCKING_MILLIS + 150;
 
     private ExecutorService executor;
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
+    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 100, maxInt = MAX_CONCURRENCY_LEVEL) int concurrencyLevel) {
         // given
         executor = Executors.newFixedThreadPool(concurrencyLevel);
 
@@ -54,7 +55,7 @@ public class BasicTest {
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
+    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 100, maxInt = MAX_CONCURRENCY_LEVEL) int concurrencyLevel) {
         // given
         executor = Executors.newFixedThreadPool(concurrencyLevel);
 
@@ -68,7 +69,7 @@ public class BasicTest {
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
+    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 100, maxInt = MAX_CONCURRENCY_LEVEL) int concurrencyLevel) {
         // given
         executor = Executors.newFixedThreadPool(concurrencyLevel);
 
