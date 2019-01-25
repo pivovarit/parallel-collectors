@@ -36,47 +36,47 @@ public class BasicTest {
     private ExecutorService executor;
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 100, maxInt = 1000) int collectionSize) {
+    public void shouldCollectToListWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
+        executor = Executors.newFixedThreadPool(concurrencyLevel);
 
         List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
-            .limit(collectionSize)
+            .limit(concurrencyLevel)
             .collect(inParallelToList(executor))
             .join());
 
         assertThat(result)
-          .hasSize(collectionSize)
+          .hasSize(concurrencyLevel)
           .hasSameSizeAs(new HashSet<>(result));
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 100, maxInt = 1000) int collectionSize) {
+    public void shouldCollectToSetWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
+        executor = Executors.newFixedThreadPool(concurrencyLevel);
 
         Set<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
-            .limit(collectionSize)
+            .limit(concurrencyLevel)
             .collect(inParallelToSet(executor))
             .join());
 
-        assertThat(result).hasSize(collectionSize);
+        assertThat(result).hasSize(concurrencyLevel);
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 100, maxInt = 1000) int collectionSize) {
+    public void shouldCollectToCollectionWithFullParallelism(@InRange(minInt = 100, maxInt = 500) int concurrencyLevel) {
         // given
-        executor = Executors.newFixedThreadPool(collectionSize);
+        executor = Executors.newFixedThreadPool(concurrencyLevel);
 
         List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
-            .limit(collectionSize)
+            .limit(concurrencyLevel)
             .collect(inParallelToCollection(ArrayList::new, executor))
             .join());
 
-        assertThat(result).hasSize(collectionSize)
+        assertThat(result).hasSize(concurrencyLevel)
           .hasSameSizeAs(new HashSet<>(result));
     }
 
