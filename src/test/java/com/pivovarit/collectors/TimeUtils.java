@@ -2,14 +2,18 @@ package com.pivovarit.collectors;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
 public final class TimeUtils {
     private TimeUtils() {
     }
 
-    public static long timed(Runnable runnable) {
+    public static <T> Map.Entry<T, Long> timed(Supplier<T> runnable) {
         Instant start = Instant.now();
-        runnable.run();
-        return Duration.between(start, Instant.now()).toMillis();
+        return new AbstractMap.SimpleEntry<>(
+          runnable.get(),
+          Duration.between(start, Instant.now()).toMillis());
     }
 }

@@ -2,6 +2,7 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -43,7 +45,7 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public Supplier<List<CompletableFuture<R1>>> supplier() {
-        return ArrayList::new;
+        return () -> Collections.synchronizedList(new ArrayList<>());
     }
 
     @Override
