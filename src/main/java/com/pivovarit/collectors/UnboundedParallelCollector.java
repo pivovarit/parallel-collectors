@@ -13,9 +13,9 @@ import java.util.stream.Collector;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelCollector<T, R1, R2 extends Collection<R1>> extends AbstractParallelCollector<T, R1, R2>
+class UnboundedParallelCollector<T, R1, R2 extends Collection<R1>> extends AbstractParallelCollector<T, R1, R2>
   implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
-    ParallelCollector(
+    UnboundedParallelCollector(
       Function<T, R1> operation,
       Supplier<R2> collection,
       Executor executor) {

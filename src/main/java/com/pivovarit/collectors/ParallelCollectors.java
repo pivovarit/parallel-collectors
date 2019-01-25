@@ -63,7 +63,7 @@ public final class ParallelCollectors {
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor) {
         requireNonNull(collection);
         requireNonNull(executor);
-        return new ParallelCollector<>(Supplier::get, collection, executor);
+        return new UnboundedParallelCollector<>(Supplier::get, collection, executor);
     }
 
     /**
@@ -80,6 +80,7 @@ public final class ParallelCollectors {
      * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     * @since 0.0.1
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism) {
         requireNonNull(collection);
@@ -107,7 +108,7 @@ public final class ParallelCollectors {
         requireNonNull(collection);
         requireNonNull(executor);
         requireNonNull(operation);
-        return new ParallelCollector<>(operation, collection, executor);
+        return new UnboundedParallelCollector<>(operation, collection, executor);
     }
 
     /**
@@ -124,6 +125,7 @@ public final class ParallelCollectors {
      * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism) {
         requireNonNull(collection);
@@ -149,7 +151,7 @@ public final class ParallelCollectors {
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
         requireNonNull(executor);
-        return new ParallelCollector<>(Supplier::get, ArrayList::new, executor);
+        return new UnboundedParallelCollector<>(Supplier::get, ArrayList::new, executor);
     }
 
     /**
@@ -165,6 +167,7 @@ public final class ParallelCollectors {
      *
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
         requireNonNull(executor);
@@ -190,7 +193,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
         requireNonNull(executor);
         requireNonNull(operation);
-        return new ParallelCollector<>(operation, ArrayList::new, executor);
+        return new UnboundedParallelCollector<>(operation, ArrayList::new, executor);
     }
 
     /**
@@ -206,6 +209,7 @@ public final class ParallelCollectors {
      * @param operation   a transformation to be performed in parallel
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor, int parallelism) {
         requireNonNull(executor);
@@ -230,7 +234,7 @@ public final class ParallelCollectors {
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
         requireNonNull(executor);
-        return new ParallelCollector<>(Supplier::get, HashSet::new, executor);
+        return new UnboundedParallelCollector<>(Supplier::get, HashSet::new, executor);
     }
 
     /**
@@ -246,6 +250,7 @@ public final class ParallelCollectors {
      *
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
         requireNonNull(executor);
@@ -271,7 +276,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor) {
         requireNonNull(executor);
         requireNonNull(operation);
-        return new ParallelCollector<>(operation, HashSet::new, executor);
+        return new UnboundedParallelCollector<>(operation, HashSet::new, executor);
     }
 
     /**
@@ -287,6 +292,7 @@ public final class ParallelCollectors {
      * @param operation   a transformation to be performed in parallel
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor, int parallelism) {
         requireNonNull(executor);
