@@ -37,25 +37,9 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
       Executor executor,
       int parallelism) {
         super(operation, collection, executor);
-        this.permits = new Semaphore(parallelism);
+        permits = new Semaphore(parallelism);
 
-        dispatcher.execute(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    permits.acquire();
-                    Supplier<R1> task = taskQueue.take();
-                    supplyAsync(task, executor)
-                      .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
-                } catch (InterruptedException e) {
-                    permits.release();
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    permits.release();
-                    throw e;
-                }
-            }
-        });
+        dispatcher.execute(dispatcherThread(executor));
     }
 
     @Override
@@ -86,5 +70,25 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
               dispatcher.shutdown();
               return f;
           });
+    }
+
+    private Runnable dispatcherThread(Executor executor) {
+        return () -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    permits.acquire();
+                    Supplier<R1> task = taskQueue.take();
+                    supplyAsync(task, executor)
+                      .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
+                } catch (InterruptedException e) {
+                    permits.release();
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    permits.release();
+                    throw e;
+                }
+            }
+        };
     }
 }
