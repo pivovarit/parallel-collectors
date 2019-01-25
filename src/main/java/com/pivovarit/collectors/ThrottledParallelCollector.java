@@ -40,7 +40,7 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
         this.permits = new Semaphore(parallelism);
 
         dispatcher.execute(() -> {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     permits.acquire();
                     Supplier<R1> task = taskQueue.take();
