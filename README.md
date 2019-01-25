@@ -39,6 +39,22 @@ In order to ensure the highest compatibility, the library relies on a native `Co
 None - the library is implemented using core Java libraries.
 
 ### Maven
+```
+<repositories>
+    <repository>
+        <id>snapshots-repo</id>
+        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        <releases><enabled>false</enabled></releases>
+        <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+</repositories>
+```
+```
+<dependency>
+    <groupId>com.pivovarit</groupId>
+    <artifactId>parallel-collectors</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
 
 ## Version history
 
