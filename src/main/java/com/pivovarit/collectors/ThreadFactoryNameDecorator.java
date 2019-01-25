@@ -8,8 +8,7 @@ class ThreadFactoryNameDecorator implements ThreadFactory {
     private final String suffix;
 
     ThreadFactoryNameDecorator(String suffix) {
-        this.suffix = suffix;
-        this.defaultThreadFactory = Executors.defaultThreadFactory();
+        this(Executors.defaultThreadFactory(), suffix);
     }
 
     ThreadFactoryNameDecorator(ThreadFactory threadFactory, String suffix) {
