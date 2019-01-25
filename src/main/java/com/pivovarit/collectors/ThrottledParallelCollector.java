@@ -10,7 +10,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
@@ -19,33 +18,34 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
  * @author Grzegorz Piwowarek
  */
-class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends AbstractParallelCollector<T, R1, R2>
-  implements Collector<T, List<CompletableFuture<R1>>, CompletableFuture<R2>> {
+class ThrottledParallelCollector<T, R, C extends Collection<R>>
+  extends AbstractParallelCollector<T, R, C>
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final Semaphore permits;
-    private final BlockingQueue<Supplier<R1>> taskQueue = new LinkedBlockingQueue<>();
-    private final ConcurrentLinkedQueue<CompletableFuture<R1>> pending = new ConcurrentLinkedQueue<>();
-    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
+    private final BlockingQueue<Supplier<R>> taskQueue = new LinkedBlockingQueue<>();
+    private final ConcurrentLinkedQueue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
+    private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
 
     ThrottledParallelCollector(
-      Function<T, R1> operation,
-      Supplier<R2> collection,
+      Function<T, R> operation,
+      Supplier<C> collection,
       Executor executor,
       int parallelism) {
         super(operation, collection, executor);
         permits = new Semaphore(parallelism);
-
-        dispatcher.execute(dispatcherThread(executor));
+        dispatcher.execute(dispatcherThread());
     }
 
     @Override
-    public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
+    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
-            CompletableFuture<R1> future = new CompletableFuture<>();
+            CompletableFuture<R> future = new CompletableFuture<>();
             pending.add(future);
             acc.add(future);
             taskQueue.add(() -> {
@@ -64,7 +64,7 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
     }
 
     @Override
-    public Function<List<CompletableFuture<R1>>, CompletableFuture<R2>> finisher() {
+    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         return super.finisher()
           .andThen(f -> {
               dispatcher.shutdown();
@@ -72,14 +72,13 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
           });
     }
 
-    private Runnable dispatcherThread(Executor executor) {
+    private Runnable dispatcherThread() {
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     permits.acquire();
-                    Supplier<R1> task = taskQueue.take();
-                    supplyAsync(task, executor)
-                      .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
+                    Supplier<R> task = taskQueue.take();
+                    runAsyncAndComplete(task);
                 } catch (InterruptedException e) {
                     permits.release();
                     Thread.currentThread().interrupt();
@@ -90,5 +89,10 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
                 }
             }
         };
+    }
+
+    private void runAsyncAndComplete(Supplier<R> task) {
+        supplyAsync(task, executor)
+          .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
     }
 }
