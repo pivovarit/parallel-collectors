@@ -94,11 +94,11 @@ public class ParallelismTest {
     }
 
     @Property
-    public void shouldReturnImmediatelyAndNotPolluteExecutor(@InRange(minInt = 4, maxInt = 20) int concurrencyLevel) {
+    public void shouldReturnImmediatelyAndNotPolluteExecutor(@InRange(minInt = 11, maxInt = 20) int concurrencyLevel, @InRange(minInt = 1, maxInt = 10) int parallelism) {
         // given
         executor = threadPoolExecutor(concurrencyLevel);
 
-        CompletableFuture<ArrayList<Long>> result = assertTimeout(ofMillis(200), () ->
+        CompletableFuture<ArrayList<Long>> result = assertTimeout(ofMillis(50), () ->
           Stream.generate(() -> supplier(() -> {
               try {
                   Thread.sleep(Integer.MAX_VALUE);
@@ -109,15 +109,15 @@ public class ParallelismTest {
               return 42L;
           }))
             .limit(concurrencyLevel)
-            .collect(inParallelToCollection(ArrayList::new, executor, 2)));
+            .collect(inParallelToCollection(ArrayList::new, executor, parallelism)));
 
-        assertThat(executor.getActiveCount()).isLessThanOrEqualTo(2);
+        assertThat(executor.getActiveCount()).isLessThanOrEqualTo(parallelism);
     }
 
     @After
     public void after() {
         if (executor != null) {
-            executor.shutdown();
+            executor.shutdownNow();
         }
     }
 
