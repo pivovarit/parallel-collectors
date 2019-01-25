@@ -50,6 +50,9 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
                     permits.release();
                     Thread.currentThread().interrupt();
                     break;
+                } catch (Exception e) {
+                    permits.release();
+                    throw e;
                 }
             }
         });
