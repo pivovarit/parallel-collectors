@@ -3,11 +3,17 @@ package com.pivovarit.collectors;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-class SimpleThreadFactory implements ThreadFactory {
-    private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+class ThreadFactoryNameDecorator implements ThreadFactory {
+    private final ThreadFactory defaultThreadFactory;
     private final String suffix;
 
-    SimpleThreadFactory(String suffix) {
+    ThreadFactoryNameDecorator(String suffix) {
+        this.suffix = suffix;
+        this.defaultThreadFactory = Executors.defaultThreadFactory();
+    }
+
+    ThreadFactoryNameDecorator(ThreadFactory threadFactory, String suffix) {
+        this.defaultThreadFactory = threadFactory;
         this.suffix = suffix;
     }
 

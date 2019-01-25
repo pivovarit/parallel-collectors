@@ -26,7 +26,7 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
     private final Semaphore permits;
     private final BlockingQueue<Supplier<R1>> taskQueue = new LinkedBlockingQueue<>();
     private final ConcurrentLinkedQueue<CompletableFuture<R1>> pending = new ConcurrentLinkedQueue<>();
-    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor(new SimpleThreadFactory("throttled-parallel-executor"));
+    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
 
     ThrottledParallelCollector(
       Function<T, R1> operation,
