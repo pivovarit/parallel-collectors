@@ -27,10 +27,13 @@ public final class ParallelCollectors {
      * to be used in conjuction with other static factory methods found in {@link ParallelCollectors}
      * <br><br>
      * Example:
-     * <br><br>
-     * <pre>Stream.of(1,2,3)
-     * .map(i -> supplier(() -> blockingIO()))
-     * .collect(inParallelToList(executor));
+     * <br>
+     * <pre>
+     * {@code
+     * Stream.of(1,2,3)
+     *   .map(i -> supplier(() -> blockingIO()))
+     *   .collect(inParallelToList(executor));
+     * }
      * </pre>
      *
      * @param supplier a lambda expression to be converted into a type-safe {@code Supplier<T>} instance
@@ -50,10 +53,13 @@ public final class ParallelCollectors {
      * {@link Collector} is accepting {@link Supplier} instances so tasks need to be prepared beforehand and represented as {@link Supplier} implementations
      * <br><br>
      * Example:
-     * <br><br>
-     * <pre>CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     * <br>
+     * <pre>
+     * {@code
+     *   CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
      * .map(i -> supplier(() -> foo(i)))
      * .collect(inParallelToCollection(TreeSet::new, executor));
+     * }
      * </pre>
      *
      * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
@@ -71,10 +77,14 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements.
      * <br><br>
      * Example:
-     * <br><br>
-     * <pre>CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
-     * .map(i -> supplier(() -> foo(i)))
-     * .collect(inParallelToCollection(TreeSet::new, executor, 2));
+     * <br>
+     * <pre>
+     * {@code
+     * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(
+     *     inParallelToCollection(TreeSet::new, executor, 2));
+     * }
      * </pre>
      *
      * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
@@ -95,8 +105,11 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     *
+     * <pre>
+     * {@code CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
      * .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor));
+     * }
      * </pre>
      *
      * @param operation  a transformation to be performed in parallel
@@ -117,8 +130,11 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
-     * .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
+     * <pre>
+     * {@code
+     * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     *   .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
+     * }
      * </pre>
      *
      * @param operation   a transformation to be performed in parallel
@@ -141,9 +157,11 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     * <pre>
+     * {@code CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
      * .map(i -> supplier(() -> foo(i)))
      * .collect(inParallelToList(executor));
+     * }
      * </pre>
      *
      * @param executor the {@link Executor} to use for asynchronous execution
@@ -160,9 +178,12 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     * .map(i -> supplier(() -> foo(i)))
-     * .collect(inParallelToList(executor, 2));
+     * <pre>
+     * {@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(inParallelToList(executor, 2));
+     * }
      * </pre>
      *
      * @param executor    the {@link Executor} to use for asynchronous execution
@@ -182,8 +203,12 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     * .collect(inParallelToList(i -> foo(), executor));
+     *
+     * <pre>
+     * {@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(inParallelToList(i -> foo(), executor));
+     *   }
      * </pre>
      *
      * @param operation a transformation to be performed in parallel
@@ -202,8 +227,11 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     * .collect(inParallelToList(i -> foo(), executor, 2));
+     * <pre>
+     * {@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(inParallelToList(i -> foo(), executor, 2));
+     * }
      * </pre>
      *
      * @param operation   a transformation to be performed in parallel
@@ -224,9 +252,13 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
-     * .map(i -> supplier(() -> foo(i)))
-     * .collect(inParallelToSet(executor));
+     *
+     * <pre>
+     * {@code
+     * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(inParallelToSet(executor));
+     * }
      * </pre>
      *
      * @param executor the {@link Executor} to use for asynchronous execution
@@ -243,9 +275,12 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
-     * .map(i -> supplier(() -> foo(i)))
-     * .collect(inParallelToSet(executor, 2));
+     * <pre>
+     * {@code
+     * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(inParallelToSet(executor, 2));
+     * }
      * </pre>
      *
      * @param executor    the {@link Executor} to use for asynchronous execution
@@ -265,8 +300,11 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
-     * .collect(inParallelToSet(i -> foo(), executor));
+     * <pre>
+     * {@code
+     * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
+     *   .collect(inParallelToSet(i -> foo(), executor));
+     * }
      * </pre>
      *
      * @param operation a transformation to be performed in parallel
@@ -285,8 +323,11 @@ public final class ParallelCollectors {
      * <br><br>
      * Example:
      * <br><br>
-     * <pre>CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
-     * .collect(inParallelToSet(i -> foo(), executor, 2));
+     * <pre>
+     * {@code
+     * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
+     *   .collect(inParallelToSet(i -> foo(), executor, 2));
+     * }
      * </pre>
      *
      * @param operation   a transformation to be performed in parallel
