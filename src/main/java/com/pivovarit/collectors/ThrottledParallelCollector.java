@@ -55,8 +55,8 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
     public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
         return (acc, e) -> {
             CompletableFuture<R1> future = new CompletableFuture<>();
-            acc.add(future);
             pending.add(future);
+            acc.add(future);
             taskQueue.add(() -> {
                 try {
                     return operation.apply(e);
