@@ -24,7 +24,9 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.TimeUtils.timed;
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 /**
  * @author Grzegorz Piwowarek
@@ -38,7 +40,7 @@ public class ParallelismTest {
     private ExecutorService executor;
 
     @Property
-    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2 , maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = Executors.newFixedThreadPool(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
@@ -70,7 +72,6 @@ public class ParallelismTest {
 
               assertThat(e.getKey()).hasSize(1);
           });
-
     }
 
     @Property
@@ -89,6 +90,17 @@ public class ParallelismTest {
 
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
+    }
+
+    @Property
+    public void shouldReturnImmediately(@InRange(minInt = 4, maxInt = 20) int concurrencyLevel) {
+        // given
+        executor = Executors.newFixedThreadPool(concurrencyLevel);
+
+        CompletableFuture<ArrayList<Long>> result = assertTimeout(ofMillis(200), () ->
+          Stream.generate(() -> supplier(() -> sleep()))
+            .limit(concurrencyLevel)
+            .collect(inParallelToCollection(ArrayList::new, executor, 1)));
     }
 
     @After

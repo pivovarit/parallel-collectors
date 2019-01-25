@@ -36,17 +36,17 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
     public BiConsumer<List<CompletableFuture<R1>>, T> accumulator() {
         return (acc, e) -> {
             try {
-                permits.acquire();
                 acc.add(supplyAsync(() -> {
                     try {
+                        permits.acquire();
                         return operation.apply(e);
+                    } catch (InterruptedException e1) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("thread was interrupted", e1);
                     } finally {
                         permits.release();
                     }
                 }, executor));
-            } catch (InterruptedException e1) {
-                permits.release();
-                Thread.currentThread().interrupt();
             } catch (RejectedExecutionException ex) {
                 permits.release();
                 throw ex;

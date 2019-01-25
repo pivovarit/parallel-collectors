@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -20,6 +21,7 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
+import static java.time.Duration.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -40,7 +42,7 @@ public class BasicTest {
         // given
         executor = Executors.newFixedThreadPool(concurrencyLevel);
 
-        List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+        List<String> result = assertTimeout(ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(concurrencyLevel)
             .collect(inParallelToList(executor))
@@ -56,7 +58,7 @@ public class BasicTest {
         // given
         executor = Executors.newFixedThreadPool(concurrencyLevel);
 
-        Set<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+        Set<String> result = assertTimeout(ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(concurrencyLevel)
             .collect(inParallelToSet(executor))
@@ -70,7 +72,7 @@ public class BasicTest {
         // given
         executor = Executors.newFixedThreadPool(concurrencyLevel);
 
-        List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+        List<String> result = assertTimeout(ofMillis(TIMEOUT), () ->
           Stream.generate(() -> supplier(() -> blockingFoo()))
             .limit(concurrencyLevel)
             .collect(inParallelToCollection(ArrayList::new, executor))
