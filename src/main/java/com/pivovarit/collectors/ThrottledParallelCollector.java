@@ -3,6 +3,7 @@ package com.pivovarit.collectors;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -16,6 +17,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
  * @author Grzegorz Piwowarek
@@ -41,8 +44,8 @@ class ThrottledParallelCollector<T, R1, R2 extends Collection<R1>> extends Abstr
                 try {
                     permits.acquire();
                     Supplier<R1> task = taskQueue.take();
-                    CompletableFuture.supplyAsync(task, executor)
-                      .thenAccept(result -> pending.poll().complete(result));
+                    supplyAsync(task, executor)
+                      .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
                 } catch (InterruptedException e) {
                     permits.release();
                     Thread.currentThread().interrupt();
