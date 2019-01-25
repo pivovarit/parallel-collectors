@@ -28,7 +28,7 @@ public class MappingTest {
 
     private static final int TRIALS = 10;
     private static final int BLOCKING_MILLIS = 200;
-    private static final int TIMEOUT = (int) (BLOCKING_MILLIS * 1.5);
+    private static final int TIMEOUT = BLOCKING_MILLIS + 150;
 
     private ExecutorService executor;
 
