@@ -24,14 +24,26 @@ As a matter of fact, Stream API supports only the common `ForkJoinPool` which re
 
 ## Basic API
 
-The main (and the only) entrypoint to the library is the `com.pivovarit.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors`.
+The main (and the only) entrypoint to the library is the `com.pivovarit.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
+and provides collectors:
 
-It features static factory methods like:
-- `inParallelToList()`
-- `inParallelToSet()`
-- `inParallelToCollection()`
+- `inParallelToList(Executor executor)`
+- `inParallelToList(Executor executor, int parallelism)`
+- `inParallelToList(Function<T, R> operation, Executor executor)`
+- `inParallelToList(Function<T, R> operation, Executor executor, int parallelism)`
 
-Above (along with customizable overloads) can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. It's obligatory to supply custom `Executor` instance and manage its own lifecycle.
+- `inParallelToSet(Executor executor)`
+- `inParallelToSet(Executor executor, int parallelism)`
+- `inParallelToSet(Function<T, R> operation, Executor executor)`
+- `inParallelToSet(Function<T, R> operation, Executor executor, int parallelism)`
+
+- `inParallelToCollection(Supplier<R> collection, Executor executor)`
+- `inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
+- `inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor)`
+- `inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism)`
+
+Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
+It's obligatory to supply custom `Executor` instance and manage its own lifecycle.
 
 ### Examples
 
