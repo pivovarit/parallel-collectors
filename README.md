@@ -21,10 +21,9 @@ Unfortunately, it's not the best choice for blocking operations - those could ea
 The standard way of dealing with the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively.
 As a matter of fact, Stream API supports only the common `ForkJoinPool` which restricts effectively the applicability of parallelized Streams to CPU-bound jobs.
 
-
 ## Basic API
 
-The main (and the only) entrypoint to the library is the `com.pivovarit.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
+The main (and the only) entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
 and provides collectors:
 
 - `inParallelToList(Executor executor)`
