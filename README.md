@@ -143,11 +143,16 @@ It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 </dependency>
 ```
 
-### Tips
-
 ### Dependencies
 
 None - the library is implemented using core Java libraries.
+
+### Tips
+
+- Name your thread pools
+- Limit the size of the working queue
+- Always Limit the parallelism when processing huge streams unless you know what you're doing
+- Release resources if a submitted pool is no longer in use
 
 ## Version history
 
