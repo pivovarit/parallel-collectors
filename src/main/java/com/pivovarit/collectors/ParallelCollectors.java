@@ -112,16 +112,16 @@ public final class ParallelCollectors {
      * }
      * </pre>
      *
-     * @param operation  a transformation to be performed in parallel
+     * @param mapper  a transformation to be performed in parallel
      * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor   the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor) {
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor) {
         requireNonNull(collection);
         requireNonNull(executor);
-        requireNonNull(operation);
-        return new UnboundedParallelCollector<>(operation, collection, executor);
+        requireNonNull(mapper);
+        return new UnboundedParallelCollector<>(mapper, collection, executor);
     }
 
     /**
@@ -137,18 +137,18 @@ public final class ParallelCollectors {
      * }
      * </pre>
      *
-     * @param operation   a transformation to be performed in parallel
+     * @param mapper   a transformation to be performed in parallel
      * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism) {
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism) {
         requireNonNull(collection);
         requireNonNull(executor);
-        requireNonNull(operation);
+        requireNonNull(mapper);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(operation, collection, executor, parallelism);
+        return new ThrottledParallelCollector<>(mapper, collection, executor, parallelism);
     }
 
     /**
@@ -211,14 +211,14 @@ public final class ParallelCollectors {
      *   }
      * </pre>
      *
-     * @param operation a transformation to be performed in parallel
+     * @param mapper a transformation to be performed in parallel
      * @param executor  the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor);
-        requireNonNull(operation);
-        return new UnboundedParallelCollector<>(operation, ArrayList::new, executor);
+        requireNonNull(mapper);
+        return new UnboundedParallelCollector<>(mapper, ArrayList::new, executor);
     }
 
     /**
@@ -234,16 +234,16 @@ public final class ParallelCollectors {
      * }
      * </pre>
      *
-     * @param operation   a transformation to be performed in parallel
+     * @param mapper   a transformation to be performed in parallel
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> operation, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor);
-        requireNonNull(operation);
+        requireNonNull(mapper);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(operation, ArrayList::new, executor, assertParallelismValid(parallelism));
+        return new ThrottledParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -307,14 +307,14 @@ public final class ParallelCollectors {
      * }
      * </pre>
      *
-     * @param operation a transformation to be performed in parallel
+     * @param mapper a transformation to be performed in parallel
      * @param executor  the {@link Executor} to use for asynchronous execution
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor);
-        requireNonNull(operation);
-        return new UnboundedParallelCollector<>(operation, HashSet::new, executor);
+        requireNonNull(mapper);
+        return new UnboundedParallelCollector<>(mapper, HashSet::new, executor);
     }
 
     /**
@@ -330,16 +330,16 @@ public final class ParallelCollectors {
      * }
      * </pre>
      *
-     * @param operation   a transformation to be performed in parallel
+     * @param mapper   a transformation to be performed in parallel
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> operation, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor);
-        requireNonNull(operation);
+        requireNonNull(mapper);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(operation, HashSet::new, executor, parallelism);
+        return new ThrottledParallelCollector<>(mapper, HashSet::new, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {
