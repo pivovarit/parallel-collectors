@@ -51,17 +51,17 @@ and provides collectors like:
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
 It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 
-### Examples
+## Examples
 
-#### 1. Fetch in parallel and collect to List
+### 1. Fetch in parallel and collect to List
 
-##### with Parallel Streams
+#### with Parallel Streams
     List<String> result = list.parallelStream()
       .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
 
 
-##### with ParallelCollectors
+#### with ParallelCollectors
 
     Executor executor = ...
 
@@ -71,15 +71,15 @@ It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
       
     executor.shutdown(); // if not needed
     
-#### 2. Fetch in parallel and collect to Set
+### 2. Fetch in parallel and collect to Set
 
-##### with Parallel Streams
+#### with Parallel Streams
     Set<String> result = list.parallelStream()
       .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
       .collect(toSet());
 
 
-##### with ParallelCollectors
+#### with ParallelCollectors
 
     Executor executor = ...
 
@@ -89,15 +89,15 @@ It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
       
     executor.shutdown(); // if not needed
     
-#### 3. Fetch in parallel and collect to a custom Collection
+### 3. Fetch in parallel and collect to a custom Collection
 
-##### with Parallel Streams
+#### with Parallel Streams
     List<String> result = list.parallelStream()
       .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
       .collect(toCollection(LinkedList::new));
 
 
-##### with ParallelCollectors
+#### with ParallelCollectors
 
     Executor executor = ...
 
@@ -107,12 +107,12 @@ It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
       
     executor.shutdown(); // if not needed
     
-#### 4. Fetch in parallel and limit parallelism
+### 4. Fetch in parallel and limit parallelism
 
-##### with Parallel Streams
+#### with Parallel Streams
     ¯\_(ツ)_/¯
 
-##### with ParallelCollectors
+#### with ParallelCollectors
 
     Executor executor = ...
 
