@@ -3,21 +3,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <parent>
-        <artifactId>oss-parent</artifactId>
-        <groupId>org.sonatype.oss</groupId>
-        <version>9</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.pivovarit</groupId>
-    <artifactId>parallel-collectors</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
-
-    <name>parallel-collectors</name>
-    <description>A set of utilities for parallel collection processing in Java</description>
-
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -26,6 +11,29 @@
         </license>
     </licenses>
 
+    <parent>
+        <artifactId>oss-parent</artifactId>
+        <groupId>org.sonatype.oss</groupId>
+        <version>9</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.pivovarit</groupId>
+    <artifactId>parallel-collectors</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <packaging>jar</packaging>
+
+    <name>parallel-collectors</name>
+    <description>A set of utilities for parallel collection processing in Java</description>
+
+    <scm>
+        <url>https://github.com/pivovarit/parallel-collectors</url>
+        <connection>scm:git:git@github.com:pivovarit/parallel-collectors.git</connection>
+        <developerConnection>scm:git:git@github.com:pivovarit/parallel-collectors.git</developerConnection>
+    </scm>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.3.2</junit.version>
@@ -33,12 +41,6 @@
         <awaitility.version>3.1.5</awaitility.version>
         <quickcheck.version>0.8.2</quickcheck.version>
     </properties>
-
-    <scm>
-        <url>https://github.com/pivovarit/parallel-collectors</url>
-        <connection>scm:git:git@github.com:pivovarit/parallel-collectors.git</connection>
-        <developerConnection>scm:git:git@github.com:pivovarit/parallel-collectors.git</developerConnection>
-    </scm>
 
     <build>
         <defaultGoal>deploy</defaultGoal>
@@ -91,7 +93,7 @@
         <developer>
             <name>Grzegorz Piwowarek</name>
             <email>gpiwowarek@gmail.com</email>
-            <organizationUrl>https://4comprehension.com</organizationUrl>
+            <url>https://4comprehension.com</url>
         </developer>
     </developers>
 
