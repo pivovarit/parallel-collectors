@@ -74,6 +74,11 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
           });
     }
 
+    @Override
+    public void close() {
+        dispatcher.shutdown();
+    }
+
     private Runnable dispatcherThread() {
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -96,11 +101,6 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
     private void runAsyncAndComplete(Supplier<R> task) {
         supplyAsync(task, executor)
           .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
-    }
-
-    @Override
-    public void close() {
-        dispatcher.shutdown();
     }
 
     private class ThreadFactoryNameDecorator implements ThreadFactory {
