@@ -51,6 +51,13 @@ and provides collectors like:
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
 It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 
+#### `CompletableFuture` leverage
+
+All Parallel Collectors™ don't expose resulting `Collection` directly, instead, they do it with `CompletableFuture` instead:
+
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+
 ## Examples
 
 ### 1. Fetch in parallel and collect to List
@@ -65,7 +72,7 @@ It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 
     Executor executor = ...
 
-    Set<String> result = list.stream()
+    List<String> result = list.stream()
       .collect(inParallelToList(i -> fetchFromDb(i), executor))
       .join(); // on CompletableFuture<Set<String>>
       
