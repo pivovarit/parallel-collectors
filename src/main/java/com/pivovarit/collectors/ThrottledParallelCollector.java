@@ -10,8 +10,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -25,12 +27,13 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 class ThrottledParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
-    private final Semaphore permits;
+    private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
+
     private final BlockingQueue<Supplier<R>> taskQueue = new LinkedBlockingQueue<>();
     private final ConcurrentLinkedQueue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
-    private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
+    private final Semaphore permits;
 
     ThrottledParallelCollector(
       Function<T, R> operation,
@@ -72,13 +75,17 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
           });
     }
 
+    @Override
+    public void close() {
+        dispatcher.shutdown();
+    }
+
     private Runnable dispatcherThread() {
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     permits.acquire();
-                    Supplier<R> task = taskQueue.take();
-                    runAsyncAndComplete(task);
+                    runAsyncAndComplete(taskQueue.take());
                 } catch (InterruptedException e) {
                     permits.release();
                     Thread.currentThread().interrupt();
@@ -94,5 +101,21 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
     private void runAsyncAndComplete(Supplier<R> task) {
         supplyAsync(task, executor)
           .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
+    }
+
+    private class ThreadFactoryNameDecorator implements ThreadFactory {
+        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+        private final String prefix;
+
+        private ThreadFactoryNameDecorator(String prefix) {
+            this.prefix = prefix;
+        }
+
+        @Override
+        public Thread newThread(Runnable task) {
+            Thread thread = defaultThreadFactory.newThread(task);
+            thread.setName(prefix + "-" + thread.getName());
+            return thread;
+        }
     }
 }

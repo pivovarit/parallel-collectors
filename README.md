@@ -4,52 +4,125 @@
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
 
-# Parallel Collection Processing
-
 ## Rationale
-Stream API is great for collection processing especially if that involves performing CPU-intensive in parallel:
+
+Stream API is a great tool for collection processing especially if that involves parallelizing CPU-intensive tasks, for example:
 
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-However, all tasks are executed on a shared ForkJoinPool instance, which is not dedicated for running blocking operations.
+It's possible because all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance which was designed for handling this kind of CPU-intensive jobs.
+Unfortunately, it's not the best choice for blocking operations - those could easily saturate the common pool:
 
-Moreover, there's no option to isolate these and run on a custom thread pool, which restricts the applicability of parallelized Streams.
+    List<String> result = list.parallelStream()
+      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
+      .collect(Collectors.toList());
+
+The standard way of dealing with the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively.
+As a matter of fact, Stream API supports only the common `ForkJoinPool` which restricts effectively the applicability of parallelized Streams to CPU-bound jobs.
 
 ## Basic API
 
-`com.pivovarit.ParallelCollectors` class serves as the main entrypoint to the library (in a similar manner that `java.util.stream.Collectors` do.
+In order to ensure the highest compatibility, the library relies on a native `Collector` mechanism used by Java Stream API.
 
-It features static factory methods like:
-- `inParallelToList()`
-- `inParallelToSet()`
-- `inParallelToCollection()`
+The only entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
+and provides collectors like:
 
-Above (along with customizable overloads) can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. It's obligatory to supply custom `Executor` instance and manage its own lifecycle.
+- `inParallelToList(Executor executor)`
+- `inParallelToList(Executor executor, int parallelism)`
+
+- `inParallelToList(Function<T, R> mapper, Executor executor)`
+- `inParallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
+
+- `inParallelToSet(Executor executor)`
+- `inParallelToSet(Executor executor, int parallelism)`
+
+- `inParallelToSet(Function<T, R> mapper, Executor executor)`
+- `inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
+
+- `inParallelToCollection(Supplier<R> collection, Executor executor)`
+- `inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
+
+- `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
+- `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+
+Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
+It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 
 ### Examples
 
-```
-List<String> result = list.stream()
-  .collect(inParallelToList(i -> fetchFromDb(i), executor))
-  .join();
-```
-```
-CompletableFuture<List<String>> futureResult = list.stream()
-  .collect(inParallelToList(i -> fetchFromDb(i), executor));
-```
+#### 1. Fetch in parallel and collect to List
 
-## Implementation details
+##### with Parallel Streams
+    List<String> result = list.parallelStream()
+      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
+      .collect(Collectors.toList());
 
-In order to ensure the highest compatibility, the library relies on a native `Collector` mechanism used by Java Stream API.
 
-## Dependencies
+##### with ParallelCollectors
 
-None - the library is implemented using core Java libraries.
+    Executor executor = ...
 
-### Maven
+    Set<String> result = list.stream()
+      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+      .join(); // on CompletableFuture<Set<String>>
+      
+    executor.shutdown(); // if not needed
+    
+#### 2. Fetch in parallel and collect to Set
+
+##### with Parallel Streams
+    Set<String> result = list.parallelStream()
+      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
+      .collect(toSet());
+
+
+##### with ParallelCollectors
+
+    Executor executor = ...
+
+    Set<String> result = list.stream()
+      .collect(inParallelToSet(i -> fetchFromDb(i), executor))
+      .join(); // on CompletableFuture<List<String>>
+      
+    executor.shutdown(); // if not needed
+    
+#### 3. Fetch in parallel and collect to a custom Collection
+
+##### with Parallel Streams
+    List<String> result = list.parallelStream()
+      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
+      .collect(toCollection(LinkedList::new));
+
+
+##### with ParallelCollectors
+
+    Executor executor = ...
+
+    List<String> result = list.stream()
+      .collect(inParallelToCollection(i -> fetchFromDb(i), LinkedList::new, executor))
+      .join(); // on CompletableFuture<LinkedList<String>>
+      
+    executor.shutdown(); // if not needed
+    
+#### 4. Fetch in parallel and limit parallelism
+
+##### with Parallel Streams
+    ???
+
+##### with ParallelCollectors
+
+    Executor executor = ...
+
+    Set<String> result = list.stream()
+      .collect(inParallelToList(i -> fetchFromDb(i), executor, 2)) // max 2 items processed at once
+      .join(); // on CompletableFuture<Set<String>>
+      
+    executor.shutdown(); // if not needed
+
+### Maven Dependencies
 ```
 <repositories>
     <repository>
@@ -67,6 +140,18 @@ None - the library is implemented using core Java libraries.
     <version>0.0.1-SNAPSHOT</version>
 </dependency>
 ```
+
+### Dependencies
+
+None - the library is implemented using core Java libraries.
+
+### Tips
+
+- Name your thread pools
+- Limit the size of the working queue
+- Always Limit the parallelism when processing huge streams unless you know what you're doing
+- Release resources after usage if a submitted pool is no longer in use
+
 ## Version history
 
 ### TODO 0.0.1-SNAPSHOT (23-01-2010)
