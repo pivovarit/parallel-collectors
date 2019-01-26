@@ -7,16 +7,20 @@
 # Parallel Collection Processing
 
 ## Rationale
-Stream API is great for collection processing especially if that involves performing CPU-intensive in parallel:
+
+Stream API is a great tool for collection processing especially if that involves parallelizing CPU-intensive tasks, for example:
 
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-However, all tasks are executed on a shared ForkJoinPool instance, which is not dedicated for running blocking operations.
+It's possible because all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance which was designed for handling this kind of CPU-intensive jobs.
+Unfortunately, it's not the best choice for blocking operations - those could easily saturate the common pool.
 
-Moreover, there's no option to isolate these and run on a custom thread pool, which restricts the applicability of parallelized Streams.
+The standard way of dealing with the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively.
+Unfortunately, Stream API supports only the common `ForkJoinPool` which restricts effectively the applicability of parallelized Streams to CPU-bound jobs.
+
 
 ## Basic API
 
