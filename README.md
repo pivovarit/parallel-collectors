@@ -4,8 +4,6 @@
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
 
-# Parallel Collection Processing
-
 ## Rationale
 
 Stream API is a great tool for collection processing especially if that involves parallelizing CPU-intensive tasks, for example:
@@ -152,7 +150,7 @@ None - the library is implemented using core Java libraries.
 - Name your thread pools
 - Limit the size of the working queue
 - Always Limit the parallelism when processing huge streams unless you know what you're doing
-- Release resources if a submitted pool is no longer in use
+- Release resources after usage if a submitted pool is no longer in use
 
 ## Version history
 
