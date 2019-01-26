@@ -38,7 +38,7 @@ abstract class AbstractParallelCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public Supplier<List<CompletableFuture<R1>>> supplier() {
-        return () -> Collections.synchronizedList(new ArrayList<>()); // TODO benchmark against LinkedList
+        return () -> Collections.synchronizedList(new ArrayList<>());
     }
 
     @Override
