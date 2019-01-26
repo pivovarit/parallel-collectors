@@ -23,8 +23,10 @@ As a matter of fact, Stream API supports only the common `ForkJoinPool` which re
 
 ## Basic API
 
-The main (and the only) entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
-and provides collectors:
+In order to ensure the highest compatibility, the library relies on a native `Collector` mechanism used by Java Stream API.
+
+The only entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
+and provides collectors like:
 
 - `inParallelToList(Executor executor)`
 - `inParallelToList(Executor executor, int parallelism)`
@@ -75,15 +77,11 @@ CompletableFuture<List<String>> futureResult = list.stream()
   .collect(inParallelToList(i -> fetchFromDb(i), executor));
 ```
 
-## Implementation details
+### Tips
 
-In order to ensure the highest compatibility, the library relies on a native `Collector` mechanism used by Java Stream API.
-
-## Dependencies
+### Dependencies
 
 None - the library is implemented using core Java libraries.
-
-### Tips
 
 ## Version history
 
