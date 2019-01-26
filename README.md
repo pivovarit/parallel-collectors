@@ -42,7 +42,26 @@ and provides collectors:
 - `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
-It's obligatory to supply custom `Executor` instance and manage its own lifecycle.
+It's obligatory to supply a custom `Executor` instance and manage its own lifecycle.
+
+### Maven Dependencies
+```
+<repositories>
+    <repository>
+        <id>snapshots-repo</id>
+        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        <releases><enabled>false</enabled></releases>
+        <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+</repositories>
+```
+```
+<dependency>
+    <groupId>com.pivovarit</groupId>
+    <artifactId>parallel-collectors</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
 
 ### Examples
 
@@ -64,24 +83,8 @@ In order to ensure the highest compatibility, the library relies on a native `Co
 
 None - the library is implemented using core Java libraries.
 
-### Maven
-```
-<repositories>
-    <repository>
-        <id>snapshots-repo</id>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        <releases><enabled>false</enabled></releases>
-        <snapshots><enabled>true</enabled></snapshots>
-    </repository>
-</repositories>
-```
-```
-<dependency>
-    <groupId>com.pivovarit</groupId>
-    <artifactId>parallel-collectors</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-</dependency>
-```
+### Tips
+
 ## Version history
 
 ### TODO 0.0.1-SNAPSHOT (23-01-2010)
