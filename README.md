@@ -28,18 +28,18 @@ and provides collectors:
 
 - `inParallelToList(Executor executor)`
 - `inParallelToList(Executor executor, int parallelism)`
-- `inParallelToList(Function<T, R> operation, Executor executor)`
-- `inParallelToList(Function<T, R> operation, Executor executor, int parallelism)`
+- `inParallelToList(Function<T, R> mapper, Executor executor)`
+- `inParallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
 - `inParallelToSet(Executor executor)`
 - `inParallelToSet(Executor executor, int parallelism)`
-- `inParallelToSet(Function<T, R> operation, Executor executor)`
-- `inParallelToSet(Function<T, R> operation, Executor executor, int parallelism)`
+- `inParallelToSet(Function<T, R> mapper, Executor executor)`
+- `inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
 - `inParallelToCollection(Supplier<R> collection, Executor executor)`
 - `inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
-- `inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor)`
-- `inParallelToCollection(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism)`
+- `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
+- `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
 It's obligatory to supply custom `Executor` instance and manage its own lifecycle.
