@@ -29,10 +29,11 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
-    private final Semaphore permits;
+    private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
+
     private final BlockingQueue<Supplier<R>> taskQueue = new LinkedBlockingQueue<>();
     private final ConcurrentLinkedQueue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
-    private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
+    private final Semaphore permits;
 
     ThrottledParallelCollector(
       Function<T, R> operation,
@@ -84,8 +85,7 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     permits.acquire();
-                    Supplier<R> task = taskQueue.take();
-                    runAsyncAndComplete(task);
+                    runAsyncAndComplete(taskQueue.take());
                 } catch (InterruptedException e) {
                     permits.release();
                     Thread.currentThread().interrupt();
