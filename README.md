@@ -24,7 +24,7 @@ As a matter of fact, Stream API supports only the common `ForkJoinPool` which re
 
 ## Basic API
 
-`com.pivovarit.ParallelCollectors` class serves as the main entrypoint to the library (in a similar manner that `java.util.stream.Collectors` do.
+The main (and the only) entrypoint to the library is the `com.pivovarit.ParallelCollectors` class which mimics the semantics of working with `java.util.stream.Collectors`.
 
 It features static factory methods like:
 - `inParallelToList()`
