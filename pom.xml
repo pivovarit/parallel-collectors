@@ -6,7 +6,7 @@
     <parent>
         <artifactId>oss-parent</artifactId>
         <groupId>org.sonatype.oss</groupId>
-        <version>7</version>
+        <version>9</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -81,98 +81,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <inherited>true</inherited>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <excludeResources>true</excludeResources>
-                            <useDefaultExcludes>true</useDefaultExcludes>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <inherited>true</inherited>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <executions>
-                            <execution>
-                                <id>bundle-sources</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <maxmemory>1024</maxmemory>
-                            <encoding>UTF-8</encoding>
-                            <show>protected</show>
-                            <notree>true</notree>
-
-                            <!-- Avoid running into Java 8's very restrictive doclint issues -->
-                            <doclint>none</doclint>
-                        </configuration>
-                    </plugin>
-
-                    <!-- Copy API docs to new directory first (replacer plugin seems to be unable to create dirs) -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-resources-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-folder</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>copy-resources</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.build.directory}/apidocs-ga</outputDirectory>
-                                    <resources>
-                                        <resource>
-                                            <filtering>false</filtering>
-                                            <directory>${project.build.directory}/apidocs</directory>
-                                        </resource>
-                                    </resources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.1</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <issueManagement>
         <system>GitHub</system>
