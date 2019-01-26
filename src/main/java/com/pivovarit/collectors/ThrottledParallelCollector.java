@@ -10,8 +10,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -97,7 +99,23 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         dispatcher.shutdown();
+    }
+
+    private class ThreadFactoryNameDecorator implements ThreadFactory {
+        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+        private final String prefix;
+
+        private ThreadFactoryNameDecorator(String prefix) {
+            this.prefix = prefix;
+        }
+
+        @Override
+        public Thread newThread(Runnable task) {
+            Thread thread = defaultThreadFactory.newThread(task);
+            thread.setName(prefix + "-" + thread.getName());
+            return thread;
+        }
     }
 }
