@@ -25,7 +25,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 class ThrottledParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
     private final Semaphore permits;
     private final BlockingQueue<Supplier<R>> taskQueue = new LinkedBlockingQueue<>();
@@ -94,5 +94,10 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
     private void runAsyncAndComplete(Supplier<R> task) {
         supplyAsync(task, executor)
           .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
+    }
+
+    @Override
+    public void close() throws Exception {
+        dispatcher.shutdown();
     }
 }
