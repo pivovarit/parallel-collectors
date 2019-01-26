@@ -55,7 +55,7 @@ None - the library is implemented using core Java libraries.
     <artifactId>parallel-collectors</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 </dependency>
-
+```
 ## Version history
 
 ### TODO 0.0.1-SNAPSHOT (23-01-2010)
