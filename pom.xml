@@ -35,9 +35,9 @@
     </properties>
 
     <scm>
-        <developerConnection>https://github.com/pivovarit/parallel-stream-api-utils.git</developerConnection>
-        <url>https://github.com/pivovarit/parallel-stream-api-utils.git</url>
-        <connection>https://github.com/pivovarit/parallel-stream-api-utils.git</connection>
+        <developerConnection>https://github.com/pivovarit/parallel-collectors.git</developerConnection>
+        <url>https://github.com/pivovarit/parallel-collectors.git</url>
+        <connection>https://github.com/pivovarit/parallel-collectors.git</connection>
     </scm>
 
     <build>
