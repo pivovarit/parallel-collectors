@@ -15,7 +15,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>parallel-stream-api-utils</name>
+    <name>parallel-collectors</name>
     <description>A set of utilities for parallel collection processing in Java</description>
 
     <licenses>
