@@ -19,7 +19,7 @@ It's possible because all tasks managed by parallel Streams are executed on a sh
 Unfortunately, it's not the best choice for blocking operations - those could easily saturate the common pool.
 
 The standard way of dealing with the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively.
-Unfortunately, Stream API supports only the common `ForkJoinPool` which restricts effectively the applicability of parallelized Streams to CPU-bound jobs.
+As a matter of fact, Stream API supports only the common `ForkJoinPool` which restricts effectively the applicability of parallelized Streams to CPU-bound jobs.
 
 
 ## Basic API
