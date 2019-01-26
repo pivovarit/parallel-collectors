@@ -7,6 +7,16 @@
 # Parallel Collection Processing
 
 ## Rationale
+Stream API is great for collection processing especially if that involves performing CPU-intensive in parallel:
+
+    public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
+        Objects.requireNonNull(generator);
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
+    }
+    
+However, all tasks are executed on a shared ForkJoinPool instance, which is not dedicated for running blocking operations.
+
+Moreover, there's no option to isolate these and run on a custom thread pool, which restricts the applicability of parallelized Streams.
 
 ## Basic API
 
