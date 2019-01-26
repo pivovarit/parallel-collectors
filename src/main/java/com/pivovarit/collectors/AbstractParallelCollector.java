@@ -2,7 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -14,6 +13,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -38,7 +38,7 @@ abstract class AbstractParallelCollector<T, R1, R2 extends Collection<R1>>
 
     @Override
     public Supplier<List<CompletableFuture<R1>>> supplier() {
-        return () -> Collections.synchronizedList(new ArrayList<>());
+        return () -> synchronizedList(new ArrayList<>());
     }
 
     @Override
