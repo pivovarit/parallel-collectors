@@ -110,7 +110,7 @@ It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 #### 4. Fetch in parallel and limit parallelism
 
 ##### with Parallel Streams
-    ???
+    ¯\_(ツ)_/¯
 
 ##### with ParallelCollectors
 
