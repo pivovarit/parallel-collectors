@@ -1,4 +1,4 @@
-# parallel-collectors
+# Parallel Collectors for Java 8 Stream API - overcoming limitations of standard Parallel Streams
 
 [![Build Status](https://travis-ci.org/pivovarit/parallel-collectors.svg?branch=master)](https://travis-ci.org/pivovarit/parallel-collectors)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
