@@ -75,7 +75,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       .collect(Collectors.toList());
 
 
-#### with ParallelCollectors
+#### with ParallelCollectors™
 
     Executor executor = ...
 
@@ -93,7 +93,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       .collect(toSet());
 
 
-#### with ParallelCollectors
+#### with ParallelCollectors™
 
     Executor executor = ...
 
@@ -111,7 +111,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       .collect(toCollection(LinkedList::new));
 
 
-#### with ParallelCollectors
+#### with ParallelCollectors™
 
     Executor executor = ...
 
@@ -126,7 +126,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 #### with Parallel Streams
     ¯\_(ツ)_/¯
 
-#### with ParallelCollectors
+#### with ParallelCollectors™
 
     Executor executor = ...
 
