@@ -24,11 +24,11 @@ A straightforward solution to the problem is to create a separate thread pool fo
 
 **Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
 
-There's a trick that allows running parallel Stream in a custom FJP instance but it's not guaranteed to work:
+There's a trick that allows running parallel Stream in a custom FJP instance but it should ve avoided:
 
 > Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
 
-says [Stuart Marks on Stackoverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776)
+says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776)
 
 ## Basic API
 
@@ -119,7 +119,6 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
     
 #### with Parallel Streams
     ¯\_(ツ)_/¯
-    
 
 ### 4. Parallelize and collect to List and define parallelism
 
@@ -166,9 +165,9 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 ### Tips
 
 - Name your thread pools
-- Limit the size of the working queue
-- Always Limit the parallelism when processing huge streams unless you know what you're doing
-- Release resources after usage if a submitted pool is no longer in use
+- Limit the size of working queues
+- Always limit the parallelism when processing huge streams unless you know what you're doing
+- An unused `ExecutorService` should be shut down to allow reclamation of its resources
 
 ## Version history
 
