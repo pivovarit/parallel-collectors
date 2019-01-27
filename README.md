@@ -13,7 +13,7 @@ Stream API is a great tool for collection processing especially if that involves
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-It's possible because all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance which was designed for handling this kind of CPU-intensive jobs.
+It's possible because **all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance** which was designed for handling this kind of CPU-intensive jobs.
 Unfortunately, it's not the best choice for blocking operations - those could easily saturate the common pool:
 
     List<String> result = list.parallelStream()
@@ -21,7 +21,7 @@ Unfortunately, it's not the best choice for blocking operations - those could ea
       .collect(Collectors.toList());
 
 A straightforward solution to the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively without impacting the common pool.
-*Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.*
+**Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
 
 ## Basic API
 
@@ -55,7 +55,7 @@ and provides static factory methods like:
 
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
  
-By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.
+**By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
 
 #### Leveraging CompletableFuture
 
@@ -163,7 +163,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 
 ### Dependencies
 
-None - the library is implemented using core Java libraries.
+**None - the library is implemented using core Java libraries.**
 
 ### Tips
 
