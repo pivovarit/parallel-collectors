@@ -4,6 +4,8 @@
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
 
+Parallel Collectors is a set of tools easining parallel collection processing in Java. 
+
 ## Rationale
 
 Stream API is a great tool for collection processing especially if that involves parallelism of CPU-intensive tasks, for example:
@@ -29,6 +31,14 @@ There's a trick that allows running parallel Stream in a custom FJP instance but
 > Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
 
 says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776)
+
+## Philosophy
+
+Parallel Collectors are unopinionated by design so it's up to users to use it responsibly, which involves things like:
+- proper configuration of a provided `Executor` and its lifecycle management
+- choosing the right parallelism level
+
+Make sure to read API documentation before using these in production.
 
 ## Basic API
 
