@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -21,7 +20,7 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static java.time.Duration.*;
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -29,10 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class BasicTest {
+public class UnboundedCollectorsTest {
 
     private static final int TRIALS = 10;
-    private static final int MAX_CONCURRENCY_LEVEL = 50;
+    private static final int MAX_CONCURRENCY_LEVEL = 20;
     private static final int BLOCKING_MILLIS = 50;
     private static final int TIMEOUT = BLOCKING_MILLIS + 150;
 
@@ -83,6 +82,48 @@ public class BasicTest {
           .hasSameSizeAs(new HashSet<>(result));
     }
 
+    @Property(trials = TRIALS)
+    public void shouldCollectToListWithFullParallelismMapping(@InRange(minInt = 10, maxInt = 100) int collectionSize) {
+        // given
+        executor = Executors.newFixedThreadPool(collectionSize);
+
+        List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+          Stream.generate(() -> 42)
+            .limit(collectionSize)
+            .collect(inParallelToList(i -> blockingFoo(), executor))
+            .join());
+
+        assertThat(result).hasSize(collectionSize);
+    }
+
+    @Property(trials = TRIALS)
+    public void shouldCollectToSetWithFullParallelismMapping(@InRange(minInt = 10, maxInt = 100) int collectionSize) {
+        // given
+        executor = Executors.newFixedThreadPool(collectionSize);
+
+        Set<Integer> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+          Stream.generate(() -> 42)
+            .limit(collectionSize)
+            .collect(inParallelToSet(i -> blockingIntFoo(), executor))
+            .join());
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Property(trials = TRIALS)
+    public void shouldCollectToCollectionWithFullParallelismMapping(@InRange(minInt = 10, maxInt = 100) int collectionSize) {
+        // given
+        executor = Executors.newFixedThreadPool(collectionSize);
+
+        List<String> result = assertTimeout(Duration.ofMillis(TIMEOUT), () ->
+          Stream.generate(() -> 42)
+            .limit(collectionSize)
+            .collect(inParallelToCollection(i -> blockingFoo(), ArrayList::new, executor))
+            .join());
+
+        assertThat(result).hasSize(collectionSize);
+    }
+
     @After
     public void after() {
         if (executor != null) {
@@ -98,5 +139,15 @@ public class BasicTest {
         }
 
         return UUID.randomUUID().toString();
+    }
+
+    private static int blockingIntFoo() {
+        try {
+            Thread.sleep(BLOCKING_MILLIS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        return 42;
     }
 }
