@@ -3,13 +3,11 @@ package com.pivovarit.collectors.parallel;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.assertj.core.data.Offset;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,10 +22,8 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
 import static com.pivovarit.collectors.TimeUtils.timed;
-import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
-import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 /**
  * @author Grzegorz Piwowarek
