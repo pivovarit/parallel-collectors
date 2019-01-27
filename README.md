@@ -6,54 +6,63 @@
 
 ## Rationale
 
-Stream API is a great tool for collection processing especially if that involves parallelizing CPU-intensive tasks, for example:
+Stream API is a great tool for collection processing especially if that involves parallelism of CPU-intensive tasks, for example:
 
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-It's possible because all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance which was designed for handling this kind of CPU-intensive jobs.
+It's possible because **all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance** which was designed for handling this kind of CPU-intensive jobs.
 Unfortunately, it's not the best choice for blocking operations - those could easily saturate the common pool:
 
     List<String> result = list.parallelStream()
       .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
 
-The standard way of dealing with the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively.
-As a matter of fact, Stream API supports only the common `ForkJoinPool` which restricts effectively the applicability of parallelized Streams to CPU-bound jobs.
+A straightforward solution to the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively without impacting the common pool.
+
+**Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
+
+There's an [implementation trick that allows running parallel Stream in a custom FJP instance](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776) but it's not guaranteed to work and it supports only FJP instances.
 
 ## Basic API
 
-In order to ensure the highest compatibility, the library relies on a native `Collector` mechanism used by Java Stream API.
+The library relies on a native `java.util.stream.Collector` mechanism used by Java Stream API which makes it possible to achieve the highest compatibility - **all of them are one-off and should not be reused unless you know what you're doing.**
 
-The only entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
-and provides collectors like:
+The only entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of working with `java.util.stream.Collectors` 
+and provides static factory methods like:
 
 - `inParallelToList(Executor executor)`
 - `inParallelToList(Executor executor, int parallelism)`
 
+
 - `inParallelToList(Function<T, R> mapper, Executor executor)`
 - `inParallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
+
 
 - `inParallelToSet(Executor executor)`
 - `inParallelToSet(Executor executor, int parallelism)`
 
+
 - `inParallelToSet(Function<T, R> mapper, Executor executor)`
 - `inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
+
 
 - `inParallelToCollection(Supplier<R> collection, Executor executor)`
 - `inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
 
+
 - `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
 - `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
-Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
-It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
+Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
+ 
+**By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
 
-#### Leveraging CompletableFuture
+### Leveraging CompletableFuture
 
-All Parallel Collectors™ don't expose resulting `Collection` directly, instead, they do it with `CompletableFuture` instead:
+All Parallel Collectors™ don't expose resulting `Collection` directly, instead, they do it with `CompletableFuture` which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(inParallelToList(i -> fetchFromDb(i), executor))
@@ -67,13 +76,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       
 ## Examples
 
-### 1. Fetch in parallel and collect to List
-
-#### with Parallel Streams
-    List<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
-      .collect(Collectors.toList());
-
+### 1. Parallelize and collect to List
 
 #### with ParallelCollectors™
 
@@ -82,60 +85,57 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
     List<String> result = list.stream()
       .collect(inParallelToList(i -> fetchFromDb(i), executor))
       .join(); // on CompletableFuture<Set<String>>
-      
-    executor.shutdown(); // if not needed
-    
-### 2. Fetch in parallel and collect to Set
 
 #### with Parallel Streams
-    Set<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
-      .collect(toSet());
-
+    List<String> result = list.parallelStream()
+      .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .collect(Collectors.toList());
+      
+### 2. Parallelize and collect to List non-blocking
 
 #### with ParallelCollectors™
 
     Executor executor = ...
 
-    Set<String> result = list.stream()
-      .collect(inParallelToSet(i -> fetchFromDb(i), executor))
-      .join(); // on CompletableFuture<List<String>>
-      
-    executor.shutdown(); // if not needed
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(inParallelToList(i -> fetchFromDb(i), executor));
     
-### 3. Fetch in parallel and collect to a custom Collection
-
 #### with Parallel Streams
-    List<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
-      .collect(toCollection(LinkedList::new));
-
+    ¯\_(ツ)_/¯
+      
+### 3. Parallelize and collect to List on a custom Executor
 
 #### with ParallelCollectors™
 
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(inParallelToCollection(i -> fetchFromDb(i), LinkedList::new, executor))
-      .join(); // on CompletableFuture<LinkedList<String>>
-      
-    executor.shutdown(); // if not needed
+      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+      .join(); // on CompletableFuture<Set<String>>
     
-### 4. Fetch in parallel and limit parallelism
-
 #### with Parallel Streams
     ¯\_(ツ)_/¯
+    
+
+### 4. Parallelize and collect to List and define parallelism
 
 #### with ParallelCollectors™
 
     Executor executor = ...
 
-    Set<String> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor, 2)) // max 2 items processed at once
+    List<String> result = list.stream()
+      .collect(inParallelToList(i -> fetchFromDb(i), executor, 42))
       .join(); // on CompletableFuture<Set<String>>
-      
-    executor.shutdown(); // if not needed
-
+    
+#### with Parallel Streams
+    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "42"); 
+    
+    // global settings ¯\_(ツ)_/¯
+    
+    List<String> result = list.parallelStream()
+      .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .collect(Collectors.toList());
+   
 ### Maven Dependencies
 ```
 <repositories>
@@ -157,7 +157,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 
 ### Dependencies
 
-None - the library is implemented using core Java libraries.
+**None - the library is implemented using core Java libraries.**
 
 ### Tips
 
