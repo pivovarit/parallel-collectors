@@ -141,15 +141,6 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
    
 ### Maven Dependencies
 
-    <repositories>
-       <repository>
-            <id>snapshots-repo</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <releases><enabled>false</enabled></releases>
-            <snapshots><enabled>true</enabled></snapshots>
-        </repository>
-    </repositories>
-
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
