@@ -3,6 +3,7 @@ package com.pivovarit.collectors.parallel;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.junit.After;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
@@ -34,8 +35,8 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
 
         CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> supplier(() ->
           returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
-            .limit(concurrencyLevel)
-            .collect(inParallelToCollection(ArrayList::new, executor, parallelism));
+          .limit(concurrencyLevel)
+          .collect(inParallelToCollection(ArrayList::new, executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -43,7 +44,6 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
 
         await().until(() -> executor.getActiveCount(), i -> i == parallelism);
     }
-
 
     @Property(trials = 5)
     public void shouldParallelizeToSetAndRespectParallelizm(@InRange(minInt = 11, maxInt = 20) int concurrencyLevel) {
@@ -72,13 +72,20 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
 
         CompletableFuture<Set<Long>> result =
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
-          .limit(concurrencyLevel)
-          .collect(inParallelToSet(executor, parallelism));
+            .limit(concurrencyLevel)
+            .collect(inParallelToSet(executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
           .isNotCancelled();
 
         await().until(() -> executor.getActiveCount(), i -> i == parallelism);
+    }
+
+    @After
+    public void after() {
+        if (executor != null) {
+            executor.shutdownNow();
+        }
     }
 }
