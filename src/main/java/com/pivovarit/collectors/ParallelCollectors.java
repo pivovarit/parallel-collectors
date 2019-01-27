@@ -67,15 +67,17 @@ public final class ParallelCollectors {
      *   .collect(inParallelToCollection(TreeSet::new, executor));
      * }</pre>
      *
-     * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
-     * @param executor   the {@link Executor} to use for asynchronous execution
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
-    public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor) {
-        requireNonNull(collection);
+    public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collectionSupplier, Executor executor) {
+        requireNonNull(collectionSupplier);
         requireNonNull(executor);
-        return new UnboundedParallelCollector<>(Supplier::get, collection, executor);
+        return new UnboundedParallelCollector<>(Supplier::get, collectionSupplier, executor);
     }
 
     /**
@@ -91,17 +93,19 @@ public final class ParallelCollectors {
      *     inParallelToCollection(TreeSet::new, executor, 2));
      * }</pre>
      *
-     * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
-     * @param executor    the {@link Executor} to use for asynchronous execution
-     * @param parallelism the parallelism level
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     * @param parallelism        the parallelism level
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
-    public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism) {
-        requireNonNull(collection);
+    public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collectionSupplier, Executor executor, int parallelism) {
+        requireNonNull(collectionSupplier);
         requireNonNull(executor);
         assertParallelismValid(parallelism);
-        return new ThrottlingParallelCollector<>(Supplier::get, collection, executor, assertParallelismValid(parallelism));
+        return new ThrottlingParallelCollector<>(Supplier::get, collectionSupplier, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -120,17 +124,19 @@ public final class ParallelCollectors {
      *   .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor));
      * }</pre>
      *
-     * @param mapper     a transformation to be performed in parallel
-     * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
-     * @param executor   the {@link Executor} to use for asynchronous execution
+     * @param mapper             a transformation to be performed in parallel
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor) {
-        requireNonNull(collection);
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
+        requireNonNull(collectionSupplier);
         requireNonNull(executor);
         requireNonNull(mapper);
-        return new UnboundedParallelCollector<>(mapper, collection, executor);
+        return new UnboundedParallelCollector<>(mapper, collectionSupplier, executor);
     }
 
     /**
@@ -144,19 +150,21 @@ public final class ParallelCollectors {
      *   .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
-     * @param executor    the {@link Executor} to use for asynchronous execution
-     * @param parallelism the parallelism level
+     * @param mapper             a transformation to be performed in parallel
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     * @param parallelism        the parallelism level
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism) {
-        requireNonNull(collection);
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+        requireNonNull(collectionSupplier);
         requireNonNull(executor);
         requireNonNull(mapper);
         assertParallelismValid(parallelism);
-        return new ThrottlingParallelCollector<>(mapper, collection, executor, parallelism);
+        return new ThrottlingParallelCollector<>(mapper, collectionSupplier, executor, parallelism);
     }
 
     /**
@@ -176,7 +184,9 @@ public final class ParallelCollectors {
      *   .collect(inParallelToList(executor));
      * }</pre>
      *
-     * @param executor the {@link Executor} to use for asynchronous execution
+     * @param executor the {@code Executor} to use for asynchronous execution
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -199,8 +209,10 @@ public final class ParallelCollectors {
      * }
      * </pre>
      *
-     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -227,7 +239,9 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
-     * @param executor the {@link Executor} to use for asynchronous execution
+     * @param executor the {@code Executor} to use for asynchronous execution
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -249,8 +263,10 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -278,7 +294,9 @@ public final class ParallelCollectors {
      *   .collect(inParallelToSet(executor));
      * }</pre>
      *
-     * @param executor the {@link Executor} to use for asynchronous execution
+     * @param executor the {@code Executor} to use for asynchronous execution
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -299,8 +317,10 @@ public final class ParallelCollectors {
      *   .collect(inParallelToSet(executor, 2));
      * }</pre>
      *
-     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -327,7 +347,9 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
-     * @param executor the {@link Executor} to use for asynchronous execution
+     * @param executor the {@code Executor} to use for asynchronous execution
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -354,8 +376,10 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@link Executor} to use for asynchronous execution
+     * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
