@@ -16,4 +16,14 @@ public final class TimeUtils {
           runnable.get(),
           Duration.between(start, Instant.now()).toMillis());
     }
+
+    public static <T> T returnWithDelay(T value, Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        return value;
+    }
 }
