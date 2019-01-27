@@ -140,23 +140,26 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       .collect(Collectors.toList());
    
 ### Maven Dependencies
-```
-<repositories>
-    <repository>
-        <id>snapshots-repo</id>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        <releases><enabled>false</enabled></releases>
-        <snapshots><enabled>true</enabled></snapshots>
-    </repository>
-</repositories>
-```
-```
-<dependency>
-    <groupId>com.pivovarit</groupId>
-    <artifactId>parallel-collectors</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-</dependency>
-```
+
+    <repositories>
+       <repository>
+            <id>snapshots-repo</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+    </repositories>
+
+    <dependency>
+        <groupId>com.pivovarit</groupId>
+        <artifactId>parallel-collectors</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </dependency>
+
+
+##### Gradle
+
+    compile 'com.pivovarit:parallel-collectors:0.0.1-SNAPSHOT'
 
 ### Dependencies
 
