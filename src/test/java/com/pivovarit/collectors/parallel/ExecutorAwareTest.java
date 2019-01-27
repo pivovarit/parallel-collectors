@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public abstract class ExecutorAwareTest {
-    protected ThreadPoolExecutor executor;
+    protected volatile ThreadPoolExecutor executor;
 
     @After
     public void after() {
