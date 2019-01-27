@@ -96,7 +96,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor, 42));
+      .collect(inParallelToList(i -> fetchFromDb(i), executor));
     
 #### with Parallel Streams
     ¯\_(ツ)_/¯
