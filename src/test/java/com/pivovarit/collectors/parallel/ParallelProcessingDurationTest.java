@@ -37,7 +37,7 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
     private static final long BLOCKING_MILLIS = 50;
     private static final long CONSTANT_DELAY = 100;
 
-    @Property
+    @Property(trials = 10)
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
@@ -55,7 +55,7 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
           });
     }
 
-    @Property
+    @Property(trials = 10)
     public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
@@ -72,7 +72,7 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
           });
     }
 
-    @Property
+    @Property(trials = 10)
     public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
