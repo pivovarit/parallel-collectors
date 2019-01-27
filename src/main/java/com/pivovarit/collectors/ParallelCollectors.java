@@ -96,7 +96,7 @@ public final class ParallelCollectors {
         requireNonNull(collection);
         requireNonNull(executor);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(Supplier::get, collection, executor, assertParallelismValid(parallelism));
+        return new ThrottlingParallelCollector<>(Supplier::get, collection, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -148,7 +148,7 @@ public final class ParallelCollectors {
         requireNonNull(executor);
         requireNonNull(mapper);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(mapper, collection, executor, parallelism);
+        return new ThrottlingParallelCollector<>(mapper, collection, executor, parallelism);
     }
 
     /**
@@ -193,7 +193,7 @@ public final class ParallelCollectors {
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
         requireNonNull(executor);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(Supplier::get, ArrayList::new, executor, assertParallelismValid(parallelism));
+        return new ThrottlingParallelCollector<>(Supplier::get, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -243,7 +243,7 @@ public final class ParallelCollectors {
         requireNonNull(executor);
         requireNonNull(mapper);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
+        return new ThrottlingParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -290,7 +290,7 @@ public final class ParallelCollectors {
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
         requireNonNull(executor);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(Supplier::get, HashSet::new, executor, assertParallelismValid(parallelism));
+        return new ThrottlingParallelCollector<>(Supplier::get, HashSet::new, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -339,7 +339,7 @@ public final class ParallelCollectors {
         requireNonNull(executor);
         requireNonNull(mapper);
         assertParallelismValid(parallelism);
-        return new ThrottledParallelCollector<>(mapper, HashSet::new, executor, parallelism);
+        return new ThrottlingParallelCollector<>(mapper, HashSet::new, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {
