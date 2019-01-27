@@ -25,7 +25,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-class ThrottledParallelCollector<T, R, C extends Collection<R>>
+class ThrottlingParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
@@ -35,7 +35,7 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
     private final ConcurrentLinkedQueue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
     private final Semaphore permits;
 
-    ThrottledParallelCollector(
+    ThrottlingParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor,
