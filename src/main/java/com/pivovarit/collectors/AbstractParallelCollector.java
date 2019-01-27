@@ -25,14 +25,14 @@ abstract class AbstractParallelCollector<T, R1, R2 extends Collection<R1>>
 
     final Executor executor;
     final Function<T, R1> operation;
-    final Supplier<R2> collectionSupplier;
+    final Supplier<R2> collectionFactory;
 
     AbstractParallelCollector(
       Function<T, R1> operation,
       Supplier<R2> collection,
       Executor executor) {
         this.executor = executor;
-        this.collectionSupplier = collection;
+        this.collectionFactory = collection;
         this.operation = operation;
     }
 
@@ -57,7 +57,7 @@ abstract class AbstractParallelCollector<T, R1, R2 extends Collection<R1>>
     @Override
     public Function<List<CompletableFuture<R1>>, CompletableFuture<R2>> finisher() {
         return futures -> futures.stream()
-          .reduce(completedFuture(collectionSupplier.get()),
+          .reduce(completedFuture(collectionFactory.get()),
             accumulatingResults(),
             mergingPartialResults());
     }

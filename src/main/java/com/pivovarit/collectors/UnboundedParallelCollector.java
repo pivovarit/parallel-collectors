@@ -13,9 +13,9 @@ import java.util.function.Supplier;
 class UnboundedParallelCollector<T, R1, R2 extends Collection<R1>> extends AbstractParallelCollector<T, R1, R2> {
     UnboundedParallelCollector(
       Function<T, R1> operation,
-      Supplier<R2> collection,
+      Supplier<R2> collectionFactory,
       Executor executor) {
-        super(operation, collection, executor);
+        super(operation, collectionFactory, executor);
     }
 
     @Override
