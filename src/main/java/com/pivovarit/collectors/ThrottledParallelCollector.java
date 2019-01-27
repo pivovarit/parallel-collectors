@@ -27,7 +27,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 class ThrottledParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
 
@@ -49,7 +49,7 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
-            pending.add(future);
+            pending.offer(future);
             acc.add(future);
             taskQueue.add(() -> {
                 try {
@@ -73,11 +73,6 @@ class ThrottledParallelCollector<T, R, C extends Collection<R>>
               dispatcher.shutdown();
               return f;
           });
-    }
-
-    @Override
-    public void close() {
-        dispatcher.shutdown();
     }
 
     private Runnable dispatcherThread() {
