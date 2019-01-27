@@ -60,7 +60,7 @@ Above can be used in conjunction with `Stream#collect` as any other `Collector` 
 
 ### Leveraging CompletableFuture
 
-All Parallel Collectors™ don't expose resulting `Collection` directly, instead, they do it with `CompletableFuture` instead:
+All Parallel Collectors™ don't expose resulting `Collection` directly, instead, they do it with `CompletableFuture` which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(inParallelToList(i -> fetchFromDb(i), executor))
