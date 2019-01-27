@@ -6,7 +6,7 @@
 
 ## Rationale
 
-Stream API is a great tool for collection processing especially if that involves parallelizing CPU-intensive tasks, for example:
+Stream API is a great tool for collection processing especially if that involves parallelism of CPU-intensive tasks, for example:
 
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
@@ -20,36 +20,42 @@ Unfortunately, it's not the best choice for blocking operations - those could ea
       .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
 
-The standard way of dealing with the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively.
-As a matter of fact, Stream API supports only the common `ForkJoinPool` which restricts effectively the applicability of parallelized Streams to CPU-bound jobs.
+A straightforward solution to the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively without impacting the common pool.
+*Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.*
 
 ## Basic API
 
-In order to ensure the highest compatibility, the library relies on a native `Collector` mechanism used by Java Stream API.
+The library relies on a native `java.util.stream.Collector` mechanism used by Java Stream API which makes it possible to achieve the highest compatibility.
 
-The only entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of `java.util.stream.Collectors` 
-and provides collectors like:
+The only entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of working with `java.util.stream.Collectors` 
+and provides static factory methods like:
 
 - `inParallelToList(Executor executor)`
 - `inParallelToList(Executor executor, int parallelism)`
 
+
 - `inParallelToList(Function<T, R> mapper, Executor executor)`
 - `inParallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
+
 
 - `inParallelToSet(Executor executor)`
 - `inParallelToSet(Executor executor, int parallelism)`
 
+
 - `inParallelToSet(Function<T, R> mapper, Executor executor)`
 - `inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
+
 
 - `inParallelToCollection(Supplier<R> collection, Executor executor)`
 - `inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
 
+
 - `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
 - `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
-Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`. 
-It's obligatory to supply a custom `Executor` instance and manage its lifecycle.
+Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
+ 
+By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 
 #### Leveraging CompletableFuture
 
