@@ -26,7 +26,7 @@ A straightforward solution to the problem is to create a separate thread pool fo
 
 ## Basic API
 
-The library relies on a native `java.util.stream.Collector` mechanism used by Java Stream API which makes it possible to achieve the highest compatibility - all of them are one-off and should not be reused unless you know what you're doing.
+The library relies on a native `java.util.stream.Collector` mechanism used by Java Stream API which makes it possible to achieve the highest compatibility - **all of them are one-off and should not be reused unless you know what you're doing.**
 
 The only entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of working with `java.util.stream.Collectors` 
 and provides static factory methods like:
