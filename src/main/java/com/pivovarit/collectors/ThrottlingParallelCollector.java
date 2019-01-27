@@ -36,10 +36,10 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     ThrottlingParallelCollector(
       Function<T, R> operation,
-      Supplier<C> collection,
+      Supplier<C> collectionFactory,
       Executor executor,
       int parallelism) {
-        super(operation, collection, executor);
+        super(operation, collectionFactory, executor);
         permits = new Semaphore(parallelism);
         dispatcher.execute(dispatcherThread());
     }
