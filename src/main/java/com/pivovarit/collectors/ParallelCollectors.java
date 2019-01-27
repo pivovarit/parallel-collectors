@@ -25,20 +25,20 @@ public final class ParallelCollectors {
     /**
      * A convenience method for constructing Lambda Expression-based {@link Supplier} instances from another Lambda Expression
      * to be used in conjuction with other static factory methods found in {@link ParallelCollectors}
-     * <br><br>
-     * Example:
+     *
      * <br>
-     * <pre>
-     * {@code
+     * Example:
+     * <pre>{@code
      * Stream.of(1,2,3)
      *   .map(i -> supplier(() -> blockingIO()))
      *   .collect(inParallelToList(executor));
-     * }
-     * </pre>
+     * }</pre>
      *
      * @param supplier a lambda expression to be converted into a type-safe {@code Supplier<T>} instance
      * @param <T>      value calculated by provided {@code Supplier<T>}
+     *
      * @return a type-safe {@code Supplier<T>} instance constructed from the supplier {@code Supplier<T>}
+     *
      * @since 0.0.1
      */
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
@@ -47,23 +47,29 @@ public final class ParallelCollectors {
     }
 
     /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
+     * A convenience {@link Collector} for executing parallel computations on a custom {@link Executor} instance
+     * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements.
+     *
      * <br><br>
-     * {@link Collector} is accepting {@link Supplier} instances so tasks need to be prepared beforehand and represented as {@link Supplier} implementations
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
      * <br><br>
-     * Example:
+     * {@link Collector} is accepting {@link Supplier} instances so tasks need to be prepared beforehand
+     * and represented as {@link Supplier} implementations
+     *
      * <br>
-     * <pre>
-     * {@code
-     *   CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
-     * .map(i -> supplier(() -> foo(i)))
-     * .collect(inParallelToCollection(TreeSet::new, executor));
-     * }
-     * </pre>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(inParallelToCollection(TreeSet::new, executor));
+     * }</pre>
      *
      * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor   the {@link Executor} to use for asynchronous execution
+     *
      * @since 0.0.1
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor) {
@@ -75,21 +81,20 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements.
-     * <br><br>
-     * Example:
+     *
      * <br>
-     * <pre>
-     * {@code
+     * Example:
+     * <pre>{@code
      * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
      *   .collect(
      *     inParallelToCollection(TreeSet::new, executor, 2));
-     * }
-     * </pre>
+     * }</pre>
      *
      * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
      * @since 0.0.1
      */
     public static <T, R extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>> inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism) {
@@ -102,19 +107,23 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
+     *
      * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
+     * <br>
      * Example:
-     * <br><br>
+     * <pre>{@code
+     * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
+     *   .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor));
+     * }</pre>
      *
-     * <pre>
-     * {@code CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
-     * .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor));
-     * }
-     * </pre>
-     *
-     * @param mapper  a transformation to be performed in parallel
+     * @param mapper     a transformation to be performed in parallel
      * @param collection a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor   the {@link Executor} to use for asynchronous execution
+     *
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor) {
@@ -127,20 +136,19 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
-     * <br><br>
+     *
+     * <br>
      * Example:
-     * <br><br>
-     * <pre>
-     * {@code
+     * <pre>{@code
      * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
      *   .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
-     * }
-     * </pre>
+     * }</pre>
      *
-     * @param mapper   a transformation to be performed in parallel
+     * @param mapper      a transformation to be performed in parallel
      * @param collection  a custom {@link Supplier} providing a target {@link Collection} for computed values to be collected into
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism) {
@@ -154,17 +162,22 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     *
      * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
+     * <br>
      * Example:
-     * <br><br>
-     * <pre>
-     * {@code CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     * .map(i -> supplier(() -> foo(i)))
-     * .collect(inParallelToList(executor));
-     * }
-     * </pre>
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(inParallelToList(executor));
+     * }</pre>
      *
      * @param executor the {@link Executor} to use for asynchronous execution
+     *
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
@@ -175,9 +188,9 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
-     * <br><br>
+     *
+     * <br>
      * Example:
-     * <br><br>
      * <pre>
      * {@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
@@ -188,6 +201,7 @@ public final class ParallelCollectors {
      *
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
@@ -201,18 +215,20 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * Example:
-     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
      *
-     * <pre>
-     * {@code
+     * <br>
+     * Example:
+     * <pre>{@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
      *   .collect(inParallelToList(i -> foo(), executor));
-     *   }
-     * </pre>
+     * }</pre>
      *
-     * @param mapper a transformation to be performed in parallel
-     * @param executor  the {@link Executor} to use for asynchronous execution
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@link Executor} to use for asynchronous execution
+     *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> mapper, Executor executor) {
@@ -224,19 +240,18 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
-     * <br><br>
+     *
+     * <br>
      * Example:
-     * <br><br>
-     * <pre>
-     * {@code
+     * <pre>{@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
      *   .collect(inParallelToList(i -> foo(), executor, 2));
-     * }
-     * </pre>
+     * }</pre>
      *
-     * @param mapper   a transformation to be performed in parallel
+     * @param mapper      a transformation to be performed in parallel
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -248,20 +263,23 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these elements
-     * <br><br>
-     * Example:
-     * <br><br>
+     * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these element
      *
-     * <pre>
-     * {@code
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
      *   .collect(inParallelToSet(executor));
-     * }
-     * </pre>
+     * }</pre>
      *
      * @param executor the {@link Executor} to use for asynchronous execution
+     *
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
@@ -272,19 +290,18 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these elements
-     * <br><br>
+     *
+     * <br>
      * Example:
-     * <br><br>
-     * <pre>
-     * {@code
+     * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
      *   .collect(inParallelToSet(executor, 2));
-     * }
-     * </pre>
+     * }</pre>
      *
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
@@ -298,17 +315,20 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
      *
      * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
+     * <br>
      * Example:
-     * <br><br>
-     * <pre>
-     * {@code
+     * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
      *   .collect(inParallelToSet(i -> foo(), executor));
-     * }
-     * </pre>
+     * }</pre>
      *
-     * @param mapper a transformation to be performed in parallel
-     * @param executor  the {@link Executor} to use for asynchronous execution
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@link Executor} to use for asynchronous execution
+     *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> mapper, Executor executor) {
@@ -320,19 +340,23 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
+     *
      * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
+     * <br>
      * Example:
-     * <br><br>
-     * <pre>
-     * {@code
+     * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
      *   .collect(inParallelToSet(i -> foo(), executor, 2));
-     * }
-     * </pre>
+     * }</pre>
      *
-     * @param mapper   a transformation to be performed in parallel
+     * @param mapper      a transformation to be performed in parallel
      * @param executor    the {@link Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
+     *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
