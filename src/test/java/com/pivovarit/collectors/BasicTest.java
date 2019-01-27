@@ -33,7 +33,7 @@ public class BasicTest {
 
     private static final int TRIALS = 10;
     private static final int MAX_CONCURRENCY_LEVEL = 50;
-    private static final int BLOCKING_MILLIS = 200;
+    private static final int BLOCKING_MILLIS = 50;
     private static final int TIMEOUT = BLOCKING_MILLIS + 150;
 
     private ExecutorService executor;

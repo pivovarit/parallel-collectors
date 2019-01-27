@@ -4,18 +4,16 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.assertj.core.data.Offset;
-import org.junit.After;
 import org.junit.runner.RunWith;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
@@ -24,6 +22,7 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
+import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
 import static com.pivovarit.collectors.TimeUtils.timed;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,14 +32,12 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class ParallelismTest {
+public class ParallelProcessingDurationTest extends ExecutorAwareTest {
 
     private static final long BLOCKING_MILLIS = 50;
     private static final long CONSTANT_DELAY = 100;
 
-    private ThreadPoolExecutor executor;
-
-    @Property
+    @Property(trials = 10)
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
@@ -58,7 +55,7 @@ public class ParallelismTest {
           });
     }
 
-    @Property
+    @Property(trials = 10)
     public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
@@ -75,7 +72,7 @@ public class ParallelismTest {
           });
     }
 
-    @Property
+    @Property(trials = 10)
     public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
@@ -93,44 +90,6 @@ public class ParallelismTest {
           });
     }
 
-    @Property
-    public void shouldReturnImmediatelyAndNotPolluteExecutor(@InRange(minInt = 11, maxInt = 20) int concurrencyLevel, @InRange(minInt = 1, maxInt = 10) int parallelism) {
-        // given
-        executor = threadPoolExecutor(concurrencyLevel);
-
-        CompletableFuture<ArrayList<Long>> result = assertTimeout(ofMillis(50), () ->
-          Stream.generate(() -> supplier(() -> {
-              try {
-                  Thread.sleep(Integer.MAX_VALUE);
-              } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-              }
-
-              return 42L;
-          }))
-            .limit(concurrencyLevel)
-            .collect(inParallelToCollection(ArrayList::new, executor, parallelism)));
-
-        assertThat(executor.getActiveCount()).isLessThanOrEqualTo(parallelism);
-    }
-
-    @After
-    public void after() {
-        if (executor != null) {
-            executor.shutdownNow();
-        }
-    }
-
-    private static Long sleep() {
-        try {
-            Thread.sleep(ParallelismTest.BLOCKING_MILLIS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        return 42L;
-    }
-
     private static long expectedDuration(long parallelism, long unitsOfWork) {
         if (unitsOfWork < parallelism) {
             return BLOCKING_MILLIS;
@@ -142,15 +101,10 @@ public class ParallelismTest {
     }
 
     private static <T, R extends Collection<T>> Supplier<R> collectWith(Collector<Supplier<Long>, List<CompletableFuture<T>>, CompletableFuture<R>> collector, int unitsOfWork) {
-        return () -> Stream.generate(() -> supplier(() -> sleep()))
+        return () -> Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
           .limit(unitsOfWork)
           .collect(collector)
           .join();
     }
 
-    private static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
-        return new ThreadPoolExecutor(unitsOfWork, unitsOfWork,
-          0L, TimeUnit.MILLISECONDS,
-          new LinkedBlockingQueue<>());
-    }
 }
