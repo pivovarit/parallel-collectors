@@ -74,13 +74,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       
 ## Examples
 
-### 1. Fetch in parallel and collect to List
-
-#### with Parallel Streams
-    List<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
-      .collect(Collectors.toList());
-
+### 1. Parallelize and collect to List
 
 #### with ParallelCollectors™
 
@@ -89,60 +83,51 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
     List<String> result = list.stream()
       .collect(inParallelToList(i -> fetchFromDb(i), executor))
       .join(); // on CompletableFuture<Set<String>>
-      
-    executor.shutdown(); // if not needed
-    
-### 2. Fetch in parallel and collect to Set
 
 #### with Parallel Streams
-    Set<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
-      .collect(toSet());
-
+    List<String> result = list.parallelStream()
+      .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .collect(Collectors.toList());
+      
+### 2. Parallelize and collect to List non-blocking
 
 #### with ParallelCollectors™
 
     Executor executor = ...
 
-    Set<String> result = list.stream()
-      .collect(inParallelToSet(i -> fetchFromDb(i), executor))
-      .join(); // on CompletableFuture<List<String>>
-      
-    executor.shutdown(); // if not needed
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(inParallelToList(i -> fetchFromDb(i), executor, 42));
     
-### 3. Fetch in parallel and collect to a custom Collection
-
 #### with Parallel Streams
-    List<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // run implicitly on ForkJoinPool.commonPool()
-      .collect(toCollection(LinkedList::new));
-
+    ¯\_(ツ)_/¯
+      
+### 3. Parallelize and collect to List on a custom Executor
 
 #### with ParallelCollectors™
 
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(inParallelToCollection(i -> fetchFromDb(i), LinkedList::new, executor))
-      .join(); // on CompletableFuture<LinkedList<String>>
-      
-    executor.shutdown(); // if not needed
+      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+      .join(); // on CompletableFuture<Set<String>>
     
-### 4. Fetch in parallel and limit parallelism
-
 #### with Parallel Streams
     ¯\_(ツ)_/¯
+    
+
+### 4. Parallelize and collect to List and define parallelism
 
 #### with ParallelCollectors™
 
     Executor executor = ...
 
-    Set<String> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor, 2)) // max 2 items processed at once
+    List<String> result = list.stream()
+      .collect(inParallelToList(i -> fetchFromDb(i), executor, 42))
       .join(); // on CompletableFuture<Set<String>>
-      
-    executor.shutdown(); // if not needed
-
+    
+#### with Parallel Streams
+    ¯\_(ツ)_/¯
+   
 ### Maven Dependencies
 ```
 <repositories>
