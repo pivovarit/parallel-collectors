@@ -24,6 +24,8 @@ A straightforward solution to the problem is to create a separate thread pool fo
 
 **Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
 
+There's an [implementation trick that allows running parallel Stream in a custom FJP instance](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776) but it's not guaranteed to work and it supports only FJP instances.
+
 ## Basic API
 
 The library relies on a native `java.util.stream.Collector` mechanism used by Java Stream API which makes it possible to achieve the highest compatibility - **all of them are one-off and should not be reused unless you know what you're doing.**
