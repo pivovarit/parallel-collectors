@@ -51,6 +51,9 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements.
      *
      * <br><br>
+     * No ordering guarantees provided.
+     *
+     * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
      * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
      * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
@@ -84,6 +87,9 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements.
      *
+     * <br><br>
+     * No ordering guarantees provided.
+     *
      * <br>
      * Example:
      * <pre>{@code
@@ -111,6 +117,9 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -143,6 +152,9 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
      *
+     * <br><br>
+     * No ordering guarantees provided.
+     *
      * <br>
      * Example:
      * <pre>{@code
@@ -172,6 +184,9 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
+     * No ordering guarantees provided.
+     *
+     * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
      * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
      * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
@@ -199,6 +214,9 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
+     * <br><br>
+     * No ordering guarantees provided.
+     *
      * <br>
      * Example:
      * <pre>
@@ -225,6 +243,9 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -255,6 +276,9 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
+     * <br><br>
+     * No ordering guarantees provided.
+     *
      * <br>
      * Example:
      * <pre>{@code
@@ -280,6 +304,9 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these element
+     *
+     * <br><br>
+     * No ordering guarantees provided.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -309,6 +336,9 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these elements
      *
+     * <br><br>
+     * No ordering guarantees provided.
+     *
      * <br>
      * Example:
      * <pre>{@code
@@ -333,6 +363,9 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -362,6 +395,9 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
