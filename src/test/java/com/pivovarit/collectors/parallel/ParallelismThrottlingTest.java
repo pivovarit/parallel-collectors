@@ -1,9 +1,6 @@
 package com.pivovarit.collectors.parallel;
 
-import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.InRange;
-import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -23,13 +20,13 @@ import static org.awaitility.Awaitility.await;
 /**
  * @author Grzegorz Piwowarek
  */
-@RunWith(JUnitQuickcheck.class)
-public class ParallelismThrottlingTest extends ExecutorAwareTest {
+class ParallelismThrottlingTest extends ExecutorAwareTest {
 
-    @Property(trials = 5)
-    public void shouldParallelizeToListAndRespectParallelizm(@InRange(minInt = 11, maxInt = 20) int concurrencyLevel) {
+    @Test
+    void shouldParallelizeToListAndRespectParallelizm() {
         // given
         int parallelism = 2;
+        int concurrencyLevel = 10;
         executor = threadPoolExecutor(concurrencyLevel);
 
         CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> supplier(() ->
@@ -44,10 +41,11 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
         await().until(() -> executor.getActiveCount(), i -> i == parallelism);
     }
 
-    @Property(trials = 5)
-    public void shouldParallelizeToSetAndRespectParallelizm(@InRange(minInt = 11, maxInt = 20) int concurrencyLevel) {
+    @Test
+    void shouldParallelizeToSetAndRespectParallelizm() {
         // given
         int parallelism = 2;
+        int concurrencyLevel = 10;
         executor = threadPoolExecutor(concurrencyLevel);
 
         CompletableFuture<List<Long>> result =
@@ -63,10 +61,11 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
         await().until(() -> executor.getActiveCount(), i -> i == parallelism);
     }
 
-    @Property(trials = 5)
-    public void shouldParallelizeToCollectionAndRespectParallelizm(@InRange(minInt = 11, maxInt = 20) int concurrencyLevel) {
+    @Test
+    void shouldParallelizeToCollectionAndRespectParallelizm() {
         // given
         int parallelism = 2;
+        int concurrencyLevel = 10;
         executor = threadPoolExecutor(concurrencyLevel);
 
         CompletableFuture<Set<Long>> result =
