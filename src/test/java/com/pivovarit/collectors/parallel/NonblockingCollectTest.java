@@ -2,7 +2,6 @@ package com.pivovarit.collectors.parallel;
 
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
@@ -20,26 +19,50 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 class NonblockingCollectTest {
 
     @Test
-    void shouldReturnImmediatelyCollectionAndNotPolluteExecutor() {
-        assertTimeout(ofMillis(50), () ->
-          Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
+    void shouldReturnImmediatelyCollection() {
+        assertTimeout(ofMillis(100), () ->
+          Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
             .collect(inParallelToCollection(ArrayList::new, Runnable::run, 42)));
     }
 
     @Test
-    void shouldReturnImmediatelyListAndNotPolluteExecutor() {
-        assertTimeout(ofMillis(50), () ->
-          Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
+    void shouldReturnImmediatelyList() {
+        assertTimeout(ofMillis(100), () ->
+          Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
             .collect(inParallelToList(Runnable::run, 42)));
     }
 
     @Test
-    void shouldReturnImmediatelySetAndNotPolluteExecutor() {
-        assertTimeout(ofMillis(50), () ->
-          Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
+    void shouldReturnImmediatelySet() {
+        assertTimeout(ofMillis(100), () ->
+          Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
             .collect(inParallelToSet(Runnable::run, 42)));
+    }
+
+    @Test
+    void shouldReturnImmediatelyCollectionMapping() {
+        assertTimeout(ofMillis(100), () ->
+          Stream.generate(() -> supplier(() -> 42))
+            .limit(5)
+            .collect(inParallelToCollection(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), ArrayList::new, Runnable::run, 42)));
+    }
+
+    @Test
+    void shouldReturnImmediatelyListMapping() {
+        assertTimeout(ofMillis(100), () ->
+          Stream.generate(() -> supplier(() -> 42))
+            .limit(5)
+            .collect(inParallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run, 42)));
+    }
+
+    @Test
+    void shouldReturnImmediatelySetMapping() {
+        assertTimeout(ofMillis(100), () ->
+          Stream.generate(() -> supplier(() -> 42))
+            .limit(5)
+            .collect(inParallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run, 42)));
     }
 }
