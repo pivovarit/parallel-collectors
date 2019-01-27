@@ -17,7 +17,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -26,9 +25,10 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  * @author Grzegorz Piwowarek
  */
 class ThrottlingParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, R, C> {
+  extends AbstractParallelCollector<T, R, C>
+  implements AutoCloseable {
 
-    private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("parallel-executor"));
+    private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
 
     private final BlockingQueue<Supplier<R>> taskQueue = new LinkedBlockingQueue<>();
     private final ConcurrentLinkedQueue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
@@ -74,6 +74,11 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
           });
     }
 
+    @Override
+    public void close() {
+        dispatcher.shutdown();
+    }
+
     private Runnable dispatcherThread() {
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -97,18 +102,14 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
           .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
     }
 
-    private class ThreadFactoryNameDecorator implements ThreadFactory {
+    private class CustomThreadFactory implements ThreadFactory {
         private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
-        private final String prefix;
-
-        private ThreadFactoryNameDecorator(String prefix) {
-            this.prefix = prefix;
-        }
 
         @Override
         public Thread newThread(Runnable task) {
             Thread thread = defaultThreadFactory.newThread(task);
-            thread.setName(prefix + "-" + thread.getName());
+            thread.setName("parallel-executor-" + thread.getName());
+            thread.setDaemon(true);
             return thread;
         }
     }
