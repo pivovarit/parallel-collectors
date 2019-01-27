@@ -165,7 +165,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 
 ## Version history
 
-### 0.0.1-RC1 (27-01-2010)
+### 0.0.1-RC1 (27-01-2019)
 
 * MVP
 
