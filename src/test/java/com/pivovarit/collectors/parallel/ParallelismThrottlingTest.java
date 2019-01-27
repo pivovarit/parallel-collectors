@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
@@ -20,14 +22,14 @@ import static org.awaitility.Awaitility.await;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelismThrottlingTest extends ExecutorAwareTest {
+class ParallelismThrottlingTest {
 
     @Test
     void shouldParallelizeToListAndRespectParallelizm() {
         // given
         int parallelism = 2;
         int concurrencyLevel = 10;
-        executor = threadPoolExecutor(concurrencyLevel);
+        CountingExecutor executor = new CountingExecutor();
 
         CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> supplier(() ->
           returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
@@ -38,7 +40,7 @@ class ParallelismThrottlingTest extends ExecutorAwareTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        await().until(() -> executor.getActiveCount(), i -> i == parallelism);
+        await().until(() -> executor.count() == parallelism);
     }
 
     @Test
@@ -46,7 +48,7 @@ class ParallelismThrottlingTest extends ExecutorAwareTest {
         // given
         int parallelism = 2;
         int concurrencyLevel = 10;
-        executor = threadPoolExecutor(concurrencyLevel);
+        CountingExecutor executor = new CountingExecutor();
 
         CompletableFuture<List<Long>> result =
           Stream.generate(() -> supplier(() ->
@@ -58,7 +60,7 @@ class ParallelismThrottlingTest extends ExecutorAwareTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        await().until(() -> executor.getActiveCount(), i -> i == parallelism);
+        await().until(() -> executor.count() == parallelism);
     }
 
     @Test
@@ -66,7 +68,7 @@ class ParallelismThrottlingTest extends ExecutorAwareTest {
         // given
         int parallelism = 2;
         int concurrencyLevel = 10;
-        executor = threadPoolExecutor(concurrencyLevel);
+        CountingExecutor executor = new CountingExecutor();
 
         CompletableFuture<Set<Long>> result =
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
@@ -77,6 +79,19 @@ class ParallelismThrottlingTest extends ExecutorAwareTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        await().until(() -> executor.getActiveCount(), i -> i == parallelism);
+        await().until(() -> executor.count() == parallelism);
+    }
+
+    public static class CountingExecutor implements Executor {
+        private final LongAdder longAdder = new LongAdder();
+
+        @Override
+        public void execute(Runnable command) {
+            longAdder.increment();
+        }
+
+        long count() {
+            return longAdder.longValue();
+        }
     }
 }
