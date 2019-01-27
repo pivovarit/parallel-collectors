@@ -24,7 +24,11 @@ A straightforward solution to the problem is to create a separate thread pool fo
 
 **Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
 
-There's an [implementation trick that allows running parallel Stream in a custom FJP instance](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776) but it's not guaranteed to work and it supports only FJP instances.
+There's a trick that allows running parallel Stream in a custom FJP instance but it's not guaranteed to work:
+
+> Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
+
+says [Stuart Marks on Stackoverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776)
 
 ## Basic API
 
