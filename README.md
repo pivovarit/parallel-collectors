@@ -128,7 +128,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       .join(); // on CompletableFuture<Set<String>>
     
 #### with Parallel Streams
-    ¯\_(ツ)_/¯
+    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "2"); // ¯\_(ツ)_/¯
    
 ### Maven Dependencies
 ```
