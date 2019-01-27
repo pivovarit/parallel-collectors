@@ -17,38 +17,29 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 /**
  * @author Grzegorz Piwowarek
  */
-class NonblockingCollectTest extends ExecutorAwareTest {
+class NonblockingCollectTest {
 
     @Test
     void shouldReturnImmediatelyCollectionAndNotPolluteExecutor() {
-        // given
-        executor = threadPoolExecutor(5);
-
         assertTimeout(ofMillis(50), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(inParallelToCollection(ArrayList::new, executor, 42)));
+            .collect(inParallelToCollection(ArrayList::new, Runnable::run, 42)));
     }
 
     @Test
     void shouldReturnImmediatelyListAndNotPolluteExecutor() {
-        // given
-        executor = threadPoolExecutor(5);
-
         assertTimeout(ofMillis(50), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(inParallelToList(executor, 42)));
+            .collect(inParallelToList(Runnable::run, 42)));
     }
 
     @Test
     void shouldReturnImmediatelySetAndNotPolluteExecutor() {
-        // given
-        executor = threadPoolExecutor(5);
-
         assertTimeout(ofMillis(50), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(inParallelToSet(executor, 42)));
+            .collect(inParallelToSet(Runnable::run, 42)));
     }
 }
