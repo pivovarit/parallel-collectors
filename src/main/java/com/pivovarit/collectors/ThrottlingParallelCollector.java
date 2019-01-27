@@ -25,7 +25,8 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  * @author Grzegorz Piwowarek
  */
 class ThrottlingParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, R, C> {
+  extends AbstractParallelCollector<T, R, C>
+  implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
 
@@ -73,6 +74,11 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
           });
     }
 
+    @Override
+    public void close() {
+        dispatcher.shutdown();
+    }
+
     private Runnable dispatcherThread() {
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -96,7 +102,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
           .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
     }
 
-    private class CustomThreadFactory implements java.util.concurrent.ThreadFactory {
+    private class CustomThreadFactory implements ThreadFactory {
         private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
         @Override
