@@ -21,6 +21,7 @@ Unfortunately, it's not the best choice for blocking operations - those could ea
       .collect(Collectors.toList());
 
 A straightforward solution to the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively without impacting the common pool.
+
 **Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
 
 ## Basic API
