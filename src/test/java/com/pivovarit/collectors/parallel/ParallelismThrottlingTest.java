@@ -41,7 +41,7 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        await().until(() -> executor.getActiveCount() == parallelism);
+        await().until(() -> executor.getActiveCount(), i -> i == parallelism);
     }
 
 
@@ -61,7 +61,7 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        await().until(() -> executor.getActiveCount() == parallelism);
+        await().until(() -> executor.getActiveCount(), i -> i == parallelism);
     }
 
     @Property(trials = 5)
@@ -79,6 +79,6 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        await().until(() -> executor.getActiveCount() == parallelism);
+        await().until(() -> executor.getActiveCount(), i -> i == parallelism);
     }
 }
