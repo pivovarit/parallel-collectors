@@ -3,7 +3,6 @@ package com.pivovarit.collectors.parallel;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.junit.After;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
@@ -31,7 +30,7 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
     public void shouldParallelizeToListAndRespectParallelizm(@InRange(minInt = 11, maxInt = 20) int concurrencyLevel) {
         // given
         int parallelism = 2;
-        executor = threadPoolExecutor(parallelism);
+        executor = threadPoolExecutor(concurrencyLevel);
 
         CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> supplier(() ->
           returnWithDelay(42L, Duration.ofMillis(Integer.MAX_VALUE))))
@@ -80,12 +79,5 @@ public class ParallelismThrottlingTest extends ExecutorAwareTest {
           .isNotCancelled();
 
         await().until(() -> executor.getActiveCount(), i -> i == parallelism);
-    }
-
-    @After
-    public void after() {
-        if (executor != null) {
-            executor.shutdownNow();
-        }
     }
 }
