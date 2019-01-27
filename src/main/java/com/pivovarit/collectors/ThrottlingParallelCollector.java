@@ -69,8 +69,11 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         return super.finisher()
           .andThen(f -> {
-              dispatcher.shutdown();
-              return f;
+              try {
+                  return f;
+              } finally {
+                  dispatcher.shutdown();
+              }
           });
     }
 
