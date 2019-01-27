@@ -38,7 +38,7 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
     }
 
@@ -58,7 +58,7 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
     }
 
@@ -77,7 +77,7 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
     }
 
@@ -96,7 +96,7 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
     }
 
@@ -115,7 +115,7 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
     }
 
@@ -134,7 +134,7 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(100);
+        Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
     }
 
