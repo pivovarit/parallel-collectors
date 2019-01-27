@@ -128,7 +128,9 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
       .join(); // on CompletableFuture<Set<String>>
     
 #### with Parallel Streams
-    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "42"); // global settings ¯\_(ツ)_/¯
+    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "42"); 
+    
+    // global settings ¯\_(ツ)_/¯
     
     List<String> result = list.parallelStream()
       .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
