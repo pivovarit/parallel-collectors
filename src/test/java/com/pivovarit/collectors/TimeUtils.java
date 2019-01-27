@@ -6,6 +6,9 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 public final class TimeUtils {
     private TimeUtils() {
     }
