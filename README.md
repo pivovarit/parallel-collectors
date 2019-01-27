@@ -58,7 +58,7 @@ Above can be used in conjunction with `Stream#collect` as any other `Collector` 
  
 **By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
 
-#### Leveraging CompletableFuture
+### Leveraging CompletableFuture
 
 All Parallel Collectors™ don't expose resulting `Collection` directly, instead, they do it with `CompletableFuture` instead:
 
