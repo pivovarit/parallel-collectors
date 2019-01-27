@@ -26,6 +26,7 @@ import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
 import static com.pivovarit.collectors.TimeUtils.timed;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 /**
@@ -49,7 +50,7 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
           .satisfies(e -> {
               assertThat(e.getValue())
                 .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
 
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
@@ -66,7 +67,7 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
           .satisfies(e -> {
               assertThat(e.getValue())
                 .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
 
               assertThat(e.getKey()).hasSize(1);
           });
@@ -84,7 +85,7 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
           .satisfies(e -> {
               assertThat(e.getValue())
                 .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, Offset.offset(CONSTANT_DELAY));
+                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
 
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
