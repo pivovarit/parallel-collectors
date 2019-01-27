@@ -153,13 +153,13 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1-RC1</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.0.1-SNAPSHOT'
+    compile 'com.pivovarit:parallel-collectors:0.0.1-RC1'
 
 ### Dependencies
 
@@ -174,7 +174,7 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 
 ## Version history
 
-### TODO 0.0.1-SNAPSHOT (23-01-2010)
+### 0.0.1-RC1 (27-01-2010)
 
 * MVP
 
