@@ -26,8 +26,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  * @author Grzegorz Piwowarek
  */
 class ThrottlingParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
+  extends AbstractParallelCollector<T, R, C> {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new ThreadFactoryNameDecorator("throttled-parallel-executor"));
 
