@@ -104,7 +104,7 @@ public final class ParallelCollectors {
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param parallelism        the parallelism level
      * @param <T>                the type of the input elements
-
+     *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
@@ -139,8 +139,8 @@ public final class ParallelCollectors {
      * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param <T>                the type of the input elements
-     * @param <R>         the result returned by {@code mapper}
-
+     * @param <R>                the result returned by {@code mapper}
+     *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
@@ -171,8 +171,8 @@ public final class ParallelCollectors {
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param parallelism        the parallelism level
      * @param <T>                the type of the input elements
-     * @param <R>         the result returned by {@code mapper}
-
+     * @param <R>                the result returned by {@code mapper}
+     *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
@@ -270,8 +270,8 @@ public final class ParallelCollectors {
      * @param mapper   a transformation to be performed in parallel
      * @param executor the {@code Executor} to use for asynchronous execution
      * @param <T>      the type of the input elements
-     * @param <R>         the result returned by {@code mapper}
-
+     * @param <R>      the result returned by {@code mapper}
+     *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
