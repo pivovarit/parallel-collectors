@@ -19,6 +19,7 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static java.util.function.Function.identity;
+import static java.util.stream.Stream.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -28,7 +29,7 @@ class SmokeTests {
 
     @TestFactory
     Stream<DynamicTest> testCollectors() {
-        return Stream.of(
+        return of(
           forListCollector(inParallelToList(i -> i, executor)),
           forListCollector(inParallelToList(i -> i, executor, 2)),
           forSetCollector(inParallelToSet(i -> i, executor)),
@@ -39,7 +40,7 @@ class SmokeTests {
     }
 
     private Stream<DynamicTest> forCollectionCollector(Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<Collection<Integer>>> collector) {
-        return Stream.of(
+        return of(
           dynamicTest("inParallelToCollection should collect", () -> {
               List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
               Collection<Integer> result = elements.stream().collect(collector).join();
@@ -59,7 +60,7 @@ class SmokeTests {
     }
 
     private Stream<DynamicTest> forSetCollector(Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<Set<Integer>>> collector) {
-        return Stream.of(
+        return of(
           dynamicTest("inParallelToSet should collect", () -> {
               List<Integer> elements = IntStream.generate(() -> 42).limit(100).boxed().collect(Collectors.toList());
               Collection<Integer> result = elements.stream().collect(collector).join();
@@ -79,7 +80,7 @@ class SmokeTests {
     }
 
     private Stream<DynamicTest> forListCollector(Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<List<Integer>>> collector) {
-        return Stream.of(
+        return of(
           dynamicTest("inParallelToList should collect", () -> {
               List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
               Collection<Integer> result = elements.stream().collect(collector).join();
