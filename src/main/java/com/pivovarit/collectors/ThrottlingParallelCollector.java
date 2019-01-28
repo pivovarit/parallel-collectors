@@ -29,10 +29,10 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
   implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
+    private final Semaphore limiter;
 
-    private final BlockingQueue<Supplier<R>> taskQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Supplier<R>> workingQueue = new LinkedBlockingQueue<>();
     private final ConcurrentLinkedQueue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
-    private final Semaphore permits;
 
     ThrottlingParallelCollector(
       Function<T, R> operation,
@@ -40,8 +40,9 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       Executor executor,
       int parallelism) {
         super(operation, collectionFactory, executor);
-        permits = new Semaphore(parallelism);
-        dispatcher.execute(dispatcherThread());
+
+        this.limiter = new Semaphore(parallelism);
+        this.dispatcher.execute(dispatcherThread());
     }
 
     @Override
@@ -50,11 +51,11 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.offer(future);
             acc.add(future);
-            taskQueue.add(() -> {
+            workingQueue.add(() -> {
                 try {
                     return operation.apply(e);
                 } finally {
-                    permits.release();
+                    limiter.release();
                 }
             });
         };
@@ -86,14 +87,14 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return () -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    permits.acquire();
-                    runAsyncAndComplete(taskQueue.take());
+                    limiter.acquire();
+                    runAsyncAndComplete(workingQueue.take());
                 } catch (InterruptedException e) {
-                    permits.release();
+                    limiter.release();
                     Thread.currentThread().interrupt();
                     break;
                 } catch (Exception e) {
-                    permits.release();
+                    limiter.release();
                     throw e;
                 }
             }
