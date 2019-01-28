@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
  */
 class SmokeTests {
 
-    private static final Executor executor = Executors.newSingleThreadExecutor();
+    private static final Executor executor = Executors.newFixedThreadPool(100);
 
     @TestFactory
     Stream<DynamicTest> testCollectors() {
@@ -50,15 +50,13 @@ class SmokeTests {
 
               assertThat(result)
                 .hasSameSizeAs(elements)
-                .containsExactlyElementsOf(elements);
+                .containsOnlyElementsOf(elements);
           }),
           dynamicTest("inParallelToCollection should collect to empty", () -> {
-              List<Integer> elements1 = new ArrayList<>();
-              Collection<Integer> result11 = elements1.stream().collect(collector).join();
+              Collection<Integer> result11 = Stream.<Integer>of().collect(collector).join();
 
               assertThat(result11)
-                .hasSameSizeAs(elements1)
-                .containsExactlyElementsOf(elements1);
+                .isEmpty();
           }));
     }
 
@@ -73,12 +71,10 @@ class SmokeTests {
                 .contains(42);
           }),
           dynamicTest("inParallelToSet should collect to empty", () -> {
-              List<Integer> elements1 = new ArrayList<>();
-              Collection<Integer> result11 = elements1.stream().collect(collector).join();
+              Collection<Integer> result11 = Stream.<Integer>of().collect(collector).join();
 
               assertThat(result11)
-                .hasSameSizeAs(elements1)
-                .containsExactlyElementsOf(elements1);
+                .isEmpty();
           }));
     }
 
@@ -90,15 +86,13 @@ class SmokeTests {
 
               assertThat(result)
                 .hasSameSizeAs(elements)
-                .containsExactlyElementsOf(elements);
+                .containsOnlyElementsOf(elements);
           }),
           dynamicTest("inParallelToList should collect to empty", () -> {
-              List<Integer> elements1 = new ArrayList<>();
-              Collection<Integer> result11 = elements1.stream().collect(collector).join();
+              Collection<Integer> result11 = Stream.<Integer>of().collect(collector).join();
 
               assertThat(result11)
-                .hasSameSizeAs(elements1)
-                .containsExactlyElementsOf(elements1);
+                .isEmpty();
           }));
     }
 }
