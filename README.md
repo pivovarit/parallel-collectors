@@ -175,6 +175,12 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 
 ## Version history
 
+#### [0.0.1-RC3](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1-RC3) (28-01-2019)
+* Moved `ThrottlingParallelCollector`'s dispatcher thread to `Collector#finisher`
+* `ThrottlingParallelCollector` migrated to use ConcurrentLinkedQueues exclusively
+* Added exception-handling-related tests
+* Optimized empty `Stream` handling
+
 #### [0.0.1-RC2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1-RC2) (28-01-2019)
 
 * Improved documentation
