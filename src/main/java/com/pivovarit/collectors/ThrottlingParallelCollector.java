@@ -46,7 +46,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.offer(future);
-            acc.add(future);
             workingQueue.add(() -> {
                 try {
                     return operation.apply(e);
@@ -54,6 +53,8 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                     limiter.release();
                 }
             });
+
+            acc.add(future);
         };
     }
 
@@ -66,6 +67,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (workingQueue.size() != 0) {
             dispatcher.execute(dispatch(workingQueue));
+
             return super.finisher()
               .andThen(f -> {
                   try {
@@ -75,6 +77,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                   }
               });
         } else {
+            dispatcher.shutdown();
             return super.finisher();
         }
     }
