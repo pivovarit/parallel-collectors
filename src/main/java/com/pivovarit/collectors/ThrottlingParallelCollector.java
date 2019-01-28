@@ -91,12 +91,11 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                     limiter.acquire();
                     runAsyncAndComplete(workingQueue.take());
                 } catch (InterruptedException e) {
-                    limiter.release();
                     Thread.currentThread().interrupt();
+                    Objects.requireNonNull(pending.poll()).completeExceptionally(e);
                     break;
                 } catch (Exception e) {
-                    limiter.release();
-                    throw e;
+                    Objects.requireNonNull(pending.poll()).completeExceptionally(e);
                 }
             }
         };
@@ -104,7 +103,12 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     private void runAsyncAndComplete(Supplier<R> task) {
         supplyAsync(task, executor)
-          .thenAccept(result -> Objects.requireNonNull(pending.poll()).complete(result));
+          .handle((r, throwable) -> {
+              CompletableFuture<R> nextFuture = Objects.requireNonNull(pending.poll());
+              return throwable == null
+                ? nextFuture.complete(r)
+                : nextFuture.completeExceptionally(throwable);
+          });
     }
 
     private class CustomThreadFactory implements ThreadFactory {
