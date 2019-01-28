@@ -93,6 +93,8 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
+                } catch (Exception e) {
+                    Objects.requireNonNull(pending.poll()).completeExceptionally(e);
                 }
             }
         };
