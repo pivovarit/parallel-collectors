@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -32,7 +33,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     private final Semaphore limiter;
 
     private final BlockingQueue<Supplier<R>> workingQueue = new LinkedBlockingQueue<>();
-    private final ConcurrentLinkedQueue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
+    private final Queue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
 
     ThrottlingParallelCollector(
       Function<T, R> operation,
