@@ -47,28 +47,26 @@ Make sure to read API documentation before using these in production.
 The library relies on a native `java.util.stream.Collector` mechanism used by Java Stream API which makes it possible to achieve the highest compatibility - **all of them are one-off and should not be reused unless you know what you're doing.**
 
 The only entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class which mimics the semantics of working with `java.util.stream.Collectors` 
-and provides static factory methods like:
+and provides the following groups of factories:
+
+`inParallelToList`:
 
 - `inParallelToList(Executor executor)`
 - `inParallelToList(Executor executor, int parallelism)`
-
-
 - `inParallelToList(Function<T, R> mapper, Executor executor)`
 - `inParallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
+`inParallelToSet`:
 
 - `inParallelToSet(Executor executor)`
 - `inParallelToSet(Executor executor, int parallelism)`
-
-
 - `inParallelToSet(Function<T, R> mapper, Executor executor)`
 - `inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
+`InParallelToCollection`:
 
 - `inParallelToCollection(Supplier<R> collection, Executor executor)`
 - `inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
-
-
 - `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
 - `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
