@@ -66,6 +66,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (workingQueue.size() != 0) {
             dispatcher.execute(dispatch(workingQueue));
+
             return super.finisher()
               .andThen(f -> {
                   try {
@@ -75,6 +76,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                   }
               });
         } else {
+            dispatcher.shutdown();
             return super.finisher();
         }
     }
