@@ -3,7 +3,6 @@ package com.pivovarit.collectors;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -43,7 +42,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         super(operation, collectionFactory, executor);
 
         this.limiter = new Semaphore(parallelism);
-        this.dispatcher.execute(dispatcherThread());
     }
 
     @Override
@@ -69,14 +67,19 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        return super.finisher()
-          .andThen(f -> {
-              try {
-                  return f;
-              } finally {
-                  dispatcher.shutdown();
-              }
-          });
+        if (workingQueue.size() != 0) {
+            dispatcher.execute(dispatcherThread());
+            return super.finisher()
+              .andThen(f -> {
+                  try {
+                      return f;
+                  } finally {
+                      dispatcher.shutdown();
+                  }
+              });
+        } else {
+            return super.finisher();
+        }
     }
 
     @Override
@@ -91,11 +94,12 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                     limiter.acquire();
                     runAsyncAndComplete(workingQueue.take());
                 } catch (InterruptedException e) {
+                    closeAndCompleteRemaining(e);
                     Thread.currentThread().interrupt();
-                    getNextFuture().completeExceptionally(e);
                     break;
                 } catch (Exception e) {
-                    getNextFuture().completeExceptionally(e);
+                    closeAndCompleteRemaining(e);
+                    break;
                 }
             }
         };
@@ -107,6 +111,11 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
             future = pending.poll();
         } while (future == null);
         return future;
+    }
+
+    private void closeAndCompleteRemaining(Exception e) {
+        limiter.release();
+        pending.forEach(future -> future.completeExceptionally(e));
     }
 
     private void runAsyncAndComplete(Supplier<R> task) {
