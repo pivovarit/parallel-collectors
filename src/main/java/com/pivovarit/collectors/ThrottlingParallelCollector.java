@@ -92,19 +92,27 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                     runAsyncAndComplete(workingQueue.take());
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    Objects.requireNonNull(pending.poll()).completeExceptionally(e);
+                    getNextFuture().completeExceptionally(e);
                     break;
                 } catch (Exception e) {
-                    Objects.requireNonNull(pending.poll()).completeExceptionally(e);
+                    getNextFuture().completeExceptionally(e);
                 }
             }
         };
     }
 
+    private CompletableFuture<R> getNextFuture() {
+        CompletableFuture<R> future;
+        do {
+            future = pending.poll();
+        } while (future == null);
+        return future;
+    }
+
     private void runAsyncAndComplete(Supplier<R> task) {
         supplyAsync(task, executor)
           .handle((r, throwable) -> {
-              CompletableFuture<R> nextFuture = Objects.requireNonNull(pending.poll());
+              CompletableFuture<R> nextFuture = getNextFuture();
               return throwable == null
                 ? nextFuture.complete(r)
                 : nextFuture.completeExceptionally(throwable);
