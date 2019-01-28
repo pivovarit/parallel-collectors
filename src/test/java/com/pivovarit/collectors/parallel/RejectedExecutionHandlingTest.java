@@ -30,9 +30,9 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
           0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
         );
 
-        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
-          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(100)))))
-          .collect(inParallelToCollection(ArrayList::new, executor, 10))
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
+          .collect(inParallelToCollection(ArrayList::new, executor, 10000))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -45,9 +45,9 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
           0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
         );
 
-        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
-          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(100)))))
-          .collect(inParallelToList(executor, 10))
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
+          .collect(inParallelToList(executor, 10000))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -60,9 +60,9 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
           0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
         );
 
-        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
-          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(1000)))))
-          .collect(inParallelToSet(executor, 10))
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
+          .collect(inParallelToSet(executor, 10000))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -75,8 +75,8 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
           0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
         );
 
-        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
-          .collect(inParallelToCollection(i -> returnWithDelay(i, ofMillis(100)), ArrayList::new, executor, 10))
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .collect(inParallelToCollection(i -> returnWithDelay(i, ofMillis(10000)), ArrayList::new, executor, 10))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -89,8 +89,8 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
           0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
         );
 
-        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
-          .collect(inParallelToList(i -> returnWithDelay(i, ofMillis(100)), executor, 10))
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .collect(inParallelToList(i -> returnWithDelay(i, ofMillis(10000)), executor, 10))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -103,8 +103,8 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
           0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
         );
 
-        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
-          .collect(inParallelToSet(i -> returnWithDelay(i, ofMillis(100)), executor, 10))
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .collect(inParallelToSet(i -> returnWithDelay(i, ofMillis(10000)), executor, 10))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
