@@ -5,13 +5,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
@@ -31,7 +29,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Semaphore limiter;
 
-    private final BlockingQueue<Supplier<R>> workingQueue = new LinkedBlockingQueue<>();
+    private final Queue<Supplier<R>> workingQueue = new ConcurrentLinkedQueue<>();
     private final Queue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
 
     ThrottlingParallelCollector(
@@ -40,7 +38,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       Executor executor,
       int parallelism) {
         super(operation, collectionFactory, executor);
-
         this.limiter = new Semaphore(parallelism);
     }
 
@@ -68,7 +65,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (workingQueue.size() != 0) {
-            dispatcher.execute(dispatcherThread());
+            dispatcher.execute(dispatch(workingQueue));
             return super.finisher()
               .andThen(f -> {
                   try {
@@ -87,12 +84,13 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         dispatcher.shutdown();
     }
 
-    private Runnable dispatcherThread() {
+    private Runnable dispatch(Queue<Supplier<R>> tasks) {
         return () -> {
-            while (!Thread.currentThread().isInterrupted()) {
+            Supplier<R> task;
+            while ((task = tasks.poll()) != null && !Thread.currentThread().isInterrupted()) {
                 try {
                     limiter.acquire();
-                    runAsyncAndComplete(workingQueue.take());
+                    runAsyncAndComplete(task);
                 } catch (InterruptedException e) {
                     closeAndCompleteRemaining(e);
                     Thread.currentThread().interrupt();
