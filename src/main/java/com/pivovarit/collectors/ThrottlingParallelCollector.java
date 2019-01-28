@@ -91,14 +91,8 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                     limiter.acquire();
                     runAsyncAndComplete(workingQueue.take());
                 } catch (InterruptedException e) {
-                    pending.poll();
-                    limiter.release();
                     Thread.currentThread().interrupt();
                     break;
-                } catch (Exception e) {
-                    limiter.release();
-                    pending.poll();
-                    throw e;
                 }
             }
         };
@@ -112,7 +106,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 ? nextFuture.complete(r)
                 : nextFuture.completeExceptionally(throwable);
           });
-
     }
 
     private class CustomThreadFactory implements ThreadFactory {
