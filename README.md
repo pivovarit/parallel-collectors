@@ -175,12 +175,12 @@ Which makes it possible to conveniently apply callbacks, and compose with other 
 
 ## Version history
 
-### [0.0.1-RC2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1-RC2) (28-01-2019)
+#### [0.0.1-RC2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1-RC2) (28-01-2019)
 
 * Improved documentation
 * Improved internal implementations
 
-### [0.0.1-RC1](https://github.com/pivovarit/parallel-collectors/releases/tag/parallel-collectors-0.0.1-RC1) (27-01-2019)
+#### [0.0.1-RC1](https://github.com/pivovarit/parallel-collectors/releases/tag/parallel-collectors-0.0.1-RC1) (27-01-2019)
 
 * Initial release providing basic functionality
 
