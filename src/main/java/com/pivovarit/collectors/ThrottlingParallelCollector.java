@@ -91,11 +91,12 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                     limiter.acquire();
                     runAsyncAndComplete(workingQueue.take());
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
                     getNextFuture().completeExceptionally(e);
+                    Thread.currentThread().interrupt();
                     break;
                 } catch (Exception e) {
                     getNextFuture().completeExceptionally(e);
+                    break;
                 }
             }
         };
