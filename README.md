@@ -24,7 +24,7 @@ Unfortunately, it's not the best choice for blocking operations - those could ea
 
 A straightforward solution to the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively without impacting the common pool.
 
-**Sadly, Stream API officially only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
+**Sadly, Stream API officially supports only the common `ForkJoinPool` which effectively restricts the applicability of parallelised Streams to CPU-bound jobs.**
 
 There's a trick that allows running parallel Stream in a custom FJP instance but should be avoided:
 
@@ -36,7 +36,7 @@ Plus, that approach was flawed before JDK-10 - if a Stream was targeted towards 
 
 ## Philosophy
 
-Parallel Collectors are unopinionated by design so it's up to users to use it responsibly, which involves things like:
+Parallel Collectors are unopinionated by design so it's up to users to utilise it responsibly, which involves things like:
 - proper configuration of a provided `Executor` and its lifecycle management
 - choosing the right parallelism level
 
