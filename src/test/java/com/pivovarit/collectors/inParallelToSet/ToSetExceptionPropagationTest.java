@@ -1,6 +1,6 @@
 package com.pivovarit.collectors.inParallelToSet;
 
-import com.pivovarit.collectors.ExecutorAwareTest;
+import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletionException;

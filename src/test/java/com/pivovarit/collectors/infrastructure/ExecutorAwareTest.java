@@ -1,4 +1,4 @@
-package com.pivovarit.collectors;
+package com.pivovarit.collectors.infrastructure;
 
 import org.junit.After;
 

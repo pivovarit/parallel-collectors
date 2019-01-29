@@ -3,7 +3,7 @@ package com.pivovarit.collectors.inParallelToCollection;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import com.pivovarit.collectors.ExecutorAwareTest;
+import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
@@ -18,8 +18,8 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
-import static com.pivovarit.collectors.TimeUtils.timed;
+import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
+import static com.pivovarit.collectors.infrastructure.TimeUtils.timed;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 

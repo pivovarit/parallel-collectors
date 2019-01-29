@@ -45,6 +45,7 @@ class SmokeTests {
     private Stream<DynamicTest> forCollectionCollector(Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<Collection<Integer>>> collector) {
         return of(
           dynamicTest("inParallelToCollection should collect", () -> {
+              Executor executor = Executors.newFixedThreadPool(100);
               List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
               Collection<Integer> result = elements.stream().collect(collector).join();
 
