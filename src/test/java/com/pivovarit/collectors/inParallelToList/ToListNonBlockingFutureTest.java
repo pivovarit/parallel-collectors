@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
+import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 

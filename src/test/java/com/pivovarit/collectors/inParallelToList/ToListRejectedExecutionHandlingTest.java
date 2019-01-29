@@ -1,6 +1,6 @@
 package com.pivovarit.collectors.inParallelToList;
 
-import com.pivovarit.collectors.ExecutorAwareTest;
+import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
 
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
+import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
