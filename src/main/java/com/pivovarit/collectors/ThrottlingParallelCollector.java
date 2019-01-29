@@ -37,7 +37,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         this.limiter = new Semaphore(parallelism);
     }
 
-    public ThrottlingParallelCollector(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism, Queue<Supplier<R>> workingQueue, Queue<CompletableFuture<R>> pending) {
+    ThrottlingParallelCollector(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism, Queue<Supplier<R>> workingQueue, Queue<CompletableFuture<R>> pending) {
         super(operation, collection, executor, workingQueue, pending);
         this.limiter =  new Semaphore(parallelism);
     }

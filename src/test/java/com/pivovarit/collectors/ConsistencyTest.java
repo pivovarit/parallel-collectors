@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -35,8 +36,7 @@ class ConsistencyTest extends ExecutorAwareTest {
                         }
                     }))
                   .join();
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) { }
         });
     }
 }
