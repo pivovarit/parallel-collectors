@@ -36,7 +36,7 @@ Plus, that approach was flawed before JDK-10 - if a Stream was targeted towards 
 
 ## Philosophy
 
-Parallel Collectors are unopinionated by design so it's up to users to utilise it responsibly, which involves things like:
+Parallel Collectors are unopinionated by design so it's up to users to use it responsibly, which involves things like:
 - proper configuration of a provided `Executor` and its lifecycle management
 - choosing the right parallelism level
 
