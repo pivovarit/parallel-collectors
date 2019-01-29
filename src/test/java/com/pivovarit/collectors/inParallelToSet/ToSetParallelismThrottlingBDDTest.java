@@ -1,12 +1,12 @@
-package com.pivovarit.collectors;
+package com.pivovarit.collectors.inParallelToSet;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import com.pivovarit.collectors.ExecutorAwareTest;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +16,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
@@ -29,28 +27,10 @@ import static org.assertj.core.data.Offset.offset;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class ParallelProcessingDurationTest extends ExecutorAwareTest {
+public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
     private static final long BLOCKING_MILLIS = 50;
     private static final long CONSTANT_DELAY = 100;
-
-    @Property(trials = 10)
-    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
-        // given
-        executor = threadPoolExecutor(unitsOfWork);
-        long expectedDuration = expectedDuration(parallelism, unitsOfWork);
-
-        Map.Entry<List<Long>, Long> result = timed(collectWith(inParallelToList(executor, parallelism), unitsOfWork));
-
-        assertThat(result)
-          .satisfies(e -> {
-              assertThat(e.getValue())
-                .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
-
-              assertThat(e.getKey()).hasSize(unitsOfWork);
-          });
-    }
 
     @Property(trials = 10)
     public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
@@ -66,24 +46,6 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
                 .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
 
               assertThat(e.getKey()).hasSize(1);
-          });
-    }
-
-    @Property(trials = 10)
-    public void shouldCollectToCollectionWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
-        // given
-        executor = threadPoolExecutor(unitsOfWork);
-        long expectedDuration = expectedDuration(parallelism, unitsOfWork);
-
-        Map.Entry<List<Long>, Long> result = timed(collectWith(inParallelToCollection(ArrayList::new, executor, parallelism), unitsOfWork));
-
-        assertThat(result)
-          .satisfies(e -> {
-              assertThat(e.getValue())
-                .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
-
-              assertThat(e.getKey()).hasSize(unitsOfWork);
           });
     }
 
@@ -103,5 +65,4 @@ public class ParallelProcessingDurationTest extends ExecutorAwareTest {
           .collect(collector)
           .join();
     }
-
 }

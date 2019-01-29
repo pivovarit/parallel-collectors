@@ -19,7 +19,7 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static java.util.function.Function.identity;
-import static java.util.stream.Stream.*;
+import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 

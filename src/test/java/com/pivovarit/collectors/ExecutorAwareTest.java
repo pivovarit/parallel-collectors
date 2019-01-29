@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  * @author Grzegorz Piwowarek
  */
 public abstract class ExecutorAwareTest {
-    volatile ThreadPoolExecutor executor;
+    protected volatile ThreadPoolExecutor executor;
 
     @After
     public void after() {
@@ -20,7 +20,7 @@ public abstract class ExecutorAwareTest {
     }
 
 
-    static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
+    public static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
         return new ThreadPoolExecutor(unitsOfWork, unitsOfWork,
           0L, TimeUnit.MILLISECONDS,
           new LinkedBlockingQueue<>());
