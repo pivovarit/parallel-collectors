@@ -24,19 +24,19 @@ Unfortunately, it's not the best choice for blocking operations - those could ea
 
 A straightforward solution to the problem is to create a separate thread pool for IO-bound tasks and run them there exclusively without impacting the common pool.
 
-**Sadly, Stream API officially supports only the common `ForkJoinPool` which effectively restricts the applicability of parallelised Streams to CPU-bound jobs.**
+**Sadly, Stream API officially supports only the common `ForkJoinPool` which effectively restricts the applicability of parallelized Streams to CPU-bound jobs.**
 
-There's a trick that allows running parallel Stream in a custom FJP instance but should be avoided:
+However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's considered harmful:
 
 > Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
 
 says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776). 
 
-Plus, that approach was flawed before JDK-10 - if a Stream was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool, and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
+Plus, that approach was flawed before JDK-10 - if a `Stream` was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool, and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
 
 ## Philosophy
 
-Parallel Collectors are unopinionated by design so it's up to users to use it responsibly, which involves things like:
+Parallel Collectors are unopinionated by design so it's up to users to use them responsibly, which involves things like:
 - proper configuration of a provided `Executor` and its lifecycle management
 - choosing the right parallelism level
 
