@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 @RunWith(JUnitQuickcheck.class)
 public class UnboundedCollectorsTest {
 
-    private static final int TRIALS = 10;
+    private static final int TRIALS = 5;
     private static final int MAX_CONCURRENCY_LEVEL = 20;
     private static final int BLOCKING_MILLIS = 50;
     private static final int TIMEOUT = BLOCKING_MILLIS + 150;

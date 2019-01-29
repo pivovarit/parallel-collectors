@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.parallel;
+package com.pivovarit.collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,8 +10,6 @@ import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.TimeUtils.returnWithDelay;
-import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**

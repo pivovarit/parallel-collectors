@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.parallel;
+package com.pivovarit.collectors;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
