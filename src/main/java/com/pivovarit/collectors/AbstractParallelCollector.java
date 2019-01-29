@@ -31,19 +31,31 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
     protected final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     protected final Executor executor;
 
-    protected final Queue<Supplier<R>> workingQueue = new ConcurrentLinkedQueue<>();
-    protected final Queue<CompletableFuture<R>> pending = new ConcurrentLinkedQueue<>();
+    protected final Queue<Supplier<R>> workingQueue;
+    protected final Queue<CompletableFuture<R>> pending;
 
     protected final Function<T, R> operation;
+
     private final Supplier<C> collectionFactory;
 
     AbstractParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor) {
+        this(operation, collection, executor, new ConcurrentLinkedQueue<>(), new ConcurrentLinkedQueue<>());
+    }
+
+    AbstractParallelCollector(
+      Function<T, R> operation,
+      Supplier<C> collection,
+      Executor executor,
+      Queue<Supplier<R>> workingQueue,
+      Queue<CompletableFuture<R>> pending) {
         this.executor = executor;
         this.collectionFactory = collection;
         this.operation = operation;
+        this.workingQueue = workingQueue;
+        this.pending = pending;
     }
 
     @Override
