@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -22,19 +21,15 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-class ThrottlingParallelCollector<T, R, C extends Collection<R>>
+class UnboundedParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
   implements AutoCloseable {
 
-    private final Semaphore limiter;
-
-    ThrottlingParallelCollector(
+    UnboundedParallelCollector(
       Function<T, R> operation,
       Supplier<C> collectionFactory,
-      Executor executor,
-      int parallelism) {
+      Executor executor) {
         super(operation, collectionFactory, executor);
-        this.limiter = new Semaphore(parallelism);
     }
 
     @Override
@@ -42,14 +37,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.offer(future);
-            workingQueue.add(() -> {
-                try {
-                    return operation.apply(e);
-                } finally {
-                    limiter.release();
-                }
-            });
-
+            workingQueue.add(() -> operation.apply(e));
             acc.add(future);
         };
     }
@@ -70,12 +58,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
             Supplier<R> task;
             while ((task = tasks.poll()) != null && !Thread.currentThread().isInterrupted()) {
                 try {
-                    limiter.acquire();
                     runAsyncAndComplete(task);
-                } catch (InterruptedException e) {
-                    closeAndCompleteRemaining(e);
-                    Thread.currentThread().interrupt();
-                    break;
                 } catch (Exception e) {
                     closeAndCompleteRemaining(e);
                     break;
@@ -93,7 +76,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     }
 
     private void closeAndCompleteRemaining(Exception e) {
-        limiter.release();
         pending.forEach(future -> future.completeExceptionally(e));
     }
 
