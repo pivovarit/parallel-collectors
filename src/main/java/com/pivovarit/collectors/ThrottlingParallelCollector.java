@@ -37,11 +37,16 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         this.limiter = new Semaphore(parallelism);
     }
 
+    public ThrottlingParallelCollector(Function<T, R> operation, Supplier<C> collection, Executor executor, int parallelism, Queue<Supplier<R>> workingQueue, Queue<CompletableFuture<R>> pending) {
+        super(operation, collection, executor, workingQueue, pending);
+        this.limiter =  new Semaphore(parallelism);
+    }
+
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
-            pending.offer(future);
+            pending.add(future);
             workingQueue.add(() -> {
                 try {
                     return operation.apply(e);

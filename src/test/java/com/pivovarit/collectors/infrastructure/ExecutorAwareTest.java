@@ -1,6 +1,7 @@
 package com.pivovarit.collectors.infrastructure;
 
 import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,6 +14,7 @@ public abstract class ExecutorAwareTest {
     protected volatile ThreadPoolExecutor executor;
 
     @After
+    @AfterEach
     public void after() {
         if (executor != null) {
             executor.shutdownNow();
