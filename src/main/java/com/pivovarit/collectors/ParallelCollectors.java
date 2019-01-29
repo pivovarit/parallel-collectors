@@ -82,7 +82,7 @@ public final class ParallelCollectors {
     public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> inParallelToCollection(Supplier<C> collectionSupplier, Executor executor) {
         requireNonNull(collectionSupplier);
         requireNonNull(executor);
-        return new ThrottlingParallelCollector<>(Supplier::get, collectionSupplier, executor, Integer.MAX_VALUE);
+        return new UnboundedParallelCollector<>(Supplier::get, collectionSupplier, executor);
     }
 
     /**
@@ -150,7 +150,7 @@ public final class ParallelCollectors {
         requireNonNull(collectionSupplier);
         requireNonNull(executor);
         requireNonNull(mapper);
-        return new ThrottlingParallelCollector<>(mapper, collectionSupplier, executor, Integer.MAX_VALUE);
+        return new UnboundedParallelCollector<>(mapper, collectionSupplier, executor);
     }
 
     /**
@@ -215,7 +215,7 @@ public final class ParallelCollectors {
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
         requireNonNull(executor);
-        return new ThrottlingParallelCollector<>(Supplier::get, ArrayList::new, executor, Integer.MAX_VALUE);
+        return new UnboundedParallelCollector<>(Supplier::get, ArrayList::new, executor);
     }
 
     /**
@@ -280,7 +280,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor);
         requireNonNull(mapper);
-        return new ThrottlingParallelCollector<>(mapper, ArrayList::new, executor, Integer.MAX_VALUE);
+        return new UnboundedParallelCollector<>(mapper, ArrayList::new, executor);
     }
 
     /**
@@ -343,7 +343,7 @@ public final class ParallelCollectors {
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
         requireNonNull(executor);
-        return new ThrottlingParallelCollector<>(Supplier::get, HashSet::new, executor, Integer.MAX_VALUE);
+        return new UnboundedParallelCollector<>(Supplier::get, HashSet::new, executor);
     }
 
     /**
@@ -406,7 +406,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor);
         requireNonNull(mapper);
-        return new ThrottlingParallelCollector<>(mapper, HashSet::new, executor, Integer.MAX_VALUE);
+        return new UnboundedParallelCollector<>(mapper, HashSet::new, executor);
     }
 
     /**
