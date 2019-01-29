@@ -1,7 +1,6 @@
 package com.pivovarit.collectors;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -16,13 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 class ConsistencyTest extends ExecutorAwareTest {
 
-    @BeforeEach
-    void before() {
-        executor = threadPoolExecutor(10);
-    }
-
     @Test
     void shouldNotDeadlockOnQueueAdd() {
+        executor = threadPoolExecutor(10);
 
         assertTimeout(Duration.ofSeconds(2), () -> {
             try {
