@@ -39,6 +39,21 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
     }
 
     @Test
+    void shouldCollectToCollectionAndSurviveRejectedExecutionExceptionUnbounded() {
+        // given
+        executor = new ThreadPoolExecutor(1, 1,
+          0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
+        );
+
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
+          .collect(inParallelToCollection(ArrayList::new, executor))
+          .join())
+          .isInstanceOf(CompletionException.class)
+          .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
+    }
+
+    @Test
     void shouldCollectToListAndSurviveRejectedExecutionException() {
         // given
         executor = new ThreadPoolExecutor(1, 1,
@@ -48,6 +63,21 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
           .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
           .collect(inParallelToList(executor, 10000))
+          .join())
+          .isInstanceOf(CompletionException.class)
+          .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
+    }
+
+    @Test
+    void shouldCollectToListAndSurviveRejectedExecutionUnbounded() {
+        // given
+        executor = new ThreadPoolExecutor(1, 1,
+          0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
+        );
+
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
+          .collect(inParallelToList(executor))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -69,6 +99,21 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
     }
 
     @Test
+    void shouldCollectToSetAndSurviveRejectedExecutionExceptionUnbounded() {
+        // given
+        executor = new ThreadPoolExecutor(2, 2,
+          0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
+        );
+
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
+          .collect(inParallelToSet(executor))
+          .join())
+          .isInstanceOf(CompletionException.class)
+          .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
+    }
+
+    @Test
     void shouldCollectToCollectionMappingAndSurviveRejectedExecutionException() {
         // given
         executor = new ThreadPoolExecutor(1, 1,
@@ -77,6 +122,20 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
           .collect(inParallelToCollection(i -> returnWithDelay(i, ofMillis(10000)), ArrayList::new, executor, 10))
+          .join())
+          .isInstanceOf(CompletionException.class)
+          .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
+    }
+
+    @Test
+    void shouldCollectToCollectionMappingAndSurviveRejectedExecutionExceptionUnbounded() {
+        // given
+        executor = new ThreadPoolExecutor(1, 1,
+          0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
+        );
+
+        assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
+          .collect(inParallelToCollection(i -> returnWithDelay(i, ofMillis(10000)), ArrayList::new, executor))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -97,14 +156,14 @@ class RejectedExecutionHandlingTest extends ExecutorAwareTest {
     }
 
     @Test
-    void shouldCollectToSetMappingAndSurviveRejectedExecutionException() {
+    void shouldCollectToSetMappingAndSurviveRejectedExecutionExceptionUnbounded() {
         // given
         executor = new ThreadPoolExecutor(1, 1,
           0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(1)
         );
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
-          .collect(inParallelToSet(i -> returnWithDelay(i, ofMillis(10000)), executor, 10))
+          .collect(inParallelToSet(i -> returnWithDelay(i, ofMillis(10000)), executor))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
