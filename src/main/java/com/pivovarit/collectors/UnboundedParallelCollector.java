@@ -32,6 +32,15 @@ class UnboundedParallelCollector<T, R, C extends Collection<R>>
         super(operation, collectionFactory, executor);
     }
 
+    UnboundedParallelCollector(
+      Function<T, R> operation,
+      Supplier<C> collection,
+      Executor executor,
+      Queue<Supplier<R>> workingQueue,
+      Queue<CompletableFuture<R>> pending) {
+        super(operation, collection, executor, workingQueue, pending);
+    }
+
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
