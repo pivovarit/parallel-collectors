@@ -18,6 +18,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Grzegorz Piwowarek
  */
+@SuppressWarnings("WeakerAccess")
 public final class ParallelCollectors {
     private ParallelCollectors() {
     }
