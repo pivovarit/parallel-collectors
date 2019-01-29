@@ -45,7 +45,7 @@ class UnboundedParallelCollector<T, R, C extends Collection<R>>
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
-            pending.offer(future);
+            pending.add(future);
             workingQueue.add(() -> operation.apply(e));
             acc.add(future);
         };
