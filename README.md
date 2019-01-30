@@ -181,6 +181,11 @@ This makes it possible to conveniently apply callbacks, and compose with other `
 
 ## Version history
 
+#### [0.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1) (30-01-2019)
+- Changed to the naming convention from `inParallelTo*` to `parallelTo*`
+- Improved `UnboundedParallelCollector` implementation
+- Improved JavaDocs
+
 #### [0.0.1-RC3](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1-RC3) (28-01-2019)
 * Moved `ThrottlingParallelCollector`'s dispatcher thread to `Collector#finisher`
 * `ThrottlingParallelCollector` migrated to use ConcurrentLinkedQueues exclusively
