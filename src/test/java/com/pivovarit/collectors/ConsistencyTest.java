@@ -1,7 +1,6 @@
 package com.pivovarit.collectors;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -24,7 +23,7 @@ class ConsistencyTest extends ExecutorAwareTest {
         assertTimeout(Duration.ofSeconds(2), () -> {
             try {
                 IntStream.range(0, 10).boxed()
-                  .collect(new ThrottlingParallelCollector<Integer, Integer, List<Integer>>(i -> i, ArrayList::new, executor, 10, new ConcurrentLinkedQueue<>(),
+                  .collect(new ThrottlingParallelCollector<Integer, Integer, List<Integer>>((Integer i) -> i, ArrayList::new, executor, 10, new ConcurrentLinkedQueue<>(),
                     new LinkedList<CompletableFuture<Integer>>() {
                         @Override
                         public boolean offer(CompletableFuture<Integer> integerSupplier) {
@@ -48,7 +47,7 @@ class ConsistencyTest extends ExecutorAwareTest {
         assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
             try {
                 IntStream.range(0, 10).boxed()
-                  .collect(new UnboundedParallelCollector<Integer, Integer, List<Integer>>(i -> i, ArrayList::new, executor, new ConcurrentLinkedQueue<>(),
+                  .collect(new UnboundedParallelCollector<Integer, Integer, List<Integer>>((Integer i) -> i, ArrayList::new, executor, new ConcurrentLinkedQueue<>(),
                     new LinkedList<CompletableFuture<Integer>>() {
                         @Override
                         public boolean offer(CompletableFuture<Integer> integerSupplier) {
