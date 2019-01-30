@@ -160,13 +160,13 @@ This makes it possible to conveniently apply callbacks, and compose with other `
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.0.1-RC3</version>
+        <version>0.0.1</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.0.1-RC3'
+    compile 'com.pivovarit:parallel-collectors:0.0.1'
 
 ### Dependencies
 
