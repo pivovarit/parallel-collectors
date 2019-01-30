@@ -1,10 +1,10 @@
-package com.pivovarit.collectors.inParallelToSet;
+package com.pivovarit.collectors.parallelToSet;
 
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -20,7 +20,7 @@ class ToSetNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(inParallelToSet(Runnable::run, 42)));
+            .collect(parallelToSet(Runnable::run, 42)));
     }
 
     @Test
@@ -28,7 +28,7 @@ class ToSetNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(inParallelToSet(Runnable::run)));
+            .collect(parallelToSet(Runnable::run)));
     }
 
     @Test
@@ -36,7 +36,7 @@ class ToSetNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
-            .collect(inParallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run, 42)));
+            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run, 42)));
     }
 
     @Test
@@ -44,6 +44,6 @@ class ToSetNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
-            .collect(inParallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run)));
+            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run)));
     }
 }

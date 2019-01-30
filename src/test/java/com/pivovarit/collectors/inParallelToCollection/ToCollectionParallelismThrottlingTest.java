@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToCollection;
+package com.pivovarit.collectors.parallelToCollection;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +8,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -28,7 +28,7 @@ class ToCollectionParallelismThrottlingTest {
         CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> supplier(() ->
           returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
           .limit(10)
-          .collect(inParallelToCollection(ArrayList::new, executor, parallelism));
+          .collect(parallelToCollection(ArrayList::new, executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -47,7 +47,7 @@ class ToCollectionParallelismThrottlingTest {
         CompletableFuture<ArrayList<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(inParallelToCollection(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), ArrayList::new, executor, parallelism));
+            .collect(parallelToCollection(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), ArrayList::new, executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()

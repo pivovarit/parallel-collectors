@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToCollection;
+package com.pivovarit.collectors.parallelToCollection;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -31,7 +31,7 @@ class ToCollectionRejectedExecutionHandlingTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
           .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
-          .collect(inParallelToCollection(ArrayList::new, executor, 10000))
+          .collect(parallelToCollection(ArrayList::new, executor, 10000))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -46,7 +46,7 @@ class ToCollectionRejectedExecutionHandlingTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
           .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
-          .collect(inParallelToCollection(ArrayList::new, executor))
+          .collect(parallelToCollection(ArrayList::new, executor))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -61,7 +61,7 @@ class ToCollectionRejectedExecutionHandlingTest extends ExecutorAwareTest {
         );
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
-          .collect(inParallelToCollection(i -> returnWithDelay(i, ofMillis(10000)), ArrayList::new, executor, 10))
+          .collect(parallelToCollection(i -> returnWithDelay(i, ofMillis(10000)), ArrayList::new, executor, 10))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -75,7 +75,7 @@ class ToCollectionRejectedExecutionHandlingTest extends ExecutorAwareTest {
         );
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
-          .collect(inParallelToCollection(i -> returnWithDelay(i, ofMillis(10000)), ArrayList::new, executor))
+          .collect(parallelToCollection(i -> returnWithDelay(i, ofMillis(10000)), ArrayList::new, executor))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);

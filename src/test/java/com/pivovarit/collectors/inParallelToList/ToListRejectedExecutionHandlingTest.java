@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToList;
+package com.pivovarit.collectors.parallelToList;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -30,7 +30,7 @@ class ToListRejectedExecutionHandlingTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
           .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
-          .collect(inParallelToList(executor, 10000))
+          .collect(parallelToList(executor, 10000))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -45,7 +45,7 @@ class ToListRejectedExecutionHandlingTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
           .map(i -> supplier(() -> supplier(() -> returnWithDelay(i, ofMillis(10000)))))
-          .collect(inParallelToList(executor))
+          .collect(parallelToList(executor))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -59,7 +59,7 @@ class ToListRejectedExecutionHandlingTest extends ExecutorAwareTest {
         );
 
         assertThatThrownBy(() -> IntStream.range(0, 1000).boxed()
-          .collect(inParallelToList(i -> returnWithDelay(i, ofMillis(10000)), executor, 10))
+          .collect(parallelToList(i -> returnWithDelay(i, ofMillis(10000)), executor, 10))
           .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RejectedExecutionException.class);

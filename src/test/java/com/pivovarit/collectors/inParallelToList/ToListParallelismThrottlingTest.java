@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToList;
+package com.pivovarit.collectors.parallelToList;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +8,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -29,7 +29,7 @@ class ToListParallelismThrottlingTest {
           Stream.generate(() -> supplier(() ->
             returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(10)
-            .collect(inParallelToList(executor, parallelism));
+            .collect(parallelToList(executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -49,7 +49,7 @@ class ToListParallelismThrottlingTest {
         CompletableFuture<List<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(inParallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()

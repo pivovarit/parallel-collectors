@@ -1,10 +1,10 @@
-package com.pivovarit.collectors.inParallelToList;
+package com.pivovarit.collectors.parallelToList;
 
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -20,7 +20,7 @@ class ToListNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(inParallelToList(Runnable::run, 42)));
+            .collect(parallelToList(Runnable::run, 42)));
     }
 
     @Test
@@ -28,7 +28,7 @@ class ToListNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(inParallelToList(Runnable::run)));
+            .collect(parallelToList(Runnable::run)));
     }
 
     @Test
@@ -36,7 +36,7 @@ class ToListNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
-            .collect(inParallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run, 42)));
+            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run, 42)));
     }
 
     @Test
@@ -44,6 +44,6 @@ class ToListNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
-            .collect(inParallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run)));
+            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run)));
     }
 }
