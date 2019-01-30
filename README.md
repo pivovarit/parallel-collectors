@@ -160,13 +160,13 @@ This makes it possible to conveniently apply callbacks, and compose with other `
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.0.1-RC3</version>
+        <version>0.0.1</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.0.1-RC3'
+    compile 'com.pivovarit:parallel-collectors:0.0.1'
 
 ### Dependencies
 
@@ -180,6 +180,11 @@ This makes it possible to conveniently apply callbacks, and compose with other `
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
 
 ## Version history
+
+### [0.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1) (30-01-2019)
+- Changed to the naming convention from `inParallelTo*` to `parallelTo*`
+- Improved `UnboundedParallelCollector` implementation
+- Improved JavaDocs
 
 #### [0.0.1-RC3](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1-RC3) (28-01-2019)
 * Moved `ThrottlingParallelCollector`'s dispatcher thread to `Collector#finisher`
