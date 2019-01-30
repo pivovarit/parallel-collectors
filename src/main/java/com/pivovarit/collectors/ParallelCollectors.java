@@ -52,11 +52,11 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link C} of these elements.
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
      * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
      *
      * <br><br>
@@ -90,7 +90,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link C} of these elements.
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -122,11 +122,11 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
      * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
      *
      * <br>
@@ -158,7 +158,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -191,12 +191,12 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -223,7 +223,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -254,12 +254,12 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -288,7 +288,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -319,12 +319,12 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these element
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -351,7 +351,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -380,12 +380,12 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -414,12 +414,12 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided.
+     * No ordering guarantees provided. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
