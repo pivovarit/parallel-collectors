@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToSet;
+package com.pivovarit.collectors.parallelToSet;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.timed;
@@ -37,7 +37,7 @@ public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
-        Map.Entry<Set<Long>, Long> result = timed(collectWith(inParallelToSet(executor, parallelism), unitsOfWork));
+        Map.Entry<Set<Long>, Long> result = timed(collectWith(parallelToSet(executor, parallelism), unitsOfWork));
 
         assertThat(result)
           .satisfies(e -> {

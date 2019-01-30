@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToSet;
+package com.pivovarit.collectors.parallelToSet;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -29,7 +29,7 @@ class ToSetExceptionPropagationTest extends ExecutorAwareTest {
                       return i;
                   }
               }))
-              .collect(inParallelToSet(executor, 10))
+              .collect(parallelToSet(executor, 10))
               .join();
         })
           .isInstanceOf(CompletionException.class)
@@ -50,7 +50,7 @@ class ToSetExceptionPropagationTest extends ExecutorAwareTest {
                       return i;
                   }
               }))
-              .collect(inParallelToSet(executor))
+              .collect(parallelToSet(executor))
               .join();
         })
           .isInstanceOf(CompletionException.class)
@@ -64,7 +64,7 @@ class ToSetExceptionPropagationTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> {
             IntStream.range(0, 10).boxed()
-              .collect(inParallelToSet(i -> {
+              .collect(parallelToSet(i -> {
                   if (i == 7) {
                       throw new IllegalArgumentException();
                   } else {
@@ -84,7 +84,7 @@ class ToSetExceptionPropagationTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> {
             IntStream.range(0, 10).boxed()
-              .collect(inParallelToSet(i -> {
+              .collect(parallelToSet(i -> {
                   if (i == 7) {
                       throw new IllegalArgumentException();
                   } else {

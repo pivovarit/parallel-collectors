@@ -32,7 +32,7 @@ public final class ParallelCollectors {
      * <pre>{@code
      * Stream.of(1,2,3)
      *   .map(i -> supplier(() -> blockingIO()))
-     *   .collect(inParallelToList(executor));
+     *   .collect(parallelToList(executor));
      * }</pre>
      *
      * @param supplier a lambda expression to be converted into a type-safe {@code Supplier<T>} instance
@@ -68,7 +68,7 @@ public final class ParallelCollectors {
      * <pre>{@code
      * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(inParallelToCollection(TreeSet::new, executor));
+     *   .collect(parallelToCollection(TreeSet::new, executor));
      * }</pre>
      *
      * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
@@ -79,7 +79,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> inParallelToCollection(Supplier<C> collectionSupplier, Executor executor) {
+    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> parallelToCollection(Supplier<C> collectionSupplier, Executor executor) {
         requireNonNull(collectionSupplier);
         requireNonNull(executor);
         return new UnboundedParallelCollector<>(Supplier::get, collectionSupplier, executor);
@@ -98,7 +98,7 @@ public final class ParallelCollectors {
      * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
      *   .collect(
-     *     inParallelToCollection(TreeSet::new, executor, 2));
+     *     parallelToCollection(TreeSet::new, executor, 2));
      * }</pre>
      *
      * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
@@ -110,7 +110,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> inParallelToCollection(Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> parallelToCollection(Supplier<C> collectionSupplier, Executor executor, int parallelism) {
         requireNonNull(collectionSupplier);
         requireNonNull(executor);
         assertParallelismValid(parallelism);
@@ -133,7 +133,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
-     *   .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor));
+     *   .collect(parallelToCollection(i -> foo(i), TreeSet::new, executor));
      * }</pre>
      *
      * @param mapper             a transformation to be performed in parallel
@@ -146,7 +146,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
         requireNonNull(collectionSupplier);
         requireNonNull(executor);
         requireNonNull(mapper);
@@ -164,7 +164,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<TreeSet<String>> result = Stream.of(1, 2, 3)
-     *   .collect(inParallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
+     *   .collect(parallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
      * }</pre>
      *
      * @param mapper             a transformation to be performed in parallel
@@ -178,7 +178,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> inParallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
         requireNonNull(collectionSupplier);
         requireNonNull(executor);
         requireNonNull(mapper);
@@ -203,7 +203,7 @@ public final class ParallelCollectors {
      * <pre>{@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(inParallelToList(executor));
+     *   .collect(parallelToList(executor));
      * }</pre>
      *
      * @param executor the {@code Executor} to use for asynchronous execution
@@ -213,7 +213,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> parallelToList(Executor executor) {
         requireNonNull(executor);
         return new UnboundedParallelCollector<>(Supplier::get, ArrayList::new, executor);
     }
@@ -231,7 +231,7 @@ public final class ParallelCollectors {
      * {@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(inParallelToList(executor, 2));
+     *   .collect(parallelToList(executor, 2));
      * }
      * </pre>
      *
@@ -243,7 +243,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> inParallelToList(Executor executor, int parallelism) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> parallelToList(Executor executor, int parallelism) {
         requireNonNull(executor);
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(Supplier::get, ArrayList::new, executor, assertParallelismValid(parallelism));
@@ -265,7 +265,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(inParallelToList(i -> foo(), executor));
+     *   .collect(parallelToList(i -> foo(), executor));
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
@@ -277,7 +277,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor);
         requireNonNull(mapper);
         return new UnboundedParallelCollector<>(mapper, ArrayList::new, executor);
@@ -294,7 +294,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(inParallelToList(i -> foo(), executor, 2));
+     *   .collect(parallelToList(i -> foo(), executor, 2));
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
@@ -307,7 +307,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> inParallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor);
         requireNonNull(mapper);
         assertParallelismValid(parallelism);
@@ -331,7 +331,7 @@ public final class ParallelCollectors {
      * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(inParallelToSet(executor));
+     *   .collect(parallelToSet(executor));
      * }</pre>
      *
      * @param executor the {@code Executor} to use for asynchronous execution
@@ -341,7 +341,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> parallelToSet(Executor executor) {
         requireNonNull(executor);
         return new UnboundedParallelCollector<>(Supplier::get, HashSet::new, executor);
     }
@@ -358,7 +358,7 @@ public final class ParallelCollectors {
      * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(inParallelToSet(executor, 2));
+     *   .collect(parallelToSet(executor, 2));
      * }</pre>
      *
      * @param executor    the {@code Executor} to use for asynchronous execution
@@ -369,7 +369,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> inParallelToSet(Executor executor, int parallelism) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> parallelToSet(Executor executor, int parallelism) {
         requireNonNull(executor);
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(Supplier::get, HashSet::new, executor, assertParallelismValid(parallelism));
@@ -391,7 +391,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
-     *   .collect(inParallelToSet(i -> foo(), executor));
+     *   .collect(parallelToSet(i -> foo(), executor));
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
@@ -403,7 +403,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor);
         requireNonNull(mapper);
         return new UnboundedParallelCollector<>(mapper, HashSet::new, executor);
@@ -425,7 +425,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<Set<String>> result = Stream.of(1, 2, 3)
-     *   .collect(inParallelToSet(i -> foo(), executor, 2));
+     *   .collect(parallelToSet(i -> foo(), executor, 2));
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
@@ -438,7 +438,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor);
         requireNonNull(mapper);
         assertParallelismValid(parallelism);

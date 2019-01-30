@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToList;
+package com.pivovarit.collectors.parallelToList;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -29,7 +29,7 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
                       return i;
                   }
               }))
-              .collect(inParallelToList(executor, 10))
+              .collect(parallelToList(executor, 10))
               .join();
         })
           .isInstanceOf(CompletionException.class)
@@ -50,7 +50,7 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
                       return i;
                   }
               }))
-              .collect(inParallelToList(executor))
+              .collect(parallelToList(executor))
               .join();
         })
           .isInstanceOf(CompletionException.class)
@@ -64,7 +64,7 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> {
             IntStream.range(0, 10).boxed()
-              .collect(inParallelToList(i -> {
+              .collect(parallelToList(i -> {
                   if (i == 7) {
                       throw new IllegalArgumentException();
                   } else {
@@ -84,7 +84,7 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> {
             IntStream.range(0, 10).boxed()
-              .collect(inParallelToList(i -> {
+              .collect(parallelToList(i -> {
                   if (i == 7) {
                       throw new IllegalArgumentException();
                   } else {

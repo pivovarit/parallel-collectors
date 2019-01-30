@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.inParallelToCollection;
+package com.pivovarit.collectors.parallelToCollection;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -30,7 +30,7 @@ class ToCollectionExceptionPropagationTest extends ExecutorAwareTest {
                       return i;
                   }
               }))
-              .collect(inParallelToCollection(ArrayList::new, executor, 10))
+              .collect(parallelToCollection(ArrayList::new, executor, 10))
               .join();
         })
           .isInstanceOf(CompletionException.class)
@@ -51,7 +51,7 @@ class ToCollectionExceptionPropagationTest extends ExecutorAwareTest {
                       return i;
                   }
               }))
-              .collect(inParallelToCollection(ArrayList::new, executor))
+              .collect(parallelToCollection(ArrayList::new, executor))
               .join();
         })
           .isInstanceOf(CompletionException.class)
@@ -66,7 +66,7 @@ class ToCollectionExceptionPropagationTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> {
             IntStream.range(0, 10).boxed()
-              .collect(inParallelToCollection(i -> {
+              .collect(parallelToCollection(i -> {
                   if (i == 7) {
                       throw new IllegalArgumentException();
                   } else {
@@ -86,7 +86,7 @@ class ToCollectionExceptionPropagationTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() -> {
             IntStream.range(0, 10).boxed()
-              .collect(inParallelToCollection(i -> {
+              .collect(parallelToCollection(i -> {
                   if (i == 7) {
                       throw new IllegalArgumentException();
                   } else {

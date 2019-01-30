@@ -53,26 +53,26 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 #### Available `Collectors`:
 
-`inParallelToList`:
+`parallelToList`:
 
-- `inParallelToList(Executor executor)`
-- `inParallelToList(Executor executor, int parallelism)`
-- `inParallelToList(Function<T, R> mapper, Executor executor)`
-- `inParallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
+- `parallelToList(Executor executor)`
+- `parallelToList(Executor executor, int parallelism)`
+- `parallelToList(Function<T, R> mapper, Executor executor)`
+- `parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
-`inParallelToSet`:
+`parallelToSet`:
 
-- `inParallelToSet(Executor executor)`
-- `inParallelToSet(Executor executor, int parallelism)`
-- `inParallelToSet(Function<T, R> mapper, Executor executor)`
-- `inParallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
+- `parallelToSet(Executor executor)`
+- `parallelToSet(Executor executor, int parallelism)`
+- `parallelToSet(Function<T, R> mapper, Executor executor)`
+- `parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
-`InParallelToCollection`:
+`parallelToCollection`:
 
-- `inParallelToCollection(Supplier<R> collection, Executor executor)`
-- `inParallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
-- `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
-- `inParallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+- `parallelToCollection(Supplier<R> collection, Executor executor)`
+- `parallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
+- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
+- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
  
@@ -85,12 +85,12 @@ Above can be used in conjunction with `Stream#collect` as any other `Collector` 
 All Parallel Collectors™ expose resulting `Collection` wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> fetchFromDb(i), executor))
 
 This makes it possible to conveniently apply callbacks, and compose with other `CompletableFuture`s:
 
     list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> fetchFromDb(i), executor))
       .thenAccept(System.out::println)
       .thenRun(() -> System.out.println("Finished!"));
       
@@ -103,7 +103,7 @@ This makes it possible to conveniently apply callbacks, and compose with other `
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> fetchFromDb(i), executor))
       .join(); // on CompletableFuture<Set<String>>
 
 #### with Parallel Streams
@@ -118,7 +118,7 @@ This makes it possible to conveniently apply callbacks, and compose with other `
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor));
+      .collect(parallelToList(i -> fetchFromDb(i), executor));
     
 #### with Parallel Streams
     ¯\_(ツ)_/¯
@@ -130,7 +130,7 @@ This makes it possible to conveniently apply callbacks, and compose with other `
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> fetchFromDb(i), executor))
       .join(); // on CompletableFuture<Set<String>>
     
 #### with Parallel Streams
@@ -143,7 +143,7 @@ This makes it possible to conveniently apply callbacks, and compose with other `
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(inParallelToList(i -> fetchFromDb(i), executor, 42))
+      .collect(parallelToList(i -> fetchFromDb(i), executor, 42))
       .join(); // on CompletableFuture<Set<String>>
     
 #### with Parallel Streams

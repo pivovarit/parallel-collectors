@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToCollection;
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToList;
-import static com.pivovarit.collectors.ParallelCollectors.inParallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,18 +33,18 @@ class SmokeTests {
     @TestFactory
     Stream<DynamicTest> testCollectors() {
         return of(
-          forListCollector(inParallelToList(i -> i, executor)),
-          forListCollector(inParallelToList(i -> i, executor, 2)),
-          forSetCollector(inParallelToSet(i -> i, executor)),
-          forSetCollector(inParallelToSet(i -> i, executor, 2)),
-          forCollectionCollector(inParallelToCollection(i -> i, ArrayList::new, executor)),
-          forCollectionCollector(inParallelToCollection(i -> i, ArrayList::new, executor, 2))
+          forListCollector(parallelToList(i -> i, executor)),
+          forListCollector(parallelToList(i -> i, executor, 2)),
+          forSetCollector(parallelToSet(i -> i, executor)),
+          forSetCollector(parallelToSet(i -> i, executor, 2)),
+          forCollectionCollector(parallelToCollection(i -> i, ArrayList::new, executor)),
+          forCollectionCollector(parallelToCollection(i -> i, ArrayList::new, executor, 2))
         ).flatMap(identity());
     }
 
     private Stream<DynamicTest> forCollectionCollector(Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<Collection<Integer>>> collector) {
         return of(
-          dynamicTest("inParallelToCollection should collect", () -> {
+          dynamicTest("parallelToCollection should collect", () -> {
               List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
               Collection<Integer> result = elements.stream().collect(collector).join();
 
@@ -52,7 +52,7 @@ class SmokeTests {
                 .hasSameSizeAs(elements)
                 .containsOnlyElementsOf(elements);
           }),
-          dynamicTest("inParallelToCollection should collect to empty", () -> {
+          dynamicTest("parallelToCollection should collect to empty", () -> {
               Collection<Integer> result11 = Stream.<Integer>of().collect(collector).join();
 
               assertThat(result11)
@@ -62,7 +62,7 @@ class SmokeTests {
 
     private Stream<DynamicTest> forSetCollector(Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<Set<Integer>>> collector) {
         return of(
-          dynamicTest("inParallelToSet should collect", () -> {
+          dynamicTest("parallelToSet should collect", () -> {
               List<Integer> elements = IntStream.generate(() -> 42).limit(100).boxed().collect(Collectors.toList());
               Collection<Integer> result = elements.stream().collect(collector).join();
 
@@ -70,7 +70,7 @@ class SmokeTests {
                 .hasSize(1)
                 .contains(42);
           }),
-          dynamicTest("inParallelToSet should collect to empty", () -> {
+          dynamicTest("parallelToSet should collect to empty", () -> {
               Collection<Integer> result11 = Stream.<Integer>of().collect(collector).join();
 
               assertThat(result11)
@@ -80,7 +80,7 @@ class SmokeTests {
 
     private Stream<DynamicTest> forListCollector(Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<List<Integer>>> collector) {
         return of(
-          dynamicTest("inParallelToList should collect", () -> {
+          dynamicTest("parallelToList should collect", () -> {
               List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
               Collection<Integer> result = elements.stream().collect(collector).join();
 
@@ -88,7 +88,7 @@ class SmokeTests {
                 .hasSameSizeAs(elements)
                 .containsOnlyElementsOf(elements);
           }),
-          dynamicTest("inParallelToList should collect to empty", () -> {
+          dynamicTest("parallelToList should collect to empty", () -> {
               Collection<Integer> result11 = Stream.<Integer>of().collect(collector).join();
 
               assertThat(result11)
