@@ -196,7 +196,7 @@ public final class ParallelCollectors {
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
      * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -259,7 +259,7 @@ public final class ParallelCollectors {
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
      * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -324,7 +324,7 @@ public final class ParallelCollectors {
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
      * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -385,7 +385,7 @@ public final class ParallelCollectors {
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
      * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
@@ -419,7 +419,7 @@ public final class ParallelCollectors {
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
      * Additionally, it will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
      *
      * <br>
      * Example:
