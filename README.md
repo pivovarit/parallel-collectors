@@ -100,7 +100,7 @@ Or just `join()` if you just want to wait for the result:
       .collect(parallelToList(i -> fetchFromDb(i), executor))
       .join();
       
-What's more, since JDK9, [you can even provide own timeout](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#get(long,java.util.concurrent.TimeUnit)) (but you will need to handle a handful of exceptions).
+What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
       
 ## Examples
 
