@@ -53,14 +53,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.add(future);
-            workingQueue.add(() -> {
-                try {
-                    return operation.apply(e);
-                } finally {
-                    limiter.release();
-                }
-            });
-
+            workingQueue.add(() -> tryWithResources(() -> operation.apply(e), limiter::release));
             acc.add(future);
         };
     }

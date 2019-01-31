@@ -25,11 +25,13 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
+@SuppressWarnings("WeakerAccess")
 abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
-    protected final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     protected final Executor executor;
+
+    protected final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
 
     protected final Queue<Supplier<R>> workingQueue;
     protected final Queue<CompletableFuture<R>> pending;
@@ -83,26 +85,25 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (workingQueue.size() != 0) {
             dispatcher.execute(dispatch(workingQueue));
-
-            return getListCompletableFutureFunction()
-              .andThen(f -> {
-                  try {
-                      return f;
-                  } finally {
-                      dispatcher.shutdown();
-                  }
-              });
+            return foldLeftFutures().andThen(f -> tryWithResources(() -> f, dispatcher::shutdown));
         } else {
-            dispatcher.shutdown();
-            return getListCompletableFutureFunction();
+            return tryWithResources(this::foldLeftFutures, dispatcher::shutdown);
         }
     }
 
-    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> getListCompletableFutureFunction() {
+    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
         return futures -> futures.stream()
           .reduce(completedFuture(collectionFactory.get()),
             accumulatingResults(),
             mergingPartialResults());
+    }
+
+    static <T> T tryWithResources(Supplier<T> action, Runnable cleanup) {
+        try {
+            return action.get();
+        } finally {
+            cleanup.run();
+        }
     }
 
     private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
