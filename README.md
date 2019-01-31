@@ -100,7 +100,7 @@ Or just `join()` if you just want to wait for the result:
       .collect(parallelToList(i -> fetchFromDb(i), executor))
       .join();
       
-What's more, since JDK9, [you can even provide own timeout](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#get(long,java.util.concurrent.TimeUnit)) (but you will need to handle a handful of exceptions).
+What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
       
 ## Examples
 
@@ -190,7 +190,7 @@ What's more, since JDK9, [you can even provide own timeout](https://docs.oracle.
 ## Version history
 
 ### [0.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1) (30-01-2019)
-- Changed to the naming convention from `inParallelTo*` to `parallelTo*`
+- Changes to the naming convention from `inParallelTo*` to `parallelTo*`
 - Improved `UnboundedParallelCollector` implementation
 - Improved _JavaDocs_
 
