@@ -4,7 +4,7 @@
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
 
-Parallel Collectors is a toolkit easining parallel collection processing in Java. 
+Parallel Collectors is a toolkit easining parallel collection processing in Java using Stream API. 
 
     list.stream()
       .collect(parallelToList(i -> fetchFromDb(i), executor, 2)).orTimeout(1000, MILLISECONDS)
