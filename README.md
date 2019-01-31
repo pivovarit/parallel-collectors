@@ -190,7 +190,7 @@ What's more, since JDK9, [you can even provide own timeout](https://docs.oracle.
 ## Version history
 
 ### [0.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1) (30-01-2019)
-- Changed to the naming convention from `inParallelTo*` to `parallelTo*`
+- Changes to the naming convention from `inParallelTo*` to `parallelTo*`
 - Improved `UnboundedParallelCollector` implementation
 - Improved _JavaDocs_
 
