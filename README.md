@@ -85,7 +85,7 @@ Above can be used in conjunction with `Stream#collect` as any other `Collector` 
 All Parallel Collectors™ expose resulting `Collection` wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> fetchFromDb(i), executor));
 
 This makes it possible to conveniently apply callbacks, and compose with other `CompletableFuture`s:
 
@@ -93,6 +93,14 @@ This makes it possible to conveniently apply callbacks, and compose with other `
       .collect(parallelToList(i -> fetchFromDb(i), executor))
       .thenAccept(System.out::println)
       .thenRun(() -> System.out.println("Finished!"));
+      
+Or just `join()` if you just want to wait for the result:
+
+    List<String> result = list.stream()
+      .collect(parallelToList(i -> fetchFromDb(i), executor))
+      .join();
+      
+What's more, since JDK9, [you can even provide own timeout](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#get(long,java.util.concurrent.TimeUnit)) (but you will need to handle a handful of exceptions).
       
 ## Examples
 
