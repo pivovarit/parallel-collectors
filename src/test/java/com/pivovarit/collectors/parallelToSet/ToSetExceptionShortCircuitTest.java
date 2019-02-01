@@ -3,14 +3,12 @@ package com.pivovarit.collectors.parallelToSet;
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.IntStream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ToSetExceptionShortCircuitTest extends ExecutorAwareTest {
 
@@ -19,24 +17,20 @@ class ToSetExceptionShortCircuitTest extends ExecutorAwareTest {
 
         // given
         executor = threadPoolExecutor(1);
+        LongAdder counter = new LongAdder();
 
-        assertTimeoutPreemptively(Duration.ofMillis(500), () -> {
-            assertThatThrownBy(() -> {
-                IntStream.generate(() -> 42).boxed()
-                  .map(i -> supplier(() -> {
-                      try {
-                          Thread.sleep(100);
-                      } catch (InterruptedException e) {
-                          throw new IllegalStateException(e);
-                      }
-                      throw new IllegalArgumentException();
-                  }))
-                  .collect(parallelToSet(executor, 1))
-                  .join();
-            })
-              .isInstanceOf(CompletionException.class)
-              .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-        });
+        try {
+            IntStream.generate(() -> 42).boxed().limit(10)
+              .map(i -> supplier(() -> {
+                  counter.increment();
+                  throw new IllegalArgumentException();
+              }))
+              .collect(parallelToSet(executor, 1))
+              .join();
+        } catch (Exception e) {
+        }
+
+        assertThat(counter.longValue()).isOne();
     }
 
     @Test
@@ -44,23 +38,19 @@ class ToSetExceptionShortCircuitTest extends ExecutorAwareTest {
 
         // given
         executor = threadPoolExecutor(1);
+        LongAdder counter = new LongAdder();
 
-        assertTimeoutPreemptively(Duration.ofMillis(500), () -> {
-            assertThatThrownBy(() -> {
-                IntStream.generate(() -> 42).boxed()
-                  .map(i -> supplier(() -> {
-                      try {
-                          Thread.sleep(100);
-                      } catch (InterruptedException e) {
-                          throw new IllegalStateException(e);
-                      }
-                      throw new IllegalArgumentException();
-                  }))
-                  .collect(parallelToSet(executor))
-                  .join();
-            })
-              .isInstanceOf(CompletionException.class)
-              .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-        });
+        try {
+            IntStream.generate(() -> 42).boxed().limit(10)
+              .map(i -> supplier(() -> {
+                  counter.increment();
+                  throw new IllegalArgumentException();
+              }))
+              .collect(parallelToSet(executor))
+              .join();
+        } catch (Exception e) {
+        }
+
+        assertThat(counter.longValue()).isOne();
     }
 }
