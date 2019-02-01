@@ -20,15 +20,15 @@ They are:
 
 ## Rationale
 
-Stream API is a great tool for collection processing especially if that involves parallelism of CPU-intensive tasks, for example:
+Stream API is a great tool for processing collections, especially if you want to parallelize execution of CPU-intensive tasks, for example:
 
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-**All tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance**. 
-Unfortunately, it's not the best choice for running blocking operations which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that relies on it.
+**However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance**. 
+Unfortunately, it's not the best choice for running blocking operations which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that uses it as well.
 
 For example:
 
@@ -36,7 +36,7 @@ For example:
       .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
 
-A standard solution to the problem involves creating a separate thread pool and offloading the common pool from tasks executing blocking operations... but here's the catch.
+That problem has been already solved and the solution is simple - one needs to create a separate thread pool and offload the common one from blocking tasks... but there's a catch.
 
 **Sadly, Streams can run parallel computations only on the common `ForkJoinPool`** which effectively restricts the applicability of parallel Streams to CPU-bound jobs.
 
