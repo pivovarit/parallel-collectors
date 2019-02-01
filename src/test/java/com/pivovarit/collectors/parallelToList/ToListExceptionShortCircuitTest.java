@@ -22,18 +22,14 @@ class ToListExceptionShortCircuitTest extends ExecutorAwareTest {
 
         assertTimeoutPreemptively(Duration.ofMillis(500), () -> {
             assertThatThrownBy(() -> {
-                IntStream.range(0, 1000000).boxed()
+                IntStream.generate(() -> 42).boxed()
                   .map(i -> supplier(() -> {
                       try {
                           Thread.sleep(100);
                       } catch (InterruptedException e) {
                           throw new IllegalStateException(e);
                       }
-                      if (i != Integer.MAX_VALUE) {
-                          throw new IllegalArgumentException();
-                      } else {
-                          return i;
-                      }
+                      throw new IllegalArgumentException();
                   }))
                   .collect(parallelToList(executor, 1))
                   .join();
@@ -51,18 +47,14 @@ class ToListExceptionShortCircuitTest extends ExecutorAwareTest {
 
         assertTimeoutPreemptively(Duration.ofMillis(500), () -> {
             assertThatThrownBy(() -> {
-                IntStream.range(0, 1000000).boxed()
+                IntStream.generate(() -> 42).boxed()
                   .map(i -> supplier(() -> {
                       try {
                           Thread.sleep(100);
                       } catch (InterruptedException e) {
                           throw new IllegalStateException(e);
                       }
-                      if (i != Integer.MAX_VALUE) {
-                          throw new IllegalArgumentException();
-                      } else {
-                          return i;
-                      }
+                      throw new IllegalArgumentException();
                   }))
                   .collect(parallelToList(executor))
                   .join();

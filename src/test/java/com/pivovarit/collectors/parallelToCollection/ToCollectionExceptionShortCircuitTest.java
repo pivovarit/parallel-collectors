@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 public class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
@@ -23,18 +24,14 @@ public class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
 
         assertTimeoutPreemptively(Duration.ofMillis(500), () -> {
             assertThatThrownBy(() -> {
-                IntStream.range(0, 1000000).boxed()
+                IntStream.generate(() -> 42).boxed().limit(1000)
                   .map(i -> supplier(() -> {
                       try {
                           Thread.sleep(100);
                       } catch (InterruptedException e) {
                           throw new IllegalStateException(e);
                       }
-                      if (i != Integer.MAX_VALUE) {
-                          throw new IllegalArgumentException();
-                      } else {
-                          return i;
-                      }
+                      throw new IllegalArgumentException();
                   }))
                   .collect(parallelToCollection(ArrayList::new, executor, 1))
                   .join();
@@ -50,20 +47,16 @@ public class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(1);
 
-        assertTimeoutPreemptively(Duration.ofMillis(500), () -> {
+        assertTimeout(Duration.ofMillis(500), () -> {
             assertThatThrownBy(() -> {
-                IntStream.range(0, 1000000).boxed()
+                IntStream.generate(() -> 42).boxed().limit(1000)
                   .map(i -> supplier(() -> {
                       try {
                           Thread.sleep(100);
                       } catch (InterruptedException e) {
                           throw new IllegalStateException(e);
                       }
-                      if (i != Integer.MAX_VALUE) {
-                          throw new IllegalArgumentException();
-                      } else {
-                          return i;
-                      }
+                      throw new IllegalArgumentException();
                   }))
                   .collect(parallelToCollection(ArrayList::new, executor))
                   .join();
