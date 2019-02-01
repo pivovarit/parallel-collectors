@@ -1,6 +1,7 @@
 package com.pivovarit.collectors.parallelToCollection;
 
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -11,13 +12,17 @@ import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
+class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
+
+    @BeforeEach
+    void setup() {
+        executor = threadPoolExecutor(1);
+    }
 
     @Test
     void shouldCollectToCollectionAndShortCircuitOnException() {
 
         // given
-        executor = threadPoolExecutor(1);
         LongAdder counter = new LongAdder();
 
         try {
@@ -38,7 +43,6 @@ public class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
     void shouldCollectToCollectionAndShortCircuitOnExceptionUnbounded() {
 
         // given
-        executor = threadPoolExecutor(1);
         LongAdder counter = new LongAdder();
 
         try {
