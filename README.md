@@ -10,6 +10,13 @@ Parallel Collectors is a toolkit easining parallel collection processing in Java
       .collect(parallelToList(i -> fetchFromDb(i), executor, 2)).orTimeout(1000, MILLISECONDS)
       .thenAccept(System.out::println)
       .thenRun(() -> System.out.println("Finished!"));
+      
+They are:
+- lightweight (yes, you could achieve the same with Project Reactor, but often there's no need for a cannon)
+- configurable (it's possible to provide your own `Executor` and `parallelism`)
+- non-blocking (no need to block the main thread while waiting for the result to arrive)
+- non-invasive (they are just custom implementations of `Collector` interface)
+- powerful (combined power of Stream API and `CompletableFutures` allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 
 ## Rationale
 
