@@ -11,6 +11,7 @@ import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
  * @author Grzegorz Piwowarek
@@ -27,7 +28,7 @@ class ToCollectionNonBlockingFutureTest {
 
     @Test
     void shouldReturnImmediatelyCollection() {
-        assertTimeout(ofMillis(100), () ->
+        assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
             .collect(parallelToCollection(ArrayList::new, blockingExecutor, 42)));
@@ -35,7 +36,7 @@ class ToCollectionNonBlockingFutureTest {
 
     @Test
     void shouldReturnImmediatelyCollectionUnbounded() {
-        assertTimeout(ofMillis(100), () ->
+        assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
             .collect(parallelToCollection(ArrayList::new, blockingExecutor)));
@@ -43,7 +44,7 @@ class ToCollectionNonBlockingFutureTest {
 
     @Test
     void shouldReturnImmediatelyCollectionMapping() {
-        assertTimeout(ofMillis(100), () ->
+        assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
             .collect(parallelToCollection(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), ArrayList::new, blockingExecutor, 42)));

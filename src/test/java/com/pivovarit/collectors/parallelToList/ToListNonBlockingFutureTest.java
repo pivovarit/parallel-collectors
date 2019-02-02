@@ -10,6 +10,7 @@ import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
  * @author Grzegorz Piwowarek
@@ -26,7 +27,7 @@ class ToListNonBlockingFutureTest {
 
     @Test
     void shouldReturnImmediatelyList() {
-        assertTimeout(ofMillis(100), () ->
+        assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
             .collect(parallelToList(blockingExecutor, 42)));
@@ -34,7 +35,7 @@ class ToListNonBlockingFutureTest {
 
     @Test
     void shouldReturnImmediatelyListUnbounded() {
-        assertTimeout(ofMillis(100), () ->
+        assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
             .collect(parallelToList(blockingExecutor)));
@@ -42,7 +43,7 @@ class ToListNonBlockingFutureTest {
 
     @Test
     void shouldReturnImmediatelyListMapping() {
-        assertTimeout(ofMillis(100), () ->
+        assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
             .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor, 42)));
@@ -50,7 +51,7 @@ class ToListNonBlockingFutureTest {
 
     @Test
     void shouldReturnImmediatelyListMappingUnbounded() {
-        assertTimeout(ofMillis(100), () ->
+        assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
             .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor)));
