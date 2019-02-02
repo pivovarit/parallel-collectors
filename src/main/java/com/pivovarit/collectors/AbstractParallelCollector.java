@@ -101,7 +101,7 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
         });
     }
 
-    protected static <RX> RX supplyWithResources(Supplier<RX> supplier, Runnable action) {
+    protected static <T1> T1 supplyWithResources(Supplier<T1> supplier, Runnable action) {
         try {
             return supplier.get();
         } finally {
