@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertTimeout;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class ConsistencyTest extends ExecutorAwareTest {
 
