@@ -79,8 +79,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> parallelToCollection(Supplier<C> collectionSupplier, Executor executor) {
-        requireNonNull(collectionSupplier);
-        requireNonNull(executor);
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
         return new ThrottlingParallelCollector<>(Supplier::get, collectionSupplier, executor , Integer.MAX_VALUE);
     }
 
@@ -110,8 +110,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<C>> parallelToCollection(Supplier<C> collectionSupplier, Executor executor, int parallelism) {
-        requireNonNull(collectionSupplier);
-        requireNonNull(executor);
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(Supplier::get, collectionSupplier, executor, assertParallelismValid(parallelism));
     }
@@ -146,9 +146,9 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
-        requireNonNull(collectionSupplier);
-        requireNonNull(executor);
-        requireNonNull(mapper);
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
         return new ThrottlingParallelCollector<>(mapper, collectionSupplier, executor, Integer.MAX_VALUE);
     }
 
@@ -178,9 +178,9 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
-        requireNonNull(collectionSupplier);
-        requireNonNull(executor);
-        requireNonNull(mapper);
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(mapper, collectionSupplier, executor, parallelism);
     }
@@ -213,7 +213,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> parallelToList(Executor executor) {
-        requireNonNull(executor);
+        requireNonNull(executor, "executor can't be null");
         return new ThrottlingParallelCollector<>(Supplier::get, ArrayList::new, executor, Integer.MAX_VALUE);
     }
 
@@ -243,7 +243,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<List<T>>> parallelToList(Executor executor, int parallelism) {
-        requireNonNull(executor);
+        requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(Supplier::get, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
@@ -277,8 +277,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor);
-        requireNonNull(mapper);
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
         return new ThrottlingParallelCollector<>(mapper, ArrayList::new, executor, Integer.MAX_VALUE);
     }
 
@@ -307,8 +307,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor);
-        requireNonNull(mapper);
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
@@ -341,7 +341,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> parallelToSet(Executor executor) {
-        requireNonNull(executor);
+        requireNonNull(executor, "executor can't be null");
         return new ThrottlingParallelCollector<>(Supplier::get, HashSet::new, executor, Integer.MAX_VALUE);
     }
 
@@ -369,7 +369,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<Set<T>>> parallelToSet(Executor executor, int parallelism) {
-        requireNonNull(executor);
+        requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(Supplier::get, HashSet::new, executor, assertParallelismValid(parallelism));
     }
@@ -403,8 +403,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor);
-        requireNonNull(mapper);
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
         return new ThrottlingParallelCollector<>(mapper, HashSet::new, executor, Integer.MAX_VALUE);
     }
 
@@ -438,8 +438,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, List<CompletableFuture<R>>, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor);
-        requireNonNull(mapper);
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
         return new ThrottlingParallelCollector<>(mapper, HashSet::new, executor, parallelism);
     }
