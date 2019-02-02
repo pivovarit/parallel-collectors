@@ -58,8 +58,6 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
         this.pending = pending;
     }
 
-    protected abstract Runnable dispatch(Queue<Supplier<R>> tasks);
-
     @Override
     public abstract BiConsumer<List<CompletableFuture<R>>, T> accumulator();
 

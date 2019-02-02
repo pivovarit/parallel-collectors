@@ -96,8 +96,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         dispatcher.shutdown();
     }
 
-    @Override
-    protected Runnable dispatch(Queue<Supplier<R>> tasks) {
+    private Runnable dispatch(Queue<Supplier<R>> tasks) {
         return () -> {
             Supplier<R> task;
             while ((task = tasks.poll()) != null && !Thread.currentThread().isInterrupted()) {
