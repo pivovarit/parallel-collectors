@@ -9,8 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -118,17 +116,5 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
             left.add(right);
             return left;
         });
-    }
-
-    private class CustomThreadFactory implements ThreadFactory {
-        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
-
-        @Override
-        public Thread newThread(Runnable task) {
-            Thread thread = defaultThreadFactory.newThread(task);
-            thread.setName("parallel-executor-" + thread.getName());
-            thread.setDaemon(true);
-            return thread;
-        }
     }
 }
