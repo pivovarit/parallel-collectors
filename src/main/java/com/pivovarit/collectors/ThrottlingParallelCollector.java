@@ -101,8 +101,8 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         };
     }
 
-    private CompletableFuture<R> runNext(Supplier<R> task) {
-        return supplyAsync(task, executor)
+    private void runNext(Supplier<R> task) {
+        supplyAsync(task, executor)
           .whenComplete((r, throwable) -> {
               CompletableFuture<R> next = Objects.requireNonNull(pending.poll());
               supplyWithResources(() -> throwable == null
