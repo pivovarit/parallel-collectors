@@ -190,7 +190,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 
 ### Dependencies
 
-**None - the library is implemented using core Java libraries.**
+None - the library is implemented using core Java libraries.
 
 ### Tips
 
