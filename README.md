@@ -194,10 +194,10 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 
 ### Good Practices
 
-- Always provide reasonable timeouts for `CompletableFuture`s [how-to](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)
-- Name your thread pools - it makes debugging easier [how-to](https://stackoverflow.com/a/9748697/2229438)
-- Limit the size of a working queue of your thread pool [source](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
-- Always limit the level of parallelism [source](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
+- Always provide reasonable timeouts for `CompletableFuture`s [(how-to)](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit))
+- Name your thread pools - it makes debugging easier [(how-to)](https://stackoverflow.com/a/9748697/2229438)
+- Limit the size of a working queue of your thread pool [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
+- Always limit the level of parallelism [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
 
 ## Version history
