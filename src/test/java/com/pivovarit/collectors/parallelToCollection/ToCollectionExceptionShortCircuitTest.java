@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
+import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -28,14 +29,9 @@ class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
         // given
         LongAdder counter = new LongAdder();
 
-        assertThatThrownBy(() ->
-          IntStream.generate(() -> 42).boxed().limit(100)
-            .map(i -> supplier(() -> {
-                counter.increment();
-                throw new IllegalArgumentException();
-            }))
-            .collect(parallelToCollection(ArrayList::new, executor, 10))
-            .join()).isInstanceOf(CompletionException.class)
+        assertThatThrownBy(IntStream.generate(() -> 42).boxed().limit(100)
+          .map(i -> supplier(() -> incrementAndThrow(counter)))
+          .collect(parallelToCollection(ArrayList::new, executor, 10))::join).isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
         assertThat(counter.longValue()).isLessThanOrEqualTo(T_POOL_SIZE);
@@ -46,14 +42,9 @@ class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
         // given
         LongAdder counter = new LongAdder();
 
-        assertThatThrownBy(() ->
-          IntStream.generate(() -> 42).boxed().limit(100)
-            .map(i -> supplier(() -> {
-                counter.increment();
-                throw new IllegalArgumentException();
-            }))
-            .collect(parallelToCollection(ArrayList::new, executor))
-            .join()).isInstanceOf(CompletionException.class)
+        assertThatThrownBy(IntStream.generate(() -> 42).boxed().limit(100)
+          .map(i -> supplier(() -> incrementAndThrow(counter)))
+          .collect(parallelToCollection(ArrayList::new, executor))::join).isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
         assertThat(counter.longValue()).isLessThanOrEqualTo(T_POOL_SIZE);

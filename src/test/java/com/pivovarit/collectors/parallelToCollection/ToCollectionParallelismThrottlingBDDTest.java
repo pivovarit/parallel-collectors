@@ -18,8 +18,8 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
-import static com.pivovarit.collectors.infrastructure.TimeUtils.returnWithDelay;
-import static com.pivovarit.collectors.infrastructure.TimeUtils.timed;
+import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
+import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 
