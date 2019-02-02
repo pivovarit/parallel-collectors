@@ -59,7 +59,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
             all.add(future);
             workingQueue.add(() -> {
                 try {
-                    return operation.apply(e);
+                    return failed.get() ? null : operation.apply(e);
                 } catch (Exception ex) {
                     exception = ex;
                     failed.set(true);
