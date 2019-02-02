@@ -58,13 +58,16 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
         this.pending = pending;
     }
 
+    protected abstract Runnable dispatch(Queue<Supplier<R>> tasks);
+
     @Override
-    abstract public BiConsumer<List<CompletableFuture<R>>, T> accumulator();
+    public abstract BiConsumer<List<CompletableFuture<R>>, T> accumulator();
 
     @Override
     public abstract Set<Characteristics> characteristics();
 
-    abstract protected Runnable dispatch(Queue<Supplier<R>> tasks);
+    @Override
+    public abstract Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher();
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
@@ -78,9 +81,6 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
             return left;
         };
     }
-
-    @Override
-    abstract public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher();
 
     protected Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
         return futures -> futures.stream()
