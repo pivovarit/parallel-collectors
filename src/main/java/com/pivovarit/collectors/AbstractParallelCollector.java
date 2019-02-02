@@ -9,8 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -60,13 +58,16 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
         this.pending = pending;
     }
 
+    protected abstract Runnable dispatch(Queue<Supplier<R>> tasks);
+
     @Override
-    abstract public BiConsumer<List<CompletableFuture<R>>, T> accumulator();
+    public abstract BiConsumer<List<CompletableFuture<R>>, T> accumulator();
 
     @Override
     public abstract Set<Characteristics> characteristics();
 
-    abstract protected Runnable dispatch(Queue<Supplier<R>> tasks);
+    @Override
+    public abstract Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher();
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
@@ -81,29 +82,11 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
         };
     }
 
-    @Override
-    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        if (workingQueue.size() != 0) {
-            dispatcher.execute(dispatch(workingQueue));
-            return foldLeftFutures().andThen(f -> tryWithResources(() -> f, dispatcher::shutdown));
-        } else {
-            return tryWithResources(this::foldLeftFutures, dispatcher::shutdown);
-        }
-    }
-
-    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
+    protected Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
         return futures -> futures.stream()
           .reduce(completedFuture(collectionFactory.get()),
             accumulatingResults(),
             mergingPartialResults());
-    }
-
-    static <T> T tryWithResources(Supplier<T> action, Runnable cleanup) {
-        try {
-            return action.get();
-        } finally {
-            cleanup.run();
-        }
     }
 
     private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
@@ -118,17 +101,5 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
             left.add(right);
             return left;
         });
-    }
-
-    private class CustomThreadFactory implements ThreadFactory {
-        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
-
-        @Override
-        public Thread newThread(Runnable task) {
-            Thread thread = defaultThreadFactory.newThread(task);
-            thread.setName("parallel-executor-" + thread.getName());
-            thread.setDaemon(true);
-            return thread;
-        }
     }
 }
