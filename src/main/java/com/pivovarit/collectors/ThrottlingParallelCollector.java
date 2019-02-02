@@ -2,8 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
@@ -17,7 +15,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
  * @author Grzegorz Piwowarek
@@ -47,7 +44,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       Queue<Supplier<R>> workingQueue,
       Queue<CompletableFuture<R>> pending) {
         super(operation, collection, executor, workingQueue, pending);
-        this.limiter =  new Semaphore(parallelism);
+        this.limiter = new Semaphore(parallelism);
     }
 
     @Override
@@ -61,8 +58,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 } catch (Exception ex) {
                     failed.set(true);
                     throw ex;
-                }
-                finally {
+                } finally {
                     limiter.release();
                 }
             });
