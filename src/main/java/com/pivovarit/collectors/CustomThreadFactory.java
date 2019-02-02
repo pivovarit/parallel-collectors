@@ -3,6 +3,9 @@ package com.pivovarit.collectors;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 class CustomThreadFactory implements ThreadFactory {
     private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
