@@ -4,13 +4,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
 /**
  * @author Grzegorz Piwowarek
  */
-public final class TimeUtils {
-    private TimeUtils() {
+public final class TestUtils {
+    private TestUtils() {
     }
 
     public static <T> Map.Entry<T, Long> timed(Supplier<T> runnable) {
@@ -28,5 +29,19 @@ public final class TimeUtils {
         }
 
         return value;
+    }
+
+
+    public static Object incrementAndThrow(LongAdder counter) {
+        counter.increment();
+        throw new IllegalArgumentException();
+    }
+
+    public static Integer throwing(Integer i) {
+        if (i == 7) {
+            throw new IllegalArgumentException();
+        } else {
+            return i;
+        }
     }
 }
