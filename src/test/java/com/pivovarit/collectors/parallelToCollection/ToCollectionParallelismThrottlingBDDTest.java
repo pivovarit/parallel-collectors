@@ -65,5 +65,4 @@ public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest 
           .collect(collector)
           .join();
     }
-
 }
