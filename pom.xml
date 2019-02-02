@@ -118,7 +118,6 @@
             <artifactId>junit-vintage-engine</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
-
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
@@ -136,12 +135,6 @@
             <groupId>com.pholser</groupId>
             <artifactId>junit-quickcheck-generators</artifactId>
             <version>${quickcheck.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-            <version>3.1.6</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
