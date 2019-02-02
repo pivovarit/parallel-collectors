@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Grzegorz Piwowarek
  */
 class ToCollectionParallelismThrottlingTest {
-
     @Test
     void shouldParallelizeToListAndRespectParallelizm() throws InterruptedException {
         // given

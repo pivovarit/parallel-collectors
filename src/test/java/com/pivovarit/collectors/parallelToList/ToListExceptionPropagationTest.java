@@ -20,18 +20,16 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(10);
 
-        assertThatThrownBy(() -> {
-            IntStream.range(0, 10).boxed()
-              .map(i -> supplier(() -> {
-                  if (i == 7) {
-                      throw new IllegalArgumentException();
-                  } else {
-                      return i;
-                  }
-              }))
-              .collect(parallelToList(executor, 10))
-              .join();
-        })
+        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
+          .map(i -> supplier(() -> {
+              if (i == 7) {
+                  throw new IllegalArgumentException();
+              } else {
+                  return i;
+              }
+          }))
+          .collect(parallelToList(executor, 10))
+          .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
     }
@@ -41,18 +39,16 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(10);
 
-        assertThatThrownBy(() -> {
-            IntStream.range(0, 10).boxed()
-              .map(i -> supplier(() -> {
-                  if (i == 7) {
-                      throw new IllegalArgumentException();
-                  } else {
-                      return i;
-                  }
-              }))
-              .collect(parallelToList(executor))
-              .join();
-        })
+        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
+          .map(i -> supplier(() -> {
+              if (i == 7) {
+                  throw new IllegalArgumentException();
+              } else {
+                  return i;
+              }
+          }))
+          .collect(parallelToList(executor))
+          .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
     }
@@ -62,17 +58,15 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(10);
 
-        assertThatThrownBy(() -> {
-            IntStream.range(0, 10).boxed()
-              .collect(parallelToList(i -> {
-                  if (i == 7) {
-                      throw new IllegalArgumentException();
-                  } else {
-                      return i;
-                  }
-              }, executor, 10))
-              .join();
-        })
+        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
+          .collect(parallelToList(i -> {
+              if (i == 7) {
+                  throw new IllegalArgumentException();
+              } else {
+                  return i;
+              }
+          }, executor, 10))
+          .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
     }
@@ -82,17 +76,15 @@ class ToListExceptionPropagationTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(10);
 
-        assertThatThrownBy(() -> {
-            IntStream.range(0, 10).boxed()
-              .collect(parallelToList(i -> {
-                  if (i == 7) {
-                      throw new IllegalArgumentException();
-                  } else {
-                      return i;
-                  }
-              }, executor))
-              .join();
-        })
+        assertThatThrownBy(() -> IntStream.range(0, 10).boxed()
+          .collect(parallelToList(i -> {
+              if (i == 7) {
+                  throw new IllegalArgumentException();
+              } else {
+                  return i;
+              }
+          }, executor))
+          .join())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
     }

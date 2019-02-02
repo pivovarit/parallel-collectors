@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Grzegorz Piwowarek
  */
 class ToListParallelismThrottlingTest {
-
     @Test
     void shouldParallelizeToSetAndRespectParallelizm() throws InterruptedException {
         // given
@@ -38,7 +37,6 @@ class ToListParallelismThrottlingTest {
         Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
     }
-
 
     @Test
     void shouldParallelizeToSetAndRespectParallelizmMapping() throws InterruptedException {

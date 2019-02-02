@@ -10,8 +10,7 @@ import java.util.function.Supplier;
  * @author Grzegorz Piwowarek
  */
 public final class TimeUtils {
-    private TimeUtils() {
-    }
+    private TimeUtils() {  }
 
     public static <T> Map.Entry<T, Long> timed(Supplier<T> runnable) {
         Instant start = Instant.now();
@@ -26,7 +25,6 @@ public final class TimeUtils {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-
         return value;
     }
 }

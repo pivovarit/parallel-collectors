@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
  * @author Grzegorz Piwowarek
  */
 class ToCollectionNonBlockingFutureTest {
-
     private final Executor blockingExecutor = i -> {
         try {
             Thread.sleep(1000);

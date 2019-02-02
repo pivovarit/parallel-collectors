@@ -25,7 +25,6 @@ class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
 
     @Test
     void shouldCollectToCollectionAndShortCircuitOnException() {
-
         // given
         LongAdder counter = new LongAdder();
 
@@ -44,7 +43,6 @@ class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
 
     @Test
     void shouldCollectToCollectionAndShortCircuitOnExceptionUnbounded() {
-
         // given
         LongAdder counter = new LongAdder();
 

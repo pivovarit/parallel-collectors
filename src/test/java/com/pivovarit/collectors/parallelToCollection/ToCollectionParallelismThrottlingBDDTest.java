@@ -28,7 +28,6 @@ import static org.assertj.core.data.Offset.offset;
  */
 @RunWith(JUnitQuickcheck.class)
 public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest {
-
     private static final long BLOCKING_MILLIS = 50;
     private static final long CONSTANT_DELAY = 100;
 

@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author Grzegorz Piwowarek
  */
 class ToCollectionRejectedExecutionHandlingTest extends ExecutorAwareTest {
-
     @Test
     void shouldCollectToCollectionAndSurviveRejectedExecutionException() {
         // given

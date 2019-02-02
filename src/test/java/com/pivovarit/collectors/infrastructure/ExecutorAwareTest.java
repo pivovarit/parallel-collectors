@@ -21,7 +21,6 @@ public abstract class ExecutorAwareTest {
         }
     }
 
-
     public static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
         return new ThreadPoolExecutor(unitsOfWork, unitsOfWork,
           0L, TimeUnit.MILLISECONDS,
