@@ -2,6 +2,7 @@ package com.pivovarit.collectors.parallelToSet;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
@@ -15,12 +16,20 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
  */
 class ToSetNonBlockingFutureTest {
 
+    private final Executor blockingExecutor = i -> {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    };
+
     @Test
     void shouldReturnImmediatelySet() {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(parallelToSet(Runnable::run, 42)));
+            .collect(parallelToSet(blockingExecutor, 42)));
     }
 
     @Test
@@ -28,7 +37,7 @@ class ToSetNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(parallelToSet(Runnable::run)));
+            .collect(parallelToSet(blockingExecutor)));
     }
 
     @Test
@@ -36,7 +45,7 @@ class ToSetNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
-            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run, 42)));
+            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor, 42)));
     }
 
     @Test
@@ -44,6 +53,6 @@ class ToSetNonBlockingFutureTest {
         assertTimeout(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> 42))
             .limit(5)
-            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), Runnable::run)));
+            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor)));
     }
 }
