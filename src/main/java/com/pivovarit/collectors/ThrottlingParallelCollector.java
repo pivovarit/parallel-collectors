@@ -25,7 +25,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     private final Semaphore limiter;
 
-    private final AtomicBoolean failed = new AtomicBoolean(false);
+    private final AtomicBoolean isFailed = new AtomicBoolean(false);
 
     ThrottlingParallelCollector(
       Function<T, R> operation,
@@ -52,7 +52,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.add(future);
-            workingQueue.add(() -> failed.get() ? null : operation.apply(e));
+            workingQueue.add(() -> isFailed.get() ? null : operation.apply(e));
             acc.add(future);
         };
     }
@@ -61,19 +61,9 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (workingQueue.size() != 0) {
             dispatcher.execute(dispatch(workingQueue));
-            return foldLeftFutures().andThen(f -> {
-                try {
-                    return f;
-                } finally {
-                    dispatcher.shutdown();
-                }
-            });
+            return foldLeftFutures().andThen(f -> supplyWithResources(() -> f, dispatcher::shutdown));
         } else {
-            try {
-                return foldLeftFutures();
-            } finally {
-                dispatcher.shutdown();
-            }
+            return supplyWithResources(this::foldLeftFutures, dispatcher::shutdown);
         }
     }
 
@@ -94,27 +84,11 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
                 try {
                     limiter.acquire();
-                    if (failed.get()) {
+                    if (isFailed.get()) {
                         pending.forEach(f -> f.cancel(true));
                         break;
                     }
-                    supplyAsync(task, executor)
-                      .handle((r, throwable) -> {
-                          CompletableFuture<R> nextFuture = Objects.requireNonNull(pending.poll());
-                          try {
-                              if (throwable == null) {
-                                  return nextFuture.complete(r);
-                              } else {
-                                  try {
-                                      return nextFuture.completeExceptionally(throwable);
-                                  } finally {
-                                      failed.set(true);
-                                  }
-                              }
-                          } finally {
-                              limiter.release();
-                          }
-                      });
+                    runNext(task);
                 } catch (InterruptedException e) {
                     closeAndCompleteRemaining(e);
                     Thread.currentThread().interrupt();
@@ -127,8 +101,27 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         };
     }
 
+    private CompletableFuture<R> runNext(Supplier<R> task) {
+        return supplyAsync(task, executor)
+          .whenComplete((r, throwable) -> {
+              CompletableFuture<R> next = Objects.requireNonNull(pending.poll());
+              supplyWithResources(() -> throwable == null
+                  ? next.complete(r)
+                  : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed.set(true)),
+                limiter::release);
+          });
+    }
+
     private void closeAndCompleteRemaining(Exception e) {
         pending.forEach(future -> future.completeExceptionally(e));
         limiter.release();
+    }
+
+    private static <RX> RX supplyWithResources(Supplier<RX> supplier, Runnable action) {
+        try {
+            return supplier.get();
+        } finally {
+            action.run();
+        }
     }
 }
