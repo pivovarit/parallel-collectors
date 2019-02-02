@@ -180,17 +180,17 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.2</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.0.1'
+    compile 'com.pivovarit:parallel-collectors:0.0.2'
 
 ### Dependencies
 
-**None - the library is implemented using core Java libraries.**
+None - the library is implemented using core Java libraries.
 
 ### Good Practices
 
@@ -201,6 +201,9 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
 
 ## Version history
+
+### [0.0.2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.2) (02-02-2019)
+- Fixed the issue with lack of short-circuiting when an exception gets thrown (#140)
 
 ### [0.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1) (30-01-2019)
 - Changes to the naming convention from `inParallelTo*` to `parallelTo*`
