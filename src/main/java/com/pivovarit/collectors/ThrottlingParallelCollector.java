@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
@@ -24,7 +25,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
   implements AutoCloseable {
 
     private final Semaphore limiter;
-
     private final AtomicBoolean isFailed = new AtomicBoolean(false);
 
     ThrottlingParallelCollector(
@@ -63,7 +63,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
             dispatcher.execute(dispatch(workingQueue));
             return foldLeftFutures().andThen(f -> supplyWithResources(() -> f, dispatcher::shutdown));
         } else {
-            return supplyWithResources(this::foldLeftFutures, dispatcher::shutdown);
+            return supplyWithResources(() -> (__) -> completedFuture(collectionFactory.get()), dispatcher::shutdown);
         }
     }
 
@@ -114,14 +114,5 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     private void closeAndCompleteRemaining(Exception e) {
         pending.forEach(future -> future.completeExceptionally(e));
-        limiter.release();
-    }
-
-    private static <RX> RX supplyWithResources(Supplier<RX> supplier, Runnable action) {
-        try {
-            return supplier.get();
-        } finally {
-            action.run();
-        }
     }
 }

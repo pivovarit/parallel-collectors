@@ -36,7 +36,7 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
 
     protected final Function<T, R> operation;
 
-    private final Supplier<C> collectionFactory;
+    protected final Supplier<C> collectionFactory;
 
     AbstractParallelCollector(
       Function<T, R> operation,
@@ -99,5 +99,13 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
             left.add(right);
             return left;
         });
+    }
+
+    protected static <T1> T1 supplyWithResources(Supplier<T1> supplier, Runnable action) {
+        try {
+            return supplier.get();
+        } finally {
+            action.run();
+        }
     }
 }
