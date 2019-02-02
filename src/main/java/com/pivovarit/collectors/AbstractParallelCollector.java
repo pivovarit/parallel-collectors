@@ -80,28 +80,13 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
     }
 
     @Override
-    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        if (workingQueue.size() != 0) {
-            dispatcher.execute(dispatch(workingQueue));
-            return foldLeftFutures().andThen(f -> tryWithResources(() -> f, dispatcher::shutdown));
-        } else {
-            return tryWithResources(this::foldLeftFutures, dispatcher::shutdown);
-        }
-    }
+    abstract public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher();
 
-    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
+    protected Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
         return futures -> futures.stream()
           .reduce(completedFuture(collectionFactory.get()),
             accumulatingResults(),
             mergingPartialResults());
-    }
-
-    static <T> T tryWithResources(Supplier<T> action, Runnable cleanup) {
-        try {
-            return action.get();
-        } finally {
-            cleanup.run();
-        }
     }
 
     private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {

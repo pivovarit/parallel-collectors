@@ -76,6 +76,26 @@ class UnboundedParallelCollector<T, R, C extends Collection<R>>
         };
     }
 
+    @Override
+    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
+        if (workingQueue.size() != 0) {
+            dispatcher.execute(dispatch(workingQueue));
+            return foldLeftFutures().andThen(f -> {
+                try {
+                    return f;
+                } finally {
+                    dispatcher.shutdown();
+                }
+            });
+        } else {
+            try {
+                return foldLeftFutures();
+            } finally {
+                dispatcher.shutdown();
+            }
+        }
+    }
+
     private CompletableFuture<R> getNextFuture() {
         CompletableFuture<R> future;
         do {
