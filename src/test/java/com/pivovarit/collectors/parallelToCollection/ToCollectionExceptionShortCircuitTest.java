@@ -16,9 +16,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
 
+    private static final int T_POOL_SIZE = 4;
+
     @BeforeEach
     void setup() {
-        executor = threadPoolExecutor(1);
+        executor = threadPoolExecutor(T_POOL_SIZE);
     }
 
     @Test
@@ -27,18 +29,17 @@ class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
         // given
         LongAdder counter = new LongAdder();
 
-        assertThatThrownBy(() -> {
-            IntStream.generate(() -> 42).boxed().limit(10)
-              .map(i -> supplier(() -> {
-                  counter.increment();
-                  throw new IllegalArgumentException();
-              }))
-              .collect(parallelToCollection(ArrayList::new, executor, 1))
-              .join();
-        }).isInstanceOf(CompletionException.class)
+        assertThatThrownBy(() ->
+          IntStream.generate(() -> 42).boxed().limit(100)
+            .map(i -> supplier(() -> {
+                counter.increment();
+                throw new IllegalArgumentException();
+            }))
+            .collect(parallelToCollection(ArrayList::new, executor, 10))
+            .join()).isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
-        assertThat(counter.longValue()).isOne();
+        assertThat(counter.longValue()).isLessThanOrEqualTo(T_POOL_SIZE);
     }
 
     @Test
@@ -47,18 +48,16 @@ class ToCollectionExceptionShortCircuitTest extends ExecutorAwareTest {
         // given
         LongAdder counter = new LongAdder();
 
-        assertThatThrownBy(() -> {
-
-            IntStream.generate(() -> 42).boxed().limit(10)
-              .map(i -> supplier(() -> {
-                  counter.increment();
-                  throw new IllegalArgumentException();
-              }))
-              .collect(parallelToCollection(ArrayList::new, executor))
-              .join();
-        }).isInstanceOf(CompletionException.class)
+        assertThatThrownBy(() ->
+          IntStream.generate(() -> 42).boxed().limit(100)
+            .map(i -> supplier(() -> {
+                counter.increment();
+                throw new IllegalArgumentException();
+            }))
+            .collect(parallelToCollection(ArrayList::new, executor))
+            .join()).isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
-        assertThat(counter.longValue()).isOne();
+        assertThat(counter.longValue()).isLessThanOrEqualTo(T_POOL_SIZE);
     }
 }

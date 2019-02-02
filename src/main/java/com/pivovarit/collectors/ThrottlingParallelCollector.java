@@ -52,16 +52,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.add(future);
-            workingQueue.add(() -> {
-                try {
-                    return failed.get() ? null : operation.apply(e);
-                } catch (Exception ex) {
-                    failed.set(true);
-                    throw ex;
-                } finally {
-                    limiter.release();
-                }
-            });
+            workingQueue.add(() -> failed.get() ? null : operation.apply(e));
             acc.add(future);
         };
     }
@@ -104,17 +95,25 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 try {
                     limiter.acquire();
                     if (failed.get()) {
-                        pending.stream()
-                          .filter(f -> !f.isDone())
-                          .forEach(f -> f.cancel(true));
+                        pending.forEach(f -> f.cancel(true));
                         break;
                     }
                     supplyAsync(task, executor)
                       .handle((r, throwable) -> {
                           CompletableFuture<R> nextFuture = Objects.requireNonNull(pending.poll());
-                          return throwable == null
-                            ? nextFuture.complete(r)
-                            : nextFuture.completeExceptionally(throwable);
+                          try {
+                              if (throwable == null) {
+                                  return nextFuture.complete(r);
+                              } else {
+                                  try {
+                                      return nextFuture.completeExceptionally(throwable);
+                                  } finally {
+                                      failed.set(true);
+                                  }
+                              }
+                          } finally {
+                              limiter.release();
+                          }
                       });
                 } catch (InterruptedException e) {
                     closeAndCompleteRemaining(e);
@@ -129,7 +128,7 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     }
 
     private void closeAndCompleteRemaining(Exception e) {
-        limiter.release();
         pending.forEach(future -> future.completeExceptionally(e));
+        limiter.release();
     }
 }
