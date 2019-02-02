@@ -2,8 +2,10 @@ package com.pivovarit.collectors;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -24,10 +26,9 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
   implements AutoCloseable {
 
-    private final Queue<CompletableFuture<R>> all;
     private final Semaphore limiter;
+
     private final AtomicBoolean failed = new AtomicBoolean(false);
-    private volatile Exception exception;
 
     ThrottlingParallelCollector(
       Function<T, R> operation,
@@ -36,7 +37,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       int parallelism) {
         super(operation, collectionFactory, executor);
         this.limiter = new Semaphore(parallelism);
-        this.all = new LinkedList<>();
     }
 
     ThrottlingParallelCollector(
@@ -48,7 +48,6 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       Queue<CompletableFuture<R>> pending) {
         super(operation, collection, executor, workingQueue, pending);
         this.limiter =  new Semaphore(parallelism);
-        this.all = new LinkedList<>();
     }
 
     @Override
@@ -56,12 +55,10 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.add(future);
-            all.add(future);
             workingQueue.add(() -> {
                 try {
                     return failed.get() ? null : operation.apply(e);
                 } catch (Exception ex) {
-                    exception = ex;
                     failed.set(true);
                     throw ex;
                 }
@@ -112,12 +109,14 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 try {
                     limiter.acquire();
                     if (failed.get()) {
-                        closeAndCompleteRemaining(exception);
+                        pending.stream()
+                          .filter(f -> !f.isDone())
+                          .forEach(f -> f.cancel(true));
                         break;
                     }
-                    CompletableFuture<Boolean> future = supplyAsync(task, executor)
+                    supplyAsync(task, executor)
                       .handle((r, throwable) -> {
-                          CompletableFuture<R> nextFuture = getNextFuture();
+                          CompletableFuture<R> nextFuture = Objects.requireNonNull(pending.poll());
                           return throwable == null
                             ? nextFuture.complete(r)
                             : nextFuture.completeExceptionally(throwable);
@@ -134,16 +133,8 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         };
     }
 
-    private CompletableFuture<R> getNextFuture() {
-        CompletableFuture<R> future;
-        do {
-            future = pending.poll();
-        } while (future == null);
-        return future;
-    }
-
     private void closeAndCompleteRemaining(Exception e) {
         limiter.release();
-        all.forEach(future -> future.completeExceptionally(e));
+        pending.forEach(future -> future.completeExceptionally(e));
     }
 }
