@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
+import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -30,10 +31,7 @@ class ToListExceptionShortCircuitTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() ->
           IntStream.generate(() -> 42).boxed().limit(100)
-            .map(i -> supplier(() -> {
-                counter.increment();
-                throw new IllegalArgumentException();
-            }))
+            .map(i -> supplier(() -> incrementAndThrow(counter)))
             .collect(parallelToList(executor, 10))
             .join()).isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
@@ -49,10 +47,7 @@ class ToListExceptionShortCircuitTest extends ExecutorAwareTest {
 
         assertThatThrownBy(() ->
           IntStream.generate(() -> 42).boxed().limit(100)
-            .map(i -> supplier(() -> {
-                counter.increment();
-                throw new IllegalArgumentException();
-            }))
+            .map(i -> supplier(() -> incrementAndThrow(counter)))
             .collect(parallelToList(executor))
             .join()).isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
