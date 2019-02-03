@@ -9,11 +9,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -59,7 +57,8 @@ class MappingCollectorFunctionalTest {
           shouldCollect(collector, name),
           shouldCollectToEmpty(collector, name),
           shouldNotBlockWhenReturningFuture(collector, name),
-          shouldShortCircuitOnException(collector, name));
+          shouldShortCircuitOnException(collector, name),
+          shouldNotSwallowException(collector, name));
     }
 
     //@Test
@@ -113,6 +112,26 @@ class MappingCollectorFunctionalTest {
 
                 assertThat(counter.longValue()).isLessThanOrEqualTo(size);
             }, size);
+        });
+    }
+
+    //@Test
+    private static <T, R extends Collection<T>> DynamicTest shouldNotSwallowException(BiFunction<Function<T, T>, Executor, Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should not swallow exception", name), () -> {
+            List<T> elements = (List<T>) IntStream.range(0, 10).boxed().collect(Collectors.toList());
+
+            runWithExecutor(e -> {
+                assertThatThrownBy(elements.stream()
+                  .collect(collector.apply(i -> {
+                      if ((Integer) i == 7) {
+                          throw new IllegalArgumentException();
+                      } else {
+                          return i;
+                      }
+                  }, e))::join)
+                  .isInstanceOf(CompletionException.class)
+                  .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+            }, 10);
         });
     }
 }

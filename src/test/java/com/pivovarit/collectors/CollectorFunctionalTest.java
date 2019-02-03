@@ -58,7 +58,8 @@ class CollectorFunctionalTest {
           shouldCollect(collector, name),
           shouldCollectToEmpty(collector, name),
           shouldNotBlockWhenReturningFuture(collector, name),
-          shouldShortCircuitOnException(collector, name));
+          shouldShortCircuitOnException(collector, name),
+          shouldNotSwallowException(collector, name));
     }
 
     //@Test
@@ -118,6 +119,27 @@ class CollectorFunctionalTest {
 
                 assertThat(counter.longValue()).isLessThanOrEqualTo(size);
             }, size);
+        });
+    }
+
+    //@Test
+    private static <T, R extends Collection<T>> DynamicTest shouldNotSwallowException(Function<Executor, Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should not swallow exception", name), () -> {
+            List<T> elements = (List<T>) IntStream.range(0, 10).boxed().collect(Collectors.toList());
+
+            runWithExecutor(e -> {
+                assertThatThrownBy(elements.stream()
+                  .map(i -> supplier(() -> {
+                      if ((Integer) i == 7) {
+                          throw new IllegalArgumentException();
+                      } else {
+                          return i;
+                      }
+                  }))
+                  .collect(collector.apply(e))::join)
+                  .isInstanceOf(CompletionException.class)
+                  .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+            }, 10);
         });
     }
 }
