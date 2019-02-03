@@ -33,31 +33,39 @@ class SmokeTests {
     @TestFactory
     Stream<DynamicTest> testCollectors() {
         return of(
-          forCollector(parallelToSet(i -> i, executor), "parallelToSet"),
-          forCollector(parallelToSet(i -> i, executor), "parallelToSet"),
-          forCollector(parallelToList(i -> i, executor), "parallelToList"),
-          forCollector(parallelToList(i -> i, executor, 2), "parallelToList"),
-          forCollector(parallelToCollection(i -> i, ArrayList::new, executor), "parallelToCollection"),
-          forCollector(parallelToCollection(i -> i, ArrayList::new, executor, 2), "parallelToCollection")
+          forCollector(parallelToSet(i -> i, executor), "parallelToSet(p=inf)"),
+          forCollector(parallelToSet(i -> i, executor, 10), "parallelToSet(p=10)"),
+          forCollector(parallelToList(i -> i, executor), "parallelToList(p=inf)"),
+          forCollector(parallelToList(i -> i, executor, 10), "parallelToList(p=10)"),
+          forCollector(parallelToCollection(i -> i, ArrayList::new, executor), "parallelToCollection(p=inf)"),
+          forCollector(parallelToCollection(i -> i, ArrayList::new, executor, 10), "parallelToCollection(p=10)")
         ).flatMap(identity());
     }
 
-    private <T, R extends Collection<T>> Stream<DynamicTest> forCollector(Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>> collector, String name) {
+    private static <T, R extends Collection<T>> Stream<DynamicTest> forCollector(Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>> collector, String name) {
         return of(
-          dynamicTest(format("%s: should collect", name), () -> {
-              List<T> elements = (List<T>) IntStream.range(0, 10).boxed().collect(Collectors.toList());
-              Collection<T> result = elements.stream().collect(collector).join();
+          shouldCollect(collector, name),
+          shouldCollectToEmpty(collector, name));
+    }
 
-              assertThat(result)
-                .hasSameSizeAs(elements)
-                .containsOnlyElementsOf(elements);
-          }),
-          dynamicTest(format("%s: should collect to empty", name), () -> {
-              List<T> elements = (List<T>) IntStream.of().boxed().collect(Collectors.toList());
-              Collection<T> result11 = elements.stream().collect(collector).join();
+    private static <T, R extends Collection<T>> DynamicTest shouldCollectToEmpty(Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>> collector, String name) {
+        return dynamicTest(format("%s: should collect to empty", name), () -> {
+            List<T> elements = (List<T>) IntStream.of().boxed().collect(Collectors.toList());
+            Collection<T> result11 = elements.stream().collect(collector).join();
 
-              assertThat(result11)
-                .isEmpty();
-          }));
+            assertThat(result11)
+              .isEmpty();
+        });
+    }
+
+    private static <T, R extends Collection<T>> DynamicTest shouldCollect(Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>> collector, String name) {
+        return dynamicTest(format("%s: should collect", name), () -> {
+            List<T> elements = (List<T>) IntStream.range(0, 10).boxed().collect(Collectors.toList());
+            Collection<T> result = elements.stream().collect(collector).join();
+
+            assertThat(result)
+              .hasSameSizeAs(elements)
+              .containsOnlyElementsOf(elements);
+        });
     }
 }
