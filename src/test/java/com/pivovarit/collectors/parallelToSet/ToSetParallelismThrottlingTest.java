@@ -1,5 +1,6 @@
 package com.pivovarit.collectors.parallelToSet;
 
+import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -23,7 +24,8 @@ class ToSetParallelismThrottlingTest {
     void shouldParallelizeToCollectionAndRespectParallelizm() throws InterruptedException {
         // given
         int parallelism = 2;
-        CountingExecutor executor = new CountingExecutor();
+        TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
+
 
         CompletableFuture<Set<Long>> result =
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
@@ -42,7 +44,7 @@ class ToSetParallelismThrottlingTest {
     void shouldParallelizeToCollectionAndRespectParallelizmMapping() throws InterruptedException {
         // given
         int parallelism = 2;
-        CountingExecutor executor = new CountingExecutor();
+        TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
         CompletableFuture<Set<Long>> result =
           Stream.generate(() -> 42)
@@ -55,18 +57,5 @@ class ToSetParallelismThrottlingTest {
 
         Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
-    }
-
-    public static class CountingExecutor implements Executor {
-        private final LongAdder longAdder = new LongAdder();
-
-        @Override
-        public void execute(Runnable command) {
-            longAdder.increment();
-        }
-
-        long count() {
-            return longAdder.longValue();
-        }
     }
 }

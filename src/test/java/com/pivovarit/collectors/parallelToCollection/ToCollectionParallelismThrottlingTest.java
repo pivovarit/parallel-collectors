@@ -1,11 +1,10 @@
 package com.pivovarit.collectors.parallelToCollection;
 
+import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
@@ -23,7 +22,7 @@ class ToCollectionParallelismThrottlingTest {
     void shouldParallelizeToListAndRespectParallelizm() throws InterruptedException {
         // given
         int parallelism = 2;
-        CountingExecutor executor = new CountingExecutor();
+        TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
         CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> supplier(() ->
           returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
@@ -42,7 +41,7 @@ class ToCollectionParallelismThrottlingTest {
     void shouldParallelizeToListAndRespectParallelizmMapping() throws InterruptedException {
         // given
         int parallelism = 2;
-        CountingExecutor executor = new CountingExecutor();
+        TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
         CompletableFuture<ArrayList<Long>> result =
           Stream.generate(() -> 42)
@@ -55,18 +54,5 @@ class ToCollectionParallelismThrottlingTest {
 
         Thread.sleep(50);
         assertThat(executor.count()).isEqualTo(parallelism);
-    }
-
-    public static class CountingExecutor implements Executor {
-        private final LongAdder longAdder = new LongAdder();
-
-        @Override
-        public void execute(Runnable command) {
-            longAdder.increment();
-        }
-
-        long count() {
-            return longAdder.longValue();
-        }
     }
 }

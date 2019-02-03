@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Supplier;
 
@@ -42,6 +43,19 @@ public final class TestUtils {
             throw new IllegalArgumentException();
         } else {
             return i;
+        }
+    }
+
+    public static class CountingExecutor implements Executor {
+        private final LongAdder longAdder = new LongAdder();
+
+        @Override
+        public void execute(Runnable command) {
+            longAdder.increment();
+        }
+
+        public long count() {
+            return longAdder.longValue();
         }
     }
 }
