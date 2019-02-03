@@ -70,22 +70,16 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 _parallelToList_:
 
-- `parallelToList(Executor executor)`
-- `parallelToList(Executor executor, int parallelism)`
 - `parallelToList(Function<T, R> mapper, Executor executor)`
 - `parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
 _parallelToSet_:
 
-- `parallelToSet(Executor executor)`
-- `parallelToSet(Executor executor, int parallelism)`
 - `parallelToSet(Function<T, R> mapper, Executor executor)`
 - `parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
 _parallelToCollection_:
 
-- `parallelToCollection(Supplier<R> collection, Executor executor)`
-- `parallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
 - `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
 - `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
