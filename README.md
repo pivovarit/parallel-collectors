@@ -205,7 +205,7 @@ None - the library is implemented using core Java libraries.
 ### [0.0.2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.2) (02-02-2019)
 - Fixed the issue with lack of short-circuiting when an exception gets thrown (#140)
 
-### [0.0.1](https://github.com/pivovarit/parallel-collectors/areleases/tag/0.0.1) (30-01-2019)
+### [0.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.1) (30-01-2019)
 - Changes to the naming convention from `inParallelTo*` to `parallelTo*`
 - Improved `UnboundedParallelCollector` implementation
 - Improved _JavaDocs_
