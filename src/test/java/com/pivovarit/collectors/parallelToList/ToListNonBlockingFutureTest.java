@@ -40,20 +40,4 @@ class ToListNonBlockingFutureTest {
             .limit(5)
             .collect(parallelToList(blockingExecutor)));
     }
-
-    @Test
-    void shouldReturnImmediatelyListMapping() {
-        assertTimeoutPreemptively(ofMillis(100), () ->
-          Stream.generate(() -> supplier(() -> 42))
-            .limit(5)
-            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor, 42)));
-    }
-
-    @Test
-    void shouldReturnImmediatelyListMappingUnbounded() {
-        assertTimeoutPreemptively(ofMillis(100), () ->
-          Stream.generate(() -> supplier(() -> 42))
-            .limit(5)
-            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor)));
-    }
 }

@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
-class ConsistencyTest extends ExecutorAwareTest {
+class ThrottlingParallelCollectorConsistencyTest extends ExecutorAwareTest {
 
     @Test
     void shouldNotDeadlockOnQueueAdd() {

@@ -40,20 +40,4 @@ class ToSetNonBlockingFutureTest {
             .limit(5)
             .collect(parallelToSet(blockingExecutor)));
     }
-
-    @Test
-    void shouldReturnImmediatelySetMapping() {
-        assertTimeoutPreemptively(ofMillis(100), () ->
-          Stream.generate(() -> supplier(() -> 42))
-            .limit(5)
-            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor, 42)));
-    }
-
-    @Test
-    void shouldReturnImmediatelySetMappingUnbounded() {
-        assertTimeout(ofMillis(100), () ->
-          Stream.generate(() -> supplier(() -> 42))
-            .limit(5)
-            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), blockingExecutor)));
-    }
 }
