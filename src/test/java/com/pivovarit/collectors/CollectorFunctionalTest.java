@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 /**
  * @author Grzegorz Piwowarek
  */
-class CollectorFunctionalTests {
+class CollectorFunctionalTest {
 
     private static final Executor executor = Executors.newFixedThreadPool(100);
 
