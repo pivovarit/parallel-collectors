@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 /**
  * @author Grzegorz Piwowarek
  */
-class SmokeTests {
+class FunctionalTests {
 
     private static final Executor executor = Executors.newFixedThreadPool(100);
 
