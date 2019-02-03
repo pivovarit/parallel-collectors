@@ -48,16 +48,6 @@ class SmokeTests {
           shouldCollectToEmpty(collector, name));
     }
 
-    private static <T, R extends Collection<T>> DynamicTest shouldCollectToEmpty(Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>> collector, String name) {
-        return dynamicTest(format("%s: should collect to empty", name), () -> {
-            List<T> elements = (List<T>) IntStream.of().boxed().collect(Collectors.toList());
-            Collection<T> result11 = elements.stream().collect(collector).join();
-
-            assertThat(result11)
-              .isEmpty();
-        });
-    }
-
     private static <T, R extends Collection<T>> DynamicTest shouldCollect(Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>> collector, String name) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<T> elements = (List<T>) IntStream.range(0, 10).boxed().collect(Collectors.toList());
@@ -66,6 +56,16 @@ class SmokeTests {
             assertThat(result)
               .hasSameSizeAs(elements)
               .containsOnlyElementsOf(elements);
+        });
+    }
+
+    private static <T, R extends Collection<T>> DynamicTest shouldCollectToEmpty(Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>> collector, String name) {
+        return dynamicTest(format("%s: should collect to empty", name), () -> {
+            List<T> elements = (List<T>) IntStream.of().boxed().collect(Collectors.toList());
+            Collection<T> result11 = elements.stream().collect(collector).join();
+
+            assertThat(result11)
+              .isEmpty();
         });
     }
 }
