@@ -41,22 +41,4 @@ class ToCollectionNonBlockingFutureTest {
             .limit(5)
             .collect(parallelToCollection(ArrayList::new, blockingExecutor)));
     }
-
-    @Test
-    void shouldReturnImmediatelyCollectionMapping() {
-        assertTimeoutPreemptively(ofMillis(100), () ->
-          Stream.generate(() -> supplier(() -> 42))
-            .limit(5)
-            .collect(parallelToCollection(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), ArrayList::new, blockingExecutor, 42)));
-    }
-
-    @Test
-    void shouldReturnImmediatelyCollectionMappingUnbounded() {
-        assertTimeout(ofMillis(100), () ->
-          Stream.generate(() -> supplier(() -> 42))
-            .limit(5)
-            .collect(parallelToCollection(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), ArrayList::new, blockingExecutor)));
-    }
-
-
 }
