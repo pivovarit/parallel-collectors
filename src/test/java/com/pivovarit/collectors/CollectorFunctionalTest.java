@@ -10,7 +10,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
@@ -59,7 +61,8 @@ class CollectorFunctionalTest {
           shouldCollectToEmpty(collector, name),
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
-          shouldNotSwallowException(collector, name));
+          shouldNotSwallowException(collector, name),
+          shouldSurviveRejectedExecutionException(collector, name));
     }
 
     //@Test
@@ -140,6 +143,21 @@ class CollectorFunctionalTest {
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
             }, 10);
+        });
+    }
+
+    //@Test
+    private static <T, R extends Collection<T>> DynamicTest shouldSurviveRejectedExecutionException(Function<Executor, Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s:{ should not swallow exception", name), () -> {
+            Executor executor = command -> { throw new RejectedExecutionException(); };
+            List<T> elements = (List<T>) IntStream.range(0, 1000).boxed().collect(Collectors.toList());
+
+            assertThatThrownBy(() -> elements.stream()
+              .map(i -> supplier(() -> returnWithDelay(i, ofMillis(10000))))
+              .collect(collector.apply(executor))
+              .join())
+              .isInstanceOf(CompletionException.class)
+              .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
         });
     }
 }
