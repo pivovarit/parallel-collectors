@@ -20,14 +20,14 @@ They are:
 
 ## Rationale
 
-Stream API is a great tool for processing collections, especially if you want to parallelize execution of CPU-intensive tasks, for example:
+Stream API is a great tool for processing collections, especially if you need to parallelize execution of CPU-intensive tasks, for example:
 
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-**However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance**. 
+**However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance by default**. 
 Unfortunately, it's not the best choice for running blocking operations which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that uses it as well.
 
 For example:
@@ -36,9 +36,9 @@ For example:
       .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
 
-That problem has been already solved and the solution is simple - one needs to create a separate thread pool and offload the common one from blocking tasks... but there's a catch.
+That problem has been already solved and the solution is simple - one needs to create a separate thread pool and offload the common one from blocking operations... but there's a catch.
 
-**Sadly, Streams can run parallel computations only on the common `ForkJoinPool`** which effectively restricts the applicability of parallel Streams to CPU-bound jobs.
+**Sadly, Streams can run parallel computations only on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
 
 However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's considered harmful:
 
@@ -50,7 +50,7 @@ Plus, that approach was seriously flawed before JDK-10 - if a `Stream` was targe
 
 ## Philosophy
 
-Parallel Collectors are unopinionated by design so it's up to users to use them responsibly, which involves things like:
+Parallel Collectors are unopinionated by design so it's up to their users to use them responsibly, which involves things like:
 - proper configuration of a provided `Executor` and its lifecycle management
 - choosing the right parallelism level
 
@@ -65,21 +65,21 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 #### Available Collectors:
 
-`parallelToList`:
+_parallelToList_:
 
 - `parallelToList(Executor executor)`
 - `parallelToList(Executor executor, int parallelism)`
 - `parallelToList(Function<T, R> mapper, Executor executor)`
 - `parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
-`parallelToSet`:
+_parallelToSet_:
 
 - `parallelToSet(Executor executor)`
 - `parallelToSet(Executor executor, int parallelism)`
 - `parallelToSet(Function<T, R> mapper, Executor executor)`
 - `parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
-`parallelToCollection`:
+_parallelToCollection_:
 
 - `parallelToCollection(Supplier<R> collection, Executor executor)`
 - `parallelToCollection(Supplier<R> collection, Executor executor, int parallelism)`
@@ -106,7 +106,7 @@ This makes it possible to conveniently apply callbacks, and compose with other `
       .thenAccept(System.out::println)
       .thenRun(() -> System.out.println("Finished!"));
       
-Or just `join()` if you just want to wait for the result:
+Or just `join()` if you just want to block and wait for the result:
 
     List<String> result = list.stream()
       .collect(parallelToList(i -> fetchFromDb(i), executor))
@@ -114,7 +114,7 @@ Or just `join()` if you just want to wait for the result:
       
 What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
       
-## Examples
+## In Action
 
 ### 1. Parallelize and collect to List
 
