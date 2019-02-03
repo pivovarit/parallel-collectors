@@ -1,13 +1,15 @@
-package com.pivovarit.collectors.parallelToCollection;
+package com.pivovarit.collectors.parallelToList;
 
 import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -16,17 +18,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Grzegorz Piwowarek
  */
-class ToCollectionParallelismThrottlingTest {
+class ToListParallelismThrottlingTest {
+
     @Test
-    void shouldParallelizeToListAndRespectParallelizm() throws InterruptedException {
+    void shouldParallelizeToSetAndRespectParallelizm() throws InterruptedException {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
-        CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> supplier(() ->
-          returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
-          .limit(10)
-          .collect(parallelToCollection(ArrayList::new, executor, parallelism));
+        CompletableFuture<List<Long>> result =
+          Stream.generate(() -> supplier(() ->
+            returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
+            .limit(10)
+            .collect(parallelToList(executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -36,16 +40,18 @@ class ToCollectionParallelismThrottlingTest {
         assertThat(executor.count()).isEqualTo(parallelism);
     }
 
+
     @Test
-    void shouldParallelizeToListAndRespectParallelizmMapping() throws InterruptedException {
+    void shouldParallelizeToSetAndRespectParallelizmMapping() throws InterruptedException {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
-        CompletableFuture<ArrayList<Long>> result =
+
+        CompletableFuture<List<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(parallelToCollection(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), ArrayList::new, executor, parallelism));
+            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()

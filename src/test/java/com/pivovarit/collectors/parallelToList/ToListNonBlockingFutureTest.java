@@ -1,12 +1,11 @@
-package com.pivovarit.collectors.parallelToCollection;
+package com.pivovarit.collectors.parallelToList;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -16,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 /**
  * @author Grzegorz Piwowarek
  */
-class ToCollectionNonBlockingFutureTest {
+class ToListNonBlockingFutureTest {
 
     private final Executor blockingExecutor = i -> {
         try {
@@ -27,18 +26,18 @@ class ToCollectionNonBlockingFutureTest {
     };
 
     @Test
-    void shouldReturnImmediatelyCollection() {
+    void shouldReturnImmediatelyList() {
         assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(parallelToCollection(ArrayList::new, blockingExecutor, 42)));
+            .collect(parallelToList(blockingExecutor, 42)));
     }
 
     @Test
-    void shouldReturnImmediatelyCollectionUnbounded() {
+    void shouldReturnImmediatelyListUnbounded() {
         assertTimeoutPreemptively(ofMillis(100), () ->
           Stream.generate(() -> supplier(() -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE))))
             .limit(5)
-            .collect(parallelToCollection(ArrayList::new, blockingExecutor)));
+            .collect(parallelToList(blockingExecutor)));
     }
 }
