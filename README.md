@@ -15,10 +15,10 @@ Parallel Collectors is a toolkit easining parallel collection processing in Java
       .thenRun(() -> System.out.println("Finished!"));
       
 They are:
-- lightweight (yes, you could achieve the same with Project Reactor, but often there's no need for a cannon)
+- lightweight (yes, you could achieve the same with Project Reactor, but that's often a way too big tool for the job)
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
 - non-blocking (no need to block the main thread while waiting for the result to arrive)
-- non-invasive (they are just custom implementations of `Collector` interface)
+- non-invasive (they are just custom implementations of `Collector` interface, no magic inside)
 - powerful (combined power of Stream API and `CompletableFutures` allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 
 ## Rationale
@@ -30,7 +30,7 @@ Stream API is a great tool for processing collections, especially if you need to
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-**However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance by default**. 
+**However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance**. 
 Unfortunately, it's not the best choice for running blocking operations which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that uses it as well.
 
 For example:
@@ -61,9 +61,9 @@ Make sure to read API documentation before using these in production.
 
 ## Basic API
 
-The main entrypoint to the libary is the `com.pivovarit.collectors.ParallelCollectors` class - which mirrors the `java.util.stream.Collectors` class and contains static factory methods returning `java.util.stream.Collector` implementations with parallel processing capabilities.
+The main entrypoint to the libary is the `com.pivovarit.collectors.ParallelCollectors` class - which mirrors the `java.util.stream.Collectors` class and contains static factory methods returning `java.util.stream.Collector` implementations enhanced with parallel processing capabilities.
 
-Since the library relies on a native `java.util.stream.Collector` mechanism, it was possible to achieve compatibility with Stream API without any intrusive interference.
+Since the library relies on a native `java.util.stream.Collector` mechanism, it was possible to achieve compatibility with Stream API without performing any intrusive surgery.
 
 
 #### Available Collectors:
