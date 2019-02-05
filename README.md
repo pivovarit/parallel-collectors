@@ -10,7 +10,7 @@
 Parallel Collectors is a toolkit easining parallel collection processing in Java using Stream API. 
 
     list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor, 2)).orTimeout(1000, MILLISECONDS)
+      .collect(parallelToList(i -> foo(i), executor, 2)).orTimeout(1000, MILLISECONDS)
       .thenAccept(System.out::println)
       .thenRun(() -> System.out.println("Finished!"));
       
@@ -36,7 +36,7 @@ Unfortunately, it's not the best choice for running blocking operations which co
 For example:
 
     List<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
 
 That problem has been already solved and the solution is simple - one needs to create a separate thread pool and offload the common one from blocking operations... but there's a catch.
@@ -56,8 +56,17 @@ Plus, that approach was seriously flawed before JDK-10 - if a `Stream` was targe
 Parallel Collectors are unopinionated by design so it's up to their users to use them responsibly, which involves things like:
 - proper configuration of a provided `Executor` and its lifecycle management
 - choosing the right parallelism level
+- making sure that the tool is applied in the right context
 
 Make sure to read API documentation before using these in production.
+
+## A Few Words of Caution
+
+Even if this tool makes it easy to parallelize things, it doesn't always mean that you should, it comes with a price. Threads are expensive to create and switch between.
+
+Often, this library will turn out to be a wrong tool for the job, it's important to follow up on the root cause and double-check if parallelism is the right choice.
+
+**It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, reorganizing your data... or even just by using a different API method.**
 
 ## Basic API
 
@@ -94,19 +103,19 @@ Above can be used in conjunction with `Stream#collect` as any other `Collector` 
 All Parallel Collectors™ expose resulting `Collection` wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor));
+      .collect(parallelToList(i -> foo(i), executor));
 
 This makes it possible to conveniently apply callbacks, and compose with other `CompletableFuture`s:
 
     list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> foo(i), executor))
       .thenAccept(System.out::println)
       .thenRun(() -> System.out.println("Finished!"));
       
 Or just `join()` if you just want to block and wait for the result:
 
     List<String> result = list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> foo(i), executor))
       .join();
       
 What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
@@ -120,12 +129,12 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> foo(i), executor))
       .join(); // on CompletableFuture<Set<String>>
 
 #### with Parallel Streams
     List<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
       
 ### 2. Parallelize and collect to List non-blocking
@@ -135,7 +144,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor));
+      .collect(parallelToList(i -> foo(i), executor));
     
 #### with Parallel Streams
     ¯\_(ツ)_/¯
@@ -147,7 +156,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor))
+      .collect(parallelToList(i -> foo(i), executor))
       .join(); // on CompletableFuture<Set<String>>
     
 #### with Parallel Streams
@@ -160,7 +169,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     Executor executor = ...
 
     List<String> result = list.stream()
-      .collect(parallelToList(i -> fetchFromDb(i), executor, 42))
+      .collect(parallelToList(i -> foo(i), executor, 42))
       .join(); // on CompletableFuture<Set<String>>
     
 #### with Parallel Streams
@@ -169,7 +178,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     // global settings ¯\_(ツ)_/¯
     
     List<String> result = list.parallelStream()
-      .map(i -> fetchFromDb(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
    
 ### Maven Dependencies
