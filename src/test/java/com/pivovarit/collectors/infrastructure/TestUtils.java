@@ -35,18 +35,19 @@ public final class TestUtils {
         return value;
     }
 
+    public static long expectedDuration(long parallelism, long unitsOfWork, long singleJobDuration) {
+        if (unitsOfWork < parallelism) {
+            return singleJobDuration;
+        } else if (unitsOfWork % parallelism == 0) {
+            return (unitsOfWork / parallelism) * singleJobDuration;
+        } else {
+            return (unitsOfWork / parallelism + 1) * singleJobDuration;
+        }
+    }
 
     public static Object incrementAndThrow(LongAdder counter) {
         counter.increment();
         throw new IllegalArgumentException();
-    }
-
-    public static Integer throwing(Integer i) {
-        if (i == 7) {
-            throw new IllegalArgumentException();
-        } else {
-            return i;
-        }
     }
 
     public static class CountingExecutor implements Executor {
