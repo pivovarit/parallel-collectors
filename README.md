@@ -66,7 +66,7 @@ Even if this tool makes it easy to parallelize things, it doesn't always mean th
 
 Often, this library will turn out to be a wrong tool for the job, it's important to follow up on the root cause and double-check if parallelism is the right choice.
 
-**It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, reorganizing your data... or even just by using a different API method.**
+**It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, reorganizing your data... or even just by choosing a different API method.**
 
 ## Basic API
 
