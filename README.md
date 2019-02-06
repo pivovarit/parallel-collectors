@@ -60,11 +60,11 @@ Parallel Collectors are unopinionated by design so it's up to their users to use
 
 Make sure to read API documentation before using these in production.
 
-## A Few Words of Caution
+## Words of Caution
 
-Even if this tool makes it easy to parallelize things, it doesn't always mean that you should, it comes with a price. Threads are expensive to create and switch between.
+Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than the starting point.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
 
-Often, this library will turn out to be a wrong tool for the job, it's important to follow up on the root cause and double-check if parallelism is the right choice.
+Often, this library will turn out to be a wrong tool for the job, it's important to follow up on the root cause and double-check if parallelism is the way to go.
 
 **It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, reorganizing your data... or even just by choosing a different API method.**
 
