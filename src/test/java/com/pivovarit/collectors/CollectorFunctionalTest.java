@@ -176,6 +176,11 @@ class CollectorFunctionalTest {
                 R result = elements.stream()
                   .map(i -> supplier(() -> {
                       countDownLatch.countDown();
+                      try {
+                          countDownLatch.await();
+                      } catch (InterruptedException e) {
+                          throw new RuntimeException(e);
+                      }
                       return i;
                   }))
                   .collect(collector.apply(executor))

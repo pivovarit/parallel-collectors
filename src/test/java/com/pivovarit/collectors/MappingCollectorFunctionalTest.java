@@ -167,6 +167,11 @@ class MappingCollectorFunctionalTest {
                 R result = elements.stream()
                   .collect(collector.apply(i -> {
                       countDownLatch.countDown();
+                      try {
+                          countDownLatch.await();
+                      } catch (InterruptedException e) {
+                          throw new RuntimeException(e);
+                      }
                       return i;
                   }, executor))
                   .join();
