@@ -16,7 +16,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
@@ -69,7 +68,7 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
-        return () -> synchronizedList(new ArrayList<>());
+        return ArrayList::new;
     }
 
     @Override
@@ -82,22 +81,27 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
 
     protected Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
         return futures -> futures.stream()
-          .reduce(completedFuture(collectionFactory.get()),
+          .reduce(completedFuture(new ConcurrentLinkedQueue<>()),
             accumulatingResults(),
-            mergingPartialResults());
+            mergingPartialResults())
+          .thenApply(list -> {
+              C collection = collectionFactory.get();
+              collection.addAll(list);
+              return collection;
+          });
     }
 
     private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
-        return (f1, f2) -> f1.thenCombine(f2, (left, right) -> {
-            left.addAll(right);
-            return left;
+        return (f1, f2) -> f1.thenCombine(f2, (l, r) -> {
+            l.addAll(r);
+            return l;
         });
     }
 
     private static <T1, R1 extends Collection<T1>> BiFunction<CompletableFuture<R1>, CompletableFuture<T1>, CompletableFuture<R1>> accumulatingResults() {
-        return (list, object) -> list.thenCombine(object, (left, right) -> {
-            left.add(right);
-            return left;
+        return (list, object) -> list.thenCombine(object, (l, r) -> {
+            l.add(r);
+            return l;
         });
     }
 
