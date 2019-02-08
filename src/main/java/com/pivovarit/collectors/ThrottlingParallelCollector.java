@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -33,7 +32,8 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Semaphore limiter;
-    private final AtomicBoolean isFailed = new AtomicBoolean(false);
+
+    private volatile boolean isFailed = false;
 
     private final Executor executor;
     private final Queue<Supplier<R>> workingQueue;
@@ -83,7 +83,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             pending.add(future);
-            workingQueue.add(() -> isFailed.get() ? null : operation.apply(e));
+            workingQueue.add(() -> isFailed ? null : operation.apply(e));
             acc.add(future);
         };
     }
@@ -115,7 +115,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
                 try {
                     limiter.acquire();
-                    if (isFailed.get()) {
+                    if (isFailed) {
                         pending.forEach(f -> f.cancel(true));
                         break;
                     }
@@ -138,7 +138,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
               CompletableFuture<R> next = Objects.requireNonNull(pending.poll());
               supplyWithResources(() -> throwable == null
                   ? next.complete(r)
-                  : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed.set(true)),
+                  : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed = true),
                 limiter::release);
           });
     }
