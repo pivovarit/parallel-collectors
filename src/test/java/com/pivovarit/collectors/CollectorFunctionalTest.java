@@ -188,7 +188,7 @@ class CollectorFunctionalTest {
 
                 assertThat(new HashSet<>(result))
                   .hasSameSizeAs(elements)
-                  .containsOnlyElementsOf(elements);
+                  .containsAll(elements);
             } finally {
                 executor.shutdownNow();
             }
