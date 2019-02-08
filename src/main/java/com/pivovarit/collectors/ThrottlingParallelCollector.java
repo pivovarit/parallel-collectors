@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -7,44 +8,74 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
  * @author Grzegorz Piwowarek
  */
-class ThrottlingParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, R, C>
-  implements AutoCloseable {
+@SuppressWarnings("WeakerAccess")
+final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
+    private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Semaphore limiter;
     private final AtomicBoolean isFailed = new AtomicBoolean(false);
 
+    private final Executor executor;
+    private final Queue<Supplier<R>> workingQueue;
+    private final Queue<CompletableFuture<R>> pending;
+
+    private final Function<T, R> operation;
+    private final Supplier<C> collectionFactory;
+
     ThrottlingParallelCollector(
       Function<T, R> operation,
-      Supplier<C> collectionFactory,
+      Supplier<C> collection,
       Executor executor,
       int parallelism) {
-        super(operation, collectionFactory, executor);
-        this.limiter = new Semaphore(parallelism);
+        this(operation, collection, executor, new ConcurrentLinkedQueue<>(), new ConcurrentLinkedQueue<>(), parallelism);
     }
 
     ThrottlingParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor,
-      int parallelism,
       Queue<Supplier<R>> workingQueue,
-      Queue<CompletableFuture<R>> pending) {
-        super(operation, collection, executor, workingQueue, pending);
+      Queue<CompletableFuture<R>> pending,
+      int parallelism) {
+        this.executor = executor;
+        this.collectionFactory = collection;
+        this.operation = operation;
+        this.workingQueue = workingQueue;
+        this.pending = pending;
         this.limiter = new Semaphore(parallelism);
+    }
+
+    @Override
+    public Supplier<List<CompletableFuture<R>>> supplier() {
+        return ArrayList::new;
+    }
+
+    @Override
+    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
+        return (left, right) -> {
+            left.addAll(right);
+            return left;
+        };
     }
 
     @Override
@@ -114,5 +145,34 @@ class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     private void closeAndCompleteRemaining(Exception e) {
         pending.forEach(future -> future.completeExceptionally(e));
+    }
+
+    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
+        return futures -> futures.stream()
+          .reduce(completedFuture(collectionFactory.get()),
+            accumulatingResults(),
+            mergingPartialResults());
+    }
+
+    private static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
+        return (f1, f2) -> f1.thenCombine(f2, (left, right) -> {
+            left.addAll(right);
+            return left;
+        });
+    }
+
+    private static <T1, R1 extends Collection<T1>> BiFunction<CompletableFuture<R1>, CompletableFuture<T1>, CompletableFuture<R1>> accumulatingResults() {
+        return (list, object) -> list.thenCombine(object, (left, right) -> {
+            left.add(right);
+            return left;
+        });
+    }
+
+    private static <T1> T1 supplyWithResources(Supplier<T1> supplier, Runnable action) {
+        try {
+            return supplier.get();
+        } finally {
+            action.run();
+        }
     }
 }

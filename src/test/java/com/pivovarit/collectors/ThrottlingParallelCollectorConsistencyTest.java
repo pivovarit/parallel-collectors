@@ -22,7 +22,7 @@ class ThrottlingParallelCollectorConsistencyTest extends ExecutorAwareTest {
         assertTimeout(Duration.ofSeconds(2), () -> {
             try {
                 IntStream.range(0, 10).boxed()
-                  .collect(new ThrottlingParallelCollector<Integer, Integer, List<Integer>>((Integer i) -> i, ArrayList::new, executor, 10, new ConcurrentLinkedQueue<>(),
+                  .collect(new ThrottlingParallelCollector<Integer, Integer, List<Integer>>((Integer i) -> i, ArrayList::new, executor, new ConcurrentLinkedQueue<>(),
                     new LinkedList<CompletableFuture<Integer>>() {
                         @Override
                         public boolean offer(CompletableFuture<Integer> integerSupplier) {
@@ -33,7 +33,7 @@ class ThrottlingParallelCollectorConsistencyTest extends ExecutorAwareTest {
                         public boolean add(CompletableFuture<Integer> integerCompletableFuture) {
                             throw new IllegalStateException();
                         }
-                    }))
+                    }, 10))
                   .join();
             } catch (Exception ignored) { }
         });
