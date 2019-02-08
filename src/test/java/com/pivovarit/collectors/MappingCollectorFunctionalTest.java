@@ -48,11 +48,11 @@ class MappingCollectorFunctionalTest {
     Stream<DynamicTest> testCollectors() {
         return of(
           forCollector((mapper, e) -> parallelToSet(mapper, e), "parallelToSet(p=inf)"),
-          forCollector((mapper, e) -> parallelToSet(mapper, e, 1000), "parallelToSet(p=10)"),
+          forCollector((mapper, e) -> parallelToSet(mapper, e, 1000), "parallelToSet(p=1000)"),
           forCollector((mapper, e) -> parallelToList(mapper, e), "parallelToList(p=inf)"),
-          forCollector((mapper, e) -> parallelToList(mapper, e, 1000), "parallelToList(p=10)"),
+          forCollector((mapper, e) -> parallelToList(mapper, e, 1000), "parallelToList(p=1000)"),
           forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e), "parallelToCollection(p=inf)"),
-          forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e, 1000), "parallelToCollection(p=10)")
+          forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e, 1000), "parallelToCollection(p=1000)")
         ).flatMap(identity());
     }
 
