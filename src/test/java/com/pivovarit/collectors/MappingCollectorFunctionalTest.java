@@ -5,10 +5,13 @@ import org.junit.jupiter.api.TestFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
@@ -45,11 +48,11 @@ class MappingCollectorFunctionalTest {
     Stream<DynamicTest> testCollectors() {
         return of(
           forCollector((mapper, e) -> parallelToSet(mapper, e), "parallelToSet(p=inf)"),
-          forCollector((mapper, e) -> parallelToSet(mapper, e, 10), "parallelToSet(p=10)"),
+          forCollector((mapper, e) -> parallelToSet(mapper, e, 1000), "parallelToSet(p=1000)"),
           forCollector((mapper, e) -> parallelToList(mapper, e), "parallelToList(p=inf)"),
-          forCollector((mapper, e) -> parallelToList(mapper, e, 10), "parallelToList(p=10)"),
+          forCollector((mapper, e) -> parallelToList(mapper, e, 1000), "parallelToList(p=1000)"),
           forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e), "parallelToCollection(p=inf)"),
-          forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e, 10), "parallelToCollection(p=10)")
+          forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e, 1000), "parallelToCollection(p=1000)")
         ).flatMap(identity());
     }
 
@@ -60,7 +63,8 @@ class MappingCollectorFunctionalTest {
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldNotSwallowException(collector, name),
-          shouldSurviveRejectedExecutionException(collector, name));
+          shouldSurviveRejectedExecutionException(collector, name),
+          shouldBeConsistent(collector, name));
     }
 
     //@Test
@@ -148,6 +152,36 @@ class MappingCollectorFunctionalTest {
               .join())
               .isInstanceOf(CompletionException.class)
               .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
+        });
+    }
+
+    //@Test
+    private static <T, R extends Collection<T>> DynamicTest shouldBeConsistent(BiFunction<Function<T, T>, Executor, Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s:{ should remain consistent", name), () -> {
+            ExecutorService executor = Executors.newFixedThreadPool(1000);
+            try {
+                List<T> elements = (List<T>) IntStream.range(0, 1000).boxed().collect(Collectors.toList());
+
+                CountDownLatch countDownLatch = new CountDownLatch(1000);
+
+                R result = elements.stream()
+                  .collect(collector.apply(i -> {
+                      countDownLatch.countDown();
+                      try {
+                          countDownLatch.await();
+                      } catch (InterruptedException e) {
+                          throw new RuntimeException(e);
+                      }
+                      return i;
+                  }, executor))
+                  .join();
+
+                assertThat(new HashSet<>(result))
+                  .hasSameSizeAs(elements)
+                  .containsAll(elements);
+            } finally {
+                executor.shutdownNow();
+            }
         });
     }
 }

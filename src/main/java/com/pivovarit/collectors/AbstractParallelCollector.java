@@ -16,7 +16,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
@@ -69,7 +68,7 @@ abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
-        return () -> synchronizedList(new ArrayList<>());
+        return ArrayList::new;
     }
 
     @Override

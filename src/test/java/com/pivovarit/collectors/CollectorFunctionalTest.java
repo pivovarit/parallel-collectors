@@ -5,10 +5,13 @@ import org.junit.jupiter.api.TestFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
@@ -46,11 +49,11 @@ class CollectorFunctionalTest {
     Stream<DynamicTest> testMappingCollectors() {
         return of(
           forCollector(e -> parallelToSet(e), "parallelToSet(p=inf)"),
-          forCollector(e -> parallelToSet(e, 10), "parallelToSet(p=10)"),
+          forCollector(e -> parallelToSet(e, 1000), "parallelToSet(p=1000)"),
           forCollector(e -> parallelToList(e), "parallelToList(p=inf)"),
-          forCollector(e -> parallelToList(e, 10), "parallelToList(p=10)"),
+          forCollector(e -> parallelToList(e, 1000), "parallelToList(p=1000)"),
           forCollector(e -> parallelToCollection(ArrayList::new, e), "parallelToCollection(p=inf)"),
-          forCollector(e -> parallelToCollection(ArrayList::new, e, 10), "parallelToCollection(p=10)")
+          forCollector(e -> parallelToCollection(ArrayList::new, e, 1000), "parallelToCollection(p=1000)")
         ).flatMap(identity());
     }
 
@@ -61,7 +64,8 @@ class CollectorFunctionalTest {
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldNotSwallowException(collector, name),
-          shouldSurviveRejectedExecutionException(collector, name));
+          shouldSurviveRejectedExecutionException(collector, name),
+          shouldBeConsistent(collector, name));
     }
 
     //@Test
@@ -157,6 +161,37 @@ class CollectorFunctionalTest {
               .join())
               .isInstanceOf(CompletionException.class)
               .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
+        });
+    }
+
+    //@Test
+    private static <T, R extends Collection<T>> DynamicTest shouldBeConsistent(Function<Executor, Collector<Supplier<T>, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s:{ should remain consistent", name), () -> {
+            ExecutorService executor = Executors.newFixedThreadPool(1000);
+            try {
+                List<T> elements = (List<T>) IntStream.range(0, 1000).boxed().collect(Collectors.toList());
+
+                CountDownLatch countDownLatch = new CountDownLatch(1000);
+
+                R result = elements.stream()
+                  .map(i -> supplier(() -> {
+                      countDownLatch.countDown();
+                      try {
+                          countDownLatch.await();
+                      } catch (InterruptedException e) {
+                          throw new RuntimeException(e);
+                      }
+                      return i;
+                  }))
+                  .collect(collector.apply(executor))
+                  .join();
+
+                assertThat(new HashSet<>(result))
+                  .hasSameSizeAs(elements)
+                  .containsAll(elements);
+            } finally {
+                executor.shutdownNow();
+            }
         });
     }
 }
