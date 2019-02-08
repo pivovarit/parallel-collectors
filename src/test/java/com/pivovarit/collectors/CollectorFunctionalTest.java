@@ -49,11 +49,11 @@ class CollectorFunctionalTest {
     Stream<DynamicTest> testMappingCollectors() {
         return of(
           forCollector(e -> parallelToSet(e), "parallelToSet(p=inf)"),
-          forCollector(e -> parallelToSet(e, 10), "parallelToSet(p=10)"),
+          forCollector(e -> parallelToSet(e, 1000), "parallelToSet(p=10)"),
           forCollector(e -> parallelToList(e), "parallelToList(p=inf)"),
-          forCollector(e -> parallelToList(e, 10), "parallelToList(p=10)"),
+          forCollector(e -> parallelToList(e, 1000), "parallelToList(p=10)"),
           forCollector(e -> parallelToCollection(ArrayList::new, e), "parallelToCollection(p=inf)"),
-          forCollector(e -> parallelToCollection(ArrayList::new, e, 10), "parallelToCollection(p=10)")
+          forCollector(e -> parallelToCollection(ArrayList::new, e, 1000), "parallelToCollection(p=10)")
         ).flatMap(identity());
     }
 
