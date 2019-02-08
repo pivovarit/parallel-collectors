@@ -26,7 +26,6 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-@SuppressWarnings("WeakerAccess")
 final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
