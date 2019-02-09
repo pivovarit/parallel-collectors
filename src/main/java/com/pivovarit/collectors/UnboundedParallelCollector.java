@@ -30,16 +30,15 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 class UnboundedParallelCollector<T, R, C extends Collection<R>>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
-    final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
-
     volatile boolean isFailed = false;
 
+    final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     final Executor executor;
     final Queue<Supplier<R>> workingQueue;
     final Queue<CompletableFuture<R>> pending;
+    final Supplier<C> collectionFactory;
 
     private final Function<T, R> operation;
-    final Supplier<C> collectionFactory;
 
     UnboundedParallelCollector(
       Function<T, R> operation,
