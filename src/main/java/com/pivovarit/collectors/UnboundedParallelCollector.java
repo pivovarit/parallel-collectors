@@ -27,28 +27,28 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-final class UnboundedThrottlingParallelCollector<T, R, C extends Collection<R>>
+class UnboundedParallelCollector<T, R, C extends Collection<R>>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
-    private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
+    final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
 
-    private volatile boolean isFailed = false;
+    volatile boolean isFailed = false;
 
-    private final Executor executor;
-    private final Queue<Supplier<R>> workingQueue;
-    private final Queue<CompletableFuture<R>> pending;
+    final Executor executor;
+    final Queue<Supplier<R>> workingQueue;
+    final Queue<CompletableFuture<R>> pending;
 
     private final Function<T, R> operation;
-    private final Supplier<C> collectionFactory;
+    final Supplier<C> collectionFactory;
 
-    UnboundedThrottlingParallelCollector(
+    UnboundedParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor) {
         this(operation, collection, executor, new ConcurrentLinkedQueue<>(), new ConcurrentLinkedQueue<>());
     }
 
-    UnboundedThrottlingParallelCollector(
+    UnboundedParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor,
@@ -136,11 +136,11 @@ final class UnboundedThrottlingParallelCollector<T, R, C extends Collection<R>>
           });
     }
 
-    private void closeAndCompleteRemaining(Exception e) {
+    void closeAndCompleteRemaining(Exception e) {
         pending.forEach(future -> future.completeExceptionally(e));
     }
 
-    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
+    Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
         return futures -> futures.stream()
           .reduce(completedFuture(collectionFactory.get()),
             accumulatingResults(),
