@@ -12,7 +12,7 @@ class CustomThreadFactory implements ThreadFactory {
     @Override
     public Thread newThread(Runnable task) {
         Thread thread = defaultThreadFactory.newThread(task);
-        thread.setName("parallel-executor-" + thread.getName());
+        thread.setName("parallel-collector-" + thread.getName());
         thread.setDaemon(true);
         return thread;
     }

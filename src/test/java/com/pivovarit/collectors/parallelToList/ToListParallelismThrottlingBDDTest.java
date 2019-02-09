@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
+import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
@@ -32,7 +33,7 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
     private static final long BLOCKING_MILLIS = 50;
     private static final long CONSTANT_DELAY = 100;
 
-    @Property(trials = 5)
+    @Property(trials = TRIALS)
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
