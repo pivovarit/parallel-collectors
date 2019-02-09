@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -131,11 +130,8 @@ final class UnboundedThrottlingParallelCollector<T, R, C extends Collection<R>>
               if (throwable == null) {
                   next.complete(r);
               } else {
-                  try {
-                      next.completeExceptionally(throwable);
-                  } finally {
-                      isFailed = true;
-                  }
+                  next.completeExceptionally(throwable);
+                  isFailed = true;
               }
           });
     }
