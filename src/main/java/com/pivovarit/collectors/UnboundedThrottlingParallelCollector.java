@@ -11,9 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -29,11 +27,10 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
+final class UnboundedThrottlingParallelCollector<T, R, C extends Collection<R>>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
-    private final Semaphore limiter;
 
     private volatile boolean isFailed = false;
 
@@ -44,27 +41,24 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     private final Function<T, R> operation;
     private final Supplier<C> collectionFactory;
 
-    ThrottlingParallelCollector(
+    UnboundedThrottlingParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
-      Executor executor,
-      int parallelism) {
-        this(operation, collection, executor, new ConcurrentLinkedQueue<>(), new ConcurrentLinkedQueue<>(), parallelism);
+      Executor executor) {
+        this(operation, collection, executor, new ConcurrentLinkedQueue<>(), new ConcurrentLinkedQueue<>());
     }
 
-    ThrottlingParallelCollector(
+    UnboundedThrottlingParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor,
       Queue<Supplier<R>> workingQueue,
-      Queue<CompletableFuture<R>> pending,
-      int parallelism) {
+      Queue<CompletableFuture<R>> pending) {
         this.executor = executor;
         this.collectionFactory = collection;
         this.operation = operation;
         this.workingQueue = workingQueue;
         this.pending = pending;
-        this.limiter = new Semaphore(parallelism);
     }
 
     @Override
@@ -116,16 +110,11 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
             while ((task = tasks.poll()) != null && !Thread.currentThread().isInterrupted()) {
 
                 try {
-                    limiter.acquire();
                     if (isFailed) {
                         pending.forEach(f -> f.cancel(true));
                         break;
                     }
                     runNext(task);
-                } catch (InterruptedException e) {
-                    closeAndCompleteRemaining(e);
-                    Thread.currentThread().interrupt();
-                    break;
                 } catch (Exception e) {
                     closeAndCompleteRemaining(e);
                     break;
@@ -138,10 +127,12 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
         supplyAsync(task, executor)
           .whenComplete((r, throwable) -> {
               CompletableFuture<R> next = Objects.requireNonNull(pending.poll());
-              supplyWithResources(() -> throwable == null
-                  ? next.complete(r)
-                  : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed = true),
-                limiter::release);
+              if (throwable == null) {
+                  next.complete(r);
+              } else {
+                  next.completeExceptionally(throwable);
+                  isFailed = true;
+              }
           });
     }
 
