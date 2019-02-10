@@ -18,18 +18,18 @@ final class ParallelDispatcher<T> implements AutoCloseable {
     private final Function<Queue<Supplier<T>>, Runnable> dispatchStrategy;
 
 
-    public ParallelDispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue, Function<Queue<Supplier<T>>, Runnable> dispatchStrategy) {
+    ParallelDispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue, Function<Queue<Supplier<T>>, Runnable> dispatchStrategy) {
         this.executor = executor;
         this.workingQueue = workingQueue;
         this.pendingQueue = pendingQueue;
         this.dispatchStrategy = dispatchStrategy;
     }
 
-    public void addPending(CompletableFuture<T> future) {
+    void addPending(CompletableFuture<T> future) {
         pendingQueue.add(future);
     }
 
-    public void addTask(Supplier<T> supplier) {
+    void addTask(Supplier<T> supplier) {
         workingQueue.add(supplier);
     }
 
@@ -38,27 +38,27 @@ final class ParallelDispatcher<T> implements AutoCloseable {
         dispatcher.shutdown();
     }
 
-    public CompletableFuture<T> supply(Supplier<T> task) {
+    CompletableFuture<T> supply(Supplier<T> task) {
         return CompletableFuture.supplyAsync(task, executor);
     }
 
-    public CompletableFuture<T> nextPending() {
+    CompletableFuture<T> nextPending() {
         return pendingQueue.poll();
     }
 
-    public void closeExceptionally(Exception e) {
+    void closeExceptionally(Exception e) {
         pendingQueue.forEach(future -> future.completeExceptionally(e));
     }
 
-    public void cancelAll() {
+    void cancelAll() {
         pendingQueue.forEach(f -> f.cancel(true));
     }
 
-    public boolean isNotEmpty() {
+    boolean isNotEmpty() {
         return workingQueue.size() != 0;
     }
 
-    public void start() {
+    void start() {
         dispatcher.execute(dispatchStrategy.apply(workingQueue));
     }
 }
