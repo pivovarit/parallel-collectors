@@ -31,8 +31,10 @@ final class ParallelDispatcher<T> implements AutoCloseable {
         dispatcher.shutdown();
     }
 
-    boolean addPending(CompletableFuture<T> future) {
-        return pendingQueue.add(future);
+    CompletableFuture<T> newPending() {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        pendingQueue.add(future);
+        return future;
     }
 
     boolean addTask(Supplier<T> supplier) {
