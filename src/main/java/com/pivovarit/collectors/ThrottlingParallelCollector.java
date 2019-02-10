@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -12,28 +11,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
 
-import static com.pivovarit.collectors.CollectorUtils.accumulatingResults;
-import static com.pivovarit.collectors.CollectorUtils.mergingPartialResults;
-import static com.pivovarit.collectors.CollectorUtils.supplyWithResources;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * @author Grzegorz Piwowarek
  */
 final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
-
-    private final Semaphore limiter;
-
-    private volatile boolean isFailed = false;
+  extends AbstractParallelCollector<T, R, C>
+  implements AutoCloseable {
 
     private final ParallelDispatcher<R> dispatcher;
 
+    private final Semaphore limiter;
     private final Function<T, R> operation;
     private final Supplier<C> collectionFactory;
 
@@ -59,24 +51,11 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     }
 
     @Override
-    public Supplier<List<CompletableFuture<R>>> supplier() {
-        return ArrayList::new;
-    }
-
-    @Override
-    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
-        return (left, right) -> {
-            left.addAll(right);
-            return left;
-        };
-    }
-
-    @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
             dispatcher.addPending(future);
-            dispatcher.addTask(() -> isFailed ? null : operation.apply(e));
+            dispatcher.addTask(() -> dispatcher.isMarkedFailed() ? null : operation.apply(e));
             acc.add(future);
         };
     }
@@ -85,7 +64,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (dispatcher.isNotEmpty()) {
             dispatcher.start();
-            return foldLeftFutures().andThen(f -> supplyWithResources(() -> f, dispatcher::close));
+            return foldLeftFutures(collectionFactory).andThen(f -> supplyWithResources(() -> f, dispatcher::close));
         } else {
             return supplyWithResources(() -> (__) -> completedFuture(collectionFactory
               .get()), dispatcher::close);
@@ -109,7 +88,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
                 try {
                     limiter.acquire();
-                    if (isFailed) {
+                    if (dispatcher.isMarkedFailed()) {
                         dispatcher.cancelAll();
                         break;
                     }
@@ -132,19 +111,12 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
               CompletableFuture<R> next = Objects.requireNonNull(dispatcher.nextPending());
               supplyWithResources(() -> throwable == null
                   ? next.complete(r)
-                  : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed = true),
+                  : supplyWithResources(() -> next.completeExceptionally(throwable), dispatcher::markFailed),
                 limiter::release);
           });
     }
 
     private void closeAndCompleteRemaining(Exception e) {
         dispatcher.closeExceptionally(e);
-    }
-
-    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
-        return futures -> futures.stream()
-          .reduce(completedFuture(collectionFactory.get()),
-            accumulatingResults(),
-            mergingPartialResults());
     }
 }

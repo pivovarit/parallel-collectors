@@ -17,6 +17,7 @@ final class ParallelDispatcher<T> implements AutoCloseable {
     private final Queue<CompletableFuture<T>> pendingQueue;
     private final Function<Queue<Supplier<T>>, Runnable> dispatchStrategy;
 
+    private volatile boolean isFailed = false;
 
     ParallelDispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue, Function<Queue<Supplier<T>>, Runnable> dispatchStrategy) {
         this.executor = executor;
@@ -25,17 +26,17 @@ final class ParallelDispatcher<T> implements AutoCloseable {
         this.dispatchStrategy = dispatchStrategy;
     }
 
-    void addPending(CompletableFuture<T> future) {
-        pendingQueue.add(future);
-    }
-
-    void addTask(Supplier<T> supplier) {
-        workingQueue.add(supplier);
-    }
-
     @Override
     public void close() {
         dispatcher.shutdown();
+    }
+
+    boolean addPending(CompletableFuture<T> future) {
+        return pendingQueue.add(future);
+    }
+
+    boolean addTask(Supplier<T> supplier) {
+        return workingQueue.add(supplier);
     }
 
     CompletableFuture<T> supply(Supplier<T> task) {
@@ -60,5 +61,13 @@ final class ParallelDispatcher<T> implements AutoCloseable {
 
     void start() {
         dispatcher.execute(dispatchStrategy.apply(workingQueue));
+    }
+
+    boolean isMarkedFailed() {
+        return isFailed;
+    }
+
+    void markFailed() {
+        isFailed = true;
     }
 }
