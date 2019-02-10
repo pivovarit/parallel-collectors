@@ -49,7 +49,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
       Executor executor,
       Queue<Supplier<R>> workingQueue,
       Queue<CompletableFuture<R>> pendingQueue) {
-        this.dispatcher = new ParallelDispatcher<>(executor, workingQueue, pendingQueue);
+        this.dispatcher = new ParallelDispatcher<>(executor, workingQueue, pendingQueue, this::dispatch);
         this.collectionFactory = collection;
         this.operation = operation;
     }
@@ -71,19 +71,19 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
-            dispatcher.pendingQueue.add(future);
-            dispatcher.workingQueue.add(() -> isFailed ? null : operation.apply(e));
+            dispatcher.addPending(future);
+            dispatcher.addTask(() -> isFailed ? null : operation.apply(e));
             acc.add(future);
         };
     }
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        if (dispatcher.workingQueue.size() != 0) {
-            dispatcher.dispatcher.execute(dispatch(dispatcher.workingQueue));
-            return foldLeftFutures().andThen(f -> supplyWithResources(() -> f, dispatcher.dispatcher::shutdown));
+        if (dispatcher.isNotEmpty()) {
+            dispatcher.start();
+            return foldLeftFutures().andThen(f -> supplyWithResources(() -> f, dispatcher::close));
         } else {
-            return supplyWithResources(() -> (__) -> completedFuture(collectionFactory.get()), dispatcher.dispatcher::shutdown);
+            return supplyWithResources(() -> (__) -> completedFuture(collectionFactory.get()), dispatcher::close);
         }
     }
 
@@ -94,7 +94,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public void close() {
-        dispatcher.dispatcher.shutdown();
+        dispatcher.close();
     }
 
     private Runnable dispatch(Queue<Supplier<R>> tasks) {
@@ -104,7 +104,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
 
                 try {
                     if (isFailed) {
-                        dispatcher.pendingQueue.forEach(f -> f.cancel(true));
+                        dispatcher.cancelAll();
                         break;
                     }
                     runNext(task);
@@ -117,9 +117,9 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
     }
 
     private void runNext(Supplier<R> task) {
-        supplyAsync(task, dispatcher.executor)
+        dispatcher.supply(task)
           .whenComplete((r, throwable) -> {
-              CompletableFuture<R> next = Objects.requireNonNull(dispatcher.pendingQueue.poll());
+              CompletableFuture<R> next = Objects.requireNonNull(dispatcher.nextPending());
               if (throwable == null) {
                   next.complete(r);
               } else {
@@ -130,7 +130,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
     }
 
     private void closeAndCompleteRemaining(Exception e) {
-        dispatcher.pendingQueue.forEach(future -> future.completeExceptionally(e));
+        dispatcher.closeExceptionally(e);
     }
 
     private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
