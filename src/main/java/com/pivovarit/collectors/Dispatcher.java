@@ -8,10 +8,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static com.pivovarit.collectors.AbstractParallelCollector.supplyWithResources;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
-final class ParallelDispatcher<T> implements AutoCloseable {
+final class Dispatcher<T> implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Executor executor;
@@ -21,7 +20,7 @@ final class ParallelDispatcher<T> implements AutoCloseable {
 
     private volatile boolean isFailed = false;
 
-    ParallelDispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue, Function<Queue<Supplier<T>>, Runnable> dispatchStrategy) {
+    Dispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue, Function<Queue<Supplier<T>>, Runnable> dispatchStrategy) {
         this.executor = executor;
         this.workingQueue = workingQueue;
         this.pendingQueue = pendingQueue;
@@ -44,26 +43,23 @@ final class ParallelDispatcher<T> implements AutoCloseable {
         return future;
     }
 
-    CompletableFuture<T> run(Supplier<T> task) {
-        return CompletableFuture.supplyAsync(task, executor)
-          .whenComplete((r, throwable) -> {
-              CompletableFuture<T> next = Objects.requireNonNull(pendingQueue.poll());
-              if (throwable == null) {
-                  next.complete(r);
-              } else {
-                  next.completeExceptionally(throwable);
-                  isFailed = true;
-              }
-          });
+    void run(Supplier<T> task) {
+        run(task, () -> {});
     }
 
-    CompletableFuture<T> run(Supplier<T> task, Runnable finisher) {
-        return CompletableFuture.supplyAsync(task, executor).whenComplete((r, throwable) -> {
+    void run(Supplier<T> task, Runnable finisher) {
+        CompletableFuture.supplyAsync(task, executor).whenComplete((r, throwable) -> {
             CompletableFuture<T> next = Objects.requireNonNull(pendingQueue.poll());
-            supplyWithResources(() -> throwable == null
-                ? next.complete(r)
-                : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed = true),
-              finisher);
+            try {
+                if (throwable == null) {
+                    next.complete(r);
+                } else {
+                    next.completeExceptionally(throwable);
+                    isFailed = true;
+                }
+            } finally {
+                finisher.run();
+            }
         });
     }
 
