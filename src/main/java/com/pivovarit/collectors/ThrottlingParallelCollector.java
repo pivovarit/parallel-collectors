@@ -88,18 +88,14 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                     }
                     dispatcher.run(task, limiter::release);
                 } catch (InterruptedException e) {
-                    closeAndCompleteRemaining(e);
+                    dispatcher.closeExceptionally(e);
                     Thread.currentThread().interrupt();
                     break;
                 } catch (Exception e) {
-                    closeAndCompleteRemaining(e);
+                    dispatcher.closeExceptionally(e);
                     break;
                 }
             }
         };
-    }
-
-    private void closeAndCompleteRemaining(Exception e) {
-        dispatcher.closeExceptionally(e);
     }
 }

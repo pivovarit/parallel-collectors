@@ -81,14 +81,10 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
                     }
                     dispatcher.run(task);
                 } catch (Exception e) {
-                    closeAndCompleteRemaining(e);
+                    dispatcher.closeExceptionally(e);
                     break;
                 }
             }
         };
-    }
-
-    private void closeAndCompleteRemaining(Exception e) {
-        dispatcher.closeExceptionally(e);
     }
 }
