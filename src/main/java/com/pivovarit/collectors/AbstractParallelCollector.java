@@ -12,7 +12,7 @@ import java.util.stream.Collector;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
-abstract class AbstractParallelCollector<T, R, C extends Collection<R>>
+abstract class AbstractParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     @Override
