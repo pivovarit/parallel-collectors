@@ -33,7 +33,11 @@ final class ParallelDispatcher<T> implements AutoCloseable {
         dispatcher.shutdown();
     }
 
-    CompletableFuture<T> execute(Supplier<T> supplier) {
+    void start() {
+        dispatcher.execute(dispatchStrategy.apply(workingQueue));
+    }
+
+    CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pendingQueue.add(future);
         workingQueue.add(() -> isMarkedFailed() ? null : supplier.get());
@@ -63,20 +67,16 @@ final class ParallelDispatcher<T> implements AutoCloseable {
         });
     }
 
-    void closeExceptionally(Exception e) {
+    void completePending(Exception e) {
         pendingQueue.forEach(future -> future.completeExceptionally(e));
     }
 
-    void cancelAll() {
+    void cancelPending() {
         pendingQueue.forEach(f -> f.cancel(true));
     }
 
     boolean isNotEmpty() {
         return workingQueue.size() != 0;
-    }
-
-    void start() {
-        dispatcher.execute(dispatchStrategy.apply(workingQueue));
     }
 
     boolean isMarkedFailed() {

@@ -51,7 +51,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.execute(() -> operation.apply(e)));
+        return (acc, e) -> acc.add(dispatcher.enqueue(() -> operation.apply(e)));
     }
 
     @Override
@@ -83,16 +83,16 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 try {
                     limiter.acquire();
                     if (dispatcher.isMarkedFailed()) {
-                        dispatcher.cancelAll();
+                        dispatcher.cancelPending();
                         break;
                     }
                     dispatcher.run(task, limiter::release);
                 } catch (InterruptedException e) {
-                    dispatcher.closeExceptionally(e);
+                    dispatcher.completePending(e);
                     Thread.currentThread().interrupt();
                     break;
                 } catch (Exception e) {
-                    dispatcher.closeExceptionally(e);
+                    dispatcher.completePending(e);
                     break;
                 }
             }
