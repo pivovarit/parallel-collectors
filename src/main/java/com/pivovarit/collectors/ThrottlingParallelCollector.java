@@ -22,7 +22,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
   implements AutoCloseable {
 
-    private final ParallelDispatcher<R> dispatcher;
+    private final Dispatcher<R> dispatcher;
 
     private final Semaphore limiter;
     private final Function<T, R> operation;
@@ -43,7 +43,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       Queue<Supplier<R>> workingQueue,
       Queue<CompletableFuture<R>> pendingQueue,
       int parallelism) {
-        this.dispatcher = new ParallelDispatcher<>(executor, workingQueue, pendingQueue, this::dispatch);
+        this.dispatcher = new Dispatcher<>(executor, workingQueue, pendingQueue, this::dispatch);
         this.collectionFactory = collection;
         this.operation = operation;
         this.limiter = new Semaphore(parallelism);

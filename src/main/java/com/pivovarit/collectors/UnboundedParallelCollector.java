@@ -21,7 +21,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
   implements AutoCloseable {
 
-    private final ParallelDispatcher<R> dispatcher;
+    private final Dispatcher<R> dispatcher;
 
     private final Function<T, R> operation;
     private final Supplier<C> collectionFactory;
@@ -39,7 +39,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
       Executor executor,
       Queue<Supplier<R>> workingQueue,
       Queue<CompletableFuture<R>> pendingQueue) {
-        this.dispatcher = new ParallelDispatcher<>(executor, workingQueue, pendingQueue, this::dispatch);
+        this.dispatcher = new Dispatcher<>(executor, workingQueue, pendingQueue, this::dispatch);
         this.collectionFactory = collection;
         this.operation = operation;
     }
