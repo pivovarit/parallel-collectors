@@ -5,6 +5,8 @@ import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -77,5 +79,20 @@ final class Dispatcher<T> implements AutoCloseable {
 
     boolean isMarkedFailed() {
         return isFailed;
+    }
+
+    /**
+     * @author Grzegorz Piwowarek
+     */
+    private class CustomThreadFactory implements ThreadFactory {
+        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+
+        @Override
+        public Thread newThread(Runnable task) {
+            Thread thread = defaultThreadFactory.newThread(task);
+            thread.setName("parallel-collector-" + thread.getName());
+            thread.setDaemon(true);
+            return thread;
+        }
     }
 }
