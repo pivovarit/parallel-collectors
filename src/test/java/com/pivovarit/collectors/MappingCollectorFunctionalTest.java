@@ -1,8 +1,11 @@
 package com.pivovarit.collectors;
 
+import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,6 +35,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.function.Function.identity;
 import static java.util.stream.Stream.of;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
@@ -64,7 +68,9 @@ class MappingCollectorFunctionalTest {
           shouldShortCircuitOnException(collector, name),
           shouldNotSwallowException(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
-          shouldBeConsistent(collector, name));
+          shouldBeConsistent(collector, name)
+//          shouldStartConsumingImmediately(collector, name) TODO enable once implemented
+        );
     }
 
     //@Test
@@ -74,7 +80,8 @@ class MappingCollectorFunctionalTest {
             assertTimeoutPreemptively(ofMillis(100), () ->
               elements.stream()
                 .limit(5)
-                .collect(collector.apply(i -> (T) returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor)));
+                .collect(collector
+                  .apply(i -> (T) returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor)), "returned blocking future");
         });
     }
 
@@ -143,7 +150,7 @@ class MappingCollectorFunctionalTest {
 
     //@Test
     private static <T, R extends Collection<T>> DynamicTest shouldSurviveRejectedExecutionException(BiFunction<Function<T, T>, Executor, Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s:{ should not swallow exception", name), () -> {
+        return dynamicTest(format("%s: should not swallow exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
             List<T> elements = (List<T>) IntStream.range(0, 1000).boxed().collect(Collectors.toList());
 
@@ -157,7 +164,7 @@ class MappingCollectorFunctionalTest {
 
     //@Test
     private static <T, R extends Collection<T>> DynamicTest shouldBeConsistent(BiFunction<Function<T, T>, Executor, Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s:{ should remain consistent", name), () -> {
+        return dynamicTest(format("%s: should remain consistent", name), () -> {
             ExecutorService executor = Executors.newFixedThreadPool(1000);
             try {
                 List<T> elements = (List<T>) IntStream.range(0, 1000).boxed().collect(Collectors.toList());
@@ -182,6 +189,21 @@ class MappingCollectorFunctionalTest {
             } finally {
                 executor.shutdownNow();
             }
+        });
+    }
+
+    //@Test
+    private static <T, R extends Collection<T>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<T, T>, Executor, Collector<T, List<CompletableFuture<T>>, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should start consuming immediately", name), () -> {
+            TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
+
+            assertTimeoutPreemptively(Duration.ofMillis(200), () -> {
+                Stream.generate(() -> returnWithDelay(42, Duration.ofMillis(10)))
+                  .limit(100)
+                  .map(i -> (T) i)
+                  .collect(collector.apply(i -> i, executor));
+                assertThat(executor.count()).isGreaterThan(0);
+            }, "didn't start processing after evaluating the first element");
         });
     }
 }
