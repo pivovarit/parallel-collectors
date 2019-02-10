@@ -46,7 +46,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.execute(() -> dispatcher.isMarkedFailed() ? null : operation.apply(e)));
+        return (acc, e) -> acc.add(dispatcher.execute(() -> operation.apply(e)));
     }
 
     @Override

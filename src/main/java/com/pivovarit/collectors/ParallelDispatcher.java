@@ -36,7 +36,7 @@ final class ParallelDispatcher<T> implements AutoCloseable {
     CompletableFuture<T> execute(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pendingQueue.add(future);
-        workingQueue.add(supplier);
+        workingQueue.add(() -> isMarkedFailed() ? null : supplier.get());
         return future;
     }
 
