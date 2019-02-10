@@ -3,7 +3,6 @@ package com.pivovarit.collectors;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -47,11 +46,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
-            CompletableFuture<R> future = dispatcher.newPending();
-            dispatcher.addTask(() -> dispatcher.isMarkedFailed() ? null : operation.apply(e));
-            acc.add(future);
-        };
+        return (acc, e) -> acc.add(dispatcher.execute(() -> dispatcher.isMarkedFailed() ? null : operation.apply(e)));
     }
 
     @Override
@@ -84,26 +79,13 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
                         dispatcher.cancelAll();
                         break;
                     }
-                    runNext(task);
+                    dispatcher.run(task);
                 } catch (Exception e) {
                     closeAndCompleteRemaining(e);
                     break;
                 }
             }
         };
-    }
-
-    private void runNext(Supplier<R> task) {
-        dispatcher.supply(task)
-          .whenComplete((r, throwable) -> {
-              CompletableFuture<R> next = Objects.requireNonNull(dispatcher.nextPending());
-              if (throwable == null) {
-                  next.complete(r);
-              } else {
-                  next.completeExceptionally(throwable);
-                  dispatcher.markFailed();
-              }
-          });
     }
 
     private void closeAndCompleteRemaining(Exception e) {

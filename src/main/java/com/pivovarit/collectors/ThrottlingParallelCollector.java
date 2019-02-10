@@ -3,7 +3,6 @@ package com.pivovarit.collectors;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -52,11 +51,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
-            CompletableFuture<R> future = dispatcher.newPending();
-            dispatcher.addTask(() -> dispatcher.isMarkedFailed() ? null : operation.apply(e));
-            acc.add(future);
-        };
+        return (acc, e) -> acc.add(dispatcher.execute(() -> dispatcher.isMarkedFailed() ? null : operation.apply(e)));
     }
 
     @Override
@@ -91,7 +86,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                         dispatcher.cancelAll();
                         break;
                     }
-                    runNext(task);
+                    dispatcher.run(task, limiter::release);
                 } catch (InterruptedException e) {
                     closeAndCompleteRemaining(e);
                     Thread.currentThread().interrupt();
@@ -102,17 +97,6 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 }
             }
         };
-    }
-
-    private void runNext(Supplier<R> task) {
-        dispatcher.supply(task)
-          .whenComplete((r, throwable) -> {
-              CompletableFuture<R> next = Objects.requireNonNull(dispatcher.nextPending());
-              supplyWithResources(() -> throwable == null
-                  ? next.complete(r)
-                  : supplyWithResources(() -> next.completeExceptionally(throwable), dispatcher::markFailed),
-                limiter::release);
-          });
     }
 
     private void closeAndCompleteRemaining(Exception e) {

@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -7,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.pivovarit.collectors.AbstractParallelCollector.supplyWithResources;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 final class ParallelDispatcher<T> implements AutoCloseable {
@@ -31,22 +33,34 @@ final class ParallelDispatcher<T> implements AutoCloseable {
         dispatcher.shutdown();
     }
 
-    CompletableFuture<T> newPending() {
+    CompletableFuture<T> execute(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pendingQueue.add(future);
+        workingQueue.add(supplier);
         return future;
     }
 
-    boolean addTask(Supplier<T> supplier) {
-        return workingQueue.add(supplier);
+    CompletableFuture<T> run(Supplier<T> task) {
+        return CompletableFuture.supplyAsync(task, executor)
+          .whenComplete((r, throwable) -> {
+              CompletableFuture<T> next = Objects.requireNonNull(pendingQueue.poll());
+              if (throwable == null) {
+                  next.complete(r);
+              } else {
+                  next.completeExceptionally(throwable);
+                  isFailed = true;
+              }
+          });
     }
 
-    CompletableFuture<T> supply(Supplier<T> task) {
-        return CompletableFuture.supplyAsync(task, executor);
-    }
-
-    CompletableFuture<T> nextPending() {
-        return pendingQueue.poll();
+    CompletableFuture<T> run(Supplier<T> task, Runnable finisher) {
+        return CompletableFuture.supplyAsync(task, executor).whenComplete((r, throwable) -> {
+            CompletableFuture<T> next = Objects.requireNonNull(pendingQueue.poll());
+            supplyWithResources(() -> throwable == null
+                ? next.complete(r)
+                : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed = true),
+              finisher);
+        });
     }
 
     void closeExceptionally(Exception e) {
@@ -67,9 +81,5 @@ final class ParallelDispatcher<T> implements AutoCloseable {
 
     boolean isMarkedFailed() {
         return isFailed;
-    }
-
-    void markFailed() {
-        isFailed = true;
     }
 }
