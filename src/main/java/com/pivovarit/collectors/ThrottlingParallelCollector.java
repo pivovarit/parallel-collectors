@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -23,7 +22,6 @@ import static com.pivovarit.collectors.CollectorUtils.mergingPartialResults;
 import static com.pivovarit.collectors.CollectorUtils.supplyWithResources;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
  * @author Grzegorz Piwowarek
@@ -31,14 +29,11 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
-    private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Semaphore limiter;
 
     private volatile boolean isFailed = false;
 
-    private final Executor executor;
-    private final Queue<Supplier<R>> workingQueue;
-    private final Queue<CompletableFuture<R>> pending;
+    private final ParallelDispatcher<R> dispatcher;
 
     private final Function<T, R> operation;
     private final Supplier<C> collectionFactory;
@@ -56,13 +51,11 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       Supplier<C> collection,
       Executor executor,
       Queue<Supplier<R>> workingQueue,
-      Queue<CompletableFuture<R>> pending,
+      Queue<CompletableFuture<R>> pendingQueue,
       int parallelism) {
-        this.executor = executor;
+        this.dispatcher = new ParallelDispatcher<>(executor, workingQueue, pendingQueue);
         this.collectionFactory = collection;
         this.operation = operation;
-        this.workingQueue = workingQueue;
-        this.pending = pending;
         this.limiter = new Semaphore(parallelism);
     }
 
@@ -83,19 +76,20 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             CompletableFuture<R> future = new CompletableFuture<>();
-            pending.add(future);
-            workingQueue.add(() -> isFailed ? null : operation.apply(e));
+            dispatcher.pendingQueue.add(future);
+            dispatcher.workingQueue.add(() -> isFailed ? null : operation.apply(e));
             acc.add(future);
         };
     }
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        if (workingQueue.size() != 0) {
-            dispatcher.execute(dispatch(workingQueue));
-            return foldLeftFutures().andThen(f -> supplyWithResources(() -> f, dispatcher::shutdown));
+        if (dispatcher.workingQueue.size() != 0) {
+            dispatcher.dispatcher.execute(dispatch(dispatcher.workingQueue));
+            return foldLeftFutures().andThen(f -> supplyWithResources(() -> f, dispatcher.dispatcher::shutdown));
         } else {
-            return supplyWithResources(() -> (__) -> completedFuture(collectionFactory.get()), dispatcher::shutdown);
+            return supplyWithResources(() -> (__) -> completedFuture(collectionFactory
+              .get()), dispatcher.dispatcher::shutdown);
         }
     }
 
@@ -106,7 +100,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public void close() {
-        dispatcher.shutdown();
+        dispatcher.dispatcher.shutdown();
     }
 
     private Runnable dispatch(Queue<Supplier<R>> tasks) {
@@ -117,7 +111,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
                 try {
                     limiter.acquire();
                     if (isFailed) {
-                        pending.forEach(f -> f.cancel(true));
+                        dispatcher.pendingQueue.forEach(f -> f.cancel(true));
                         break;
                     }
                     runNext(task);
@@ -134,9 +128,9 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     }
 
     private void runNext(Supplier<R> task) {
-        supplyAsync(task, executor)
+        supplyAsync(task, dispatcher.executor)
           .whenComplete((r, throwable) -> {
-              CompletableFuture<R> next = Objects.requireNonNull(pending.poll());
+              CompletableFuture<R> next = Objects.requireNonNull(dispatcher.pendingQueue.poll());
               supplyWithResources(() -> throwable == null
                   ? next.complete(r)
                   : supplyWithResources(() -> next.completeExceptionally(throwable), () -> isFailed = true),
@@ -145,7 +139,7 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     }
 
     private void closeAndCompleteRemaining(Exception e) {
-        pending.forEach(future -> future.completeExceptionally(e));
+        dispatcher.pendingQueue.forEach(future -> future.completeExceptionally(e));
     }
 
     private Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures() {
