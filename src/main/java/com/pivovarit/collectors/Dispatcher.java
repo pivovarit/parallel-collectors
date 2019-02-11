@@ -7,27 +7,28 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
-final class Dispatcher<T> implements AutoCloseable {
+abstract class Dispatcher<T> implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
-    private final Executor executor;
-    private final Queue<Supplier<T>> workingQueue;
+
+    protected final Executor executor;
+    protected final Queue<Supplier<T>> workingQueue;
+
     private final Queue<CompletableFuture<T>> pendingQueue;
-    private final Function<Queue<Supplier<T>>, Runnable> dispatchStrategy;
 
     private volatile boolean isFailed = false;
 
-    Dispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue, Function<Queue<Supplier<T>>, Runnable> dispatchStrategy) {
+    Dispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue) {
         this.executor = executor;
         this.workingQueue = workingQueue;
         this.pendingQueue = pendingQueue;
-        this.dispatchStrategy = dispatchStrategy;
     }
+
+    abstract protected Runnable dispatchStrategy();
 
     @Override
     public void close() {
@@ -35,7 +36,7 @@ final class Dispatcher<T> implements AutoCloseable {
     }
 
     void start() {
-        dispatcher.execute(dispatchStrategy.apply(workingQueue));
+        dispatcher.execute(dispatchStrategy());
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {

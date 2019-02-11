@@ -39,7 +39,7 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
       Executor executor,
       Queue<Supplier<R>> workingQueue,
       Queue<CompletableFuture<R>> pendingQueue) {
-        this.dispatcher = new Dispatcher<>(executor, workingQueue, pendingQueue, this::dispatch);
+        this.dispatcher = new UnboundedDispatcher<>(executor, workingQueue, pendingQueue);
         this.collectionFactory = collection;
         this.operation = operation;
     }
@@ -67,24 +67,5 @@ final class UnboundedParallelCollector<T, R, C extends Collection<R>>
     @Override
     public void close() {
         dispatcher.close();
-    }
-
-    private Runnable dispatch(Queue<Supplier<R>> tasks) {
-        return () -> {
-            Supplier<R> task;
-            while ((task = tasks.poll()) != null && !Thread.currentThread().isInterrupted()) {
-
-                try {
-                    if (dispatcher.isMarkedFailed()) {
-                        dispatcher.cancelPending();
-                        break;
-                    }
-                    dispatcher.run(task);
-                } catch (Exception e) {
-                    dispatcher.completePending(e);
-                    break;
-                }
-            }
-        };
     }
 }

@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -24,7 +23,6 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
 
     private final Dispatcher<R> dispatcher;
 
-    private final Semaphore limiter;
     private final Function<T, R> operation;
     private final Supplier<C> collectionFactory;
 
@@ -43,10 +41,9 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
       Queue<Supplier<R>> workingQueue,
       Queue<CompletableFuture<R>> pendingQueue,
       int parallelism) {
-        this.dispatcher = new Dispatcher<>(executor, workingQueue, pendingQueue, this::dispatch);
+        this.dispatcher = new ThrottlingDispatcher<>(executor, workingQueue, pendingQueue, parallelism);
         this.collectionFactory = collection;
         this.operation = operation;
-        this.limiter = new Semaphore(parallelism);
     }
 
     @Override
@@ -73,29 +70,5 @@ final class ThrottlingParallelCollector<T, R, C extends Collection<R>>
     @Override
     public void close() {
         dispatcher.close();
-    }
-
-    private Runnable dispatch(Queue<Supplier<R>> tasks) {
-        return () -> {
-            Supplier<R> task;
-            while ((task = tasks.poll()) != null && !Thread.currentThread().isInterrupted()) {
-
-                try {
-                    limiter.acquire();
-                    if (dispatcher.isMarkedFailed()) {
-                        dispatcher.cancelPending();
-                        break;
-                    }
-                    dispatcher.run(task, limiter::release);
-                } catch (InterruptedException e) {
-                    dispatcher.completePending(e);
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    dispatcher.completePending(e);
-                    break;
-                }
-            }
-        };
     }
 }
