@@ -15,24 +15,16 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 abstract class Dispatcher<T> implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
-
-    protected final Executor executor;
-    protected final Queue<Supplier<T>> workingQueue;
-
     private final Queue<CompletableFuture<T>> pendingQueue;
+    private final Queue<Supplier<T>> workingQueue;
+    private final Executor executor;
 
-    private volatile boolean isFailed = false;
+    private volatile boolean failed = false;
 
     Dispatcher(Executor executor) {
         this.executor = executor;
         this.workingQueue = new ConcurrentLinkedQueue<>();
         this.pendingQueue = new ConcurrentLinkedQueue<>();
-    }
-
-    Dispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue) {
-        this.executor = executor;
-        this.workingQueue = workingQueue;
-        this.pendingQueue = pendingQueue;
     }
 
     abstract protected Runnable dispatchStrategy();
@@ -65,12 +57,16 @@ abstract class Dispatcher<T> implements AutoCloseable {
                     next.complete(r);
                 } else {
                     next.completeExceptionally(throwable);
-                    isFailed = true;
+                    failed = true;
                 }
             } finally {
                 finisher.run();
             }
         });
+    }
+
+    Queue<Supplier<T>> getWorkingQueue() {
+        return workingQueue;
     }
 
     void completePending(Exception e) {
@@ -81,18 +77,14 @@ abstract class Dispatcher<T> implements AutoCloseable {
         pendingQueue.forEach(f -> f.cancel(true));
     }
 
-    boolean isNotEmpty() {
-        return workingQueue.size() != 0;
-    }
-
     boolean isMarkedFailed() {
-        return isFailed;
+        return failed;
     }
 
     /**
      * @author Grzegorz Piwowarek
      */
-    private class CustomThreadFactory implements ThreadFactory {
+    private static class CustomThreadFactory implements ThreadFactory {
         private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
         @Override
