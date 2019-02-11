@@ -13,7 +13,7 @@ import java.util.stream.Collector;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 abstract class AbstractParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
+  implements Collector<T, List<CompletableFuture<R>>, C> {
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
