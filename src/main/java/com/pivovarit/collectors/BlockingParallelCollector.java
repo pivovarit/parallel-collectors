@@ -15,7 +15,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 /**
  * @author Grzegorz Piwowarek
  */
-final class ConfigurableParallelCollector<T, R, C extends Collection<R>>
+final class BlockingParallelCollector<T, R, C extends Collection<R>>
   extends AbstractParallelCollector<T, R, C>
   implements AutoCloseable {
 
@@ -24,7 +24,7 @@ final class ConfigurableParallelCollector<T, R, C extends Collection<R>>
     private final Function<T, R> operation;
     private final Supplier<C> collectionFactory;
 
-    ConfigurableParallelCollector(
+    BlockingParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor,
@@ -34,7 +34,7 @@ final class ConfigurableParallelCollector<T, R, C extends Collection<R>>
         this.operation = operation;
     }
 
-    ConfigurableParallelCollector(
+    BlockingParallelCollector(
       Function<T, R> operation,
       Supplier<C> collection,
       Executor executor) {
@@ -49,13 +49,13 @@ final class ConfigurableParallelCollector<T, R, C extends Collection<R>>
     }
 
     @Override
-    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
+    public Function<List<CompletableFuture<R>>, C> finisher() {
         if (dispatcher.getWorkingQueue().size() != 0) {
             dispatcher.start();
-            return foldLeftFutures(collectionFactory).andThen(f -> supplyWithResources(() -> f, dispatcher::close));
+            return foldLeftFutures(collectionFactory)
+              .andThen(future -> supplyWithResources(future::join, dispatcher::close));
         } else {
-            return supplyWithResources(() -> (__) -> completedFuture(collectionFactory
-              .get()), dispatcher::close);
+            return supplyWithResources(() -> (__) -> collectionFactory.get(), dispatcher::close);
         }
     }
 
