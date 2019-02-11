@@ -479,7 +479,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<T>, C> parallelToCollectionBlocking(Supplier<C> collectionSupplier, Executor executor) {
+    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, C> parallelToCollectionBlocking(Supplier<C> collectionSupplier, Executor executor) {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
         return null;
@@ -510,7 +510,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<T>, C> parallelToCollectionBlocking(Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, C> parallelToCollectionBlocking(Supplier<C> collectionSupplier, Executor executor, int parallelism) {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
@@ -546,7 +546,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<R>, C> parallelToCollectionBlocking(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, C> parallelToCollectionBlocking(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
@@ -578,7 +578,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R, C extends Collection<R>> Collector<T, List<R>, C> parallelToCollectionBlocking(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, C> parallelToCollectionBlocking(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
@@ -613,7 +613,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<T>, List<T>> parallelToListBlocking(Executor executor) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, List<T>> parallelToListBlocking(Executor executor) {
         requireNonNull(executor, "executor can't be null");
         return null;
     }
@@ -643,7 +643,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<T>, List<T>> parallelToListBlocking(Executor executor, int parallelism) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, List<T>> parallelToListBlocking(Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
         return null;
@@ -677,7 +677,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<R>, List<R>> parallelToListBlocking(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, List<CompletableFuture<T>>, List<R>> parallelToListBlocking(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         return null;
@@ -707,7 +707,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<R>, List<R>> parallelToListBlocking(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, List<CompletableFuture<T>>, List<R>> parallelToListBlocking(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
@@ -741,7 +741,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<T>, Set<T>> parallelToSetBlocking(Executor executor) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, Set<T>> parallelToSetBlocking(Executor executor) {
         requireNonNull(executor, "executor can't be null");
         return null;
     }
@@ -769,7 +769,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T> Collector<Supplier<T>, List<T>, Set<T>> parallelToSetBlocking(Executor executor, int parallelism) {
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, Set<T>> parallelToSetBlocking(Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
         return null;
@@ -803,7 +803,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<R>, Set<T>> parallelToSetBlocking(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, List<CompletableFuture<T>>, Set<T>> parallelToSetBlocking(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         return null;
@@ -838,7 +838,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
-    public static <T, R> Collector<T, List<R>, Set<R>> parallelToSetBlocking(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, List<CompletableFuture<T>>, Set<R>> parallelToSetBlocking(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
