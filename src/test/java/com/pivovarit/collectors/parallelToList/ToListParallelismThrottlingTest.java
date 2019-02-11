@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
