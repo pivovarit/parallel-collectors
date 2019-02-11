@@ -84,7 +84,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
     /**
      * @author Grzegorz Piwowarek
      */
-    private class CustomThreadFactory implements ThreadFactory {
+    private static class CustomThreadFactory implements ThreadFactory {
         private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
         @Override
