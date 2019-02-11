@@ -444,6 +444,407 @@ public final class ParallelCollectors {
         return new ConfigurableParallelCollector<>(mapper, HashSet::new, executor, parallelism);
     }
 
+
+    // BLOCKING
+
+    /**
+     * A convenience {@link Collector} for executing parallel computations on a custom {@link Executor} instance
+     * and returning them as a user-provided {@link Collection} {@link C} of these elements.
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
+     * <br><br>
+     * {@link Collector} is accepting {@link Supplier} instances so tasks need to be prepared beforehand
+     * and represented as {@link Supplier} implementations
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TreeSet<String> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(parallelToCollection(TreeSet::new, executor));
+     * }</pre>
+     *
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     * @param <T>                the type of the input elements
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, C> parallelToCollectionBlocking(Supplier<C> collectionSupplier, Executor executor) {
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a user-provided {@link Collection} {@link C} of these elements.
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TreeSet<String> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(
+     *     parallelToCollection(TreeSet::new, executor, 2));
+     * }</pre>
+     *
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     * @param parallelism        the parallelism level
+     * @param <T>                the type of the input elements
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, C extends Collection<T>> Collector<Supplier<T>, List<CompletableFuture<T>>, C> parallelToCollectionBlocking(Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a user-provided {@link Collection} {@link R} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <TreeSet<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToCollection(i -> foo(i), TreeSet::new, executor));
+     * }</pre>
+     *
+     * @param mapper             a transformation to be performed in parallel
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     * @param <T>                the type of the input elements
+     * @param <R>                the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, C> parallelToCollectionBlocking(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a user-provided {@link Collection} {@link R} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <TreeSet<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
+     * }</pre>
+     *
+     * @param mapper             a transformation to be performed in parallel
+     * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
+     * @param executor           the {@code Executor} to use for asynchronous execution
+     * @param parallelism        the parallelism level
+     * @param <T>                the type of the input elements
+     * @param <R>                the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, R, C extends Collection<R>> Collector<T, List<CompletableFuture<R>>, C> parallelToCollectionBlocking(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link List} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <List<String> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(parallelToList(executor));
+     * }</pre>
+     *
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the input elements
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, List<T>> parallelToListBlocking(Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link List} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>
+     * {@code
+     * <List<String> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(parallelToList(executor, 2));
+     * }
+     * </pre>
+     *
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the input elements
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, List<T>> parallelToListBlocking(Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link List} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor));
+     * }</pre>
+     *
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the input elements
+     * @param <R>      the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, List<R>> parallelToListBlocking(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link List} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor, 2));
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the input elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, List<R>> parallelToListBlocking(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as an {@link HashSet} of these element
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <Set<String> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(parallelToSet(executor));
+     * }</pre>
+     *
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the input elements
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, Set<T>> parallelToSetBlocking(Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as an {@link HashSet} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <Set<String> result = Stream.of(1, 2, 3)
+     *   .map(i -> supplier(() -> foo(i)))
+     *   .collect(parallelToSet(executor, 2));
+     * }</pre>
+     *
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the input elements
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T> Collector<Supplier<T>, List<CompletableFuture<T>>, Set<T>> parallelToSetBlocking(Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link Set} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <Set<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToSet(i -> foo(), executor));
+     * }</pre>
+     *
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the input elements
+     * @param <R>      the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, Set<T>> parallelToSetBlocking(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link Set} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * <Set<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToSet(i -> foo(), executor, 2));
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the input elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     *
+     * @since 0.0.1
+     */
+    public static <T, R> Collector<T, List<CompletableFuture<R>>, Set<R>> parallelToSetBlocking(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
     private static int assertParallelismValid(int parallelism) {
         if (parallelism < 1) throw new IllegalArgumentException("Parallelism can't be lower than 1");
         return parallelism;
