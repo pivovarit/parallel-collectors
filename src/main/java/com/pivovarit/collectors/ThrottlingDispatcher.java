@@ -17,7 +17,7 @@ final class ThrottlingDispatcher<T> extends Dispatcher<T> {
     protected Runnable dispatchStrategy() {
         return () -> {
             Supplier<T> task;
-            while ((task = workingQueue.poll()) != null && !Thread.currentThread().isInterrupted()) {
+            while ((task = getWorkingQueue().poll()) != null && !Thread.currentThread().isInterrupted()) {
                 try {
                     limiter.acquire();
                     if (isMarkedFailed()) {

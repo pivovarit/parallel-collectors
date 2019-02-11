@@ -50,7 +50,7 @@ final class ConfigurableParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        if (dispatcher.isNotEmpty()) {
+        if (dispatcher.getWorkingQueue().size() != 0) {
             dispatcher.start();
             return foldLeftFutures(collectionFactory).andThen(f -> supplyWithResources(() -> f, dispatcher::close));
         } else {
