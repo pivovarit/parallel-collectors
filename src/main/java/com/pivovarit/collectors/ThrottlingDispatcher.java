@@ -1,7 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.Queue;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
@@ -10,8 +8,8 @@ final class ThrottlingDispatcher<T> extends Dispatcher<T> {
 
     private final Semaphore limiter;
 
-    ThrottlingDispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue, int permits) {
-        super(executor, workingQueue, pendingQueue);
+    ThrottlingDispatcher(Executor executor, int permits) {
+        super(executor);
         this.limiter = new Semaphore(permits);
     }
 

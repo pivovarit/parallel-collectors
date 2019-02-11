@@ -3,6 +3,7 @@ package com.pivovarit.collectors;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,6 +22,12 @@ abstract class Dispatcher<T> implements AutoCloseable {
     private final Queue<CompletableFuture<T>> pendingQueue;
 
     private volatile boolean isFailed = false;
+
+    Dispatcher(Executor executor) {
+        this.executor = executor;
+        this.workingQueue = new ConcurrentLinkedQueue<>();
+        this.pendingQueue = new ConcurrentLinkedQueue<>();
+    }
 
     Dispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue) {
         this.executor = executor;

@@ -1,13 +1,11 @@
 package com.pivovarit.collectors;
 
-import java.util.Queue;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 final class UnboundedDispatcher<T> extends Dispatcher<T> {
-    UnboundedDispatcher(Executor executor, Queue<Supplier<T>> workingQueue, Queue<CompletableFuture<T>> pendingQueue) {
-        super(executor, workingQueue, pendingQueue);
+    UnboundedDispatcher(Executor executor) {
+        super(executor);
     }
 
     @Override
