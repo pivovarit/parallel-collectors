@@ -47,7 +47,7 @@ public final class TestUtils {
         }
     }
 
-    public static Object incrementAndThrow(LongAdder counter) {
+    public static Integer incrementAndThrow(LongAdder counter) {
         counter.increment();
         throw new IllegalArgumentException();
     }
