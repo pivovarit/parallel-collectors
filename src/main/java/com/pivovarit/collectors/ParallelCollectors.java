@@ -529,8 +529,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <TreeSet<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToCollection(i -> foo(i), TreeSet::new, executor));
+     * TreeSet<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToCollectionBlocking(i -> foo(i), TreeSet::new, executor));
      * }</pre>
      *
      * @param mapper             a transformation to be performed in parallel
@@ -560,8 +560,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <TreeSet<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToCollection(i -> foo(i), TreeSet::new, executor, 2));
+     * TreeSet<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToCollectionBlocking(i -> foo(i), TreeSet::new, executor, 2));
      * }</pre>
      *
      * @param mapper             a transformation to be performed in parallel
@@ -598,9 +598,9 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <List<String> result = Stream.of(1, 2, 3)
+     * List<String> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(parallelToList(executor));
+     *   .collect(parallelToListBlocking(executor));
      * }</pre>
      *
      * @param executor the {@code Executor} to use for asynchronous execution
@@ -626,9 +626,9 @@ public final class ParallelCollectors {
      * Example:
      * <pre>
      * {@code
-     * <List<String> result = Stream.of(1, 2, 3)
+     * List<String> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(parallelToList(executor, 2));
+     *   .collect(parallelToListBlocking(executor, 2));
      * }
      * </pre>
      *
@@ -661,8 +661,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor));
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToListBlocking(i -> foo(), executor));
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
@@ -690,8 +690,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor, 2));
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToListBlocking(i -> foo(), executor, 2));
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
@@ -726,9 +726,9 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <Set<String> result = Stream.of(1, 2, 3)
+     * Set<String> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(parallelToSet(executor));
+     *   .collect(parallelToSetBlocking(executor));
      * }</pre>
      *
      * @param executor the {@code Executor} to use for asynchronous execution
@@ -753,9 +753,9 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <Set<String> result = Stream.of(1, 2, 3)
+     * Set<String> result = Stream.of(1, 2, 3)
      *   .map(i -> supplier(() -> foo(i)))
-     *   .collect(parallelToSet(executor, 2));
+     *   .collect(parallelToSetBlocking(executor, 2));
      * }</pre>
      *
      * @param executor    the {@code Executor} to use for asynchronous execution
@@ -787,8 +787,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <Set<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToSet(i -> foo(), executor));
+     * Set<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToSetBlocking(i -> foo(), executor));
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
@@ -821,8 +821,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * <Set<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToSet(i -> foo(), executor, 2));
+     * Set<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToSetBlocking(i -> foo(), executor, 2));
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
