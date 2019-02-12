@@ -16,7 +16,6 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToListBlocking;
 import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;
@@ -40,7 +39,7 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
         executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork, BLOCKING_MILLIS);
 
-        Map.Entry<List<Long>, Long> result = timed(collectWith(parallelToListBlocking(executor, parallelism), unitsOfWork));
+        Map.Entry<List<Long>, Long> result = timed(collectWith(parallelToList(executor, parallelism), unitsOfWork));
 
         assertThat(result)
           .satisfies(e -> {
@@ -52,9 +51,10 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
           });
     }
 
-    private static <T, R extends Collection<T>> Supplier<R> collectWith(Collector<Supplier<Long>, List<CompletableFuture<T>>, R> collector, int unitsOfWork) {
+    private static <T, R extends Collection<T>> Supplier<R> collectWith(Collector<Supplier<Long>, List<CompletableFuture<T>>, CompletableFuture<R>> collector, int unitsOfWork) {
         return () -> Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
           .limit(unitsOfWork)
-          .collect(collector);
+          .collect(collector)
+          .join();
     }
 }
