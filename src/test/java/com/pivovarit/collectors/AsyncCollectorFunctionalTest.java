@@ -59,7 +59,7 @@ class AsyncCollectorFunctionalTest {
         ).flatMap(identity());
     }
 
-    private static <R extends Collection<Integer>> Stream<DynamicTest> forCollector(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> Stream<DynamicTest> forCollector(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldCollect(collector, name),
           shouldCollectToEmpty(collector, name),
@@ -73,7 +73,7 @@ class AsyncCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(Collectors.toList());
             assertTimeoutPreemptively(ofMillis(100), () ->
@@ -85,7 +85,7 @@ class AsyncCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect to empty", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(Collectors.toList());
             Collection<Integer> result11 = elements.stream()
@@ -98,7 +98,7 @@ class AsyncCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldCollect(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldCollect(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
             Collection<Integer> result = elements.stream()
@@ -112,7 +112,7 @@ class AsyncCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldShortCircuitOnException(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldShortCircuitOnException(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should short circuit on exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 100).boxed().collect(Collectors.toList());
             int size = 4;
@@ -133,7 +133,7 @@ class AsyncCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldNotSwallowException(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldNotSwallowException(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
 
@@ -154,7 +154,7 @@ class AsyncCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
             List<Integer> elements = IntStream.range(0, 1000).boxed().collect(Collectors.toList());
@@ -169,7 +169,7 @@ class AsyncCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldBeConsistent(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldBeConsistent(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should remain consistent", name), () -> {
             ExecutorService executor = Executors.newFixedThreadPool(1000);
             try {
@@ -201,7 +201,7 @@ class AsyncCollectorFunctionalTest {
 
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldStartConsumingImmediately(Function<Executor, Collector<Supplier<Integer>, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldStartConsumingImmediately(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
             TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 

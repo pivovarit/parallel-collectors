@@ -52,7 +52,7 @@ public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest 
           });
     }
 
-    private static <T, R extends Collection<T>> Supplier<R> collectWith(Collector<Supplier<Long>, List<CompletableFuture<T>>, CompletableFuture<R>> collector, int unitsOfWork) {
+    private static <T, R extends Collection<T>> Supplier<R> collectWith(Collector<Supplier<Long>, ?, CompletableFuture<R>> collector, int unitsOfWork) {
         return () -> Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
           .limit(unitsOfWork)
           .collect(collector)

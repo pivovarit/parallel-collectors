@@ -58,7 +58,7 @@ class AsyncMappingCollectorFunctionalTest {
         ).flatMap(identity());
     }
 
-    private static <R extends Collection<Integer>> Stream<DynamicTest> forCollector(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> Stream<DynamicTest> forCollector(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldCollect(collector, name),
           shouldCollectToEmpty(collector, name),
@@ -72,7 +72,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(Collectors.toList());
             assertTimeoutPreemptively(ofMillis(100), () ->
@@ -84,7 +84,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect to empty", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(Collectors.toList());
             Collection<Integer> result11 = elements.stream().collect(collector.apply(i -> i, executor)).join();
@@ -95,7 +95,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldCollect(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldCollect(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
             Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor)).join();
@@ -107,7 +107,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldShortCircuitOnException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldShortCircuitOnException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should short circuit on exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 100).boxed().collect(Collectors.toList());
             int size = 4;
@@ -127,7 +127,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldNotSwallowException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldNotSwallowException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
 
@@ -147,7 +147,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
             List<Integer> elements = IntStream.range(0, 1000).boxed().collect(Collectors.toList());
@@ -161,7 +161,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldBeConsistent(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldBeConsistent(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should remain consistent", name), () -> {
             ExecutorService executor = Executors.newFixedThreadPool(1000);
             try {
@@ -191,7 +191,7 @@ class AsyncMappingCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, List<CompletableFuture<Integer>>, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
             TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
