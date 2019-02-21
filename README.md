@@ -208,6 +208,11 @@ None - the library is implemented using core Java libraries.
 
 ## Version history
 
+### [0.0.3](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.3) (21-02-2019)
+- Improved performance
+- Improved internal implementation
+- Relaxed generic type parameters in a backward-compatible manner
+
 ### [0.0.2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.2) (02-02-2019)
 - Fixed the issue with lack of short-circuiting when an exception gets thrown (#140)
 
