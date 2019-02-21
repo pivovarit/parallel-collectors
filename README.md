@@ -79,18 +79,18 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 _parallelToList_:
 
-- `parallelToList(Function<T, R> mapper, Executor executor)`
-- `parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
+- `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
 _parallelToSet_:
 
-- `parallelToSet(Function<T, R> mapper, Executor executor)`
-- `parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
+- `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
 _parallelToCollection_:
 
-- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
-- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+- `CompletableFuture<C<R>> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
+- `CompletableFuture<C<R>> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
 ##### Blocking Semantics
 
