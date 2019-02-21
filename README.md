@@ -92,6 +92,14 @@ _parallelToCollection_:
 - `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
 - `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
+##### Blocking Semantics
+
+If you want to achieve blocking semantics, just add `.join()` straight after collection:
+
+    ...
+    .collect(parallelToList(i -> 42, executor))
+    .join(); // returns List<Integer>
+
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
  
 **By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
