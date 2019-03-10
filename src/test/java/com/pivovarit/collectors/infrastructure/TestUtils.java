@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,6 +26,16 @@ public final class TestUtils {
         return new AbstractMap.SimpleEntry<>(
           runnable.get(),
           Duration.between(start, Instant.now()).toMillis());
+    }
+
+    public static <T> T returnWithDelayGaussian(T value, Duration duration) {
+        try {
+            Thread.sleep(Math.abs((long) (duration.toMillis() * new Random().nextGaussian())));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        return value;
     }
 
     public static <T> T returnWithDelay(T value, Duration duration) {

@@ -2,6 +2,7 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
@@ -17,7 +18,7 @@ abstract class AbstractParallelCollector<T, R, C>
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
-        return ArrayList::new;
+        return () -> Collections.synchronizedList(new ArrayList<>());
     }
 
     @Override
