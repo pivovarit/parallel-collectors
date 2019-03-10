@@ -17,9 +17,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToListOrdered;
-import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
@@ -52,6 +50,17 @@ public class ToListOrderedParallelismThrottlingBDDTest extends ExecutorAwareTest
 
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
+    }
+
+    @Property
+    public void shouldMaintainOrder(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+        // given
+        executor = threadPoolExecutor(unitsOfWork);
+        List<Integer> result = Stream.iterate(0, i -> i + 1).limit(1000)
+            .collect(parallelToListOrdered(i -> i, executor, parallelism))
+            .join();
+
+        assertThat(result).isSorted();
     }
 
     private static <R extends Collection<Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>,  Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
