@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -38,7 +40,7 @@ public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork);
-        Map.Entry<Set<Long>, Long> result = timed(collectWith(parallelToSet(executor, parallelism), unitsOfWork));
+        Map.Entry<Set<Long>, Long> result = timed(collectWith(f-> parallelToSet(f, executor, parallelism), unitsOfWork));
 
         assertThat(result)
           .satisfies(e -> {
@@ -60,10 +62,10 @@ public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
         }
     }
 
-    private static <T, R extends Collection<T>> Supplier<R> collectWith(Collector<Supplier<Long>, ?, CompletableFuture<R>> collector, int unitsOfWork) {
-        return () -> Stream.generate(() -> supplier(() -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
-          .limit(unitsOfWork)
-          .collect(collector)
-          .join();
+    private static <R extends Collection<Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>,  Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
+        return () -> Stream.generate(() -> 42L)
+            .limit(unitsOfWork)
+            .collect(collector.apply(f -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
+            .join();
     }
 }
