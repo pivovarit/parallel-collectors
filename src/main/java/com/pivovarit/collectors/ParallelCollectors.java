@@ -315,6 +315,71 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     *
+     * <br><br>
+     * Original ordering preserved. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor));
+     * }</pre>
+     *
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the input elements
+     * @param <R>      the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     *
+     * @since 0.1.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToListOrdered(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return new AsyncParallelCollector<>(mapper, ArrayList::new, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     *
+     * <br><br>
+     * Original ordering preserved. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor, 2));
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the input elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     *
+     * @since 0.1.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToListOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing an {@link HashSet} of these element
      *
      * <br><br>
