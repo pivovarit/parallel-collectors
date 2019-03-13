@@ -41,6 +41,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
+    @Deprecated() // for removal in 1.0.0
     public static <T> Supplier<T> supplier(Supplier<T> supplier) {
         requireNonNull(supplier);
         return supplier;
@@ -78,6 +79,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
+    @Deprecated() // for removal in 1.0.0
     public static <T, C extends Collection<T>> Collector<Supplier<T>, ?, CompletableFuture<C>> parallelToCollection(Supplier<C> collectionSupplier, Executor executor) {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
@@ -109,6 +111,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
+    @Deprecated() // for removal in 1.0.0
     public static <T, C extends Collection<T>> Collector<Supplier<T>, ?, CompletableFuture<C>> parallelToCollection(Supplier<C> collectionSupplier, Executor executor, int parallelism) {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
@@ -212,6 +215,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
+    @Deprecated() // for removal in 1.0.0
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<List<T>>> parallelToList(Executor executor) {
         requireNonNull(executor, "executor can't be null");
         return new AsyncParallelCollector<>(Supplier::get, ArrayList::new, executor);
@@ -242,6 +246,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
+    @Deprecated() // for removal in 1.0.0
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<List<T>>> parallelToList(Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
@@ -405,6 +410,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
+    @Deprecated() // for removal in 1.0.0
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<Set<T>>> parallelToSet(Executor executor) {
         requireNonNull(executor, "executor can't be null");
         return new AsyncParallelCollector<>(Supplier::get, HashSet::new, executor);
@@ -433,6 +439,7 @@ public final class ParallelCollectors {
      *
      * @since 0.0.1
      */
+    @Deprecated() // for removal in 1.0.0
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<Set<T>>> parallelToSet(Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);

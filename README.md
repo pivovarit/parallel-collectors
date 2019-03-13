@@ -79,18 +79,26 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 _parallelToList_:
 
-- `parallelToList(Function<T, R> mapper, Executor executor)`
-- `parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
+- `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
 _parallelToSet_:
 
-- `parallelToSet(Function<T, R> mapper, Executor executor)`
-- `parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
+- `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
 _parallelToCollection_:
 
-- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
-- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+- `CompletableFuture<C<R>> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
+- `CompletableFuture<C<R>> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+
+##### Blocking Semantics
+
+If you want to achieve blocking semantics, just add `.join()` straight after collection:
+
+    ...
+    .collect(parallelToList(i -> 42, executor))
+    .join(); // returns List<Integer>
 
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
  
@@ -186,13 +194,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.0.2</version>
+        <version>0.0.3</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.0.2'
+    compile 'com.pivovarit:parallel-collectors:0.0.3'
 
 ### Dependencies
 
@@ -207,6 +215,11 @@ None - the library is implemented using core Java libraries.
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
 
 ## Version history
+
+### [0.0.3](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.3) (21-02-2019)
+- Improved performance
+- Improved internal implementation
+- Relaxed generic type parameters in a backward-compatible manner
 
 ### [0.0.2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.2) (02-02-2019)
 - Fixed the issue with lack of short-circuiting when an exception gets thrown (#140)
