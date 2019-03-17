@@ -53,7 +53,7 @@ public class ToListOrderedParallelismThrottlingBDDTest extends ExecutorAwareTest
           });
     }
 
-    @Property(trials = TRIALS)
+    @Property
     public void shouldMaintainOrder(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);

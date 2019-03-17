@@ -349,7 +349,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToListOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, ArrayList::new, executor);
+        return new AsyncOrderedParallelCollector<>(mapper, ArrayList::new, executor);
     }
 
     /**
@@ -380,7 +380,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
+        return new AsyncOrderedParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
     }
 
     /**
