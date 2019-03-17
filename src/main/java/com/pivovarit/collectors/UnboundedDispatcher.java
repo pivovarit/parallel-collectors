@@ -17,7 +17,7 @@ final class UnboundedDispatcher<T> extends Dispatcher<T> {
             Supplier<T> task;
             try {
                 while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null) {
-                    if (isInterrupted()) {
+                    if (isFailed()) {
                         cancelPending();
                         break;
                     }

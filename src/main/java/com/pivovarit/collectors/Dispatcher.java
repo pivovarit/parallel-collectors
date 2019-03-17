@@ -45,7 +45,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pendingQueue.add(future);
-        workingQueue.add(() -> isInterrupted() ? null : supplier.get());
+        workingQueue.add(() -> isFailed() ? null : supplier.get());
         return future;
     }
 
@@ -81,7 +81,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
         pendingQueue.forEach(f -> f.cancel(true));
     }
 
-    boolean isInterrupted() {
+    boolean isFailed() {
         return failed;
     }
 
