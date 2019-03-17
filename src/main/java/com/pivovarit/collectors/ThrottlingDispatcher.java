@@ -23,7 +23,7 @@ final class ThrottlingDispatcher<T> extends Dispatcher<T> {
             try {
                 while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null) {
                     limiter.acquire();
-                    if (isInterrupted()) {
+                    if (isFailed()) {
                         cancelPending();
                         break;
                     }
