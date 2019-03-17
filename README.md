@@ -82,6 +82,11 @@ _parallelToList_:
 - `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor)`
 - `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
+_parallelToListOrdered_:
+
+- `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor, int parallelism)`
+
 _parallelToSet_:
 
 - `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor)`
