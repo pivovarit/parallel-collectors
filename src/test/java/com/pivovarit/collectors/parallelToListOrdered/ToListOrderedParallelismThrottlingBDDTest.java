@@ -54,17 +54,17 @@ public class ToListOrderedParallelismThrottlingBDDTest extends ExecutorAwareTest
     }
 
     @Property
-    public void shouldMaintainOrder(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    public void shouldMaintainOrder(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 2, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
         List<Integer> result = Stream.iterate(0, i -> i + 1).limit(20)
-            .collect(parallelToListOrdered(i -> returnWithDelayGaussian(i, Duration.ofMillis(10)), executor, parallelism))
-            .join();
+          .collect(parallelToListOrdered(i -> returnWithDelayGaussian(i, Duration.ofMillis(10)), executor, parallelism))
+          .join();
 
         assertThat(result).isSorted();
     }
 
-    private static <R extends Collection<Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>,  Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
+    private static <R extends Collection<Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>, Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
         return () -> Stream.generate(() -> 42L)
           .limit(unitsOfWork)
           .collect(collector.apply(f -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
