@@ -12,6 +12,10 @@ import java.util.function.Supplier;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
+
+/**
+ * @author Grzegorz Piwowarek
+ */
 abstract class Dispatcher<T> implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());

@@ -3,6 +3,9 @@ package com.pivovarit.collectors;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 final class UnboundedDispatcher<T> extends Dispatcher<T> {
     UnboundedDispatcher(Executor executor) {
         super(executor);

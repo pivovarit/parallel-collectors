@@ -13,6 +13,9 @@ import java.util.stream.Collector;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 abstract class AbstractParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, C> {
 

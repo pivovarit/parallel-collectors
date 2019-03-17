@@ -1,9 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +13,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
@@ -64,7 +61,7 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>> finisher() {
         if (dispatcher.getWorkingQueue().size() != 0) {
             dispatcher.start();
-            return foldLeftFutures(collectionFactory)
+            return foldLeftFuturesOrdered(collectionFactory)
               .andThen(f -> supplyWithResources(() -> f, dispatcher::close));
         } else {
             return supplyWithResources(() -> (__) -> completedFuture(collectionFactory

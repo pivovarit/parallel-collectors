@@ -16,6 +16,9 @@ import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 abstract class AbstractOrderedParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<Map.Entry<Integer, R>>>, C> {
 
@@ -40,7 +43,7 @@ abstract class AbstractOrderedParallelCollector<T, R, C>
         }
     }
 
-    static <R, C extends Collection<R>> Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>> foldLeftFutures(Supplier<C> collectionFactory) {
+    static <R, C extends Collection<R>> Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>> foldLeftFuturesOrdered(Supplier<C> collectionFactory) {
         return futures -> futures.stream()
           .reduce(completedFuture(new ArrayList<>()),
             accumulatingResults(),
