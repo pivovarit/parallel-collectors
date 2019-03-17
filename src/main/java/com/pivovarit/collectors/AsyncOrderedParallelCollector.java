@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -23,10 +24,10 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * @author Grzegorz Piwowarek
  */
 final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, Map.Entry<Integer, R>, CompletableFuture<C>>
+  extends AbstractParallelCollector<T, Entry<Integer, R>, CompletableFuture<C>>
   implements AutoCloseable {
 
-    private final Dispatcher<Map.Entry<Integer, R>> dispatcher;
+    private final Dispatcher<Entry<Integer, R>> dispatcher;
 
     private final Function<T, R> operation;
     private final Supplier<C> collectionFactory;
@@ -53,7 +54,7 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
     }
 
     @Override
-    public BiConsumer<List<CompletableFuture<Map.Entry<Integer, R>>>, T> accumulator() {
+    public BiConsumer<List<CompletableFuture<Entry<Integer, R>>>, T> accumulator() {
         return (acc, e) -> {
             int nextVal = seq.getAndIncrement();
             acc.add(dispatcher.enqueue(() -> new AbstractMap.SimpleEntry<>(nextVal, operation.apply(e))));
@@ -61,7 +62,7 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
     }
 
     @Override
-    public Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>> finisher() {
+    public Function<List<CompletableFuture<Entry<Integer, R>>>, CompletableFuture<C>> finisher() {
         if (dispatcher.getWorkingQueue().size() != 0) {
             dispatcher.start();
             return foldLeftFuturesOrdered(collectionFactory)
@@ -82,14 +83,14 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
         dispatcher.close();
     }
 
-    private static <R, C extends Collection<R>> Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>> foldLeftFuturesOrdered(Supplier<C> collectionFactory) {
+    private static <R, C extends Collection<R>> Function<List<CompletableFuture<Entry<Integer, R>>>, CompletableFuture<C>> foldLeftFuturesOrdered(Supplier<C> collectionFactory) {
         return futures -> futures.stream()
           .reduce(completedFuture(new ArrayList<>()),
             accumulatingResults(),
             mergingPartialResults())
           .thenApply(list -> list.stream()
-            .sorted(Comparator.comparing(Map.Entry::getKey))
-            .map(Map.Entry::getValue)
+            .sorted(Comparator.comparing(Entry::getKey))
+            .map(Entry::getValue)
             .collect(Collectors.toCollection(collectionFactory)));
     }
 }
