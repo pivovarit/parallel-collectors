@@ -320,7 +320,7 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     * and returning them as {@link CompletableFuture} containing an ordered {@link List} of these elements
      *
      * <br><br>
      * Original ordering preserved. Instances should not be reused.
@@ -354,7 +354,7 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
+     * and returning them as {@link CompletableFuture} containing an ordered {@link List} of these elements
      *
      * <br><br>
      * Original ordering preserved. Instances should not be reused.
