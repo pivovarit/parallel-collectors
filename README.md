@@ -82,6 +82,11 @@ _parallelToList_:
 - `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor)`
 - `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
 
+_parallelToListOrdered_:
+
+- `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor, int parallelism)`
+
 _parallelToSet_:
 
 - `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor)`
@@ -215,6 +220,9 @@ None - the library is implemented using core Java libraries.
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
 
 ## Version history
+
+### [0.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.1.0) (17-03-2019)
+- Introduced a new API method `ParallelCollectors.parallelToListOrdered`
 
 ### [0.0.3](https://github.com/pivovarit/parallel-collectors/releases/tag/0.0.3) (21-02-2019)
 - Improved performance
