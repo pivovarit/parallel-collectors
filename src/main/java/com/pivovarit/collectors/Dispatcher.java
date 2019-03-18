@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
-
 /**
  * @author Grzegorz Piwowarek
  */
@@ -50,7 +49,15 @@ abstract class Dispatcher<T> implements AutoCloseable {
     }
 
     void run(Supplier<T> task) {
-        run(task, () -> {});
+        CompletableFuture.supplyAsync(task, executor).whenComplete((r, throwable) -> {
+            CompletableFuture<T> next = Objects.requireNonNull(pendingQueue.poll(), "internal error, future can't be null");
+            if (throwable == null) {
+                next.complete(r);
+            } else {
+                next.completeExceptionally(throwable);
+                failed = true;
+            }
+        });
     }
 
     void run(Supplier<T> task, Runnable finisher) {
