@@ -54,9 +54,9 @@ abstract class Dispatcher<T> implements AutoCloseable {
             if (throwable == null) {
                 next.complete(r);
             } else {
+                failed = true;
                 next.completeExceptionally(throwable);
                 cancelPending();
-                failed = true;
             }
         });
     }
