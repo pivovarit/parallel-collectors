@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -19,7 +18,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Queue<CompletableFuture<T>> pendingQueue;
-    private final Queue<Supplier<T>> workingQueue;
+    private final Queue<Runnable> workingQueue;
     private final Executor executor;
 
     private volatile boolean failed = false;
@@ -44,50 +43,35 @@ abstract class Dispatcher<T> implements AutoCloseable {
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pendingQueue.add(future);
-        workingQueue.add(() -> isFailed() ? null : supplier.get());
+        workingQueue.add(() -> {
+            try {
+                T result = supplier.get();
+                future.complete(result);
+            } catch (Throwable e) {
+                failed = true;
+                future.completeExceptionally(e);
+                pendingQueue.forEach(f -> f.completeExceptionally(e));
+                throw e;
+            }
+        });
         return future;
     }
 
-    void run(Supplier<T> task) {
-        CompletableFuture.supplyAsync(task, executor).whenComplete((r, throwable) -> {
-            CompletableFuture<T> next = Objects.requireNonNull(pendingQueue.poll(), "internal error, future can't be null");
-            if (throwable == null) {
-                next.complete(r);
-            } else {
-                failed = true;
-                next.completeExceptionally(throwable);
-                cancelPending();
-            }
-        });
+    CompletableFuture<Void> run(Runnable task) {
+        return CompletableFuture.runAsync(task, executor);
     }
 
-    void run(Supplier<T> task, Runnable finisher) {
-        CompletableFuture.supplyAsync(task, executor).whenComplete((r, throwable) -> {
-            CompletableFuture<T> next = Objects.requireNonNull(pendingQueue.poll());
-            try {
-                if (throwable == null) {
-                    next.complete(r);
-                } else {
-                    next.completeExceptionally(throwable);
-                    cancelPending();
-                    failed = true;
-                }
-            } finally {
-                finisher.run();
-            }
-        });
+    CompletableFuture<Void> run(Runnable task, Runnable finisher) {
+        return CompletableFuture.runAsync(task, executor)
+          .whenComplete((r, throwable) -> finisher.run());
     }
 
-    Queue<Supplier<T>> getWorkingQueue() {
+    Queue<Runnable> getWorkingQueue() {
         return workingQueue;
     }
 
     void completePending(Exception e) {
         pendingQueue.forEach(future -> future.completeExceptionally(e));
-    }
-
-    private void cancelPending() {
-        pendingQueue.forEach(f -> f.cancel(true));
     }
 
     boolean isFailed() {

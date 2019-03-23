@@ -14,7 +14,7 @@ final class UnboundedDispatcher<T> extends Dispatcher<T> {
     @Override
     protected Runnable dispatchStrategy() {
         return () -> {
-            Supplier<T> task;
+            Runnable task;
             try {
                 while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null && !isFailed()) {
                     run(task);

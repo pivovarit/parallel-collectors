@@ -157,7 +157,7 @@ class AsyncCollectorFunctionalTest {
 
     //@Test
     private static <R extends Collection<Integer>> DynamicTest shouldSurviveExceptionThrownOnLastFuture(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should not swallow exception", name), () -> {
+        return dynamicTest(format("%s: should not swallow exception on last element", name), () -> {
             int endInclusive = 10;
             List<Integer> elements = IntStream.rangeClosed(0, endInclusive).boxed().collect(Collectors.toList());
 
