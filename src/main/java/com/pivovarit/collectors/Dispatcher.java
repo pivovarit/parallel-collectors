@@ -85,7 +85,13 @@ abstract class Dispatcher<T> implements AutoCloseable {
     }
 
     void run(Runnable task, Runnable finisher) {
-        runAsync(task, executor).whenComplete((r, throwable) -> finisher.run());
+        runAsync(() -> {
+            try {
+                task.run();
+            } finally {
+                finisher.run();
+            }
+        }, executor);
     }
 
     Queue<Runnable> getWorkingQueue() {
