@@ -21,12 +21,8 @@ final class ThrottlingDispatcher<T> extends Dispatcher<T> {
         return () -> {
             Supplier<T> task;
             try {
-                while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null) {
+                while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null && !isFailed()) {
                     limiter.acquire();
-                    if (isFailed()) {
-                        cancelPending();
-                        break;
-                    }
                     run(task, limiter::release);
                 }
             } catch (Exception e) { // covers InterruptedException

@@ -16,13 +16,10 @@ final class UnboundedDispatcher<T> extends Dispatcher<T> {
         return () -> {
             Supplier<T> task;
             try {
-                while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null) {
-                    if (isFailed()) {
-                        cancelPending();
-                        break;
-                    }
+                while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null && !isFailed()) {
                     run(task);
                 }
+
             } catch (Exception e) {
                 completePending(e);
             }

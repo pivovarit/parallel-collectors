@@ -55,7 +55,8 @@ class AsyncCollectorFunctionalTest {
           forCollector(e -> parallelToList(e), "parallelToList(p=inf)"),
           forCollector(e -> parallelToList(e, 1000), "parallelToList(p=1000)"),
           forCollector(e -> parallelToCollection(ArrayList::new, e), "parallelToCollection(p=inf)"),
-          forCollector(e -> parallelToCollection(ArrayList::new, e, 1000), "parallelToCollection(p=1000)")
+          forCollector(e -> parallelToCollection(ArrayList::new, e, 1000),
+            "parallelToCollection(p=1000)")
         ).flatMap(identity());
     }
 

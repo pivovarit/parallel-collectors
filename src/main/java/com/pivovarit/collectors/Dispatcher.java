@@ -55,6 +55,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
                 next.complete(r);
             } else {
                 next.completeExceptionally(throwable);
+                cancelPending();
                 failed = true;
             }
         });
@@ -68,6 +69,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
                     next.complete(r);
                 } else {
                     next.completeExceptionally(throwable);
+                    cancelPending();
                     failed = true;
                 }
             } finally {
@@ -84,7 +86,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
         pendingQueue.forEach(future -> future.completeExceptionally(e));
     }
 
-    void cancelPending() {
+    private void cancelPending() {
         pendingQueue.forEach(f -> f.cancel(true));
     }
 
