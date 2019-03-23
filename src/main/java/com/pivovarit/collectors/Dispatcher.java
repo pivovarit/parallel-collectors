@@ -49,6 +49,9 @@ abstract class Dispatcher<T> implements AutoCloseable {
                 }
             } catch (Exception e) { // covers InterruptedException
                 pending.forEach(future -> future.completeExceptionally(e));
+            } catch (Throwable e) {
+                pending.forEach(future -> future.completeExceptionally(e));
+                throw e;
             }
         });
     }
