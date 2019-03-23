@@ -16,19 +16,10 @@ final class ThrottlingDispatcher<T> extends Dispatcher<T> {
     }
 
     @Override
-    protected Runnable dispatchStrategy() {
-        return () -> {
-            Runnable task;
-            try {
-                while (!Thread.currentThread().isInterrupted()
-                  && isRunning()
-                  && (task = getWorkingQueue().poll()) != null) {
-                    limiter.acquire();
-                    run(task, limiter::release);
-                }
-            } catch (Exception e) { // covers InterruptedException
-                completePending(e);
-            }
+    protected Dispatcher.Runner dispatchStrategy() {
+        return task -> {
+            limiter.acquire();
+            run(task, limiter::release);
         };
     }
 }

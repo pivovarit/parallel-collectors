@@ -11,18 +11,7 @@ final class UnboundedDispatcher<T> extends Dispatcher<T> {
     }
 
     @Override
-    protected Runnable dispatchStrategy() {
-        return () -> {
-            Runnable task;
-            try {
-                while (!Thread.currentThread().isInterrupted()
-                  && isRunning()
-                  && (task = getWorkingQueue().poll()) != null) {
-                    run(task);
-                }
-            } catch (Exception e) {
-                completePending(e);
-            }
-        };
+    protected Runner dispatchStrategy() {
+        return this::run;
     }
 }

@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;
 
+import static java.util.concurrent.CompletableFuture.*;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
@@ -29,7 +30,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
         this.pending = new ConcurrentLinkedQueue<>();
     }
 
-    abstract protected Runnable dispatchStrategy();
+    abstract protected Runner dispatchStrategy();
 
     @Override
     public void close() {
@@ -37,7 +38,19 @@ abstract class Dispatcher<T> implements AutoCloseable {
     }
 
     void start() {
-        dispatcher.execute(dispatchStrategy());
+        dispatcher.execute(() -> {
+            Runnable task;
+            try {
+                while (
+                  !Thread.currentThread().isInterrupted()
+                    && !failed
+                    && (task = getWorkingQueue().poll()) != null) {
+                    dispatchStrategy().run(task);
+                }
+            } catch (Exception e) { // covers InterruptedException
+                pending.forEach(future -> future.completeExceptionally(e));
+            }
+        });
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
@@ -65,25 +78,17 @@ abstract class Dispatcher<T> implements AutoCloseable {
         pending.forEach(f -> f.obtrudeException(e));
     }
 
-    CompletableFuture<Void> run(Runnable task) {
-        return CompletableFuture.runAsync(task, executor);
+    void run(Runnable task) {
+        runAsync(task, executor);
     }
 
-    CompletableFuture<Void> run(Runnable task, Runnable finisher) {
-        return CompletableFuture.runAsync(task, executor)
+    void run(Runnable task, Runnable finisher) {
+        runAsync(task, executor)
           .whenComplete((r, throwable) -> finisher.run());
     }
 
     Queue<Runnable> getWorkingQueue() {
         return workingQueue;
-    }
-
-    void completePending(Exception e) {
-        pending.forEach(future -> future.completeExceptionally(e));
-    }
-
-    boolean isRunning() {
-        return !failed;
     }
 
     /**
@@ -99,5 +104,10 @@ abstract class Dispatcher<T> implements AutoCloseable {
             thread.setDaemon(true);
             return thread;
         }
+    }
+
+    @FunctionalInterface
+    protected interface Runner {
+        void run(Runnable task) throws Exception;
     }
 }
