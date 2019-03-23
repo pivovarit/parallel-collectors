@@ -17,7 +17,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 abstract class Dispatcher<T> implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
-    private final Queue<CompletableFuture<T>> pendingQueue;
+    private final Queue<CompletableFuture<T>> pending;
     private final Queue<Runnable> workingQueue;
     private final Executor executor;
 
@@ -26,7 +26,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
     Dispatcher(Executor executor) {
         this.executor = executor;
         this.workingQueue = new ConcurrentLinkedQueue<>();
-        this.pendingQueue = new ConcurrentLinkedQueue<>();
+        this.pending = new ConcurrentLinkedQueue<>();
     }
 
     abstract protected Runnable dispatchStrategy();
@@ -42,7 +42,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
-        pendingQueue.add(future);
+        pending.add(future);
         workingQueue.add(() -> {
             try {
                 if (!failed) {
@@ -52,11 +52,11 @@ abstract class Dispatcher<T> implements AutoCloseable {
             } catch (Exception e) {
                 failed = true;
                 future.completeExceptionally(e);
-                pendingQueue.forEach(f -> f.completeExceptionally(e));
+                pending.forEach(f -> f.obtrudeException(e));
             } catch (Throwable e) {
                 failed = true;
                 future.completeExceptionally(e);
-                pendingQueue.forEach(f -> f.completeExceptionally(e));
+                pending.forEach(f -> f.obtrudeException(e));
                 throw e;
             }
         });
@@ -77,7 +77,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
     }
 
     void completePending(Exception e) {
-        pendingQueue.forEach(future -> future.completeExceptionally(e));
+        pending.forEach(future -> future.completeExceptionally(e));
     }
 
     boolean isRunning() {
