@@ -66,6 +66,7 @@ class AsyncCollectorFunctionalTest {
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldNotSwallowException(collector, name),
+          shouldSurviveExceptionThrownOnLastFuture(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
           shouldBeConsistent(collector, name)
 //          shouldStartConsumingImmediately(collector, name) TODO enable once implemented
@@ -141,6 +142,28 @@ class AsyncCollectorFunctionalTest {
                 assertThatThrownBy(elements.stream()
                   .map(i -> supplier(() -> {
                       if (i == 7) {
+                          throw new IllegalArgumentException();
+                      } else {
+                          return i;
+                      }
+                  }))
+                  .collect(collector.apply(e))::join)
+                  .isInstanceOf(CompletionException.class)
+                  .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+            }, 10);
+        });
+    }
+
+    //@Test
+    private static <R extends Collection<Integer>> DynamicTest shouldSurviveExceptionThrownOnLastFuture(Function<Executor, Collector<Supplier<Integer>, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should not swallow exception", name), () -> {
+            int endInclusive = 10;
+            List<Integer> elements = IntStream.rangeClosed(0, endInclusive).boxed().collect(Collectors.toList());
+
+            runWithExecutor(e -> {
+                assertThatThrownBy(elements.stream()
+                  .map(i -> supplier(() -> {
+                      if (i == endInclusive) {
                           throw new IllegalArgumentException();
                       } else {
                           return i;
