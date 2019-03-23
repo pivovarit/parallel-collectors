@@ -74,8 +74,8 @@ abstract class Dispatcher<T> implements AutoCloseable {
         pendingQueue.forEach(future -> future.completeExceptionally(e));
     }
 
-    boolean isFailed() {
-        return failed;
+    boolean isRunning() {
+        return !failed;
     }
 
     /**

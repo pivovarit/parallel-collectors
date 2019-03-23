@@ -2,7 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
-import java.util.function.Supplier;
 
 /**
  * @author Grzegorz Piwowarek
@@ -21,7 +20,9 @@ final class ThrottlingDispatcher<T> extends Dispatcher<T> {
         return () -> {
             Runnable task;
             try {
-                while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null && !isFailed()) {
+                while (!Thread.currentThread().isInterrupted()
+                  && isRunning()
+                  && (task = getWorkingQueue().poll()) != null) {
                     limiter.acquire();
                     run(task, limiter::release);
                 }

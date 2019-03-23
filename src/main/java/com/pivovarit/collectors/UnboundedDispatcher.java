@@ -1,7 +1,6 @@
 package com.pivovarit.collectors;
 
 import java.util.concurrent.Executor;
-import java.util.function.Supplier;
 
 /**
  * @author Grzegorz Piwowarek
@@ -16,10 +15,11 @@ final class UnboundedDispatcher<T> extends Dispatcher<T> {
         return () -> {
             Runnable task;
             try {
-                while (!Thread.currentThread().isInterrupted() && (task = getWorkingQueue().poll()) != null && !isFailed()) {
+                while (!Thread.currentThread().isInterrupted()
+                  && isRunning()
+                  && (task = getWorkingQueue().poll()) != null) {
                     run(task);
                 }
-
             } catch (Exception e) {
                 completePending(e);
             }
