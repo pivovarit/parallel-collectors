@@ -16,7 +16,7 @@ final class ThrottlingDispatcher<T> extends Dispatcher<T> {
     }
 
     @Override
-    protected Dispatcher.Runner dispatchStrategy() {
+    protected CheckedConsumer dispatchStrategy() {
         return task -> {
             limiter.acquire();
             run(task, limiter::release);
