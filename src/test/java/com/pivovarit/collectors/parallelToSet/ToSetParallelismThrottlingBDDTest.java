@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 
 import java.time.Duration;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -19,7 +18,6 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
-import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
