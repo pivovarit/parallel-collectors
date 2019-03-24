@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToListOrdered;
-import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;

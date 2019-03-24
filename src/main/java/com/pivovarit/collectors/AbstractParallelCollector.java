@@ -2,19 +2,17 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
+import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * @author Grzegorz Piwowarek
@@ -24,7 +22,7 @@ abstract class AbstractParallelCollector<T, R, C>
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
-        return () -> Collections.synchronizedList(new ArrayList<>());
+        return ArrayList::new;
     }
 
     @Override
@@ -45,9 +43,10 @@ abstract class AbstractParallelCollector<T, R, C>
 
     static <R, C extends Collection<R>> Function<List<CompletableFuture<R>>, CompletableFuture<C>> foldLeftFutures(Supplier<C> collectionFactory) {
         return futures -> futures.stream()
-          .reduce(completedFuture(collectionFactory.get()),
+          .reduce(completedFuture(synchronizedList(new ArrayList<>())),
             accumulatingResults(),
-            mergingPartialResults());
+            mergingPartialResults())
+          .thenApply(list -> list.stream().collect(toCollection(collectionFactory)));
     }
 
     static <T1, R1 extends Collection<T1>> BinaryOperator<CompletableFuture<R1>> mergingPartialResults() {
