@@ -61,9 +61,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
         pending.add(future);
         workingQueue.add(() -> {
             try {
-                if (!failed) {
-                    future.complete(supplier.get());
-                }
+                future.complete(supplier.get());
             } catch (Exception e) {
                 handle(future, e);
             } catch (Throwable e) {
