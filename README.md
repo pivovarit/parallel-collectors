@@ -221,6 +221,11 @@ None - the library is implemented using core Java libraries.
 
 ## Version history
 
+
+### [0.1.1](https://github.com/pivovarit/parallel-collectors/releases/tag/0.1.1) (24-03-2019)
+- Internal structure improvements
+- Thread-safety improvements
+
 ### [0.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.1.0) (17-03-2019)
 - Introduced a new API method `ParallelCollectors.parallelToListOrdered`
 
