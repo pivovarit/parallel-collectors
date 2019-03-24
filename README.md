@@ -199,13 +199,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.0.3</version>
+        <version>0.1.1</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.0.3'
+    compile 'com.pivovarit:parallel-collectors:0.1.1'
 
 ### Dependencies
 
