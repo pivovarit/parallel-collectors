@@ -1,19 +1,16 @@
 package com.pivovarit.collectors;
 
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
@@ -85,11 +82,11 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
     }
 
     private static <R, C extends Collection<R>> Function<List<CompletableFuture<Entry<Integer, R>>>, CompletableFuture<C>> foldLeftFuturesOrdered(Supplier<C> collectionFactory) {
-        return futures -> futures.stream()
-          .reduce(completedFuture(new ArrayList<>()),
-            accumulatingResults(),
-            mergingPartialResults())
-          .thenApply(list -> list.stream()
+        return futures -> CompletableFuture.allOf(futures.toArray(new CompletableFuture<?>[0]))
+          .thenApply(v -> futures.stream()
+            .map(CompletableFuture::join)
+            .collect(Collectors.toList())
+          ).thenApply(list -> list.stream()
             .sorted(Comparator.comparing(Entry::getKey))
             .map(Entry::getValue)
             .collect(Collectors.toCollection(collectionFactory)));
