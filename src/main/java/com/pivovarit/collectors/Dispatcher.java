@@ -30,7 +30,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
         this.pending = new ConcurrentLinkedQueue<>();
     }
 
-    abstract protected Runner dispatchStrategy();
+    abstract protected CheckedConsumer dispatchStrategy();
 
     @Override
     public void close() {
@@ -45,7 +45,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
                   !Thread.currentThread().isInterrupted()
                     && !failed
                     && (task = getWorkingQueue().poll()) != null) {
-                    dispatchStrategy().run(task);
+                    dispatchStrategy().consume(task);
                 }
             } catch (Exception e) { // covers InterruptedException
                 pending.forEach(future -> future.completeExceptionally(e));
@@ -113,7 +113,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
     }
 
     @FunctionalInterface
-    protected interface Runner {
-        void run(Runnable task) throws Exception;
+    protected interface CheckedConsumer {
+        void consume(Runnable task) throws Exception;
     }
 }

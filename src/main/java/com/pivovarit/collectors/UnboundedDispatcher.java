@@ -11,7 +11,7 @@ final class UnboundedDispatcher<T> extends Dispatcher<T> {
     }
 
     @Override
-    protected Runner dispatchStrategy() {
+    protected CheckedConsumer dispatchStrategy() {
         return this::run;
     }
 }
