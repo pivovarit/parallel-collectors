@@ -64,19 +64,18 @@ abstract class Dispatcher<T> implements AutoCloseable {
                 future.complete(supplier.get());
                 pending.remove(future);
             } catch (Exception e) {
-                handle(future, e);
+                handle(e);
             } catch (Throwable e) {
-                handle(future, e);
+                handle(e);
                 throw e;
             }
         });
         return future;
     }
 
-    private void handle(CompletableFuture<T> future, Throwable e) {
+    private void handle(Throwable e) {
         failed = true;
-        future.completeExceptionally(e);
-        pending.forEach(f -> f.obtrudeException(e));
+        pending.forEach(f -> f.completeExceptionally(e));
     }
 
     void run(Runnable task) {

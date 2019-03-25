@@ -129,7 +129,7 @@ class AsyncCollectorFunctionalTest {
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
-                assertThat(counter.longValue()).isLessThanOrEqualTo(size);
+                assertThat(counter.longValue()).isLessThanOrEqualTo(size + 1);
             }, size);
         });
     }
