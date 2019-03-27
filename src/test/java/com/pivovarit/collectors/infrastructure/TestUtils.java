@@ -59,6 +59,11 @@ public final class TestUtils {
     }
 
     public static Integer incrementAndThrow(LongAdder counter) {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // ignore purposefully
+        }
         counter.increment();
         throw new IllegalArgumentException();
     }
