@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toCollection;
  * @author Grzegorz Piwowarek
  */
 final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, Entry<Integer, R>, CompletableFuture<C>>
+  extends AbstractParallelCollector<T, Entry<Integer, R>, C>
   implements AutoCloseable {
 
     private final Dispatcher<Entry<Integer, R>> dispatcher;

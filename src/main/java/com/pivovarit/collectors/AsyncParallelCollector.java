@@ -16,36 +16,36 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * @author Grzegorz Piwowarek
  */
 final class AsyncParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, R, CompletableFuture<C>>
+  extends AbstractParallelCollector<T, R, C>
   implements AutoCloseable {
 
     private final Dispatcher<R> dispatcher;
 
-    private final Function<T, R> operation;
+    private final Function<T, R> function;
     private final Supplier<C> collectionFactory;
 
     AsyncParallelCollector(
-      Function<T, R> operation,
+      Function<T, R> function,
       Supplier<C> collection,
       Executor executor,
       int parallelism) {
         this.dispatcher = new ThrottlingDispatcher<>(executor, parallelism);
         this.collectionFactory = collection;
-        this.operation = operation;
+        this.function = function;
     }
 
     AsyncParallelCollector(
-      Function<T, R> operation,
+      Function<T, R> function,
       Supplier<C> collection,
       Executor executor) {
         this.dispatcher = new UnboundedDispatcher<>(executor);
         this.collectionFactory = collection;
-        this.operation = operation;
+        this.function = function;
     }
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.enqueue(() -> operation.apply(e)));
+        return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
     }
 
     @Override
