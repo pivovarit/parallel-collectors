@@ -415,6 +415,7 @@ public final class ParallelCollectors {
     public static <T, R, C extends List<R>> Collector<T, ?, CompletableFuture<C>> parallelToListOrdered(Function<T, R> mapper, Supplier<C> listSupplier, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(listSupplier, "listSupplier can't be null");
         return new AsyncOrderedParallelCollector<>(mapper, listSupplier, executor);
     }
 
@@ -446,6 +447,7 @@ public final class ParallelCollectors {
     public static <T, R, C extends List<R>> Collector<T, ?, CompletableFuture<C>> parallelToListOrdered(Function<T, R> mapper, Supplier<C> listSupplier, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(listSupplier, "listSupplier can't be null");
         assertParallelismValid(parallelism);
         return new AsyncOrderedParallelCollector<>(mapper, listSupplier, executor, assertParallelismValid(parallelism));
     }
