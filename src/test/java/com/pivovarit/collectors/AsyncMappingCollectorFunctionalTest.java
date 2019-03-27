@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -56,8 +57,10 @@ class AsyncMappingCollectorFunctionalTest {
           forCollector((mapper, e) -> parallelToList(mapper, e, 1000), "parallelToList(p=1000)"),
           forCollector((mapper, e) -> parallelToListOrdered(mapper, e), "parallelToListOrdered(p=inf)"),
           forCollector((mapper, e) -> parallelToListOrdered(mapper, e, 1000), "parallelToListOrdered(p=1000)"),
-          forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e), "parallelToCollection(p=inf)"),
-          forCollector((mapper, e) -> parallelToCollection(mapper, ArrayList::new, e, 1000), "parallelToCollection(p=1000)")
+          forCollector((mapper, e) -> parallelToListOrdered(mapper, LinkedList::new, e), "parallelToListOrdered(p=inf)"),
+          forCollector((mapper, e) -> parallelToListOrdered(mapper, LinkedList::new, e, 1000), "parallelToListOrdered(p=1000)"),
+          forCollector((mapper, e) -> parallelToCollection(mapper, LinkedList::new, e), "parallelToCollection(p=inf)"),
+          forCollector((mapper, e) -> parallelToCollection(mapper, LinkedList::new, e, 1000), "parallelToCollection(p=1000)")
         ).flatMap(identity());
     }
 
