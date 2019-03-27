@@ -62,7 +62,7 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public Function<List<CompletableFuture<Entry<Integer, R>>>, CompletableFuture<C>> finisher() {
-        if (dispatcher.getWorkingQueue().size() != 0) {
+        if (!dispatcher.isEmpty()) {
             dispatcher.start();
             return foldLeftFuturesOrdered(collectionFactory)
               .andThen(f -> supplyWithResources(() -> f, dispatcher::close));

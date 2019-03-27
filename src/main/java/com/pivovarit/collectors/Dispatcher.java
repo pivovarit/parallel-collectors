@@ -44,7 +44,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
                 while (
                   !Thread.currentThread().isInterrupted()
                     && !failed
-                    && (task = getWorkingQueue().poll()) != null) {
+                    && (task = workingQueue.poll()) != null) {
                     dispatchStrategy().consume(task);
                 }
             } catch (Exception e) { // covers InterruptedException
@@ -92,8 +92,8 @@ abstract class Dispatcher<T> implements AutoCloseable {
         }, executor);
     }
 
-    Queue<Runnable> getWorkingQueue() {
-        return workingQueue;
+    boolean isEmpty() {
+        return workingQueue.size() == 0;
     }
 
     /**
