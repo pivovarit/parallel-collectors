@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toCollection;
  * @author Grzegorz Piwowarek
  */
 abstract class AbstractParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, C> {
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
