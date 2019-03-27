@@ -50,7 +50,7 @@ final class AsyncParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        if (dispatcher.getWorkingQueue().size() != 0) {
+        if (!dispatcher.isEmpty()) {
             dispatcher.start();
             return foldLeftFutures(collectionFactory).andThen(f -> supplyWithResources(() -> f, dispatcher::close));
         } else {
