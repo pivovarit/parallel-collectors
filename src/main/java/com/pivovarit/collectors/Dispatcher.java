@@ -22,7 +22,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
     private final Queue<Runnable> workingQueue;
     private final Executor executor;
 
-    private volatile boolean failed = false;
+    private volatile boolean completed = false;
 
     Dispatcher(Executor executor) {
         this.executor = executor;
@@ -43,7 +43,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
             try {
                 while (
                   !Thread.currentThread().isInterrupted()
-                    && !failed
+                    && !completed
                     && (task = workingQueue.poll()) != null) {
                     dispatchStrategy().consume(task);
                 }
@@ -74,7 +74,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
     }
 
     private void handle(Throwable e) {
-        failed = true;
+        completed = true;
         pending.forEach(future -> future.completeExceptionally(e));
     }
 
