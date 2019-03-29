@@ -1,17 +1,22 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -20,6 +25,16 @@ import static java.util.Objects.requireNonNull;
  */
 public final class ParallelCollectors {
     private ParallelCollectors() {
+    }
+
+    public static void main(String[] args) {
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+        CompletableFuture<Map<Integer, Integer>> result = Arrays.asList(1, 2, 3).stream()
+          .collect(parallel(i -> i, executorService, toMap(i -> i, i -> i * 2)));
+
+        System.out.println(result.join());
+        executorService.shutdown();
     }
 
     /**
@@ -583,6 +598,42 @@ public final class ParallelCollectors {
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
         return new AsyncParallelCollector<>(mapper, HashSet::new, executor, parallelism);
+    }
+
+    /**
+     * @param mapper    a transformation to be performed in parallel
+     * @param executor
+     * @param collector
+     * @param <T>
+     * @param <R>
+     * @param <RR>
+     *
+     * @return
+     */
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Executor executor, Collector<R, ?, RR> collector) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(collector, "collector can't be null");
+        return new AsyncCustomizableParallelCollector<>(mapper, collector, executor);
+    }
+
+    /**
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor
+     * @param parallelism
+     * @param collector
+     * @param <T>
+     * @param <R>
+     * @param <RR>
+     *
+     * @return
+     */
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Executor executor, int parallelism, Collector<R, ?, RR> collector) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(collector, "collector can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncCustomizableParallelCollector<>(mapper, collector, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {

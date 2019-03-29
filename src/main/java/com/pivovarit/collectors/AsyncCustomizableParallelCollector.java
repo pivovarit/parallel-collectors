@@ -54,8 +54,7 @@ final class AsyncCustomizableParallelCollector<T, R, C>
             dispatcher.start();
         }
 
-        return collectingWith(collector)
-          .andThen(f -> supplyWithResources(() -> f, dispatcher::close));
+        return collectingWith(collector).andThen(f -> supplyWithResources(() -> f, dispatcher::close));
     }
 
     private Function<List<CompletableFuture<R>>, CompletableFuture<C>> collectingWith(Collector<R, ?, C> collector) {
