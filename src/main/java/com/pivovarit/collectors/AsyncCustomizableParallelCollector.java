@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -8,38 +7,39 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Collector;
 
-import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.allOf;
 
 /**
  * @author Grzegorz Piwowarek
  */
-final class AsyncParallelCollector<T, R, C extends Collection<R>>
+final class AsyncCustomizableParallelCollector<T, R, C>
   extends AbstractAsyncCollector<T, R, C>
   implements AutoCloseable {
 
     private final Dispatcher<R> dispatcher;
 
     private final Function<T, R> function;
-    private final Supplier<C> collectionFactory;
 
-    AsyncParallelCollector(
+    private final Collector<R, ?, C> collector;
+
+    AsyncCustomizableParallelCollector(
       Function<T, R> function,
-      Supplier<C> collection,
+      Collector<R, ?, C> collector,
       Executor executor,
       int parallelism) {
         this.dispatcher = new ThrottlingDispatcher<>(executor, parallelism);
-        this.collectionFactory = collection;
+        this.collector = collector;
         this.function = function;
     }
 
-    AsyncParallelCollector(
+    AsyncCustomizableParallelCollector(
       Function<T, R> function,
-      Supplier<C> collection,
+      Collector<R, ?, C> collector,
       Executor executor) {
         this.dispatcher = new UnboundedDispatcher<>(executor);
-        this.collectionFactory = collection;
+        this.collector = collector;
         this.function = function;
     }
 
@@ -52,11 +52,17 @@ final class AsyncParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return foldLeftFutures(collectionFactory).andThen(f -> supplyWithResources(() -> f, dispatcher::close));
-        } else {
-            return supplyWithResources(() -> (__) -> completedFuture(collectionFactory
-              .get()), dispatcher::close);
         }
+
+        return collectingWith(collector)
+          .andThen(f -> supplyWithResources(() -> f, dispatcher::close));
+    }
+
+    private Function<List<CompletableFuture<R>>, CompletableFuture<C>> collectingWith(Collector<R, ?, C> collector) {
+        return futures -> allOf(futures.toArray(new CompletableFuture<?>[0]))
+          .thenApply(__ -> futures.stream()
+            .map(CompletableFuture::join)
+            .collect(collector));
     }
 
     @Override
