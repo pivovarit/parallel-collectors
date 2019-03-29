@@ -48,16 +48,12 @@ abstract class Dispatcher<T> implements AutoCloseable {
                     dispatchStrategy().consume(task);
                 }
             } catch (Exception e) { // covers InterruptedException
-                completeRemaining(e);
+                handle(e);
             } catch (Throwable e) {
-                completeRemaining(e);
+                handle(e);
                 throw e;
             }
         });
-    }
-
-    private void completeRemaining(Throwable e) {
-        pending.forEach(future -> future.completeExceptionally(e));
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
@@ -79,8 +75,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
 
     private void handle(Throwable e) {
         failed = true;
-        completeRemaining(e);
-
+        pending.forEach(future -> future.completeExceptionally(e));
     }
 
     void run(Runnable task) {
