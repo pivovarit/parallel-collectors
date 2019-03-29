@@ -598,7 +598,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, executor));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -616,9 +617,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
-            throw new IllegalStateException("todo");
-        }, HashMap::new, executor);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), HashMap::new, executor);
     }
 
     /**
@@ -631,7 +630,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, executor, 2));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -651,9 +651,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
-            throw new IllegalStateException("todo");
-        }, HashMap::new, executor, parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), HashMap::new, executor, parallelism);
     }
 
     /**
@@ -666,7 +664,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, Integer::sum, executor));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -699,7 +698,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, Integer::sum, executor, 2));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -734,7 +734,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, () -> new HashMap<>(), executor));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -754,9 +755,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(mapSupplier, "mapSupplier can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
-            throw new IllegalStateException("todo");
-        }, mapSupplier, executor);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), mapSupplier, executor);
     }
 
     /**
@@ -769,7 +768,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, () -> new HashMap<>(), executor, 2));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -791,9 +791,7 @@ public final class ParallelCollectors {
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(mapSupplier, "mapSupplier can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
-            throw new IllegalStateException("todo");
-        }, mapSupplier, executor, parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), mapSupplier, executor, parallelism);
     }
 
     /**
@@ -806,7 +804,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, HashMap::new, Integer::sum, executor));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -841,7 +840,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * TODO
+     * CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToMap(i -> i, i -> i * 2, HashMap::new, Integer::sum, executor, 2));
      * }</pre>
      *
      * @param keyMapper   the key deriving operation to be performed in parallel
@@ -871,5 +871,9 @@ public final class ParallelCollectors {
     private static int assertParallelismValid(int parallelism) {
         if (parallelism < 1) throw new IllegalArgumentException("Parallelism can't be lower than 1");
         return parallelism;
+    }
+
+    private static <V> BinaryOperator<V> uniqueKeyMerger() {
+        return (i1, i2) -> { throw new IllegalStateException("Duplicate key found"); };
     }
 }
