@@ -1,22 +1,17 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -25,16 +20,6 @@ import static java.util.stream.Collectors.toMap;
  */
 public final class ParallelCollectors {
     private ParallelCollectors() {
-    }
-
-    public static void main(String[] args) {
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-
-        CompletableFuture<Map<Integer, Integer>> result = Arrays.asList(1, 2, 3).stream()
-          .collect(parallel(i -> i, executorService, toMap(i -> i, i -> i * 2)));
-
-        System.out.println(result.join());
-        executorService.shutdown();
     }
 
     /**
@@ -90,7 +75,7 @@ public final class ParallelCollectors {
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param <T>                the type of the input elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -122,7 +107,7 @@ public final class ParallelCollectors {
      * @param parallelism        the parallelism level
      * @param <T>                the type of the input elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -159,7 +144,7 @@ public final class ParallelCollectors {
      * @param <T>                the type of the input elements
      * @param <R>                the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -191,7 +176,7 @@ public final class ParallelCollectors {
      * @param <T>                the type of the input elements
      * @param <R>                the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -226,7 +211,7 @@ public final class ParallelCollectors {
      * @param executor the {@code Executor} to use for asynchronous execution
      * @param <T>      the type of the input elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -257,7 +242,7 @@ public final class ParallelCollectors {
      * @param parallelism the parallelism level
      * @param <T>         the type of the input elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -292,7 +277,7 @@ public final class ParallelCollectors {
      * @param <T>      the type of the input elements
      * @param <R>      the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -322,7 +307,7 @@ public final class ParallelCollectors {
      * @param <T>         the type of the input elements
      * @param <R>         the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -357,7 +342,7 @@ public final class ParallelCollectors {
      * @param <T>      the type of the input elements
      * @param <R>      the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.1.0
      */
@@ -387,7 +372,7 @@ public final class ParallelCollectors {
      * @param <T>         the type of the input elements
      * @param <R>         the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.1.0
      */
@@ -423,7 +408,7 @@ public final class ParallelCollectors {
      * @param <T>          the type of the input elements
      * @param <R>          the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.2.0
      */
@@ -455,7 +440,7 @@ public final class ParallelCollectors {
      * @param <T>          the type of the input elements
      * @param <R>          the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.2.0
      */
@@ -490,7 +475,7 @@ public final class ParallelCollectors {
      * @param executor the {@code Executor} to use for asynchronous execution
      * @param <T>      the type of the input elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -519,7 +504,7 @@ public final class ParallelCollectors {
      * @param parallelism the parallelism level
      * @param <T>         the type of the input elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -554,7 +539,7 @@ public final class ParallelCollectors {
      * @param <T>      the type of the input elements
      * @param <R>      the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -589,7 +574,7 @@ public final class ParallelCollectors {
      * @param <T>         the type of the input elements
      * @param <R>         the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -602,13 +587,13 @@ public final class ParallelCollectors {
 
     /**
      * @param mapper    a transformation to be performed in parallel
-     * @param executor
-     * @param collector
-     * @param <T>
-     * @param <R>
-     * @param <RR>
+     * @param executor  the {@code Executor} to use for asynchronous execution
+     * @param collector the {@link Collector} to collect processed elements with
+     * @param <T>       the type of the input elements
+     * @param <R>       the result returned by {@code mapper}
+     * @param <RR>      the end result generated by provided {@code collector}
      *
-     * @return
+     * @return a {@code Collector} which collects all processed elements using user-provided {@link Collector} in parallel
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Executor executor, Collector<R, ?, RR> collector) {
         requireNonNull(executor, "executor can't be null");
@@ -619,12 +604,12 @@ public final class ParallelCollectors {
 
     /**
      * @param mapper      a transformation to be performed in parallel
-     * @param executor
-     * @param parallelism
-     * @param collector
-     * @param <T>
-     * @param <R>
-     * @param <RR>
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param collector   the {@link Collector} to collect processed elements with
+     * @param <T>         the type of the input elements
+     * @param <R>         the result returned by {@code mapper}
+     * @param <RR>        the end result generated by provided {@code collector}
      *
      * @return
      */
