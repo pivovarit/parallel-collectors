@@ -36,7 +36,7 @@ public class ToListOrderedParallelismThrottlingBDDTest extends ExecutorAwareTest
     private static final long CONSTANT_DELAY = 100;
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    public void shouldCollectToListOrderedWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork, BLOCKING_MILLIS);
