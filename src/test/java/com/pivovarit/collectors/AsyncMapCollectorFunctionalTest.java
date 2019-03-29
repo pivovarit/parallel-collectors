@@ -5,10 +5,13 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
 import java.time.Duration;
+import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
@@ -27,6 +30,7 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToListOrdered;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToMap;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
@@ -50,20 +54,18 @@ class AsyncMapCollectorFunctionalTest {
     @TestFactory
     Stream<DynamicTest> testCollectors() {
         return of(
-          forCollector((mapper, e) -> parallelToSet(mapper, e), "parallelToSet(p=inf)"),
-          forCollector((mapper, e) -> parallelToSet(mapper, e, 1000), "parallelToSet(p=1000)"),
-          forCollector((mapper, e) -> parallelToList(mapper, e), "parallelToList(p=inf)"),
-          forCollector((mapper, e) -> parallelToList(mapper, e, 1000), "parallelToList(p=1000)"),
-          forCollector((mapper, e) -> parallelToListOrdered(mapper, e), "parallelToListOrdered(p=inf)"),
-          forCollector((mapper, e) -> parallelToListOrdered(mapper, e, 1000), "parallelToListOrdered(p=1000)"),
-          forCollector((mapper, e) -> parallelToListOrdered(mapper, LinkedList::new, e), "parallelToListOrdered(p=inf)"),
-          forCollector((mapper, e) -> parallelToListOrdered(mapper, LinkedList::new, e, 1000), "parallelToListOrdered(p=1000)"),
-          forCollector((mapper, e) -> parallelToCollection(mapper, LinkedList::new, e), "parallelToCollection(p=inf)"),
-          forCollector((mapper, e) -> parallelToCollection(mapper, LinkedList::new, e, 1000), "parallelToCollection(p=1000)")
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), e), "parallelToMap(p=inf)"),
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), e, 1000), "parallelToMap(p=1000)"),
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), (i1, i2) -> i2, e), "parallelToMapMerging(p=inf)"),
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), (i1, i2) -> i2, e, 1000), "parallelToMapMerging(p=1000)"),
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(), e), "parallelToMapCustomMap(p=inf)"),
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(), e, 1000), "parallelToMapCustomMap(p=1000)"),
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(),(i1, i2) -> i2, e), "parallelToMapCustomMapAndMerging(p=inf)"),
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(), (i1, i2) -> i2, e), "parallelToMapCustomMapAndMerging(p=1000)")
         ).flatMap(identity());
     }
 
-    private static <R extends Collection<Integer>> Stream<DynamicTest> forCollector(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> Stream<DynamicTest> forCollector(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldCollect(collector, name),
           shouldCollectToEmpty(collector, name),
@@ -77,22 +79,21 @@ class AsyncMapCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldNotBlockWhenReturningFuture(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(Collectors.toList());
             assertTimeoutPreemptively(ofMillis(100), () ->
               elements.stream()
                 .limit(5)
-                .collect(collector
-                  .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), executor)), "returned blocking future");
+                .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), i -> i), executor)), "returned blocking future");
         });
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldCollectToEmpty(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect to empty", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(Collectors.toList());
-            Collection<Integer> result11 = elements.stream().collect(collector.apply(i -> i, executor)).join();
+            Map<Integer, Integer> result11 = elements.stream().collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> i,i -> i), executor)).join();
 
             assertThat(result11)
               .isEmpty();
@@ -100,19 +101,19 @@ class AsyncMapCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldCollect(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldCollect(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-            Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor)).join();
+            Map<Integer, Integer> result = elements.stream().collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> i, i -> i), executor)).join();
 
             assertThat(result)
               .hasSameSizeAs(elements)
-              .containsOnlyElementsOf(elements);
+              .containsKeys(elements.toArray(new Integer[0]));
         });
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldShortCircuitOnException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldShortCircuitOnException(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should short circuit on exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 100).boxed().collect(Collectors.toList());
             int size = 4;
@@ -122,7 +123,7 @@ class AsyncMapCollectorFunctionalTest {
                 LongAdder counter = new LongAdder();
 
                 assertThatThrownBy(elements.stream()
-                  .collect(collector.apply(i -> incrementAndThrow(counter), e))::join)
+                  .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> incrementAndThrow(counter), i -> i), e))::join)
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
@@ -132,19 +133,19 @@ class AsyncMapCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldNotSwallowException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldNotSwallowException(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
 
             runWithExecutor(e -> {
                 assertThatThrownBy(elements.stream()
-                  .collect(collector.apply(i -> {
+                  .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> {
                       if (i == 7) {
                           throw new IllegalArgumentException();
                       } else {
                           return i;
                       }
-                  }, e))::join)
+                  }, i -> i), e))::join)
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
             }, 10);
@@ -152,13 +153,13 @@ class AsyncMapCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldSurviveRejectedExecutionException(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
             List<Integer> elements = IntStream.range(0, 1000).boxed().collect(Collectors.toList());
 
             assertThatThrownBy(() -> elements.stream()
-              .collect(collector.apply(i -> returnWithDelay(i, ofMillis(10000)), executor))
+              .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> returnWithDelay(i, ofMillis(10000)), i -> i), executor))
               .join())
               .isInstanceOf(CompletionException.class)
               .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -166,7 +167,7 @@ class AsyncMapCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldBeConsistent(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldBeConsistent(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should remain consistent", name), () -> {
             ExecutorService executor = Executors.newFixedThreadPool(1000);
             try {
@@ -175,7 +176,7 @@ class AsyncMapCollectorFunctionalTest {
                 CountDownLatch countDownLatch = new CountDownLatch(1000);
 
                 R result = elements.stream()
-                  .collect(collector.apply(i -> {
+                  .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> {
                       countDownLatch.countDown();
                       try {
                           countDownLatch.await();
@@ -183,12 +184,12 @@ class AsyncMapCollectorFunctionalTest {
                           throw new RuntimeException(e);
                       }
                       return i;
-                  }, executor))
+                  }, i -> i), executor))
                   .join();
 
-                assertThat(new HashSet<>(result))
+                assertThat(new HashMap<>(result))
                   .hasSameSizeAs(elements)
-                  .containsAll(elements);
+                  .containsKeys(elements.toArray(new Integer[0]));
             } finally {
                 executor.shutdownNow();
             }
@@ -196,7 +197,7 @@ class AsyncMapCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Collection<Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
             TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 

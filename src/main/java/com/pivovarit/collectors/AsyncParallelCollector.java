@@ -16,7 +16,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * @author Grzegorz Piwowarek
  */
 final class AsyncParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractParallelCollector<T, R, C>
+  extends AbstractAsyncCollector<T, R, C>
   implements AutoCloseable {
 
     private final Dispatcher<R> dispatcher;

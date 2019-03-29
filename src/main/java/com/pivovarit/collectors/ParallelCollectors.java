@@ -588,7 +588,7 @@ public final class ParallelCollectors {
     }
 
     /**
-     * TODO§§
+     * TODO
      * @param keyMapper
      * @param valueMapper
      * @param executor
@@ -605,7 +605,7 @@ public final class ParallelCollectors {
     }
 
     /**
-     * TODO§§
+     * TODO
      * @param keyMapper
      * @param valueMapper
      * @param executor
@@ -624,7 +624,7 @@ public final class ParallelCollectors {
     }
 
     /**
-     * TODO§§
+     * TODO
      * @param keyMapper
      * @param valueMapper
      * @param merger

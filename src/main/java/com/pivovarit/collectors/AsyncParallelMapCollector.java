@@ -24,8 +24,8 @@ import static java.util.stream.Collectors.toMap;
 /**
  * @author Grzegorz Piwowarek
  */
-final class AsyncMapParallelCollector<T, K, V, M extends Map<K, V>>
-  extends AbstractParallelCollector<T, Entry<K, V>, M>
+final class AsyncParallelMapCollector<T, K, V, M extends Map<K, V>>
+  extends AbstractAsyncCollector<T, Entry<K, V>, M>
   implements AutoCloseable {
 
     private final Dispatcher<Entry<K, V>> dispatcher;
@@ -35,7 +35,7 @@ final class AsyncMapParallelCollector<T, K, V, M extends Map<K, V>>
     private final BinaryOperator<V> duplicateKeyResolutionStrategy;
     private final Supplier<M> mapFactory;
 
-    AsyncMapParallelCollector(
+    AsyncParallelMapCollector(
       Function<T, K> keyMapper,
       Function<T, V> valueMapper,
       BinaryOperator<V> duplicateKeyResolutionStrategy,
@@ -49,7 +49,7 @@ final class AsyncMapParallelCollector<T, K, V, M extends Map<K, V>>
         this.mapFactory = mapFactory;
     }
 
-    AsyncMapParallelCollector(
+    AsyncParallelMapCollector(
       Function<T, K> keyMapper,
       Function<T, V> valueMapper,
       BinaryOperator<V> duplicateKeyResolutionStrategy,
