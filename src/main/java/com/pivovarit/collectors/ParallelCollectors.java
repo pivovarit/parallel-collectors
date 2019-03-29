@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
@@ -583,6 +585,166 @@ public final class ParallelCollectors {
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
         return new AsyncParallelCollector<>(mapper, HashSet::new, executor, parallelism);
+    }
+
+    /**
+     * TODO§§
+     * @param keyMapper
+     * @param valueMapper
+     * @param executor
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        return null;
+    }
+
+    /**
+     * TODO§§
+     * @param keyMapper
+     * @param valueMapper
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * TODO§§
+     * @param keyMapper
+     * @param valueMapper
+     * @param merger
+     * @param executor
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        return null;
+    }
+
+    /**
+     * TODO
+     * @param keyMapper
+     * @param valueMapper
+     * @param merger
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * TODO
+     * @param keyMapper
+     * @param valueMapper
+     * @param mapSupplier
+     * @param executor
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        return null;
+    }
+
+    /**
+     * TODO
+     * @param keyMapper
+     * @param valueMapper
+     * @param mapSupplier
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
+    /**
+     * TODO
+     * @param keyMapper
+     * @param valueMapper
+     * @param mapSupplier
+     * @param merger
+     * @param executor
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        return null;
+    }
+
+    /**
+     * TODO
+     * @param keyMapper
+     * @param valueMapper
+     * @param mapSupplier
+     * @param merger
+     * @param executor
+     * @param parallelism
+     * @param <T>
+     * @param <K>
+     * @param <V>
+     * @return
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        assertParallelismValid(parallelism);
+        return null;
     }
 
     private static int assertParallelismValid(int parallelism) {
