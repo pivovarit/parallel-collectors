@@ -14,7 +14,7 @@ import static java.util.concurrent.CompletableFuture.allOf;
 /**
  * @author Grzegorz Piwowarek
  */
-final class AsyncCustomizableParallelCollector<T, R, C>
+final class AsyncDecoratingParallelCollector<T, R, C>
   extends AbstractAsyncCollector<T, R, C>
   implements AutoCloseable {
 
@@ -24,7 +24,7 @@ final class AsyncCustomizableParallelCollector<T, R, C>
 
     private final Collector<R, ?, C> collector;
 
-    AsyncCustomizableParallelCollector(
+    AsyncDecoratingParallelCollector(
       Function<T, R> function,
       Collector<R, ?, C> collector,
       Executor executor,
@@ -34,7 +34,7 @@ final class AsyncCustomizableParallelCollector<T, R, C>
         this.function = function;
     }
 
-    AsyncCustomizableParallelCollector(
+    AsyncDecoratingParallelCollector(
       Function<T, R> function,
       Collector<R, ?, C> collector,
       Executor executor) {
