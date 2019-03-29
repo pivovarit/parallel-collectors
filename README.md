@@ -219,6 +219,11 @@ None - the library is implemented using core Java libraries.
 - Always limit the level of parallelism [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
 
+### Limitations
+
+- short-circuiting after encountering an exception doesn't actually kill background tasks
+- the processing starts after the whole stream is buffered
+
 ## Version history
 
 ### [0.1.2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.1.2) (26-03-2019)
