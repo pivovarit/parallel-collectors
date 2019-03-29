@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -38,7 +39,7 @@ public class ToMapParallelismThrottlingBDDTest extends ExecutorAwareTest {
         executor = threadPoolExecutor(unitsOfWork);
         long expectedDuration = expectedDuration(parallelism, unitsOfWork, BLOCKING_MILLIS);
 
-        Map.Entry<Map<Long, Long>, Long> result = timed(collectWith(f -> parallelToMap(f, f, executor, parallelism), unitsOfWork));
+        Map.Entry<Map<Long, Long>, Long> result = timed(collectWith(f -> parallelToMap(f, i -> ThreadLocalRandom.current().nextLong(), executor, parallelism), unitsOfWork));
 
         assertThat(result)
           .satisfies(e -> {
@@ -53,7 +54,7 @@ public class ToMapParallelismThrottlingBDDTest extends ExecutorAwareTest {
     private static <R extends Map<Long, Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>, Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
         return () -> Stream.generate(() -> 42L)
           .limit(unitsOfWork)
-          .collect(collector.apply(f -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
+          .collect(collector.apply(f -> returnWithDelay(ThreadLocalRandom.current().nextLong(), Duration.ofMillis(BLOCKING_MILLIS))))
           .join();
     }
 }
