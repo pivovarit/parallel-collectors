@@ -19,7 +19,7 @@ import static java.util.stream.Collectors.toCollection;
 /**
  * @author Grzegorz Piwowarek
  */
-abstract class AbstractParallelCollector<T, R, C>
+abstract class AbstractAsyncCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     @Override

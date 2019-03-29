@@ -2,11 +2,14 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
@@ -73,7 +76,7 @@ public final class ParallelCollectors {
      *
      * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
      * @param executor           the {@code Executor} to use for asynchronous execution
-     * @param <T>                the type of the input elements
+     * @param <T>                the type of the collected elements
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
@@ -105,7 +108,7 @@ public final class ParallelCollectors {
      * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param parallelism        the parallelism level
-     * @param <T>                the type of the input elements
+     * @param <T>                the type of the collected elements
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
      *
@@ -141,7 +144,7 @@ public final class ParallelCollectors {
      * @param mapper             a transformation to be performed in parallel
      * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
      * @param executor           the {@code Executor} to use for asynchronous execution
-     * @param <T>                the type of the input elements
+     * @param <T>                the type of the collected elements
      * @param <R>                the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
@@ -173,7 +176,7 @@ public final class ParallelCollectors {
      * @param collectionSupplier a {@code Supplier} which returns a mutable {@code Collection} of the appropriate type
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param parallelism        the parallelism level
-     * @param <T>                the type of the input elements
+     * @param <T>                the type of the collected elements
      * @param <R>                the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
@@ -209,7 +212,7 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the input elements
+     * @param <T>      the type of the collected elements
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
      *
@@ -240,7 +243,7 @@ public final class ParallelCollectors {
      *
      * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
-     * @param <T>         the type of the input elements
+     * @param <T>         the type of the collected elements
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
      *
@@ -274,7 +277,7 @@ public final class ParallelCollectors {
      *
      * @param mapper   a transformation to be performed in parallel
      * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the input elements
+     * @param <T>      the type of the collected elements
      * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
@@ -304,7 +307,7 @@ public final class ParallelCollectors {
      * @param mapper      a transformation to be performed in parallel
      * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
-     * @param <T>         the type of the input elements
+     * @param <T>         the type of the collected elements
      * @param <R>         the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
@@ -339,7 +342,7 @@ public final class ParallelCollectors {
      *
      * @param mapper   a transformation to be performed in parallel
      * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the input elements
+     * @param <T>      the type of the collected elements
      * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
@@ -369,7 +372,7 @@ public final class ParallelCollectors {
      * @param mapper      a transformation to be performed in parallel
      * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
-     * @param <T>         the type of the input elements
+     * @param <T>         the type of the collected elements
      * @param <R>         the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
@@ -405,7 +408,7 @@ public final class ParallelCollectors {
      * @param mapper       a transformation to be performed in parallel
      * @param listSupplier a {@code Supplier} which returns a mutable {@code List} of the appropriate type
      * @param executor     the {@code Executor} to use for asynchronous execution
-     * @param <T>          the type of the input elements
+     * @param <T>          the type of the collected elements
      * @param <R>          the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
@@ -434,10 +437,10 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param mapper       a transformation to be performed in parallel
-     * @param listSupplier a {@code Supplier} which returns a mutable {@code List} of the appropriate type
+     * @param listSupplier a {@code Supplier} which returns a target {@code List} of the provided type
      * @param executor     the {@code Executor} to use for asynchronous execution
      * @param parallelism  the parallelism level
-     * @param <T>          the type of the input elements
+     * @param <T>          the type of the collected elements
      * @param <R>          the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
@@ -473,7 +476,7 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the input elements
+     * @param <T>      the type of the collected elements
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
      *
@@ -502,7 +505,7 @@ public final class ParallelCollectors {
      *
      * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
-     * @param <T>         the type of the input elements
+     * @param <T>         the type of the collected elements
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
      *
@@ -536,7 +539,7 @@ public final class ParallelCollectors {
      *
      * @param mapper   a transformation to be performed in parallel
      * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the input elements
+     * @param <T>      the type of the collected elements
      * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
@@ -571,7 +574,7 @@ public final class ParallelCollectors {
      * @param mapper      a transformation to be performed in parallel
      * @param executor    the {@code Executor} to use for asynchronous execution
      * @param parallelism the parallelism level
-     * @param <T>         the type of the input elements
+     * @param <T>         the type of the collected elements
      * @param <R>         the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
@@ -583,6 +586,286 @@ public final class ParallelCollectors {
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
         return new AsyncParallelCollector<>(mapper, HashSet::new, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
+            throw new IllegalStateException("todo");
+        }, HashMap::new, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
+            throw new IllegalStateException("todo");
+        }, HashMap::new, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param merger      the duplicate key value resolution strategy
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param merger      the duplicate key value resolution strategy
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param mapSupplier the factory returning a target {@code Map} instance
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
+            throw new IllegalStateException("todo");
+        }, mapSupplier, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param mapSupplier the factory returning a target {@code Map} instance
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {
+            throw new IllegalStateException("todo");
+        }, mapSupplier, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param mapSupplier the factory returning a target {@code Map} instance
+     * @param merger      the duplicate key value resolution strategy
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, mapSupplier, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * TODO
+     * }</pre>
+     *
+     * @param keyMapper   the key deriving operation to be performed in parallel
+     * @param valueMapper the value deriving operation to be performed in parallel
+     * @param mapSupplier the factory returning a target {@code Map} instance
+     * @param merger      the duplicate key value resolution strategy
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <K>         the target {@code Map} key type
+     * @param <V>         the target {@code Map} value type
+     *
+     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
+     *
+     * @since 0.2.0
+     */
+    public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, mapSupplier, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {
