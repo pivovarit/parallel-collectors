@@ -2,6 +2,7 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -601,7 +602,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {throw new IllegalStateException("todo");}, HashMap::new, executor);
     }
 
     /**
@@ -620,7 +621,8 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         assertParallelismValid(parallelism);
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {throw new IllegalStateException("todo");}, HashMap::new, executor, parallelism);
+
     }
 
     /**
@@ -639,7 +641,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(merger, "merger can't be null");
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor);
     }
 
     /**
@@ -660,7 +662,7 @@ public final class ParallelCollectors {
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(merger, "merger can't be null");
         assertParallelismValid(parallelism);
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor, parallelism);
     }
 
     /**
@@ -679,7 +681,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(mapSupplier, "mapSupplier can't be null");
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {throw new IllegalStateException("todo");}, mapSupplier, executor);
     }
 
     /**
@@ -700,7 +702,7 @@ public final class ParallelCollectors {
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(mapSupplier, "mapSupplier can't be null");
         assertParallelismValid(parallelism);
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, (i1, i2) -> {throw new IllegalStateException("todo");}, mapSupplier, executor, parallelism);
     }
 
     /**
@@ -721,7 +723,7 @@ public final class ParallelCollectors {
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(merger, "merger can't be null");
         requireNonNull(mapSupplier, "mapSupplier can't be null");
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, mapSupplier, executor);
     }
 
     /**
@@ -744,7 +746,7 @@ public final class ParallelCollectors {
         requireNonNull(merger, "merger can't be null");
         requireNonNull(mapSupplier, "mapSupplier can't be null");
         assertParallelismValid(parallelism);
-        return null;
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, mapSupplier, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {
