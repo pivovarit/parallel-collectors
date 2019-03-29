@@ -9,13 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -26,14 +23,6 @@ import static java.util.Objects.requireNonNull;
  */
 public final class ParallelCollectors {
     private ParallelCollectors() {
-    }
-
-    public static void main(String[] args) {
-
-        ExecutorService executor = Executors.newFixedThreadPool(10);
-
-        CompletableFuture<Map<Integer, Integer>> result = Stream.of(1, 2, 3)
-          .collect(parallelToMap(i -> i, i -> i * 2, Integer::sum, executor));
     }
 
     /**
