@@ -594,6 +594,7 @@ public final class ParallelCollectors {
      *
      * <br><br>
      * No ordering guarantees provided. Instances should not be reused.
+     * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
      * Example:
@@ -626,6 +627,7 @@ public final class ParallelCollectors {
      *
      * <br><br>
      * No ordering guarantees provided. Instances should not be reused.
+     * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
      * Example:
@@ -730,6 +732,7 @@ public final class ParallelCollectors {
      *
      * <br><br>
      * No ordering guarantees provided. Instances should not be reused.
+     * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
      * Example:
@@ -764,6 +767,7 @@ public final class ParallelCollectors {
      *
      * <br><br>
      * No ordering guarantees provided. Instances should not be reused.
+     * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
      * Example:
