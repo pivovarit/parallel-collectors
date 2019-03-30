@@ -669,7 +669,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), HashMap::new, executor);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), defaultMapImpl(), executor);
     }
 
     /**
@@ -703,7 +703,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), HashMap::new, executor, parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), defaultMapImpl(), executor, parallelism);
     }
 
     /**
@@ -737,7 +737,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(merger, "merger can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, defaultMapImpl(), executor);
     }
 
     /**
@@ -773,7 +773,7 @@ public final class ParallelCollectors {
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(merger, "merger can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor, parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, defaultMapImpl(), executor, parallelism);
     }
 
     /**
@@ -927,5 +927,9 @@ public final class ParallelCollectors {
 
     private static <V> BinaryOperator<V> uniqueKeyMerger() {
         return (i1, i2) -> { throw new IllegalStateException("Duplicate key found"); };
+    }
+
+    private static <K, V> Supplier<Map<K, V>> defaultMapImpl() {
+        return HashMap::new;
     }
 }
