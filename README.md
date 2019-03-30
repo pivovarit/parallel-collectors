@@ -86,16 +86,24 @@ _parallelToListOrdered_:
 
 - `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor)`
 - `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor, int parallelism)`
+- ...
 
 _parallelToSet_:
 
 - `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor)`
 - `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
 
+_parallelToMap_:
+
+- `CompletableFuture<Map<K, V>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor)`
+- `CompletableFuture<Map<K, V>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism)`
+- ...
+
+
 _parallelToCollection_:
 
-- `CompletableFuture<C<R>> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
-- `CompletableFuture<C<R>> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+- `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
+- `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
 
 ##### Blocking Semantics
 
@@ -199,13 +207,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.1.2</version>
+        <version>0.2.0</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.1.2'
+    compile 'com.pivovarit:parallel-collectors:0.2.0'
 
 ### Dependencies
 
@@ -225,6 +233,10 @@ None - the library is implemented using core Java libraries.
 - the processing starts after the whole stream is buffered
 
 ## Version history
+
+### [0.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.2.0) (30-03-2019)
+- Introduced a new API method `ParallelCollectors.parallelToListOrdered` supporting user-provided `List` implementations
+- Introduced a new API method `ParallelCollectors.parallelToMap`
 
 ### [0.1.2](https://github.com/pivovarit/parallel-collectors/releases/tag/0.1.2) (26-03-2019)
 - Internal exception handling improvements
