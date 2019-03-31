@@ -78,7 +78,7 @@ public final class ParallelCollectors {
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param <T>                the type of the collected elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -86,7 +86,7 @@ public final class ParallelCollectors {
     public static <T, C extends Collection<T>> Collector<Supplier<T>, ?, CompletableFuture<C>> parallelToCollection(Supplier<C> collectionSupplier, Executor executor) {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
-        return new AsyncParallelCollector<>(Supplier::get, collectionSupplier, executor);
+        return new AsyncUnorderedParallelCollector<>(Supplier::get, collectionSupplier, executor);
     }
 
     /**
@@ -110,7 +110,7 @@ public final class ParallelCollectors {
      * @param parallelism        the parallelism level
      * @param <T>                the type of the collected elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -119,7 +119,7 @@ public final class ParallelCollectors {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(Supplier::get, collectionSupplier, executor, assertParallelismValid(parallelism));
+        return new AsyncUnorderedParallelCollector<>(Supplier::get, collectionSupplier, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -147,7 +147,7 @@ public final class ParallelCollectors {
      * @param <T>                the type of the collected elements
      * @param <R>                the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -155,7 +155,7 @@ public final class ParallelCollectors {
         requireNonNull(collectionSupplier, "collectionSupplier can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, collectionSupplier, executor);
+        return new AsyncUnorderedParallelCollector<>(mapper, collectionSupplier, executor);
     }
 
     /**
@@ -179,7 +179,7 @@ public final class ParallelCollectors {
      * @param <T>                the type of the collected elements
      * @param <R>                the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Collection} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
      */
@@ -188,7 +188,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(mapper, collectionSupplier, executor, parallelism);
+        return new AsyncUnorderedParallelCollector<>(mapper, collectionSupplier, executor, parallelism);
     }
 
     /**
@@ -214,14 +214,14 @@ public final class ParallelCollectors {
      * @param executor the {@code Executor} to use for asynchronous execution
      * @param <T>      the type of the collected elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
     @Deprecated() // for removal in 1.0.0
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<List<T>>> parallelToList(Executor executor) {
         requireNonNull(executor, "executor can't be null");
-        return new AsyncParallelCollector<>(Supplier::get, ArrayList::new, executor);
+        return new AsyncUnorderedParallelCollector<>(Supplier::get, defaultListImpl(), executor);
     }
 
     /**
@@ -245,7 +245,7 @@ public final class ParallelCollectors {
      * @param parallelism the parallelism level
      * @param <T>         the type of the collected elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -253,7 +253,7 @@ public final class ParallelCollectors {
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<List<T>>> parallelToList(Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(Supplier::get, ArrayList::new, executor, assertParallelismValid(parallelism));
+        return new AsyncUnorderedParallelCollector<>(Supplier::get, defaultListImpl(), executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -280,14 +280,14 @@ public final class ParallelCollectors {
      * @param <T>      the type of the collected elements
      * @param <R>      the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, ArrayList::new, executor);
+        return new AsyncUnorderedParallelCollector<>(mapper, defaultListImpl(), executor);
     }
 
     /**
@@ -310,7 +310,7 @@ public final class ParallelCollectors {
      * @param <T>         the type of the collected elements
      * @param <R>         the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
      */
@@ -318,7 +318,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
+        return new AsyncUnorderedParallelCollector<>(mapper, defaultListImpl(), executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -345,14 +345,14 @@ public final class ParallelCollectors {
      * @param <T>      the type of the collected elements
      * @param <R>      the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.1.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToListOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncOrderedParallelCollector<>(mapper, ArrayList::new, executor);
+        return new AsyncOrderedParallelCollector<>(mapper, defaultListImpl(), executor);
     }
 
     /**
@@ -375,7 +375,7 @@ public final class ParallelCollectors {
      * @param <T>         the type of the collected elements
      * @param <R>         the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.1.0
      */
@@ -383,7 +383,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncOrderedParallelCollector<>(mapper, ArrayList::new, executor, assertParallelismValid(parallelism));
+        return new AsyncOrderedParallelCollector<>(mapper, defaultListImpl(), executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -411,7 +411,7 @@ public final class ParallelCollectors {
      * @param <T>          the type of the collected elements
      * @param <R>          the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.2.0
      */
@@ -443,7 +443,7 @@ public final class ParallelCollectors {
      * @param <T>          the type of the collected elements
      * @param <R>          the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code List} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.2.0
      */
@@ -478,14 +478,14 @@ public final class ParallelCollectors {
      * @param executor the {@code Executor} to use for asynchronous execution
      * @param <T>      the type of the collected elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
     @Deprecated() // for removal in 1.0.0
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<Set<T>>> parallelToSet(Executor executor) {
         requireNonNull(executor, "executor can't be null");
-        return new AsyncParallelCollector<>(Supplier::get, HashSet::new, executor);
+        return new AsyncUnorderedParallelCollector<>(Supplier::get, HashSet::new, executor);
     }
 
     /**
@@ -507,7 +507,7 @@ public final class ParallelCollectors {
      * @param parallelism the parallelism level
      * @param <T>         the type of the collected elements
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -515,7 +515,7 @@ public final class ParallelCollectors {
     public static <T> Collector<Supplier<T>, ?, CompletableFuture<Set<T>>> parallelToSet(Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(Supplier::get, HashSet::new, executor, assertParallelismValid(parallelism));
+        return new AsyncUnorderedParallelCollector<>(Supplier::get, HashSet::new, executor, assertParallelismValid(parallelism));
     }
 
     /**
@@ -542,14 +542,14 @@ public final class ParallelCollectors {
      * @param <T>      the type of the collected elements
      * @param <R>      the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, HashSet::new, executor);
+        return new AsyncUnorderedParallelCollector<>(mapper, HashSet::new, executor);
     }
 
     /**
@@ -577,7 +577,7 @@ public final class ParallelCollectors {
      * @param <T>         the type of the collected elements
      * @param <R>         the result returned by {@code mapper}
      *
-     * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Set} in parallel
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
      */
@@ -585,7 +585,59 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(mapper, HashSet::new, executor, parallelism);
+        return new AsyncUnorderedParallelCollector<>(mapper, HashSet::new, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a result of collection performed by using a provided {@link Collector}
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * @param mapper    a transformation to be performed in parallel
+     * @param executor  the {@code Executor} to use for asynchronous execution
+     * @param collector the {@link Collector} to collect processed elements with
+     * @param <T>       the type of the input elements
+     * @param <R>       the result returned by {@code mapper}
+     * @param <RR>      the end result generated by provided {@code collector}
+     *
+     * @return a {@code Collector} which collects all processed elements using user-provided {@link Collector} in parallel
+     *
+     * @since 0.3.0
+     */
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Executor executor, Collector<R, ?, RR> collector) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(collector, "collector can't be null");
+        return new AsyncDelegatingParallelCollector<>(mapper, collector, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a result of collection performed by using a provided {@link Collector}
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param collector   the {@link Collector} to collect processed elements with
+     * @param <T>         the type of the input elements
+     * @param <R>         the result returned by {@code mapper}
+     * @param <RR>        the end result generated by provided {@code collector}
+     *
+     * @return a {@code Collector} which collects all processed elements using user-provided {@link Collector} in parallel
+     *
+     * @since 0.3.0
+     */
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Executor executor, int parallelism, Collector<R, ?, RR> collector) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(collector, "collector can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncDelegatingParallelCollector<>(mapper, collector, executor, parallelism);
     }
 
     /**
@@ -618,7 +670,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), HashMap::new, executor);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), defaultMapImpl(), executor);
     }
 
     /**
@@ -653,7 +705,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), HashMap::new, executor, parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), defaultMapImpl(), executor, parallelism);
     }
 
     /**
@@ -687,7 +739,7 @@ public final class ParallelCollectors {
         requireNonNull(keyMapper, "keyMapper can't be null");
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(merger, "merger can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, defaultMapImpl(), executor);
     }
 
     /**
@@ -723,7 +775,7 @@ public final class ParallelCollectors {
         requireNonNull(valueMapper, "valueMapper can't be null");
         requireNonNull(merger, "merger can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, HashMap::new, executor, parallelism);
+        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, defaultMapImpl(), executor, parallelism);
     }
 
     /**
@@ -879,5 +931,13 @@ public final class ParallelCollectors {
 
     private static <V> BinaryOperator<V> uniqueKeyMerger() {
         return (i1, i2) -> { throw new IllegalStateException("Duplicate key found"); };
+    }
+
+    private static <K, V> Supplier<Map<K, V>> defaultMapImpl() {
+        return HashMap::new;
+    }
+
+    private static <R> Supplier<List<R>> defaultListImpl() {
+        return ArrayList::new;
     }
 }

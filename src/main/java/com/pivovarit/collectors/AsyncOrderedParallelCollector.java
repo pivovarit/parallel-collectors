@@ -64,7 +64,7 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
     public Function<List<CompletableFuture<Entry<Integer, R>>>, CompletableFuture<C>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return foldLeftFuturesOrdered(collectionFactory)
+            return combineFuturesOrdered(collectionFactory)
               .andThen(f -> supplyWithResources(() -> f, dispatcher::close));
         } else {
             return supplyWithResources(() -> (__) -> completedFuture(collectionFactory
@@ -82,7 +82,7 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
         dispatcher.close();
     }
 
-    private static <R, C extends Collection<R>> Function<List<CompletableFuture<Entry<Integer, R>>>, CompletableFuture<C>> foldLeftFuturesOrdered(Supplier<C> collectionFactory) {
+    private static <R, C extends Collection<R>> Function<List<CompletableFuture<Entry<Integer, R>>>, CompletableFuture<C>> combineFuturesOrdered(Supplier<C> collectionFactory) {
         return futures -> allOf(futures.toArray(new CompletableFuture<?>[0]))
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join)
