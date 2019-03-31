@@ -940,6 +940,65 @@ public final class ParallelCollectors {
         return new AsyncUnorderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements with encounter order preserved
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor));
+     * }</pre>
+     *
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 0.3.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStreamOrdered(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return new AsyncOrderedParallelStreamCollector<>(mapper, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements with encounter order preserved
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor, 2));
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 0.3.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStreamOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncOrderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
+    }
+
     private static int assertParallelismValid(int parallelism) {
         if (parallelism < 1) throw new IllegalArgumentException("Parallelism can't be lower than 1");
         return parallelism;
