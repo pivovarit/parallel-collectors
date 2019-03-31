@@ -13,6 +13,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -22,6 +23,7 @@ import static java.util.Objects.requireNonNull;
  * @author Grzegorz Piwowarek
  */
 public final class ParallelCollectors {
+
     private ParallelCollectors() {
     }
 
@@ -912,7 +914,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} which collects all input elements into a user-provided mutable {@code Map} in parallel
      *
-     * @since 0.2.0
+     * @since 0.3.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
@@ -922,6 +924,71 @@ public final class ParallelCollectors {
         requireNonNull(mapSupplier, "mapSupplier can't be null");
         assertParallelismValid(parallelism);
         return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, mapSupplier, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br><br>
+     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
+     * It will try to submit {@code N} tasks to a provided {@link Executor}
+     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor));
+     * }</pre>
+     *
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 0.3.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return new AsyncUnorderedParallelStreamCollector<>(mapper, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements
+     *
+     * <br><br>
+     * No ordering guarantees provided. Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToList(i -> foo(), executor, 2));
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 0.3.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        assertParallelismValid(parallelism);
+        return new AsyncUnorderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
     }
 
     private static int assertParallelismValid(int parallelism) {
