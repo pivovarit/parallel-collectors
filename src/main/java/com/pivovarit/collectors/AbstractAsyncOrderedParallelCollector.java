@@ -63,7 +63,6 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
         } else {
             return empty -> resultsProcessor()
               .compose(combineFuturesOrdered())
-              .andThen(f -> supplyWithResources(() -> f, dispatcher::close))
               .apply(Collections.emptyList());
         }
     }
