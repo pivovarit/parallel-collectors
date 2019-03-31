@@ -968,7 +968,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStreamOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncUnorderedParallelStreamCollector<>(mapper, executor);
+        return new AsyncOrderedParallelStreamCollector<>(mapper, executor);
     }
 
     /**
@@ -996,7 +996,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncUnorderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
+        return new AsyncOrderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
     }
 
     private static int assertParallelismValid(int parallelism) {
