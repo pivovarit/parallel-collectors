@@ -10,8 +10,7 @@ import java.util.stream.Stream;
  * @author Grzegorz Piwowarek
  */
 final class AsyncDelegatingParallelCollector<T, R, C>
-  extends AbstractAsyncUnorderedParallelCollector<T, R, C>
-  implements AutoCloseable {
+  extends AbstractAsyncUnorderedParallelCollector<T, R, C> {
 
     private final Collector<R, ?, C> collector;
 
