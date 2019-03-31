@@ -1,6 +1,7 @@
 package com.pivovarit.collectors.parallelToListOrdered;
 
 import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -33,7 +34,7 @@ class ToListOrderedParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(50);
-        assertThat(executor.count()).isEqualTo(parallelism);
+        Awaitility.await()
+          .until(() -> executor.count() == parallelism);
     }
 }
