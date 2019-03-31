@@ -610,7 +610,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireNonNull(collector, "collector can't be null");
-        return new AsyncDecoratingParallelCollector<>(mapper, collector, executor);
+        return new AsyncDelegatingParallelCollector<>(mapper, collector, executor);
     }
 
     /**
@@ -637,7 +637,7 @@ public final class ParallelCollectors {
         requireNonNull(mapper, "mapper can't be null");
         requireNonNull(collector, "collector can't be null");
         assertParallelismValid(parallelism);
-        return new AsyncDecoratingParallelCollector<>(mapper, collector, executor, parallelism);
+        return new AsyncDelegatingParallelCollector<>(mapper, collector, executor, parallelism);
     }
 
     /**
