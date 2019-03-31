@@ -1,6 +1,7 @@
 package com.pivovarit.collectors.parallelToCollection;
 
 import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -33,8 +34,8 @@ class ToCollectionParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(50);
-        assertThat(executor.count()).isEqualTo(parallelism);
+        Awaitility.await()
+          .until(() -> executor.count() == parallelism);
     }
 
     @Test
@@ -52,7 +53,7 @@ class ToCollectionParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(50);
-        assertThat(executor.count()).isEqualTo(parallelism);
+        Awaitility.await()
+          .until(() -> executor.count() == parallelism);
     }
 }

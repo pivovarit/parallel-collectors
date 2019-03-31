@@ -1,6 +1,7 @@
 package com.pivovarit.collectors.parallelToList;
 
 import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ToListParallelismThrottlingTest {
 
     @Test
-    void shouldParallelizeToSetAndRespectParallelizm() throws InterruptedException {
+    void shouldParallelizeToSetAndRespectParallelizm() {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
@@ -34,13 +35,13 @@ class ToListParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(50);
-        assertThat(executor.count()).isEqualTo(parallelism);
+        Awaitility.await()
+          .until(() -> executor.count() == parallelism);
     }
 
 
     @Test
-    void shouldParallelizeToSetAndRespectParallelizmMapping() throws InterruptedException {
+    void shouldParallelizeToSetAndRespectParallelizmMapping() {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
@@ -55,7 +56,7 @@ class ToListParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Thread.sleep(50);
-        assertThat(executor.count()).isEqualTo(parallelism);
+        Awaitility.await()
+          .until(() -> executor.count() == parallelism);
     }
 }
