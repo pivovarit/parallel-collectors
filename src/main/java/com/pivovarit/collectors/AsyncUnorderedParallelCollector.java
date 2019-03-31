@@ -8,6 +8,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.*;
+
 /**
  * @author Grzegorz Piwowarek
  */
@@ -36,6 +38,6 @@ final class AsyncUnorderedParallelCollector<T, R, C extends Collection<R>>
 
     @Override
     Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor() {
-        return result -> result.thenApply(futures -> futures.collect(Collectors.toCollection(collectionFactory)));
+        return result -> result.thenApply(futures -> futures.collect(toCollection(collectionFactory)));
     }
 }

@@ -14,7 +14,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.concurrent.CompletableFuture.allOf;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * @author Grzegorz Piwowarek
@@ -58,11 +57,11 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
             return resultsProcessor()
-              .compose(combineFuturesOrdered())
+              .compose(combineResultsOrdered())
               .andThen(f -> supplyWithResources(() -> f, dispatcher::close));
         } else {
             return empty -> resultsProcessor()
-              .compose(combineFuturesOrdered())
+              .compose(combineResultsOrdered())
               .apply(Collections.emptyList());
         }
     }
@@ -77,7 +76,7 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
         dispatcher.close();
     }
 
-    private static <R> Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<Stream<R>>> combineFuturesOrdered() {
+    private static <R> Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<Stream<R>>> combineResultsOrdered() {
         return futures -> allOf(futures.toArray(new CompletableFuture<?>[0]))
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join)

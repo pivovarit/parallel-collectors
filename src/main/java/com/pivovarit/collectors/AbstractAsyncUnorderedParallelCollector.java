@@ -48,10 +48,9 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return futures -> resultsProcessor().andThen(f -> supplyWithResources(() -> f, dispatcher::close))
-              .apply(allOf(futures.toArray(new CompletableFuture<?>[0]))
-                .thenApply(__ -> futures.stream()
-                  .map(CompletableFuture::join)));
+            return futures -> resultsProcessor()
+              .andThen(f -> supplyWithResources(() -> f, dispatcher::close))
+              .apply(combineResults(futures));
         } else {
             return futures -> resultsProcessor().apply(completedFuture(Stream.empty()));
         }
@@ -65,5 +64,11 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
     @Override
     public void close() {
         dispatcher.close();
+    }
+
+    private static <T> CompletableFuture<Stream<T>> combineResults(List<CompletableFuture<T>> futures) {
+        return allOf(futures.toArray(new CompletableFuture<?>[0]))
+          .thenApply(__ -> futures.stream()
+            .map(CompletableFuture::join));
     }
 }
