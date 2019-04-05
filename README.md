@@ -19,6 +19,7 @@ They are:
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
 - non-blocking (no need to block the main thread while waiting for the result to arrive)
 - non-invasive (they are just custom implementations of `Collector` interface, no magic inside)
+- versatile (missing an API for your use case? just `parallelToStream` and continue with Stream API)
 - powerful (combined power of Stream API and `CompletableFutures` allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 
 ## Rationale
@@ -104,6 +105,16 @@ _parallelToCollection_:
 
 - `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
 - `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+
+_parallelToStream_:
+
+- `CompletableFuture<C> parallelToStream(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<C> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)`
+
+_parallelToStreamOrdered_:
+
+- `CompletableFuture<C> parallelToStreamOrdered(Function<T, R> mapper, Executor executor)`
+- `CompletableFuture<C> parallelToStreamOrdered(Function<T, R> mapper, Executor executor, int parallelism)`
 
 ##### Blocking Semantics
 
@@ -207,13 +218,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.2.0</version>
+        <version>0.3.0</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.2.0'
+    compile 'com.pivovarit:parallel-collectors:0.3.0'
 
 ### Dependencies
 
@@ -232,7 +243,11 @@ None - the library is implemented using core Java libraries.
 - short-circuiting after encountering an exception doesn't actually kill background tasks
 - the processing starts after the whole stream is buffered
 
-## Version history
+## Version History
+
+### [0.3.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.3.0) (05-04-2019)
+- Introduced a new API method: `paralleltoStream`
+- Introduced a new API method: `paralleltoStreamOrdered`
 
 ### [0.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.2.0) (30-03-2019)
 - Introduced a new API method `ParallelCollectors.parallelToListOrdered` supporting user-provided `List` implementations
