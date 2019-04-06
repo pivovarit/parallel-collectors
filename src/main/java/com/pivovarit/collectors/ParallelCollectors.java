@@ -999,6 +999,62 @@ public final class ParallelCollectors {
         return new AsyncOrderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
     }
 
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning a {@link Stream} instance returning results in the completion order.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallel(i -> foo(), executor, 2))
+     *   .collect(toList());
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 0.4.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return null;
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning a {@link Stream} instance returning results in the completion order.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallel(i -> foo(), executor, 2))
+     *   .collect(toList());
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 0.4.0
+     */
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        assertParallelismValid(parallelism);
+        return null;
+    }
+
     private static int assertParallelismValid(int parallelism) {
         if (parallelism < 1) throw new IllegalArgumentException("Parallelism can't be lower than 1");
         return parallelism;
