@@ -1007,7 +1007,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallel(i -> foo(), executor, 2))
+     *   .collect(parallel(i -> foo(), executor))
      *   .collect(toList());
      * }</pre>
      *
