@@ -35,9 +35,9 @@ class CompletionOrderSpliterator<T> implements Spliterator<T> {
         anyOf(futureQueue.toArray(new CompletableFuture[0])).join();
 
         CompletableFuture<T> next = null;
-        for (CompletableFuture<T> tCompletableFuture : futureQueue) {
-            if (tCompletableFuture.isDone()) {
-                next = tCompletableFuture;
+        for (CompletableFuture<T> future : futureQueue) {
+            if (future.isDone()) {
+                next = future;
                 break;
             }
         }
