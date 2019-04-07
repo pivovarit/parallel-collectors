@@ -1,8 +1,7 @@
 package com.pivovarit.collectors;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -11,12 +10,17 @@ import static java.util.concurrent.CompletableFuture.anyOf;
 
 class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
-    private final Set<CompletableFuture<T>> futureQueue;
+    private final List<CompletableFuture<T>> futureQueue;
     private final Runnable finisher;
 
-    CompletionOrderSpliterator(Collection<CompletableFuture<T>> futures, Runnable finisher) {
-        this.futureQueue = new HashSet<>(futures);
+    CompletionOrderSpliterator(List<CompletableFuture<T>> futures, Runnable finisher) {
+        this.futureQueue = new ArrayList<>(futures);
         this.finisher = finisher;
+    }
+
+    CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
+        this.futureQueue  = new ArrayList<>(futures);
+        this.finisher = null;
     }
 
     @Override
@@ -26,7 +30,9 @@ class CompletionOrderSpliterator<T> implements Spliterator<T> {
             action.accept(next);
             return true;
         } else {
-            finisher.run();
+            if (finisher != null) {
+                finisher.run();
+            }
             return false;
         }
     }
@@ -61,3 +67,5 @@ class CompletionOrderSpliterator<T> implements Spliterator<T> {
         return SIZED & IMMUTABLE;
     }
 }
+
+
