@@ -19,7 +19,7 @@ import static java.util.concurrent.CompletableFuture.allOf;
  * @author Grzegorz Piwowarek
  */
 abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
-  extends AbstractParallelCollector<T, Map.Entry<Integer, R>, CompletableFuture<C>>
+  extends AbstractAsyncParallelCollector<T, Map.Entry<Integer, R>, C>
   implements AutoCloseable {
 
     private final Dispatcher<Map.Entry<Integer, R>> dispatcher;
