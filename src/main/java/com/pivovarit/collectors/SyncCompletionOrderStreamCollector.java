@@ -14,7 +14,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-class SyncCompletionOrderStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+class SyncCompletionOrderStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>>, AutoCloseable {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
@@ -65,5 +65,10 @@ class SyncCompletionOrderStreamCollector<T, R> implements Collector<T, List<Comp
     @Override
     public Set<Characteristics> characteristics() {
         return EnumSet.of(Characteristics.UNORDERED);
+    }
+
+    @Override
+    public void close() {
+        dispatcher.close();
     }
 }

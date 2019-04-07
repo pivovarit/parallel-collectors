@@ -2,6 +2,7 @@ package com.pivovarit.collectors;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -45,5 +46,10 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
     @Override
     Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor() {
         return result -> result.thenApply(futures -> futures.collect(Collectors.toCollection(collectionFactory)));
+    }
+
+    @Override
+    public Set<Characteristics> characteristics() {
+        return EnumSet.noneOf(Characteristics.class);
     }
 }

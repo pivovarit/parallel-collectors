@@ -67,11 +67,6 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
     }
 
     @Override
-    public Set<Characteristics> characteristics() {
-        return Collections.emptySet();
-    }
-
-    @Override
     public void close() {
         dispatcher.close();
     }
