@@ -47,9 +47,4 @@ final class AsyncOrderedParallelCollector<T, R, C extends Collection<R>>
     Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor() {
         return result -> result.thenApply(futures -> futures.collect(Collectors.toCollection(collectionFactory)));
     }
-
-    @Override
-    public Set<Characteristics> characteristics() {
-        return EnumSet.noneOf(Characteristics.class);
-    }
 }
