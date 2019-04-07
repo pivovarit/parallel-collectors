@@ -22,14 +22,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ParallelBDDTest extends ExecutorAwareTest {
 
     @Property(trials = 10)
-    public void shouldCollectToListInCompletionOrder(@InRange(minInt = 3, maxInt = 10) int unitsOfWork) {
+    public void shouldCollectToListInCompletionOrder() {
         // given
-        executor = threadPoolExecutor(unitsOfWork);
+        executor = threadPoolExecutor(10);
 
-        List<Integer> result = Stream.of(500, 300, 100)
+        List<Integer> result = Stream.of(200, 100, 300, 10)
           .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor))
           .collect(Collectors.toList());
 
-        assertThat(result).containsExactly(100, 300, 500);
+        assertThat(result).containsExactly(10, 100, 200, 300);
     }
 }
