@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -13,7 +12,7 @@ import java.util.stream.StreamSupport;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CompletionOrderSpliteratorTest {
+class OrderedFutureSpliteratorTest {
 
     @Test
     void shouldTraverseInCompletionOrder() {
@@ -34,7 +33,7 @@ class CompletionOrderSpliteratorTest {
           new OrderedFutureSpliterator<>(futures), false)
           .collect(Collectors.toList());
 
-        assertThat(results).containsExactly(3, 2, 1);
+        assertThat(results).containsExactly(2, 1, 3);
     }
 
     private static void sleep(int millis) {
@@ -43,17 +42,6 @@ class CompletionOrderSpliteratorTest {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    @Test
-    void shouldStreamInCompletionOrder() {
-        int value = 42;
-        List<CompletableFuture<Integer>> futures = asList(new CompletableFuture<>(), CompletableFuture
-          .completedFuture(value));
-
-        Optional<Integer> result = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).findAny();
-
-        assertThat(result).contains(value);
     }
 
     @Test
