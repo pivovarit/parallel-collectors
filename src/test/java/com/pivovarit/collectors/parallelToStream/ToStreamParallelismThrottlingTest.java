@@ -4,13 +4,10 @@ import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
-import static com.pivovarit.collectors.ParallelCollectors.supplier;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;

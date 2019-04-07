@@ -1,28 +1,25 @@
 package com.pivovarit.collectors;
 
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import static java.util.concurrent.CompletableFuture.allOf;
-import static java.util.concurrent.CompletableFuture.completedFuture;
-
-/**
- * @author Grzegorz Piwowarek
- */
-abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
-  extends AbstractAsyncParallelCollector<T, R, C>
-  implements AutoCloseable {
+class SyncStreamParallelCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>>, AutoCloseable {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
 
-    AbstractAsyncUnorderedParallelCollector(
+    SyncStreamParallelCollector(
       Function<T, R> function,
       Executor executor,
       int parallelism) {
@@ -30,14 +27,17 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
         this.function = function;
     }
 
-    AbstractAsyncUnorderedParallelCollector(
+    SyncStreamParallelCollector(
       Function<T, R> function,
       Executor executor) {
         this.dispatcher = new UnboundedDispatcher<>(executor);
         this.function = function;
     }
 
-    abstract Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor();
+    @Override
+    public Supplier<List<CompletableFuture<R>>> supplier() {
+        return LinkedList::new;
+    }
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
@@ -45,14 +45,20 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
     }
 
     @Override
-    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
+    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
+        return (left, right) -> {
+            left.addAll(right);
+            return left;
+        };
+    }
+
+    @Override
+    public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return futures -> resultsProcessor()
-              .andThen(f -> supplyWithResources(() -> f, dispatcher::close))
-              .apply(combineResults(futures));
+            return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures, dispatcher::close), false);
         } else {
-            return futures -> resultsProcessor().apply(completedFuture(Stream.empty()));
+            return __ -> Stream.empty();
         }
     }
 
@@ -64,11 +70,5 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
     @Override
     public void close() {
         dispatcher.close();
-    }
-
-    private static <T> CompletableFuture<Stream<T>> combineResults(List<CompletableFuture<T>> futures) {
-        return allOf(futures.toArray(new CompletableFuture<?>[0]))
-          .thenApply(__ -> futures.stream()
-            .map(CompletableFuture::join));
     }
 }

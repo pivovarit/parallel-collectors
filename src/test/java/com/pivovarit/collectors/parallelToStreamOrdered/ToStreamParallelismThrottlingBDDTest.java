@@ -17,8 +17,6 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToListOrdered;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStreamOrdered;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;

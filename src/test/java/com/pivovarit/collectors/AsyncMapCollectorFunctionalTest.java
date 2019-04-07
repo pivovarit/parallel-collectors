@@ -6,10 +6,7 @@ import org.junit.jupiter.api.TestFactory;
 
 import java.time.Duration;
 import java.util.AbstractMap;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -27,11 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToListOrdered;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToMap;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.runWithExecutor;

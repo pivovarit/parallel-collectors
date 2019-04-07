@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStreamOrdered;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;

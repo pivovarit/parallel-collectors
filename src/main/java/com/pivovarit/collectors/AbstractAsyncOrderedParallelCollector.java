@@ -3,6 +3,7 @@ package com.pivovarit.collectors;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +20,7 @@ import static java.util.concurrent.CompletableFuture.allOf;
  * @author Grzegorz Piwowarek
  */
 abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
-  extends AbstractAsyncCollector<T, Map.Entry<Integer, R>, C>
+  extends AbstractAsyncParallelCollector<T, Map.Entry<Integer, R>, C>
   implements AutoCloseable {
 
     private final Dispatcher<Map.Entry<Integer, R>> dispatcher;
@@ -66,9 +67,10 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
         }
     }
 
+
     @Override
     public Set<Characteristics> characteristics() {
-        return Collections.emptySet();
+        return EnumSet.noneOf(Characteristics.class);
     }
 
     @Override
