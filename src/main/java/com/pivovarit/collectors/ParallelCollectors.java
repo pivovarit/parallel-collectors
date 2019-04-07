@@ -1020,10 +1020,10 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return null; // TODO
+        return new SyncCompletionOrderStreamCollector<>(mapper, executor);
     }
 
     /**
@@ -1048,11 +1048,11 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return null; // TODO
+        return new SyncCompletionOrderStreamCollector<>(mapper, executor, parallelism);
     }
 
     /**
