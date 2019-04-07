@@ -1063,7 +1063,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallel(i -> foo(), executor))
+     *   .collect(parallelOrdered(i -> foo(), executor))
      *   .collect(toList());
      * }</pre>
      *
@@ -1090,7 +1090,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallel(i -> foo(), executor, 2))
+     *   .collect(parallelOrdered(i -> foo(), executor, 2))
      *   .collect(toList());
      * }</pre>
      *
