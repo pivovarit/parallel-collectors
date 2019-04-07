@@ -23,7 +23,6 @@ class CompletionOrderSpliteratorTest {
         List<CompletableFuture<Integer>> futures = asList(f1, f2, f3);
 
         CompletableFuture.runAsync(() -> {
-            sleep(10);
             f3.complete(3);
             sleep(10);
             f1.complete(2);
@@ -31,7 +30,7 @@ class CompletionOrderSpliteratorTest {
             f2.complete(1);
         });
         List<Integer> results = StreamSupport.stream(
-          new OrderedFutureSpliterator<>(futures), false)
+          new CompletionOrderSpliterator<>(futures), false)
           .collect(Collectors.toList());
 
         assertThat(results).containsExactly(3, 2, 1);
