@@ -6,13 +6,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
@@ -1023,7 +1027,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new SyncCompletionOrderStreamCollector<>(mapper, executor);
+        return new SyncStreamParallelCollector<>(mapper, executor);
     }
 
     /**
@@ -1052,7 +1056,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new SyncCompletionOrderStreamCollector<>(mapper, executor, parallelism);
+        return new SyncStreamParallelCollector<>(mapper, executor, parallelism);
     }
 
     /**
@@ -1076,10 +1080,10 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelOrdered(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return null; // TODO
+        return new SyncOrderedStreamParallelCollector<>(mapper, executor);
     }
 
     /**
@@ -1104,11 +1108,11 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return null; // TODO
+        return new SyncOrderedStreamParallelCollector<>(mapper, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {

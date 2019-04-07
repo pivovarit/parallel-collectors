@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
@@ -14,12 +15,12 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-class SyncCompletionOrderStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>>, AutoCloseable {
+class SyncStreamParallelCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>>, AutoCloseable {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
 
-    SyncCompletionOrderStreamCollector(
+    SyncStreamParallelCollector(
       Function<T, R> function,
       Executor executor,
       int parallelism) {
@@ -27,7 +28,7 @@ class SyncCompletionOrderStreamCollector<T, R> implements Collector<T, List<Comp
         this.function = function;
     }
 
-    SyncCompletionOrderStreamCollector(
+    SyncStreamParallelCollector(
       Function<T, R> function,
       Executor executor) {
         this.dispatcher = new UnboundedDispatcher<>(executor);

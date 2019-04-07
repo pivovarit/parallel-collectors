@@ -6,11 +6,11 @@ import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+
+/**
+ * @author Grzegorz Piwowarek
+ */
 class OrderedFutureSpliterator<T> implements Spliterator<T> {
-
-    public static void main(String[] args) {
-
-    }
 
     private final List<CompletableFuture<T>> futureQueue;
     private final Runnable finisher;

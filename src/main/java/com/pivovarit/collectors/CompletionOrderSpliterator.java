@@ -8,6 +8,9 @@ import java.util.function.Consumer;
 
 import static java.util.concurrent.CompletableFuture.anyOf;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     private final List<CompletableFuture<T>> futureQueue;
