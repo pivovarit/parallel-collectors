@@ -1,12 +1,16 @@
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -16,8 +20,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * @author Grzegorz Piwowarek
  */
 abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
-  extends AbstractAsyncParallelCollector<T, R, C>
-  implements AutoCloseable {
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
@@ -38,6 +41,20 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
     }
 
     abstract Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor();
+
+
+    @Override
+    public Supplier<List<CompletableFuture<R>>> supplier() {
+        return ArrayList::new;
+    }
+
+    @Override
+    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
+        return (left, right) -> {
+            left.addAll(right);
+            return left;
+        };
+    }
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
@@ -70,5 +87,13 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
         return allOf(futures.toArray(new CompletableFuture<?>[0]))
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join));
+    }
+
+    static <T1> T1 supplyWithResources(Supplier<T1> supplier, Runnable action) {
+        try {
+            return supplier.get();
+        } finally {
+            action.run();
+        }
     }
 }

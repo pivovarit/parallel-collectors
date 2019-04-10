@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -11,17 +12,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.AbstractAsyncUnorderedParallelCollector.supplyWithResources;
 import static java.util.concurrent.CompletableFuture.allOf;
 
 /**
  * @author Grzegorz Piwowarek
  */
 abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
-  extends AbstractAsyncParallelCollector<T, Map.Entry<Integer, R>, C>
-  implements AutoCloseable {
+  implements Collector<T, List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>>, AutoCloseable {
 
     private final Dispatcher<Map.Entry<Integer, R>> dispatcher;
     private final Function<T, R> function;
@@ -44,6 +48,19 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
     }
 
     abstract Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor();
+
+    @Override
+    public Supplier<List<CompletableFuture<Map.Entry<Integer, R>>>> supplier() {
+        return ArrayList::new;
+    }
+
+    @Override
+    public BinaryOperator<List<CompletableFuture<Map.Entry<Integer, R>>>> combiner() {
+        return (left, right) -> {
+            left.addAll(right);
+            return left;
+        };
+    }
 
     @Override
     public BiConsumer<List<CompletableFuture<Map.Entry<Integer, R>>>, T> accumulator() {
