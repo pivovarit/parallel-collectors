@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;
 
@@ -15,12 +16,14 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-abstract class Dispatcher<T> implements AutoCloseable {
+class Dispatcher<T> implements AutoCloseable {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Queue<CompletableFuture<T>> pending;
     private final Queue<Runnable> workingQueue;
     private final Executor executor;
+
+    private final Semaphore limiter;
 
     private volatile boolean completed = false;
 
@@ -28,9 +31,15 @@ abstract class Dispatcher<T> implements AutoCloseable {
         this.executor = executor;
         this.workingQueue = new ConcurrentLinkedQueue<>();
         this.pending = new ConcurrentLinkedQueue<>();
+        this.limiter = new Semaphore(Runtime.getRuntime().availableProcessors() - 1);
     }
 
-    abstract protected CheckedConsumer dispatchStrategy();
+    Dispatcher(Executor executor, int permits) {
+        this.executor = executor;
+        this.workingQueue = new ConcurrentLinkedQueue<>();
+        this.pending = new ConcurrentLinkedQueue<>();
+        this.limiter = new Semaphore(permits);
+    }
 
     @Override
     public void close() {
@@ -45,7 +54,9 @@ abstract class Dispatcher<T> implements AutoCloseable {
                   !Thread.currentThread().isInterrupted()
                     && !completed
                     && (task = workingQueue.poll()) != null) {
-                    dispatchStrategy().consume(task);
+
+                        limiter.acquire();
+                        run(task, limiter::release);
                 }
             } catch (Exception e) { // covers InterruptedException
                 handle(e);
@@ -78,11 +89,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
         pending.forEach(future -> future.completeExceptionally(e));
     }
 
-    void run(Runnable task) {
-        runAsync(task, executor);
-    }
-
-    void run(Runnable task, Runnable finisher) {
+    private void run(Runnable task, Runnable finisher) {
         runAsync(() -> {
             try {
                 task.run();
@@ -109,10 +116,5 @@ abstract class Dispatcher<T> implements AutoCloseable {
             thread.setDaemon(true);
             return thread;
         }
-    }
-
-    @FunctionalInterface
-    protected interface CheckedConsumer {
-        void consume(Runnable task) throws Exception;
     }
 }

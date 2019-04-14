@@ -47,14 +47,10 @@ class AsyncMapCollectorFunctionalTest {
     @TestFactory
     Stream<DynamicTest> testCollectors() {
         return of(
-          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), e), "parallelToMap(p=inf)"),
           forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), e, 1000), "parallelToMap(p=1000)"),
-          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), (i1, i2) -> i2, e), "parallelToMapMerging(p=inf)"),
           forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), (i1, i2) -> i2, e, 1000), "parallelToMapMerging(p=1000)"),
-          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(), e), "parallelToMapCustomMap(p=inf)"),
           forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(), e, 1000), "parallelToMapCustomMap(p=1000)"),
-          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(),(i1, i2) -> i2, e), "parallelToMapCustomMapAndMerging(p=inf)"),
-          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(), (i1, i2) -> i2, e), "parallelToMapCustomMapAndMerging(p=1000)")
+          forCollector((m, e) -> parallelToMap(m.getKey(), m.getValue(), () -> new HashMap<>(), (i1, i2) -> i2, e, 1000), "parallelToMapCustomMapAndMerging(p=1000)")
         ).flatMap(identity());
     }
 

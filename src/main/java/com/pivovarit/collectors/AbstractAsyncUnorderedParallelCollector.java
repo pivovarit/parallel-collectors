@@ -29,14 +29,14 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
       Function<T, R> function,
       Executor executor,
       int parallelism) {
-        this.dispatcher = new ThrottlingDispatcher<>(executor, parallelism);
+        this.dispatcher = new Dispatcher<>(executor, parallelism);
         this.function = function;
     }
 
     AbstractAsyncUnorderedParallelCollector(
       Function<T, R> function,
       Executor executor) {
-        this.dispatcher = new UnboundedDispatcher<>(executor);
+        this.dispatcher = new Dispatcher<>(executor);
         this.function = function;
     }
 
