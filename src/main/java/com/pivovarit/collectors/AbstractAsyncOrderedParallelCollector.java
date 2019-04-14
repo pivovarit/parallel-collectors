@@ -18,14 +18,13 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.AbstractAsyncUnorderedParallelCollector.supplyWithResources;
 import static java.util.concurrent.CompletableFuture.allOf;
 
 /**
  * @author Grzegorz Piwowarek
  */
 abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>>, AutoCloseable {
+  implements Collector<T, List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<C>> {
 
     private final Dispatcher<Map.Entry<Integer, R>> dispatcher;
     private final Function<T, R> function;
@@ -75,8 +74,7 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
             return resultsProcessor()
-              .compose(combineResultsOrdered())
-              .andThen(f -> supplyWithResources(() -> f, dispatcher::close));
+              .compose(combineResultsOrdered());
         } else {
             return empty -> resultsProcessor()
               .compose(combineResultsOrdered())
@@ -88,11 +86,6 @@ abstract class AbstractAsyncOrderedParallelCollector<T, R, C>
     @Override
     public Set<Characteristics> characteristics() {
         return EnumSet.noneOf(Characteristics.class);
-    }
-
-    @Override
-    public void close() {
-        dispatcher.close();
     }
 
     private static <R> Function<List<CompletableFuture<Map.Entry<Integer, R>>>, CompletableFuture<Stream<R>>> combineResultsOrdered() {

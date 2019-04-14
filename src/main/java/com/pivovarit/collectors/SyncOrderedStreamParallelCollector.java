@@ -14,7 +14,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>>, AutoCloseable {
+class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
@@ -56,7 +56,7 @@ class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<Comp
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return futures -> StreamSupport.stream(new OrderedFutureSpliterator<>(futures, dispatcher::close), false);
+            return futures -> StreamSupport.stream(new OrderedFutureSpliterator<>(futures), false);
         } else {
             return __ -> Stream.empty();
         }
@@ -65,10 +65,5 @@ class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<Comp
     @Override
     public Set<Characteristics> characteristics() {
         return EnumSet.of(Characteristics.UNORDERED);
-    }
-
-    @Override
-    public void close() {
-        dispatcher.close();
     }
 }

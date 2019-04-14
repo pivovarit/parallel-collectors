@@ -14,16 +14,9 @@ import static java.util.concurrent.CompletableFuture.anyOf;
 class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     private final List<CompletableFuture<T>> futureQueue;
-    private final Runnable finisher;
-
-    CompletionOrderSpliterator(List<CompletableFuture<T>> futures, Runnable finisher) {
-        this.futureQueue = new ArrayList<>(futures);
-        this.finisher = finisher;
-    }
 
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
         this.futureQueue  = new ArrayList<>(futures);
-        this.finisher = null;
     }
 
     @Override
@@ -33,9 +26,6 @@ class CompletionOrderSpliterator<T> implements Spliterator<T> {
             action.accept(next);
             return true;
         } else {
-            if (finisher != null) {
-                finisher.run();
-            }
             return false;
         }
     }
