@@ -47,7 +47,9 @@ class Dispatcher<T> {
                     && (task = workingQueue.poll()) != null) {
 
                     limiter.acquire();
-                    run(task, limiter::release);
+                    if (!completed) {
+                        run(task, limiter::release);
+                    }
                 }
             } catch (Exception e) { // covers InterruptedException
                 handle(e);
