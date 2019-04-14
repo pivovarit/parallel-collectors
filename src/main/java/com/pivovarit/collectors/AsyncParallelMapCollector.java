@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toMap;
  * @author Grzegorz Piwowarek
  */
 final class AsyncParallelMapCollector<T, K, V, M extends Map<K, V>>
-  extends AbstractAsyncUnorderedParallelCollector<T, Entry<K, V>, M> {
+  extends AbstractAsyncParallelCollector<T, Entry<K, V>, M> {
 
     private final BinaryOperator<V> duplicateKeyResolutionStrategy;
     private final Supplier<M> mapFactory;

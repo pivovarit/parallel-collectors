@@ -8,17 +8,17 @@ import java.util.stream.Stream;
 /**
  * @author Grzegorz Piwowarek
  */
-final class AsyncOrderedParallelStreamCollector<T, R>
-  extends AbstractAsyncOrderedParallelCollector<T, R, Stream<R>> {
+final class AsyncParallelStreamCollector<T, R>
+  extends AbstractAsyncParallelCollector<T, R, Stream<R>> {
 
-    AsyncOrderedParallelStreamCollector(
+    AsyncParallelStreamCollector(
       Function<T, R> function,
       Executor executor,
       int parallelism) {
         super(function, executor, parallelism);
     }
 
-    AsyncOrderedParallelStreamCollector(
+    AsyncParallelStreamCollector(
       Function<T, R> function,
       Executor executor) {
         super(function, executor);

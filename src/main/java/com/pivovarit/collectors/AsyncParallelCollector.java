@@ -12,12 +12,12 @@ import static java.util.stream.Collectors.toCollection;
 /**
  * @author Grzegorz Piwowarek
  */
-final class AsyncUnorderedParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractAsyncUnorderedParallelCollector<T, R, C> {
+final class AsyncParallelCollector<T, R, C extends Collection<R>>
+  extends AbstractAsyncParallelCollector<T, R, C> {
 
     private final Supplier<C> collectionFactory;
 
-    AsyncUnorderedParallelCollector(
+    AsyncParallelCollector(
       Function<T, R> function,
       Supplier<C> collection,
       Executor executor,
@@ -26,7 +26,7 @@ final class AsyncUnorderedParallelCollector<T, R, C extends Collection<R>>
         this.collectionFactory = collection;
     }
 
-    AsyncUnorderedParallelCollector(
+    AsyncParallelCollector(
       Function<T, R> function,
       Supplier<C> collection,
       Executor executor) {

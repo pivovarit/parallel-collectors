@@ -19,13 +19,13 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 /**
  * @author Grzegorz Piwowarek
  */
-abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
+abstract class AbstractAsyncParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
 
-    AbstractAsyncUnorderedParallelCollector(
+    AbstractAsyncParallelCollector(
       Function<T, R> function,
       Executor executor,
       int parallelism) {
@@ -33,7 +33,7 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
         this.function = function;
     }
 
-    AbstractAsyncUnorderedParallelCollector(
+    AbstractAsyncParallelCollector(
       Function<T, R> function,
       Executor executor) {
         this.dispatcher = new Dispatcher<>(executor);
