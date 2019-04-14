@@ -1,7 +1,6 @@
 package com.pivovarit.collectors.parallel;
 
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.runner.RunWith;

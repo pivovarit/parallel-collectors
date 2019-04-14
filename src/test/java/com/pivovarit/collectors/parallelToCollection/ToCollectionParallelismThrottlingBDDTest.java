@@ -22,6 +22,7 @@ import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
+import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelayGaussian;
 import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
@@ -58,6 +59,17 @@ public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest 
             .limit(unitsOfWork)
             .collect(collector.apply(f -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
             .join();
+    }
+
+    @Property
+    public void shouldMaintainOrder(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 2, maxInt = 40) int parallelism) {
+        // given
+        executor = threadPoolExecutor(unitsOfWork);
+        List<Integer> result = Stream.iterate(0, i -> i + 1).limit(20)
+          .collect(parallelToCollection(i -> returnWithDelayGaussian(i, Duration.ofMillis(10)), ArrayList::new, executor, parallelism))
+          .join();
+
+        assertThat(result).isSorted();
     }
 
 }
