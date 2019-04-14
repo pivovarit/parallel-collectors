@@ -25,7 +25,6 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToListOrdered;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
@@ -52,8 +51,6 @@ class AsyncMappingCollectorFunctionalTest {
         return of(
           forCollector((mapper, e) -> parallelToSet(mapper, e, 1000), "parallelToSet(p=1000)"),
           forCollector((mapper, e) -> parallelToList(mapper, e, 1000), "parallelToList(p=1000)"),
-          forCollector((mapper, e) -> parallelToListOrdered(mapper, e, 1000), "parallelToListOrdered(p=1000)"),
-          forCollector((mapper, e) -> parallelToListOrdered(mapper, LinkedList::new, e, 1000), "parallelToListOrdered(p=1000)"),
           forCollector((mapper, e) -> parallelToCollection(mapper, LinkedList::new, e, 1000), "parallelToCollection(p=1000)")
         ).flatMap(identity());
     }

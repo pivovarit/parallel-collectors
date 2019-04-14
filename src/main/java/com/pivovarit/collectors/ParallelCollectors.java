@@ -32,7 +32,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -68,7 +68,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -101,7 +101,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -135,7 +135,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -163,144 +163,10 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing an ordered {@link List} of these elements
-     *
-     * <br><br>
-     * Original ordering preserved. Instances should not be reused.
-     *
-     * <br><br>
-     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * It will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor));
-     * }</pre>
-     *
-     * @param mapper   a transformation to be performed in parallel
-     * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the collected elements
-     * @param <R>      the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
-     *
-     * @since 0.1.0
-     */
-    public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToListOrdered(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncOrderedParallelCollector<>(mapper, defaultListImpl(), executor);
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing an ordered {@link List} of these elements
-     *
-     * <br><br>
-     * Original ordering preserved. Instances should not be reused.
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor, 2));
-     * }</pre>
-     *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param parallelism the parallelism level
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
-     *
-     * @since 0.1.0
-     */
-    public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToListOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncOrderedParallelCollector<>(mapper, defaultListImpl(), executor, assertParallelismValid(parallelism));
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing an ordered {@link List} of these elements
-     *
-     * <br><br>
-     * Original ordering preserved. Instances should not be reused.
-     *
-     * <br><br>
-     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * It will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor));
-     * }</pre>
-     *
-     * @param mapper       a transformation to be performed in parallel
-     * @param listSupplier a {@code Supplier} which returns a mutable {@code List} of the appropriate type
-     * @param executor     the {@code Executor} to use for asynchronous execution
-     * @param <T>          the type of the collected elements
-     * @param <R>          the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
-     *
-     * @since 0.2.0
-     */
-    public static <T, R, C extends List<R>> Collector<T, ?, CompletableFuture<C>> parallelToListOrdered(Function<T, R> mapper, Supplier<C> listSupplier, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        requireNonNull(listSupplier, "listSupplier can't be null");
-        return new AsyncOrderedParallelCollector<>(mapper, listSupplier, executor);
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing an ordered {@link List} of these elements
-     *
-     * <br><br>
-     * Original ordering preserved. Instances should not be reused.
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor, 2));
-     * }</pre>
-     *
-     * @param mapper       a transformation to be performed in parallel
-     * @param listSupplier a {@code Supplier} which returns a target {@code List} of the provided type
-     * @param executor     the {@code Executor} to use for asynchronous execution
-     * @param parallelism  the parallelism level
-     * @param <T>          the type of the collected elements
-     * @param <R>          the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
-     *
-     * @since 0.2.0
-     */
-    public static <T, R, C extends List<R>> Collector<T, ?, CompletableFuture<C>> parallelToListOrdered(Function<T, R> mapper, Supplier<C> listSupplier, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        requireNonNull(listSupplier, "listSupplier can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncOrderedParallelCollector<>(mapper, listSupplier, executor, assertParallelismValid(parallelism));
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -334,7 +200,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -371,7 +237,8 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
+     * <br><br>
      * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
@@ -404,7 +271,8 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
+     * <br><br>
      * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
@@ -439,7 +307,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -473,7 +341,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -509,7 +377,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
@@ -544,7 +412,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
@@ -581,7 +449,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -617,7 +485,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -655,7 +523,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br><br>
      * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
@@ -686,10 +554,10 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements
+     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements.
      *
      * <br><br>
-     * No ordering guarantees provided. Instances should not be reused.
+     * Encounter order is preserved. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -713,65 +581,6 @@ public final class ParallelCollectors {
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
         return new AsyncUnorderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements with encounter order preserved
-     *
-     * <br><br>
-     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * It will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor));
-     * }</pre>
-     *
-     * @param mapper   a transformation to be performed in parallel
-     * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the collected elements
-     * @param <R>      the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
-     *
-     * @since 0.3.0
-     */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStreamOrdered(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncOrderedParallelStreamCollector<>(mapper, executor);
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements with encounter order preserved
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor, 2));
-     * }</pre>
-     *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param parallelism the parallelism level
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
-     *
-     * @since 0.3.0
-     */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStreamOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncOrderedParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
     }
 
     /**
