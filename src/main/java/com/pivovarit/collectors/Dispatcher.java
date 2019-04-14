@@ -79,6 +79,7 @@ class Dispatcher<T> {
     private void handle(Throwable e) {
         completed = true;
         pending.forEach(future -> future.completeExceptionally(e));
+        limiter.release();
     }
 
     private void run(Runnable task, Runnable finisher) {
