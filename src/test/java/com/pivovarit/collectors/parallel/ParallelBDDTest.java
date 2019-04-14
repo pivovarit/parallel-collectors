@@ -27,7 +27,7 @@ public class ParallelBDDTest extends ExecutorAwareTest {
         executor = threadPoolExecutor(10);
 
         List<Integer> result = Stream.of(200, 100, 300, 10)
-          .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor))
+          .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor, 100))
           .collect(Collectors.toList());
 
         assertThat(result).containsExactly(10, 100, 200, 300);
