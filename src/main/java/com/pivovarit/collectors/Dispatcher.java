@@ -47,7 +47,11 @@ class Dispatcher<T> {
                     && (task = workingQueue.poll()) != null) {
 
                     limiter.acquire();
-                    run(task, limiter::release);
+                    if (!completed) {
+                        run(task, limiter::release);
+                    } else {
+                        limiter.release();
+                    }
                 }
             } catch (Exception e) { // covers InterruptedException
                 handle(e);
@@ -79,6 +83,7 @@ class Dispatcher<T> {
     private void handle(Throwable e) {
         completed = true;
         pending.forEach(future -> future.completeExceptionally(e));
+        limiter.release();
     }
 
     private void run(Runnable task, Runnable finisher) {
