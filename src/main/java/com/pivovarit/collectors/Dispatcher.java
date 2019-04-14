@@ -49,6 +49,8 @@ class Dispatcher<T> {
                     limiter.acquire();
                     if (!completed) {
                         run(task, limiter::release);
+                    } else {
+                        limiter.release();
                     }
                 }
             } catch (Exception e) { // covers InterruptedException
