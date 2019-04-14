@@ -1,7 +1,6 @@
 package com.pivovarit.collectors.parallel;
 
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import org.junit.runner.RunWith;
@@ -27,7 +26,7 @@ public class ParallelBDDTest extends ExecutorAwareTest {
         executor = threadPoolExecutor(10);
 
         List<Integer> result = Stream.of(200, 100, 300, 10)
-          .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor, 100))
+          .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
           .collect(Collectors.toList());
 
         assertThat(result).containsExactly(10, 100, 200, 300);
