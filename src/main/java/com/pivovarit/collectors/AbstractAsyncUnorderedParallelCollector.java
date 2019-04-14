@@ -82,12 +82,4 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join));
     }
-
-    static <T1> T1 supplyWithResources(Supplier<T1> supplier, Runnable action) {
-        try {
-            return supplier.get();
-        } finally {
-            action.run();
-        }
-    }
 }
