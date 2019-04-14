@@ -6,31 +6,36 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;
 
+import static java.lang.Runtime.*;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
  * @author Grzegorz Piwowarek
  */
-abstract class Dispatcher<T> {
+class Dispatcher<T> {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
-    private final Queue<CompletableFuture<T>> pending;
-    private final Queue<Runnable> workingQueue;
+    private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
+    private final Queue<Runnable> workingQueue = new ConcurrentLinkedQueue<>();
     private final Executor executor;
 
+    private final Semaphore limiter;
     private volatile boolean completed = false;
 
     Dispatcher(Executor executor) {
         this.executor = executor;
-        this.workingQueue = new ConcurrentLinkedQueue<>();
-        this.pending = new ConcurrentLinkedQueue<>();
+        this.limiter = new Semaphore(getDefaultParallelism());
     }
 
-    abstract protected CheckedConsumer dispatchStrategy();
+    Dispatcher(Executor executor, int permits) {
+        this.executor = executor;
+        this.limiter = new Semaphore(permits);
+    }
 
     void start() {
         dispatcher.execute(() -> {
@@ -40,7 +45,9 @@ abstract class Dispatcher<T> {
                   !Thread.currentThread().isInterrupted()
                     && !completed
                     && (task = workingQueue.poll()) != null) {
-                    dispatchStrategy().consume(task);
+
+                    limiter.acquire();
+                    run(task, limiter::release);
                 }
             } catch (Exception e) { // covers InterruptedException
                 handle(e);
@@ -74,11 +81,7 @@ abstract class Dispatcher<T> {
         pending.forEach(future -> future.completeExceptionally(e));
     }
 
-    void run(Runnable task) {
-        runAsync(task, executor);
-    }
-
-    void run(Runnable task, Runnable finisher) {
+    private void run(Runnable task, Runnable finisher) {
         runAsync(() -> {
             try {
                 task.run();
@@ -96,8 +99,8 @@ abstract class Dispatcher<T> {
      * @author Grzegorz Piwowarek
      */
     private static class CustomThreadFactory implements ThreadFactory {
-        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
+        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
         @Override
         public Thread newThread(Runnable task) {
             Thread thread = defaultThreadFactory.newThread(task);
@@ -105,10 +108,9 @@ abstract class Dispatcher<T> {
             thread.setDaemon(true);
             return thread;
         }
-    }
 
-    @FunctionalInterface
-    protected interface CheckedConsumer {
-        void consume(Runnable task) throws Exception;
+    }
+    private static int getDefaultParallelism() {
+        return getRuntime().availableProcessors() != 1 ? getRuntime().availableProcessors() - 1 : 1;
     }
 }
