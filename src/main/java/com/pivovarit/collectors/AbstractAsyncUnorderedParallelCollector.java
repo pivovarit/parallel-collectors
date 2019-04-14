@@ -20,7 +20,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * @author Grzegorz Piwowarek
  */
 abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>>, AutoCloseable {
+  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
@@ -66,7 +66,6 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
             return futures -> resultsProcessor()
-              .andThen(f -> supplyWithResources(() -> f, dispatcher::close))
               .apply(combineResults(futures));
         } else {
             return futures -> resultsProcessor().apply(completedFuture(Stream.empty()));
@@ -78,22 +77,9 @@ abstract class AbstractAsyncUnorderedParallelCollector<T, R, C>
         return EnumSet.of(Characteristics.UNORDERED);
     }
 
-    @Override
-    public void close() {
-        dispatcher.close();
-    }
-
     private static <T> CompletableFuture<Stream<T>> combineResults(List<CompletableFuture<T>> futures) {
         return allOf(futures.toArray(new CompletableFuture<?>[0]))
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join));
-    }
-
-    static <T1> T1 supplyWithResources(Supplier<T1> supplier, Runnable action) {
-        try {
-            return supplier.get();
-        } finally {
-            action.run();
-        }
     }
 }

@@ -13,8 +13,7 @@ import static java.util.stream.Collectors.toCollection;
  * @author Grzegorz Piwowarek
  */
 final class AsyncUnorderedParallelCollector<T, R, C extends Collection<R>>
-  extends AbstractAsyncUnorderedParallelCollector<T, R, C>
-  implements AutoCloseable {
+  extends AbstractAsyncUnorderedParallelCollector<T, R, C> {
 
     private final Supplier<C> collectionFactory;
 

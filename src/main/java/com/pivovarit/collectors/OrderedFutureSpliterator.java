@@ -13,16 +13,9 @@ import java.util.function.Consumer;
 class OrderedFutureSpliterator<T> implements Spliterator<T> {
 
     private final List<CompletableFuture<T>> futureQueue;
-    private final Runnable finisher;
-
-    OrderedFutureSpliterator(List<CompletableFuture<T>> futures, Runnable finisher) {
-        this.futureQueue = new ArrayList<>(futures);
-        this.finisher = finisher;
-    }
 
     OrderedFutureSpliterator(List<CompletableFuture<T>> futures) {
         this.futureQueue = new ArrayList<>(futures);
-        this.finisher = null;
     }
 
     @Override
@@ -32,9 +25,6 @@ class OrderedFutureSpliterator<T> implements Spliterator<T> {
             action.accept(next);
             return true;
         } else {
-            if (finisher != null) {
-                finisher.run();
-            }
             return false;
         }
     }

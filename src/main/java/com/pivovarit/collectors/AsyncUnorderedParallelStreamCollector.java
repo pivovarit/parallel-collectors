@@ -9,8 +9,7 @@ import java.util.stream.Stream;
  * @author Grzegorz Piwowarek
  */
 final class AsyncUnorderedParallelStreamCollector<T, R>
-  extends AbstractAsyncUnorderedParallelCollector<T, R, Stream<R>>
-  implements AutoCloseable {
+  extends AbstractAsyncUnorderedParallelCollector<T, R, Stream<R>> {
 
     AsyncUnorderedParallelStreamCollector(
       Function<T, R> function,

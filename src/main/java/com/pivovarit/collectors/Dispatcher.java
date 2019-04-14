@@ -15,7 +15,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-abstract class Dispatcher<T> implements AutoCloseable {
+abstract class Dispatcher<T> {
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Queue<CompletableFuture<T>> pending;
@@ -31,11 +31,6 @@ abstract class Dispatcher<T> implements AutoCloseable {
     }
 
     abstract protected CheckedConsumer dispatchStrategy();
-
-    @Override
-    public void close() {
-        dispatcher.shutdown();
-    }
 
     void start() {
         dispatcher.execute(() -> {
@@ -54,6 +49,7 @@ abstract class Dispatcher<T> implements AutoCloseable {
                 throw e;
             }
         });
+        dispatcher.shutdown();
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
