@@ -32,7 +32,7 @@ Stream API is a great tool for processing collections, especially if you need to
     }
     
 **However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance**. 
-Unfortunately, it's not the best choice for running blocking operations which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that uses it as well.
+Unfortunately, it's not the best choice for running blocking operations (at least without `ManagedBlocker`) which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that uses it as well.
 
 For example:
 
