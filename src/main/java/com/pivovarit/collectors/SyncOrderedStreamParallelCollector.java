@@ -56,7 +56,8 @@ class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<Comp
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return futures -> StreamSupport.stream(new OrderedFutureSpliterator<>(futures), false);
+            return futures -> futures.stream()
+              .map(CompletableFuture::join);
         } else {
             return __ -> Stream.empty();
         }
