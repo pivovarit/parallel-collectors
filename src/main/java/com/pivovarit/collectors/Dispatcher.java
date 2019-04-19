@@ -26,6 +26,7 @@ class Dispatcher<T> {
 
     private final Semaphore limiter;
     private volatile boolean completed = false;
+    private final CompletableFuture<Void> completion = new CompletableFuture<>();
 
     Dispatcher(Executor executor) {
         this.executor = executor;
@@ -37,7 +38,7 @@ class Dispatcher<T> {
         this.limiter = new Semaphore(permits);
     }
 
-    void start() {
+    CompletableFuture<Void> start() {
         dispatcher.execute(() -> {
             Runnable task;
             try {
@@ -53,6 +54,8 @@ class Dispatcher<T> {
                         limiter.release();
                     }
                 }
+
+                completion.complete(null);
             } catch (Exception e) { // covers InterruptedException
                 handle(e);
             } catch (Throwable e) {
@@ -60,7 +63,11 @@ class Dispatcher<T> {
                 throw e;
             }
         });
-        dispatcher.shutdown();
+        try {
+            return completion;
+        } finally {
+            dispatcher.shutdown();
+        }
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
@@ -82,6 +89,7 @@ class Dispatcher<T> {
 
     private void handle(Throwable e) {
         completed = true;
+        completion.completeExceptionally(e);
         pending.forEach(future -> future.completeExceptionally(e));
         limiter.release();
     }
