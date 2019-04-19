@@ -19,13 +19,14 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 class Dispatcher<T> {
 
+    private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
+
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final Queue<Runnable> workingQueue = new ConcurrentLinkedQueue<>();
     private final Executor executor;
 
     private final Semaphore limiter;
-    private volatile boolean completed = false;
 
     Dispatcher(Executor executor) {
         this.executor = executor;
@@ -37,30 +38,31 @@ class Dispatcher<T> {
         this.limiter = new Semaphore(permits);
     }
 
-    void start() {
+    CompletableFuture<Void> start() {
         dispatcher.execute(() -> {
             Runnable task;
             try {
                 while (
                   !Thread.currentThread().isInterrupted()
-                    && !completed
                     && (task = workingQueue.poll()) != null) {
 
                     limiter.acquire();
-                    if (!completed) {
-                        run(task, limiter::release);
-                    } else {
-                        limiter.release();
-                    }
+                    run(task, limiter::release);
                 }
-            } catch (Exception e) { // covers InterruptedException
+
+                completionSignaller.complete(null);
+            } catch (InterruptedException e) {
                 handle(e);
             } catch (Throwable e) {
                 handle(e);
                 throw e;
             }
         });
-        dispatcher.shutdown();
+        try {
+            return completionSignaller;
+        } finally {
+            dispatcher.shutdown();
+        }
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
@@ -70,8 +72,6 @@ class Dispatcher<T> {
             try {
                 future.complete(supplier.get());
                 pending.remove(future);
-            } catch (Exception e) {
-                handle(e);
             } catch (Throwable e) {
                 handle(e);
                 throw e;
@@ -81,9 +81,9 @@ class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
-        completed = true;
+        dispatcher.shutdownNow();
         pending.forEach(future -> future.completeExceptionally(e));
-        limiter.release();
+        completionSignaller.completeExceptionally(e);
     }
 
     private void run(Runnable task, Runnable finisher) {

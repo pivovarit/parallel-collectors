@@ -25,6 +25,8 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
 
+    protected final CompletableFuture<C> result = new CompletableFuture<>();
+
     AbstractAsyncParallelCollector(
       Function<T, R> function,
       Executor executor,
@@ -64,9 +66,25 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         if (!dispatcher.isEmpty()) {
-            dispatcher.start();
-            return futures -> resultsProcessor()
-              .apply(combineResults(futures));
+            dispatcher.start()
+              .whenComplete((aVoid, throwable) -> {
+                  if (throwable != null) {
+                      result.completeExceptionally(throwable);
+                  }
+              });
+            return futures -> {
+                resultsProcessor()
+                  .apply(combineResults(futures))
+                  .whenComplete((c, throwable) -> {
+                      if (throwable == null) {
+                          result.complete(c);
+                      } else {
+                          result.completeExceptionally(throwable);
+                      }
+                  });
+
+                return result;
+            };
         } else {
             return futures -> resultsProcessor().apply(completedFuture(Stream.empty()));
         }
