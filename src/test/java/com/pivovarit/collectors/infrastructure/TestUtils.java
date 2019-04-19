@@ -88,7 +88,7 @@ public final class TestUtils {
         try {
             consumer.accept(executor);
         } finally {
-            executor.shutdownNow();
+            executor.shutdown();
         }
     }
 }
