@@ -38,7 +38,6 @@ public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest 
 
         Awaitility.await()
           .until(() -> {
-              System.out.println(executor.count());
               return executor.count() == parallelism;
           });
     }
