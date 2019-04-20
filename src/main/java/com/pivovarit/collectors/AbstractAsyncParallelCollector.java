@@ -14,7 +14,6 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static java.util.concurrent.CompletableFuture.allOf;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * @author Grzegorz Piwowarek
@@ -69,23 +68,19 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         dispatcher.stop();
 
-        if (!dispatcher.isEmpty()) {
-            return futures -> {
-                postProcess()
-                  .apply(combineResults(futures))
-                  .whenComplete((c, throwable) -> {
-                      if (throwable == null) {
-                          result.complete(c);
-                      } else {
-                          result.completeExceptionally(throwable);
-                      }
-                  });
+        return futures -> {
+            postProcess()
+              .apply(combineResults(futures))
+              .whenComplete((c, throwable) -> {
+                  if (throwable == null) {
+                      result.complete(c);
+                  } else {
+                      result.completeExceptionally(throwable);
+                  }
+              });
 
-                return result;
-            };
-        } else {
-            return futures -> postProcess().apply(completedFuture(Stream.empty()));
-        }
+            return result;
+        };
     }
 
     @Override

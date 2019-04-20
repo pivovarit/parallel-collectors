@@ -9,13 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
@@ -619,7 +616,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new SyncOrderedStreamParallelCollector<>(mapper, executor);
+        return new SyncCompletionOrderParallelCollector<>(mapper, executor);
     }
 
     /**
@@ -648,7 +645,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new SyncOrderedStreamParallelCollector<>(mapper, executor, parallelism);
+        return new SyncCompletionOrderParallelCollector<>(mapper, executor, parallelism);
     }
 
     /**
@@ -681,7 +678,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new SyncCompletionOrderParallelCollector<>(mapper, executor);
+        return new SyncOrderedStreamParallelCollector<>(mapper, executor);
     }
 
     /**
@@ -710,7 +707,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new SyncCompletionOrderParallelCollector<>(mapper, executor, parallelism);
+        return new SyncOrderedStreamParallelCollector<>(mapper, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {

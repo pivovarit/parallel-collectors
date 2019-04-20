@@ -24,9 +24,9 @@ public class ParallelBDDTest extends ExecutorAwareTest {
     @Property(trials = 5)
     public void shouldCollectToListInCompletionOrder() {
         // given
-        executor = threadPoolExecutor(10);
+        executor = threadPoolExecutor(4);
 
-        List<Integer> result = Stream.of(350, 200, 0, 500)
+        List<Integer> result = Stream.of(350, 200, 0, 400)
           .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
           .limit(2)
           .collect(Collectors.toList());
