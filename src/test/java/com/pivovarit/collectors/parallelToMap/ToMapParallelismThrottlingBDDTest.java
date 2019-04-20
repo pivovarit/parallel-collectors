@@ -49,6 +49,8 @@ public class ToMapParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
+        executor.shutdown();
+
     }
 
     private static <R extends Map<Long, Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>, Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {

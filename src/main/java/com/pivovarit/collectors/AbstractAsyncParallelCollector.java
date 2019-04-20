@@ -46,8 +46,6 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
-        startConsuming();
-
         return ArrayList::new;
     }
 
@@ -61,7 +59,10 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
+        return (acc, e) -> {
+            startConsuming();
+            acc.add(dispatcher.enqueue(() -> function.apply(e)));
+        };
     }
 
     @Override

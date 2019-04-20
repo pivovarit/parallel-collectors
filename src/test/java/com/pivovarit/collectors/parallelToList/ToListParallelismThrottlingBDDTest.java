@@ -51,6 +51,7 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
+
     }
 
     @Property

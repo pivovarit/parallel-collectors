@@ -124,7 +124,7 @@ class AsyncMapCollectorFunctionalTest {
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
-                assertThat(counter.longValue()).isLessThanOrEqualTo(size);
+                assertThat(counter.longValue()).isLessThan(elements.size());
             }, size);
         });
     }
