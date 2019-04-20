@@ -44,7 +44,6 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
 
     abstract Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> postProcess();
 
-
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
         return ArrayList::new;
@@ -60,18 +59,23 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
-    }
-
-    @Override
-    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        if (!dispatcher.isEmpty()) {
+        if (!dispatcher.isRunning()) {
             dispatcher.start()
               .whenComplete((aVoid, throwable) -> {
                   if (throwable != null) {
                       result.completeExceptionally(throwable);
                   }
               });
+        }
+
+        return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
+    }
+
+    @Override
+    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
+        dispatcher.stop();
+
+        if (!dispatcher.isEmpty()) {
             return futures -> {
                 postProcess()
                   .apply(combineResults(futures))

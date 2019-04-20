@@ -28,6 +28,9 @@ class Dispatcher<T> {
 
     private final Semaphore limiter;
 
+    private volatile boolean completed = false;
+    private volatile boolean started = false;
+
     Dispatcher(Executor executor) {
         this.executor = executor;
         this.limiter = new Semaphore(getDefaultParallelism());
@@ -39,13 +42,23 @@ class Dispatcher<T> {
     }
 
     CompletableFuture<Void> start() {
+        if (!started) {
+            started = true;
+        } else {
+            return completionSignaller;
+        }
+
         dispatcher.execute(() -> {
             Runnable task;
             try {
-                while (
-                  !Thread.currentThread().isInterrupted()
-                    && (task = workingQueue.poll()) != null) {
-
+                while (!Thread.currentThread().isInterrupted()) {
+                    task = workingQueue.poll();
+                    if (task == null && !completed) {
+                        // onSpinWait
+                        continue;
+                    } else if (task == null && completed) {
+                        break;
+                    }
                     limiter.acquire();
                     run(task, limiter::release);
                 }
@@ -63,6 +76,14 @@ class Dispatcher<T> {
         } finally {
             dispatcher.shutdown();
         }
+    }
+
+    void stop() {
+        completed = true;
+    }
+
+    boolean isRunning() {
+        return started;
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
