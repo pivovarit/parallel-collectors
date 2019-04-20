@@ -6,7 +6,7 @@ import java.lang.invoke.MethodHandles;
 import static java.lang.invoke.MethodType.methodType;
 
 final class OnSpinWaitAdapter {
-    private static final MethodHandle ON_SPIN_WAIT_METHOD_HANDLE = resolveOnSpinWait();
+    private static final MethodHandle ON_SPIN_WAIT_HANDLE = resolveOnSpinWait();
 
     private OnSpinWaitAdapter() {
     }
@@ -21,9 +21,9 @@ final class OnSpinWaitAdapter {
     }
 
     static void onSpinWait() {
-        if (ON_SPIN_WAIT_METHOD_HANDLE != null) {
+        if (ON_SPIN_WAIT_HANDLE != null) {
             try {
-                ON_SPIN_WAIT_METHOD_HANDLE.invokeExact();
+                ON_SPIN_WAIT_HANDLE.invokeExact();
             } catch (Throwable ignore) {
             }
         }
