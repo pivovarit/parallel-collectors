@@ -25,7 +25,7 @@ final class AsyncParallelStreamCollector<T, R>
     }
 
     @Override
-    Function<CompletableFuture<Stream<R>>, CompletableFuture<Stream<R>>> resultsProcessor() {
+    Function<CompletableFuture<Stream<R>>, CompletableFuture<Stream<R>>> postProcess() {
         return result -> result;
     }
 }

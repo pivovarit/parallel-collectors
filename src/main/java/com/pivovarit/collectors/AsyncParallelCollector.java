@@ -35,7 +35,7 @@ final class AsyncParallelCollector<T, R, C extends Collection<R>>
     }
 
     @Override
-    Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor() {
+    Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> postProcess() {
         return result -> result.thenApply(futures -> futures.collect(toCollection(collectionFactory)));
     }
 }

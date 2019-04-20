@@ -45,7 +45,7 @@ final class AsyncParallelMapCollector<T, K, V, M extends Map<K, V>>
     }
 
     @Override
-    Function<CompletableFuture<Stream<Entry<K, V>>>, CompletableFuture<M>> resultsProcessor() {
+    Function<CompletableFuture<Stream<Entry<K, V>>>, CompletableFuture<M>> postProcess() {
         return result -> result.thenApply(futures -> futures.collect(toMap(Entry::getKey, Entry::getValue, duplicateKeyResolutionStrategy, mapFactory)));
     }
 

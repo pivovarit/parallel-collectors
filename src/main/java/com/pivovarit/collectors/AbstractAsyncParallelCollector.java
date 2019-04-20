@@ -42,7 +42,7 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
         this.function = function;
     }
 
-    abstract Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> resultsProcessor();
+    abstract Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> postProcess();
 
 
     @Override
@@ -73,7 +73,7 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
                   }
               });
             return futures -> {
-                resultsProcessor()
+                postProcess()
                   .apply(combineResults(futures))
                   .whenComplete((c, throwable) -> {
                       if (throwable == null) {
@@ -86,7 +86,7 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
                 return result;
             };
         } else {
-            return futures -> resultsProcessor().apply(completedFuture(Stream.empty()));
+            return futures -> postProcess().apply(completedFuture(Stream.empty()));
         }
     }
 
