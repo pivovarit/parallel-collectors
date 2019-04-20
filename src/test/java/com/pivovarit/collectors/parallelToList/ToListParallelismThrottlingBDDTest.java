@@ -39,7 +39,6 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
     @Property(trials = TRIALS)
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
         // given
-        // given
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
         Stream.generate(() -> 42)
@@ -47,9 +46,7 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
           .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         Awaitility.await()
-          .until(() -> {
-              return executor.count() == parallelism;
-          });
+          .until(() -> executor.count() == parallelism);
     }
 
     @Property

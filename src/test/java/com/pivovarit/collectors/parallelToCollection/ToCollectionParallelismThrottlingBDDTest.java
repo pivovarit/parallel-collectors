@@ -37,9 +37,7 @@ public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest 
           .collect(parallelToStream(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         Awaitility.await()
-          .until(() -> {
-              return executor.count() == parallelism;
-          });
+          .until(() -> executor.count() == parallelism);
     }
 
     @Property(trials = TRIALS)
