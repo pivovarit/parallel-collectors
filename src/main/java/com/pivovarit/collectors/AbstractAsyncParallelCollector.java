@@ -59,14 +59,7 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        if (!dispatcher.isRunning()) {
-            dispatcher.start()
-              .whenComplete((aVoid, throwable) -> {
-                  if (throwable != null) {
-                      result.completeExceptionally(throwable);
-                  }
-              });
-        }
+        startConsuming();
 
         return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
     }
@@ -103,5 +96,16 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
         return allOf(futures.toArray(new CompletableFuture<?>[0]))
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join));
+    }
+
+    private void startConsuming() {
+        if (!dispatcher.isRunning()) {
+            dispatcher.start()
+              .whenComplete((aVoid, throwable) -> {
+                  if (throwable != null) {
+                      result.completeExceptionally(throwable);
+                  }
+              });
+        }
     }
 }
