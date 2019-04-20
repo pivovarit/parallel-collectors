@@ -5,3 +5,4 @@ install: mvn clean install
 
 jdk:
   - openjdk8
+  - openjdk11
