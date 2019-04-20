@@ -49,7 +49,7 @@ public class ToStreamParallelismThrottlingBDDTest extends ExecutorAwareTest {
           .until(() -> executor.count() == parallelism);
     }
 
-    @Property
+    @Property(trials = TRIALS)
     public void shouldMaintainOrder(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 2, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
