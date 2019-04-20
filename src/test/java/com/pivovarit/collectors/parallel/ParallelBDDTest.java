@@ -28,6 +28,7 @@ public class ParallelBDDTest extends ExecutorAwareTest {
 
         List<Integer> result = Stream.of(350, 200, 0, 500)
           .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
+          .limit(2)
           .collect(Collectors.toList());
 
         assertThat(result).isSorted();
