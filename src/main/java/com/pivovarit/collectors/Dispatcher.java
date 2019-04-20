@@ -117,10 +117,6 @@ final class Dispatcher<T> {
         dispatcher.shutdownNow();
     }
 
-    boolean isEmpty() {
-        return workingQueue.size() == 0;
-    }
-
     /**
      * @author Grzegorz Piwowarek
      */
