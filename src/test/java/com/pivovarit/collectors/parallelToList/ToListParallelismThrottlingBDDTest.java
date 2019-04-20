@@ -4,6 +4,8 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
+import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.awaitility.Awaitility;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
@@ -18,11 +20,13 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelayGaussian;
 import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 
@@ -32,27 +36,21 @@ import static org.assertj.core.data.Offset.offset;
 @RunWith(JUnitQuickcheck.class)
 public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
-    private static final long BLOCKING_MILLIS = 50;
-    private static final long CONSTANT_DELAY = 100;
-
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 2, maxInt = 10) int unitsOfWork, @InRange(minInt = 1, maxInt = 10) int parallelism) {
+    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
         // given
-        executor = threadPoolExecutor(unitsOfWork);
-        long expectedDuration = expectedDuration(parallelism, unitsOfWork, BLOCKING_MILLIS);
+        // given
+        TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
-        Map.Entry<List<Long>, Long> result = timed(collectWith(f -> parallelToList(f, executor, parallelism), unitsOfWork));
+        Stream.generate(() -> 42)
+          .limit(unitsOfWork)
+          .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
-        assertThat(result)
-          .satisfies(e -> {
-              assertThat(e.getValue())
-                .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
-
-              assertThat(e.getKey()).hasSize(unitsOfWork);
+        Awaitility.await()
+          .until(() -> {
+              System.out.println(executor.count());
+              return executor.count() == parallelism;
           });
-
-        executor.shutdownNow();
     }
 
     @Property
@@ -66,12 +64,5 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
         assertThat(result).isSorted();
 
         executor.shutdownNow();
-    }
-
-    private static <R extends Collection<Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>,  Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
-        return () -> Stream.generate(() -> 42L)
-            .limit(unitsOfWork)
-            .collect(collector.apply(f -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
-            .join();
     }
 }
