@@ -1,5 +1,4 @@
 language: java
-dist: xenial
 
 install: mvn clean install
 
