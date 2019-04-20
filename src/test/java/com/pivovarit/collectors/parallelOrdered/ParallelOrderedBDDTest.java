@@ -28,7 +28,7 @@ public class ParallelOrderedBDDTest extends ExecutorAwareTest {
         executor = threadPoolExecutor(unitsOfWork);
 
         List<Integer> result = IntStream.range(0, unitsOfWork).boxed()
-          .collect(parallelOrdered(i -> returnWithDelay(i, ofMillis(new Random().nextInt(200))), executor, parallelism))
+          .collect(parallelOrdered(i -> returnWithDelay(i, ofMillis(new Random().nextInt(20))), executor, parallelism))
           .collect(Collectors.toList());
 
         assertThat(result).isSorted();
