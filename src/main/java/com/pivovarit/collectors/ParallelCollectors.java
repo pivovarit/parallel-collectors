@@ -32,15 +32,13 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a user-provided {@link Collection} {@link R} of these elements
+     * and returning them as a {@link CompletableFuture} containing a user-provided {@link Collection}<{@link R}> of these elements.
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
      *
      * <br><br>
-     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * It will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a number of elements in a {@link java.util.stream.Stream} instance
+     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -104,12 +102,10 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
      *
      * <br><br>
-     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * It will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -169,12 +165,10 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Set} of these elements
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
      *
      * <br><br>
-     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * It will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -240,7 +234,8 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
      * <br><br>
      * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
@@ -310,7 +305,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
      *
      * <br>
      * Example:
@@ -380,7 +375,11 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br><br>
+     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
+     * <br><br>
      * On duplicate key, completes exceptionally with {@link IllegalStateException}
      *
      * <br>
@@ -452,7 +451,10 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Map} of these elements
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br><br>
+     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -526,12 +528,10 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
      *
      * <br><br>
-     * Warning: this implementation can't be used with infinite {@link java.util.stream.Stream} instances.
-     * It will try to submit {@code N} tasks to a provided {@link Executor}
-     * where {@code N} is a size of a collected {@link java.util.stream.Stream}
+     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -560,7 +560,10 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements.
      *
      * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br><br>
+     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
      *
      * <br>
      * Example:
@@ -588,7 +591,13 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning a {@link Stream} instance returning results as they arrive.
+     * and returning a {@link Stream} instance returning results in completion order
+     *
+     * <br><br>
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br><br>
+     * Instances should not be reused.
      *
      * <br>
      * Example:
@@ -646,7 +655,13 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
      *
-     * <br>
+     *
+     * <br><br>
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br><br>
+     * Instances should not be reused.
+     * <br><br>
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
