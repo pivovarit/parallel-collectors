@@ -30,6 +30,7 @@ class Dispatcher<T> {
 
     private volatile boolean completed = false;
     private volatile boolean started = false;
+    private volatile boolean failed = false;
 
     Dispatcher(Executor executor) {
         this.executor = executor;
@@ -91,8 +92,10 @@ class Dispatcher<T> {
         pending.add(future);
         workingQueue.add(() -> {
             try {
-                future.complete(supplier.get());
-                pending.remove(future);
+                if (!failed) {
+                    future.complete(supplier.get());
+                    pending.remove(future);
+                }
             } catch (Throwable e) {
                 handle(e);
                 throw e;
@@ -102,6 +105,7 @@ class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
+        failed = true;
         pending.forEach(future -> future.completeExceptionally(e));
         completionSignaller.completeExceptionally(e);
         dispatcher.shutdownNow();
@@ -127,6 +131,7 @@ class Dispatcher<T> {
     private static class CustomThreadFactory implements ThreadFactory {
 
         private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+
         @Override
         public Thread newThread(Runnable task) {
             Thread thread = defaultThreadFactory.newThread(task);
@@ -134,9 +139,9 @@ class Dispatcher<T> {
             thread.setDaemon(true);
             return thread;
         }
-
     }
+
     private static int getDefaultParallelism() {
-        return  Math.max(getRuntime().availableProcessors(), 1);
+        return Math.max(getRuntime().availableProcessors(), 1);
     }
 }
