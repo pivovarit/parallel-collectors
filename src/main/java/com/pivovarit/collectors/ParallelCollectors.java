@@ -607,7 +607,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new SyncStreamParallelCollector<>(mapper, executor);
+        return new SyncOrderedStreamParallelCollector<>(mapper, executor);
     }
 
     /**
@@ -636,7 +636,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new SyncStreamParallelCollector<>(mapper, executor, parallelism);
+        return new SyncOrderedStreamParallelCollector<>(mapper, executor, parallelism);
     }
 
     /**
@@ -663,7 +663,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new SyncOrderedStreamParallelCollector<>(mapper, executor);
+        return new SyncCompletionOrderParallelCollector<>(mapper, executor);
     }
 
     /**
@@ -692,7 +692,7 @@ public final class ParallelCollectors {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
-        return new SyncOrderedStreamParallelCollector<>(mapper, executor, parallelism);
+        return new SyncCompletionOrderParallelCollector<>(mapper, executor, parallelism);
     }
 
     private static int assertParallelismValid(int parallelism) {

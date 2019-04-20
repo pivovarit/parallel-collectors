@@ -116,6 +116,6 @@ class Dispatcher<T> {
 
     }
     private static int getDefaultParallelism() {
-        return getRuntime().availableProcessors() != 1 ? getRuntime().availableProcessors() - 1 : 1;
+        return  Math.max(getRuntime().availableProcessors(), 1);
     }
 }
