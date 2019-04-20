@@ -31,7 +31,7 @@ class Dispatcher<T> {
 
     private volatile boolean completed = false;
     private volatile boolean started = false;
-    private volatile boolean failed = false;
+    private volatile boolean shortCircuited = false;
 
     Dispatcher(Executor executor) {
         this.executor = executor;
@@ -51,10 +51,9 @@ class Dispatcher<T> {
         }
 
         dispatcher.execute(() -> {
-            Runnable task;
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    task = workingQueue.poll();
+                    Runnable task = workingQueue.poll();
                     if (task == null && !completed) {
                         onSpinWait();
                         continue;
@@ -62,7 +61,13 @@ class Dispatcher<T> {
                         break;
                     }
                     limiter.acquire();
-                    run(task, limiter::release);
+                    runAsync(() -> {
+                        try {
+                            task.run();
+                        } finally {
+                            limiter.release();
+                        }
+                    }, executor);
                 }
 
                 completionSignaller.complete(null);
@@ -93,7 +98,7 @@ class Dispatcher<T> {
         pending.add(future);
         workingQueue.add(() -> {
             try {
-                if (!failed) {
+                if (!shortCircuited) {
                     future.complete(supplier.get());
                     pending.remove(future);
                 }
@@ -106,20 +111,10 @@ class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
-        failed = true;
         pending.forEach(future -> future.completeExceptionally(e));
         completionSignaller.completeExceptionally(e);
+        shortCircuited = true;
         dispatcher.shutdownNow();
-    }
-
-    private void run(Runnable task, Runnable finisher) {
-        runAsync(() -> {
-            try {
-                task.run();
-            } finally {
-                finisher.run();
-            }
-        }, executor);
     }
 
     boolean isEmpty() {
