@@ -200,7 +200,7 @@ class AsyncMapCollectorFunctionalTest {
 
             AtomicInteger counter = new AtomicInteger();
 
-            IntStream.range(0, 10).boxed()
+            IntStream.range(0, 3).boxed()
               .map(i -> returnWithDelay(i, ofMillis(100)))
               .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> counter.incrementAndGet(), i -> i), executor));
 
