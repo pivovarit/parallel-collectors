@@ -19,7 +19,7 @@ public final class TestUtils {
     private TestUtils() {
     }
 
-    public static final int TRIALS = 10;
+    public static final int TRIALS = 1;
 
     public static <T> Map.Entry<T, Long> timed(Supplier<T> runnable) {
         Instant start = Instant.now();
