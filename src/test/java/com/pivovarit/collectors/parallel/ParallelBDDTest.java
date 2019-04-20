@@ -30,5 +30,7 @@ public class ParallelBDDTest extends ExecutorAwareTest {
           .collect(Collectors.toList());
 
         assertThat(result).containsExactly(10, 100, 200, 300);
+
+        executor.shutdownNow();
     }
 }

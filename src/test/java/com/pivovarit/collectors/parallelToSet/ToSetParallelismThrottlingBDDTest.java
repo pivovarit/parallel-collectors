@@ -48,6 +48,8 @@ public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
               assertThat(e.getKey()).hasSize(1);
           });
+
+        executor.shutdownNow();
     }
 
     private static long expectedDuration(long parallelism, long unitsOfWork) {

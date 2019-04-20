@@ -52,6 +52,7 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
 
+        executor.shutdownNow();
     }
 
     @Property
@@ -63,6 +64,8 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
           .join();
 
         assertThat(result).isSorted();
+
+        executor.shutdownNow();
     }
 
     private static <R extends Collection<Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>,  Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {

@@ -51,6 +51,8 @@ public class ToStreamParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
               assertThat(e.getKey()).hasSize(unitsOfWork);
           });
+
+        executor.shutdownNow();
     }
 
     @Property
@@ -63,6 +65,8 @@ public class ToStreamParallelismThrottlingBDDTest extends ExecutorAwareTest {
           .collect(Collectors.toList());
 
         assertThat(result).isSorted();
+
+        executor.shutdownNow();
     }
 
     private static <R> Supplier<Stream<R>> collectWith(Function<UnaryOperator<Long>,  Collector<Long, ?, CompletableFuture<Stream<R>>>> collector, int unitsOfWork) {
