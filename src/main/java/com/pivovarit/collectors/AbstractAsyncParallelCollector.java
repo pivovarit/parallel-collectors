@@ -1,7 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -92,7 +92,7 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
 
     @Override
     public Set<Characteristics> characteristics() {
-        return EnumSet.of(Characteristics.UNORDERED);
+        return Collections.emptySet();
     }
 
     private static <T> CompletableFuture<Stream<T>> combineResults(List<CompletableFuture<T>> futures) {

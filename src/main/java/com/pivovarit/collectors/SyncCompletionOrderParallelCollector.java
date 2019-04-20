@@ -1,7 +1,7 @@
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -12,14 +12,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-class SyncStreamParallelCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+class SyncCompletionOrderParallelCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
 
-    SyncStreamParallelCollector(
+    SyncCompletionOrderParallelCollector(
       Function<T, R> function,
       Executor executor,
       int parallelism) {
@@ -27,7 +26,7 @@ class SyncStreamParallelCollector<T, R> implements Collector<T, List<Completable
         this.function = function;
     }
 
-    SyncStreamParallelCollector(
+    SyncCompletionOrderParallelCollector(
       Function<T, R> function,
       Executor executor) {
         this.dispatcher = new Dispatcher<>(executor);
@@ -36,7 +35,7 @@ class SyncStreamParallelCollector<T, R> implements Collector<T, List<Completable
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
-        return LinkedList::new;
+        return ArrayList::new;
     }
 
     @Override
@@ -56,7 +55,8 @@ class SyncStreamParallelCollector<T, R> implements Collector<T, List<Completable
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
+            return futures -> futures.stream()
+              .map(CompletableFuture::join);
         } else {
             return __ -> Stream.empty();
         }

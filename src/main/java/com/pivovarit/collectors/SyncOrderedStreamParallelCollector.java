@@ -1,7 +1,7 @@
 package com.pivovarit.collectors;
 
-import java.util.EnumSet;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -36,7 +36,7 @@ class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<Comp
 
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
-        return LinkedList::new;
+        return ArrayList::new;
     }
 
     @Override
@@ -56,8 +56,7 @@ class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<Comp
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
         if (!dispatcher.isEmpty()) {
             dispatcher.start();
-            return futures -> futures.stream()
-              .map(CompletableFuture::join);
+            return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
         } else {
             return __ -> Stream.empty();
         }
@@ -65,6 +64,6 @@ class SyncOrderedStreamParallelCollector<T, R> implements Collector<T, List<Comp
 
     @Override
     public Set<Characteristics> characteristics() {
-        return EnumSet.of(Characteristics.UNORDERED);
+        return Collections.emptySet();
     }
 }
