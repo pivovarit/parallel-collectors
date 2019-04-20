@@ -18,7 +18,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
 /**
  * @author Grzegorz Piwowarek
  */
-class Dispatcher<T> {
+final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
