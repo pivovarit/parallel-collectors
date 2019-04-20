@@ -10,6 +10,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;
 
+import static com.pivovarit.collectors.OnSpinWaitAdapter.onSpinWait;
 import static java.lang.Runtime.getRuntime;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -55,7 +56,7 @@ class Dispatcher<T> {
                 while (!Thread.currentThread().isInterrupted()) {
                     task = workingQueue.poll();
                     if (task == null && !completed) {
-                        // onSpinWait
+                        onSpinWait();
                         continue;
                     } else if (task == null && completed) {
                         break;
