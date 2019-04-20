@@ -48,16 +48,6 @@ public final class TestUtils {
         return value;
     }
 
-    public static long expectedCount(long parallelism, long unitsOfWork) {
-        if (unitsOfWork < parallelism) {
-            return unitsOfWork;
-        } else if (unitsOfWork % parallelism == 0) {
-            return (unitsOfWork / parallelism);
-        } else {
-            return (unitsOfWork / parallelism + 1);
-        }
-    }
-
     public static long expectedDuration(long parallelism, long unitsOfWork, long singleJobDuration) {
         if (unitsOfWork < parallelism) {
             return singleJobDuration;
