@@ -140,10 +140,9 @@ class Dispatcher<T> {
             thread.setDaemon(true);
             return thread;
         }
-
     }
 
     private static int getDefaultParallelism() {
-        return  Math.max(getRuntime().availableProcessors(), 1);
+        return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
 }

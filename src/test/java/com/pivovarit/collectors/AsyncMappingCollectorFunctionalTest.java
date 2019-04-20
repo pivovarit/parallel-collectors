@@ -193,7 +193,7 @@ class AsyncMappingCollectorFunctionalTest {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
             AtomicInteger counter = new AtomicInteger();
 
-            IntStream.range(0, 10).boxed()
+            IntStream.range(0, 3).boxed()
               .map(i -> returnWithDelay(i, ofMillis(100)))
               .collect(collector.apply(i -> counter.incrementAndGet(), executor));
 
