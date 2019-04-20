@@ -102,9 +102,9 @@ class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
-        dispatcher.shutdownNow();
         pending.forEach(future -> future.completeExceptionally(e));
         completionSignaller.completeExceptionally(e);
+        dispatcher.shutdownNow();
     }
 
     private void run(Runnable task, Runnable finisher) {

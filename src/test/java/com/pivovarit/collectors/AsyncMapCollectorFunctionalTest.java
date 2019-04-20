@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -16,6 +17,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -34,6 +37,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -42,7 +46,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
  */
 class AsyncMapCollectorFunctionalTest {
 
-    private static final Executor executor = Executors.newFixedThreadPool(100);
+    private static final ExecutorService executor = Executors.newFixedThreadPool(100);
 
     @TestFactory
     Stream<DynamicTest> testCollectors() {
@@ -62,8 +66,8 @@ class AsyncMapCollectorFunctionalTest {
           shouldShortCircuitOnException(collector, name),
           shouldNotSwallowException(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
-          shouldBeConsistent(collector, name)
-//          shouldStartConsumingImmediately(collector, name) TODO enable once implemented
+          shouldBeConsistent(collector, name),
+          shouldStartConsumingImmediately(collector, name)
         );
     }
 
@@ -74,7 +78,8 @@ class AsyncMapCollectorFunctionalTest {
             assertTimeoutPreemptively(ofMillis(100), () ->
               elements.stream()
                 .limit(5)
-                .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), i -> i), executor)), "returned blocking future");
+                .collect(collector
+                  .apply(new AbstractMap.SimpleEntry<>(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), i -> i), executor)), "returned blocking future");
         });
     }
 
@@ -82,7 +87,8 @@ class AsyncMapCollectorFunctionalTest {
     private static <R extends Map<Integer, Integer>> DynamicTest shouldCollectToEmpty(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect to empty", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(Collectors.toList());
-            Map<Integer, Integer> result11 = elements.stream().collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> i,i -> i), executor)).join();
+            Map<Integer, Integer> result11 = elements.stream()
+              .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> i, i -> i), executor)).join();
 
             assertThat(result11)
               .isEmpty();
@@ -93,7 +99,8 @@ class AsyncMapCollectorFunctionalTest {
     private static <R extends Map<Integer, Integer>> DynamicTest shouldCollect(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(Collectors.toList());
-            Map<Integer, Integer> result = elements.stream().collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> i, i -> i), executor)).join();
+            Map<Integer, Integer> result = elements.stream()
+              .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> i, i -> i), executor)).join();
 
             assertThat(result)
               .hasSameSizeAs(elements)
@@ -112,7 +119,8 @@ class AsyncMapCollectorFunctionalTest {
                 LongAdder counter = new LongAdder();
 
                 assertThatThrownBy(elements.stream()
-                  .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> incrementAndThrow(counter), i -> i), e))::join)
+                  .collect(collector
+                    .apply(new AbstractMap.SimpleEntry<>(i -> incrementAndThrow(counter), i -> i), e))::join)
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
@@ -148,7 +156,8 @@ class AsyncMapCollectorFunctionalTest {
             List<Integer> elements = IntStream.range(0, 1000).boxed().collect(Collectors.toList());
 
             assertThatThrownBy(() -> elements.stream()
-              .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> returnWithDelay(i, ofMillis(10000)), i -> i), executor))
+              .collect(collector
+                .apply(new AbstractMap.SimpleEntry<>(i -> returnWithDelay(i, ofMillis(10000)), i -> i), executor))
               .join())
               .isInstanceOf(CompletionException.class)
               .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
@@ -186,16 +195,18 @@ class AsyncMapCollectorFunctionalTest {
     }
 
     //@Test
-    private static <R extends Map<Integer, Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
-            TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
-            assertTimeoutPreemptively(Duration.ofMillis(200), () -> {
-                Stream.generate(() -> returnWithDelay(42, Duration.ofMillis(10)))
-                  .limit(100)
-                  .collect(collector.apply(i -> i, executor));
-                assertThat(executor.count()).isGreaterThan(0);
-            }, "didn't start processing after evaluating the first element");
+            AtomicInteger counter = new AtomicInteger();
+
+            IntStream.range(0, 10).boxed()
+              .map(i -> returnWithDelay(i, ofMillis(100)))
+              .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> counter.incrementAndGet(), i -> i), executor));
+
+            await()
+              .atMost(200, TimeUnit.MILLISECONDS)
+              .until(() -> counter.get() > 0);
         });
     }
 }
