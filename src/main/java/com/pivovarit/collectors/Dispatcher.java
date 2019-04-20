@@ -28,6 +28,10 @@ class Dispatcher<T> {
 
     private final Semaphore limiter;
 
+    private volatile boolean completed = false;
+    private volatile boolean started = false;
+    private volatile boolean failed = false;
+
     Dispatcher(Executor executor) {
         this.executor = executor;
         this.limiter = new Semaphore(getDefaultParallelism());
@@ -39,13 +43,23 @@ class Dispatcher<T> {
     }
 
     CompletableFuture<Void> start() {
+        if (!started) {
+            started = true;
+        } else {
+            return completionSignaller;
+        }
+
         dispatcher.execute(() -> {
             Runnable task;
             try {
-                while (
-                  !Thread.currentThread().isInterrupted()
-                    && (task = workingQueue.poll()) != null) {
-
+                while (!Thread.currentThread().isInterrupted()) {
+                    task = workingQueue.poll();
+                    if (task == null && !completed) {
+                        // onSpinWait
+                        continue;
+                    } else if (task == null && completed) {
+                        break;
+                    }
                     limiter.acquire();
                     run(task, limiter::release);
                 }
@@ -65,13 +79,23 @@ class Dispatcher<T> {
         }
     }
 
+    void stop() {
+        completed = true;
+    }
+
+    boolean isRunning() {
+        return started;
+    }
+
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pending.add(future);
         workingQueue.add(() -> {
             try {
-                future.complete(supplier.get());
-                pending.remove(future);
+                if (!failed) {
+                    future.complete(supplier.get());
+                    pending.remove(future);
+                }
             } catch (Throwable e) {
                 handle(e);
                 throw e;
@@ -81,9 +105,10 @@ class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
-        dispatcher.shutdownNow();
+        failed = true;
         pending.forEach(future -> future.completeExceptionally(e));
         completionSignaller.completeExceptionally(e);
+        dispatcher.shutdownNow();
     }
 
     private void run(Runnable task, Runnable finisher) {
@@ -106,6 +131,7 @@ class Dispatcher<T> {
     private static class CustomThreadFactory implements ThreadFactory {
 
         private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+
         @Override
         public Thread newThread(Runnable task) {
             Thread thread = defaultThreadFactory.newThread(task);
@@ -115,6 +141,7 @@ class Dispatcher<T> {
         }
 
     }
+
     private static int getDefaultParallelism() {
         return  Math.max(getRuntime().availableProcessors(), 1);
     }

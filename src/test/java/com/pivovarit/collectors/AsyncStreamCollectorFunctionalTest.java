@@ -1,10 +1,8 @@
 package com.pivovarit.collectors;
 
-import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +13,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -34,6 +34,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -59,8 +60,8 @@ class AsyncStreamCollectorFunctionalTest {
           shouldShortCircuitOnException(collector, name),
           shouldNotSwallowException(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
-          shouldBeConsistent(collector, name)
-//          shouldStartConsumingImmediately(collector, name) TODO enable once implemented
+          shouldBeConsistent(collector, name),
+          shouldStartConsumingImmediately(collector, name)
         );
     }
 
@@ -114,7 +115,7 @@ class AsyncStreamCollectorFunctionalTest {
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
-                assertThat(counter.longValue()).isLessThanOrEqualTo(size);
+                assertThat(counter.longValue()).isLessThan(elements.size());
             }, size);
         });
     }
@@ -186,14 +187,15 @@ class AsyncStreamCollectorFunctionalTest {
     //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
-            TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
+            AtomicInteger counter = new AtomicInteger();
 
-            assertTimeoutPreemptively(Duration.ofMillis(200), () -> {
-                Stream.generate(() -> returnWithDelay(42, Duration.ofMillis(10)))
-                  .limit(100)
-                  .collect(collector.apply(i -> i, executor));
-                assertThat(executor.count()).isGreaterThan(0);
-            }, "didn't start processing after evaluating the first element");
+            IntStream.range(0, 10).boxed()
+              .map(i -> returnWithDelay(i, ofMillis(100)))
+              .collect(collector.apply(i -> counter.incrementAndGet(), executor));
+
+            await()
+              .atMost(200, TimeUnit.MILLISECONDS)
+              .until(() -> counter.get() > 0);
         });
     }
 }

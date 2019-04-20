@@ -20,15 +20,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(JUnitQuickcheck.class)
 public class ParallelBDDTest extends ExecutorAwareTest {
 
-    @Property(trials = 10)
+    @Property(trials = 5)
     public void shouldCollectToListInCompletionOrder() {
         // given
         executor = threadPoolExecutor(10);
 
-        List<Integer> result = Stream.of(200, 100, 300, 10)
+        List<Integer> result = Stream.of(350, 200, 0, 500)
           .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
           .collect(Collectors.toList());
 
-        assertThat(result).containsExactly(10, 100, 200, 300);
+        assertThat(result).isSorted();
+
+        executor.shutdownNow();
     }
 }

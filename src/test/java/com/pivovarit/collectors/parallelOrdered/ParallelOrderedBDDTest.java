@@ -32,5 +32,7 @@ public class ParallelOrderedBDDTest extends ExecutorAwareTest {
           .collect(Collectors.toList());
 
         assertThat(result).isSorted();
+
+        executor.shutdownNow();
     }
 }

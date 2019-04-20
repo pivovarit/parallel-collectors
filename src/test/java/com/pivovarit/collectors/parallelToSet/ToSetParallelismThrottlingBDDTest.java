@@ -4,6 +4,8 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
+import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.awaitility.Awaitility;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
@@ -17,10 +19,12 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 
@@ -30,40 +34,16 @@ import static org.assertj.core.data.Offset.offset;
 @RunWith(JUnitQuickcheck.class)
 public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
-    private static final long BLOCKING_MILLIS = 50;
-    private static final long CONSTANT_DELAY = 100;
-
     @Property(trials = TRIALS)
-    public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    public void shouldCollectToSetWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
         // given
-        executor = threadPoolExecutor(unitsOfWork);
-        long expectedDuration = expectedDuration(parallelism, unitsOfWork);
-        Map.Entry<Set<Long>, Long> result = timed(collectWith(f-> parallelToSet(f, executor, parallelism), unitsOfWork));
+        TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
-        assertThat(result)
-          .satisfies(e -> {
-              assertThat(e.getValue())
-                .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
+        Stream.generate(() -> 42)
+          .limit(unitsOfWork)
+          .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
-              assertThat(e.getKey()).hasSize(1);
-          });
-    }
-
-    private static long expectedDuration(long parallelism, long unitsOfWork) {
-        if (unitsOfWork < parallelism) {
-            return BLOCKING_MILLIS;
-        } else if (unitsOfWork % parallelism == 0) {
-            return (unitsOfWork / parallelism) * BLOCKING_MILLIS;
-        } else {
-            return (unitsOfWork / parallelism + 1) * BLOCKING_MILLIS;
-        }
-    }
-
-    private static <R extends Collection<Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>,  Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
-        return () -> Stream.generate(() -> 42L)
-            .limit(unitsOfWork)
-            .collect(collector.apply(f -> returnWithDelay(42L, Duration.ofMillis(BLOCKING_MILLIS))))
-            .join();
+        Awaitility.await()
+          .until(() -> executor.count() == parallelism);
     }
 }

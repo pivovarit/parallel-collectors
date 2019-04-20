@@ -4,6 +4,8 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
+import com.pivovarit.collectors.infrastructure.TestUtils;
+import org.awaitility.Awaitility;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
@@ -16,11 +18,13 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToMap;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 
@@ -30,31 +34,16 @@ import static org.assertj.core.data.Offset.offset;
 @RunWith(JUnitQuickcheck.class)
 public class ToMapParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
-    private static final long BLOCKING_MILLIS = 50;
-    private static final long CONSTANT_DELAY = 100;
-
     @Property(trials = TRIALS)
-    public void shouldCollectToMapWithThrottledParallelism(@InRange(minInt = 2, maxInt = 20) int unitsOfWork, @InRange(minInt = 1, maxInt = 40) int parallelism) {
+    public void shouldCollectToMapWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
         // given
-        executor = threadPoolExecutor(unitsOfWork);
-        long expectedDuration = expectedDuration(parallelism, unitsOfWork, BLOCKING_MILLIS);
+        TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
-        Map.Entry<Map<Long, Long>, Long> result = timed(collectWith(f -> parallelToMap(f, i -> ThreadLocalRandom.current().nextLong(), executor, parallelism), unitsOfWork));
-
-        assertThat(result)
-          .satisfies(e -> {
-              assertThat(e.getValue())
-                .isGreaterThanOrEqualTo(expectedDuration)
-                .isCloseTo(expectedDuration, offset(CONSTANT_DELAY));
-
-              assertThat(e.getKey()).hasSize(unitsOfWork);
-          });
-    }
-
-    private static <R extends Map<Long, Long>> Supplier<R> collectWith(Function<UnaryOperator<Long>, Collector<Long, ?, CompletableFuture<R>>> collector, int unitsOfWork) {
-        return () -> Stream.generate(() -> 42L)
+        Stream.generate(() -> 42)
           .limit(unitsOfWork)
-          .collect(collector.apply(f -> returnWithDelay(ThreadLocalRandom.current().nextLong(), Duration.ofMillis(BLOCKING_MILLIS))))
-          .join();
+          .collect(parallelToMap(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), i -> i, executor, parallelism));
+
+        Awaitility.await()
+          .until(() -> executor.count() == parallelism);
     }
 }
