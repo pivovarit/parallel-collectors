@@ -1,11 +1,8 @@
 package com.pivovarit.collectors;
 
-import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-import java.time.Duration;
-import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;

@@ -19,7 +19,7 @@ public final class TestUtils {
     private TestUtils() {
     }
 
-    public static final int TRIALS = 1;
+    public static final int TRIALS = 100;
 
     public static <T> Map.Entry<T, Long> timed(Supplier<T> runnable) {
         Instant start = Instant.now();
@@ -46,6 +46,16 @@ public final class TestUtils {
         }
 
         return value;
+    }
+
+    public static long expectedCount(long parallelism, long unitsOfWork) {
+        if (unitsOfWork < parallelism) {
+            return unitsOfWork;
+        } else if (unitsOfWork % parallelism == 0) {
+            return (unitsOfWork / parallelism);
+        } else {
+            return (unitsOfWork / parallelism + 1);
+        }
     }
 
     public static long expectedDuration(long parallelism, long unitsOfWork, long singleJobDuration) {
