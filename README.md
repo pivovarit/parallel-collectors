@@ -106,13 +106,13 @@ _parallelToMap_:
 
 _parallelToCollection_:
 
-- `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
-- `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)` -> `CompletableFuture<C>`
+- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)` -> `CompletableFuture<C>`
 
 _parallelToStream_:
 
-- `CompletableFuture<C> parallelToStream(Function<T, R> mapper, Executor executor)`
-- `CompletableFuture<C> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)`
+- `parallelToStream(Function<T, R> mapper, Executor executor)` -> `CompletableFuture<C>`
+- `parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)` -> `CompletableFuture<C>`
 
 ##### Blocking Semantics
 
