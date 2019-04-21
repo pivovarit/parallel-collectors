@@ -14,8 +14,7 @@ final class OnSpinWaitAdapter {
     private static MethodHandle resolveOnSpinWait() {
         try {
             return MethodHandles.lookup().findStatic(Thread.class, "onSpinWait", methodType(void.class));
-        } catch (Throwable ignore) {
-        }
+        } catch (Exception ignore) { }
 
         return null;
     }
@@ -24,8 +23,7 @@ final class OnSpinWaitAdapter {
         if (ON_SPIN_WAIT_HANDLE != null) {
             try {
                 ON_SPIN_WAIT_HANDLE.invokeExact();
-            } catch (Throwable ignore) {
-            }
+            } catch (Throwable ignore) { }
         }
     }
 }
