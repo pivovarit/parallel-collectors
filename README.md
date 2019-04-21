@@ -216,13 +216,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.3.0</version>
+        <version>1.0.0</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.3.0'
+    compile 'com.pivovarit:parallel-collectors:1.0.0'
 
 ### Dependencies
 
@@ -238,10 +238,11 @@ None - the library is implemented using core Java libraries.
 
 ### Limitations
 
-- short-circuiting after encountering an exception doesn't actually kill background tasks
-- the processing starts after the whole stream is buffered
+- short-circuiting after encountering an exception doesn't actually kill background tasks (`CompletableFuture` limitation)
+- collected `Stream` is always evaluated as a whole, even if the following operation is short-circuiting
 
 ## Version History
+
 
 ### [0.3.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.3.0) (05-04-2019)
 - Introduced a new API method: `paralleltoStream`
