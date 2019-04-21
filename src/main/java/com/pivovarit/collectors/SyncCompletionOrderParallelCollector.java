@@ -9,6 +9,9 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 final class SyncCompletionOrderParallelCollector<T, R> extends AbstractSyncStreamCollector<T, R> {
 
     SyncCompletionOrderParallelCollector(

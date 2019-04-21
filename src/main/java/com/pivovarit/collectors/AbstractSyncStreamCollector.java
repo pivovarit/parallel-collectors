@@ -11,6 +11,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 abstract class AbstractSyncStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
     private final Dispatcher<R> dispatcher;

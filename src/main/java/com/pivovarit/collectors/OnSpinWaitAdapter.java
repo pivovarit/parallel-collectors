@@ -5,6 +5,9 @@ import java.lang.invoke.MethodHandles;
 
 import static java.lang.invoke.MethodType.methodType;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 final class OnSpinWaitAdapter {
     private static final MethodHandle ON_SPIN_WAIT_HANDLE = resolveOnSpinWait();
 
