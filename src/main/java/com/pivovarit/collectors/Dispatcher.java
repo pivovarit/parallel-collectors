@@ -36,8 +36,7 @@ final class Dispatcher<T> {
     private volatile boolean shortCircuited = false;
 
     Dispatcher(Executor executor) {
-        this.executor = executor;
-        this.limiter = new Semaphore(getDefaultParallelism());
+        this(executor, getDefaultParallelism());
     }
 
     Dispatcher(Executor executor, int permits) {
@@ -56,17 +55,18 @@ final class Dispatcher<T> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
                     Runnable task = workingQueue.take();
-                    if (task == POISON_PILL) {
+                    if (task != POISON_PILL) {
+                        limiter.acquire();
+                        runAsync(() -> {
+                            try {
+                                task.run();
+                            } finally {
+                                limiter.release();
+                            }
+                        }, executor);
+                    } else {
                         break;
                     }
-                    limiter.acquire();
-                    runAsync(() -> {
-                        try {
-                            task.run();
-                        } finally {
-                            limiter.release();
-                        }
-                    }, executor);
                 }
 
                 completionSignaller.complete(null);
