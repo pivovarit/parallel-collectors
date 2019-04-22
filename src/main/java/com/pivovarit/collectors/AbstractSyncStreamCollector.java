@@ -62,7 +62,10 @@ abstract class AbstractSyncStreamCollector<T, R> implements Collector<T, List<Co
 
     @Override
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
-        dispatcher.stop();
-        return postProcess();
+        return postProcess()
+          .compose(i -> {
+              dispatcher.stop();
+              return i;
+          });
     }
 }
