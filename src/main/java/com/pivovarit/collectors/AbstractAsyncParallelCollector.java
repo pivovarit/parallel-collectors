@@ -66,9 +66,9 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        dispatcher.stop();
-
         return futures -> {
+            dispatcher.stop();
+
             postProcess()
               .apply(combineResults(futures))
               .whenComplete((c, throwable) -> {
