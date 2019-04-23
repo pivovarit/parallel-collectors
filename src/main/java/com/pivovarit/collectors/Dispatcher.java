@@ -70,7 +70,7 @@ final class Dispatcher<T> {
                 }
 
                 completionSignaller.complete(null);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 handle(e);
             } catch (Throwable e) {
                 handle(e);
@@ -101,6 +101,8 @@ final class Dispatcher<T> {
                     future.complete(supplier.get());
                     pending.remove(future);
                 }
+            } catch (Exception e) {
+                handle(e);
             } catch (Throwable e) {
                 handle(e);
                 throw e;
