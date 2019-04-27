@@ -1,16 +1,17 @@
 package com.pivovarit.collectors;
 
 import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Supplier;
 
-import static com.pivovarit.collectors.OnSpinWaitAdapter.onSpinWait;
 import static java.lang.Runtime.getRuntime;
 import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -20,22 +21,22 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 final class Dispatcher<T> {
 
+    private static final Runnable POISON_PILL = () -> {};
+
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
     private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
-    private final Queue<Runnable> workingQueue = new ConcurrentLinkedQueue<>();
+    private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
 
     private final Semaphore limiter;
 
-    private volatile boolean completed = false;
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
     Dispatcher(Executor executor) {
-        this.executor = executor;
-        this.limiter = new Semaphore(getDefaultParallelism());
+        this(executor, getDefaultParallelism());
     }
 
     Dispatcher(Executor executor, int permits) {
@@ -53,25 +54,23 @@ final class Dispatcher<T> {
         dispatcher.execute(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    Runnable task = workingQueue.poll();
-                    if (task == null && !completed) {
-                        onSpinWait();
-                        continue;
-                    } else if (task == null && completed) {
+                    Runnable task = workingQueue.take();
+                    if (task != POISON_PILL) {
+                        limiter.acquire();
+                        runAsync(() -> {
+                            try {
+                                task.run();
+                            } finally {
+                                limiter.release();
+                            }
+                        }, executor);
+                    } else {
                         break;
                     }
-                    limiter.acquire();
-                    runAsync(() -> {
-                        try {
-                            task.run();
-                        } finally {
-                            limiter.release();
-                        }
-                    }, executor);
                 }
 
                 completionSignaller.complete(null);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 handle(e);
             } catch (Throwable e) {
                 handle(e);
@@ -86,7 +85,7 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        completed = true;
+        workingQueue.add(POISON_PILL);
     }
 
     boolean isRunning() {
@@ -102,6 +101,8 @@ final class Dispatcher<T> {
                     future.complete(supplier.get());
                     pending.remove(future);
                 }
+            } catch (Exception e) {
+                handle(e);
             } catch (Throwable e) {
                 handle(e);
                 throw e;
