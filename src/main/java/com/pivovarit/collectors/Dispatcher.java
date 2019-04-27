@@ -99,7 +99,6 @@ final class Dispatcher<T> {
             try {
                 if (!shortCircuited) {
                     future.complete(supplier.get());
-                    pending.remove(future);
                 }
             } catch (Exception e) {
                 handle(e);
