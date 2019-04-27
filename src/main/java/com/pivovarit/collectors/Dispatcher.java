@@ -21,17 +21,16 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 final class Dispatcher<T> {
 
-    private static final Runnable POISON_PILL = () -> {};
+    private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
-
     private final Semaphore limiter;
 
+    private volatile ExecutorService dispatcher;
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
@@ -51,6 +50,7 @@ final class Dispatcher<T> {
             return completionSignaller;
         }
 
+        dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
         dispatcher.execute(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
@@ -85,7 +85,9 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        workingQueue.add(POISON_PILL);
+        if (started) {
+            workingQueue.add(POISON_PILL);
+        }
     }
 
     boolean isRunning() {
