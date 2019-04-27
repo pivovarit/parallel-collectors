@@ -128,7 +128,7 @@ final class Dispatcher<T> {
         public Thread newThread(Runnable task) {
             Thread thread = defaultThreadFactory.newThread(task);
             thread.setName("parallel-collector-" + thread.getName());
-            thread.setDaemon(true);
+            thread.setDaemon(false);
             return thread;
         }
     }
