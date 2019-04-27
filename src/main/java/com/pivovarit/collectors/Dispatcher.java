@@ -21,7 +21,7 @@ import static java.util.concurrent.Executors.newSingleThreadExecutor;
  */
 final class Dispatcher<T> {
 
-    private static final Runnable POISON_PILL = () -> {};
+    private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
