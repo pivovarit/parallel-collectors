@@ -46,11 +46,11 @@ final class Dispatcher<T> {
     CompletableFuture<Void> start() {
         if (!started) {
             started = true;
-            dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
         } else {
             return completionSignaller;
         }
 
+        dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
         dispatcher.execute(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
