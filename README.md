@@ -78,12 +78,12 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 #### Available Collectors:
 
-_parallel_:
+_parallelMap_:
 
 - `parallel(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
 - `parallel(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
 
-_parallelOrdered_:
+_parallelMapOrdered_:
 
 - `parallelOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
 - `parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
