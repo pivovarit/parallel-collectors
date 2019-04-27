@@ -600,7 +600,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallel(i -> foo(), executor))
+     *   .collect(parallelMap(i -> foo(), executor))
      *   .collect(toList());
      * }</pre>
      *
@@ -613,7 +613,7 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         return new SyncCompletionOrderParallelCollector<>(mapper, executor);
@@ -627,7 +627,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallel(i -> foo(), executor, 2))
+     *   .collect(parallelMap(i -> foo(), executor, 2))
      *   .collect(toList());
      * }</pre>
      *
@@ -641,7 +641,7 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
@@ -662,7 +662,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelOrdered(i -> foo(), executor))
+     *   .collect(parallelMapOrdered(i -> foo(), executor))
      *   .collect(toList());
      * }</pre>
      *
@@ -675,7 +675,7 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         return new SyncOrderedStreamParallelCollector<>(mapper, executor);
@@ -689,7 +689,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelOrdered(i -> foo(), executor, 2))
+     *   .collect(parallelMapOrdered(i -> foo(), executor, 2))
      *   .collect(toList());
      * }</pre>
      *
@@ -703,7 +703,7 @@ public final class ParallelCollectors {
      *
      * @since 0.4.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         assertParallelismValid(parallelism);
