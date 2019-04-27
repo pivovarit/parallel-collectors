@@ -25,13 +25,12 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final ExecutorService dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
-
     private final Semaphore limiter;
 
+    private volatile ExecutorService dispatcher;
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
@@ -47,6 +46,7 @@ final class Dispatcher<T> {
     CompletableFuture<Void> start() {
         if (!started) {
             started = true;
+            dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
         } else {
             return completionSignaller;
         }
@@ -85,7 +85,9 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        workingQueue.add(POISON_PILL);
+        if (started) {
+            workingQueue.add(POISON_PILL);
+        }
     }
 
     boolean isRunning() {
