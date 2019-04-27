@@ -80,13 +80,13 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 _parallelMap_:
 
-- `parallel(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
-- `parallel(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
+- `parallelMap(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
+- `parallelMap(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
 
 _parallelMapOrdered_:
 
-- `parallelOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
-- `parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
+- `parallelMapOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
+- `parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
 
 _parallelToList_:
 
