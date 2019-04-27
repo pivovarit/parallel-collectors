@@ -15,12 +15,12 @@ Parallel Collectors is a toolkit easing parallel collection processing in Java u
       .thenRun(() -> System.out.println("Finished!"));
       
 They are:
-- lightweight (yes, you could achieve the same with Project Reactor, but that's often a way too big tool for the job)
+- lightweight (yes, you could achieve the same with Project Reactor, but that's often a tool way too big for the job)
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
 - non-blocking (no need to block the main thread while waiting for the result to arrive)
 - non-invasive (they are just custom implementations of `Collector` interface, no magic inside)
 - versatile (missing an API for your use case? just `parallelToStream` and continue with Stream API)
-- powerful (combined power of Stream API and `CompletableFutures` allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
+- powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 
 ## Rationale
 
@@ -32,7 +32,7 @@ Stream API is a great tool for processing collections, especially if you need to
     }
     
 **However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance**. 
-Unfortunately, it's not the best choice for running blocking operations (at least without `ManagedBlocker`) which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that uses it as well.
+Unfortunately, it's not the best choice for running blocking operations (at least without `ManagedBlocker`) which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that relies on it as well.
 
 For example:
 
@@ -40,7 +40,7 @@ For example:
       .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
 
-That problem has been already solved and the solution is simple - one needs to create a separate thread pool and offload the common one from blocking operations... but there's a catch.
+That problem's been already solved and the solution is simple - one needs to create a separate thread pool and offload the shared one from blocking operations... but there's a catch.
 
 **Sadly, Streams can run parallel computations only on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
 
@@ -67,7 +67,7 @@ Even if this tool makes it easy to parallelize things, it doesn't always mean th
 
 Often, this library will turn out to be a wrong tool for the job, it's important to follow up on the root cause and double-check if parallelism is the way to go.
 
-**It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, reorganizing your data... or even just by choosing a different API method.**
+**It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
 
 ## Basic API
 
@@ -78,43 +78,41 @@ Since the library relies on a native `java.util.stream.Collector` mechanism, it 
 
 #### Available Collectors:
 
+_parallelMap_:
+
+- `parallel(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
+- `parallel(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
+
+_parallelMapOrdered_:
+
+- `parallelOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
+- `parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
+
 _parallelToList_:
 
-- `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor)`
-- `CompletableFuture<List<R>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism)`
-
-_parallelToListOrdered_:
-
-- `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor)`
-- `CompletableFuture<List<R>> parallelToListOrdered(Function<T, R> mapper, Executor executor, int parallelism)`
-- ...
+- `parallelToList(Function<T, R> mapper, Executor executor)` -> `CompletableFuture<List<R>>`
+- `parallelToList(Function<T, R> mapper, Executor executor, int parallelism)` -> `CompletableFuture<List<R>>`
 
 _parallelToSet_:
 
-- `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor)`
-- `CompletableFuture<Set<R>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)`
+- `parallelToSet(Function<T, R> mapper, Executor executor)` -> `CompletableFuture<Set<R>>`
+- `parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)` -> `CompletableFuture<Set<R>>`
 
 _parallelToMap_:
 
-- `CompletableFuture<Map<K, V>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor)`
-- `CompletableFuture<Map<K, V>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism)`
+- `parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor)` -> `CompletableFuture<Map<K, V>>`
+- `parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism)` -> `CompletableFuture<Map<K, V>>`
 - ...
-
 
 _parallelToCollection_:
 
-- `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)`
-- `CompletableFuture<C> parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)`
+- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)` -> `CompletableFuture<C>`
+- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)` -> `CompletableFuture<C>`
 
 _parallelToStream_:
 
-- `CompletableFuture<C> parallelToStream(Function<T, R> mapper, Executor executor)`
-- `CompletableFuture<C> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)`
-
-_parallelToStreamOrdered_:
-
-- `CompletableFuture<C> parallelToStreamOrdered(Function<T, R> mapper, Executor executor)`
-- `CompletableFuture<C> parallelToStreamOrdered(Function<T, R> mapper, Executor executor, int parallelism)`
+- `parallelToStream(Function<T, R> mapper, Executor executor)` -> `CompletableFuture<C>`
+- `parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)` -> `CompletableFuture<C>`
 
 ##### Blocking Semantics
 
@@ -218,13 +216,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>0.3.0</version>
+        <version>1.0.0</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:0.3.0'
+    compile 'com.pivovarit:parallel-collectors:1.0.0'
 
 ### Dependencies
 
@@ -240,10 +238,11 @@ None - the library is implemented using core Java libraries.
 
 ### Limitations
 
-- short-circuiting after encountering an exception doesn't actually kill background tasks
-- the processing starts after the whole stream is buffered
+- short-circuiting after encountering an exception doesn't actually kill background tasks (`CompletableFuture` limitation)
+- collected `Stream` is always evaluated as a whole, even if the following operation is short-circuiting
 
 ## Version History
+
 
 ### [0.3.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.3.0) (05-04-2019)
 - Introduced a new API method: `paralleltoStream`

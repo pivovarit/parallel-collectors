@@ -8,6 +8,9 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 final class SyncOrderedStreamParallelCollector<T, R> extends AbstractSyncStreamCollector<T, R> {
 
     SyncOrderedStreamParallelCollector(
