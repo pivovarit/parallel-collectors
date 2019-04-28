@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static java.util.concurrent.CompletableFuture.anyOf;
@@ -19,11 +18,11 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     private final Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> indexAwareFutureMap = new HashMap<>();
 
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
-        AtomicInteger counter = new AtomicInteger();
-        futures.forEach(f -> {
-            int i = counter.getAndIncrement();
+        final int[] counter = {0};
+        for (CompletableFuture<T> f : futures) {
+            int i = counter[0]++;
             indexAwareFutureMap.put(i, f.thenApply(value -> new AbstractMap.SimpleEntry<>(i, value)));
-        });
+        }
     }
 
     @Override
