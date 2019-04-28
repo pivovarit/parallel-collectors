@@ -18,22 +18,21 @@ final class SyncCompletionOrderParallelCollector<T, R> extends AbstractSyncStrea
       Function<T, R> function,
       Executor executor,
       int parallelism) {
-        super(function, executor, parallelism);
+        super(function, postProcess(), executor, parallelism);
     }
 
     SyncCompletionOrderParallelCollector(
       Function<T, R> function,
       Executor executor) {
-        super(function, executor);
-    }
-
-    @Override
-    Function<List<CompletableFuture<R>>, Stream<R>> postProcess() {
-        return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
+        super(function, postProcess(), executor);
     }
 
     @Override
     public Set<Characteristics> characteristics() {
         return EnumSet.of(Characteristics.UNORDERED);
+    }
+
+    private static <T, R> Function<List<CompletableFuture<R>>, Stream<R>> postProcess() {
+        return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
     }
 }

@@ -18,23 +18,26 @@ abstract class AbstractSyncStreamCollector<T, R> implements Collector<T, List<Co
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
+    private final Function<List<CompletableFuture<R>>, Stream<R>> processor;
+
 
     AbstractSyncStreamCollector(
       Function<T, R> function,
-      Executor executor,
-      int parallelism) {
+      Function<List<CompletableFuture<R>>, Stream<R>> processor,
+      Executor executor, int parallelism) {
+        this.processor = processor;
         this.dispatcher = new Dispatcher<>(executor, parallelism);
         this.function = function;
     }
 
     AbstractSyncStreamCollector(
       Function<T, R> function,
+      Function<List<CompletableFuture<R>>, Stream<R>> processor,
       Executor executor) {
         this.dispatcher = new Dispatcher<>(executor);
         this.function = function;
+        this.processor = processor;
     }
-
-    abstract Function<List<CompletableFuture<R>>, Stream<R>> postProcess();
 
     private void startConsuming() {
         if (!dispatcher.isRunning()) {
@@ -65,7 +68,7 @@ abstract class AbstractSyncStreamCollector<T, R> implements Collector<T, List<Co
 
     @Override
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
-        return postProcess()
+        return processor
           .compose(i -> {
               dispatcher.stop();
               return i;

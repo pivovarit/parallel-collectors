@@ -16,10 +16,7 @@ import static java.util.stream.Collectors.toMap;
  * @author Grzegorz Piwowarek
  */
 final class AsyncParallelMapCollector<T, K, V, M extends Map<K, V>>
-  extends AbstractAsyncParallelCollector<T, Entry<K, V>, M> {
-
-    private final BinaryOperator<V> duplicateKeyResolutionStrategy;
-    private final Supplier<M> mapFactory;
+  extends AsyncParallelCollector<T, Entry<K, V>, M> {
 
     AsyncParallelMapCollector(
       Function<T, K> keyMapper,
@@ -28,9 +25,7 @@ final class AsyncParallelMapCollector<T, K, V, M extends Map<K, V>>
       Supplier<M> mapFactory,
       Executor executor,
       int parallelism) {
-        super(toEntry(keyMapper, valueMapper), executor, parallelism);
-        this.duplicateKeyResolutionStrategy = duplicateKeyResolutionStrategy;
-        this.mapFactory = mapFactory;
+        super(toEntry(keyMapper, valueMapper), postProcess(duplicateKeyResolutionStrategy, mapFactory), executor, parallelism);
     }
 
     AsyncParallelMapCollector(
@@ -39,13 +34,10 @@ final class AsyncParallelMapCollector<T, K, V, M extends Map<K, V>>
       BinaryOperator<V> duplicateKeyResolutionStrategy,
       Supplier<M> mapFactory,
       Executor executor) {
-        super(toEntry(keyMapper, valueMapper), executor);
-        this.duplicateKeyResolutionStrategy = duplicateKeyResolutionStrategy;
-        this.mapFactory = mapFactory;
+        super(toEntry(keyMapper, valueMapper), postProcess(duplicateKeyResolutionStrategy, mapFactory), executor);
     }
 
-    @Override
-    Function<CompletableFuture<Stream<Entry<K, V>>>, CompletableFuture<M>> postProcess() {
+    static <K, V, M extends Map<K, V>>Function<CompletableFuture<Stream<Entry<K, V>>>, CompletableFuture<M>> postProcess(BinaryOperator<V> duplicateKeyResolutionStrategy, Supplier<M> mapFactory) {
         return result -> result.thenApply(futures -> futures.collect(toMap(Entry::getKey, Entry::getValue, duplicateKeyResolutionStrategy, mapFactory)));
     }
 

@@ -17,17 +17,16 @@ final class SyncOrderedStreamParallelCollector<T, R> extends AbstractSyncStreamC
       Function<T, R> function,
       Executor executor,
       int parallelism) {
-        super(function, executor, parallelism);
+        super(function, postProcess(), executor, parallelism);
     }
 
     SyncOrderedStreamParallelCollector(
       Function<T, R> function,
       Executor executor) {
-        super(function, executor);
+        super(function, postProcess(), executor);
     }
 
-    @Override
-    Function<List<CompletableFuture<R>>, Stream<R>> postProcess() {
+    private static <T, R>Function<List<CompletableFuture<R>>, Stream<R>> postProcess() {
         return futures -> futures.stream().map(CompletableFuture::join);
     }
 
