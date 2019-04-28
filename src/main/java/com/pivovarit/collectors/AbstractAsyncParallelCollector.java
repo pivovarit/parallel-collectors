@@ -97,7 +97,7 @@ abstract class AbstractAsyncParallelCollector<T, R, C>
     private void startConsuming() {
         if (!dispatcher.isRunning()) {
             dispatcher.start()
-              .whenComplete((aVoid, throwable) -> {
+              .whenComplete((__, throwable) -> {
                   if (throwable != null) {
                       result.completeExceptionally(throwable);
                   }
