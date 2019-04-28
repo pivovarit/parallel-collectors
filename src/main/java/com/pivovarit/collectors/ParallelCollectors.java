@@ -1,9 +1,6 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +12,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.AsyncParallelCollector.defaultListSupplier;
+import static com.pivovarit.collectors.AsyncParallelCollector.defaultSetSupplier;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -55,10 +54,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
-        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, collectionSupplier, executor);
+        return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor);
+
     }
 
     /**
@@ -87,11 +84,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
-        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(mapper, collectionSupplier, executor, parallelism);
+        return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor, parallelism);
     }
 
     /**
@@ -121,9 +114,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, defaultListImpl(), executor);
+        return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor);
     }
 
     /**
@@ -151,10 +142,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(mapper, defaultListImpl(), executor, assertParallelismValid(parallelism));
+        return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor, parallelism);
     }
 
     /**
@@ -184,9 +172,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, HashSet::new, executor);
+        return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor);
+
     }
 
     /**
@@ -219,10 +206,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelCollector<>(mapper, HashSet::new, executor, parallelism);
+        return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor, parallelism);
     }
 
 
@@ -255,10 +239,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), defaultMapImpl(), executor);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, executor);
     }
 
     /**
@@ -290,11 +271,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), defaultMapImpl(), executor, parallelism);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, executor, parallelism);
     }
 
     /**
@@ -324,11 +301,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        requireNonNull(merger, "merger can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, defaultMapImpl(), executor);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, merger, executor);
     }
 
     /**
@@ -359,12 +332,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        requireNonNull(merger, "merger can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, defaultMapImpl(), executor, parallelism);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, merger, executor, parallelism);
     }
 
     /**
@@ -399,11 +367,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        requireNonNull(mapSupplier, "mapSupplier can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), mapSupplier, executor);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, executor);
     }
 
     /**
@@ -435,12 +399,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        requireNonNull(mapSupplier, "mapSupplier can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, uniqueKeyMerger(), mapSupplier, executor, parallelism);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, executor, parallelism);
     }
 
     /**
@@ -474,12 +433,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        requireNonNull(merger, "merger can't be null");
-        requireNonNull(mapSupplier, "mapSupplier can't be null");
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, mapSupplier, executor);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor);
     }
 
     /**
@@ -511,13 +465,7 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(keyMapper, "keyMapper can't be null");
-        requireNonNull(valueMapper, "valueMapper can't be null");
-        requireNonNull(merger, "merger can't be null");
-        requireNonNull(mapSupplier, "mapSupplier can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelMapCollector<>(keyMapper, valueMapper, merger, mapSupplier, executor, parallelism);
+        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor, parallelism);
     }
 
     /**
@@ -533,8 +481,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor));
+     * CompletableFuture<Stream<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToStream(i -> foo(), executor));
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
@@ -547,9 +495,7 @@ public final class ParallelCollectors {
      * @since 0.3.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelStreamCollector<>(mapper, executor);
+        return AsyncParallelCollector.collectingToStream(mapper, executor);
     }
 
     /**
@@ -565,8 +511,8 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor, 2));
+     * CompletableFuture<Stream<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallelToStream(i -> foo(), executor, 2));
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
@@ -580,10 +526,7 @@ public final class ParallelCollectors {
      * @since 0.3.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelStreamCollector<>(mapper, executor, assertParallelismValid(parallelism));
+        return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
     }
 
     /**
@@ -614,9 +557,7 @@ public final class ParallelCollectors {
      * @since 0.4.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new SyncCompletionOrderParallelCollector<>(mapper, executor);
+        return ParallelStreamCollector.streaming(mapper, executor);
     }
 
     /**
@@ -642,10 +583,7 @@ public final class ParallelCollectors {
      * @since 0.4.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new SyncCompletionOrderParallelCollector<>(mapper, executor, parallelism);
+        return ParallelStreamCollector.streaming(mapper, executor, parallelism);
     }
 
     /**
@@ -676,9 +614,7 @@ public final class ParallelCollectors {
      * @since 0.4.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new SyncOrderedStreamParallelCollector<>(mapper, executor);
+        return ParallelStreamCollector.streamingOrdered(mapper, executor);
     }
 
     /**
@@ -704,26 +640,6 @@ public final class ParallelCollectors {
      * @since 0.4.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new SyncOrderedStreamParallelCollector<>(mapper, executor, parallelism);
-    }
-
-    private static int assertParallelismValid(int parallelism) {
-        if (parallelism < 1) throw new IllegalArgumentException("Parallelism can't be lower than 1");
-        return parallelism;
-    }
-
-    private static <V> BinaryOperator<V> uniqueKeyMerger() {
-        return (i1, i2) -> { throw new IllegalStateException("Duplicate key found"); };
-    }
-
-    private static <K, V> Supplier<Map<K, V>> defaultMapImpl() {
-        return HashMap::new;
-    }
-
-    private static <R> Supplier<List<R>> defaultListImpl() {
-        return ArrayList::new;
+        return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
 }

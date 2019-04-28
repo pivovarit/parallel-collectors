@@ -10,11 +10,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static java.lang.Runtime.getRuntime;
 import static java.util.concurrent.CompletableFuture.runAsync;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 /**
  * @author Grzegorz Piwowarek
@@ -25,12 +26,13 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
+    private final ExecutorService dispatcher;
+
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
     private final Semaphore limiter;
 
-    private volatile ExecutorService dispatcher;
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
@@ -41,6 +43,10 @@ final class Dispatcher<T> {
     Dispatcher(Executor executor, int permits) {
         this.executor = executor;
         this.limiter = new Semaphore(permits);
+        dispatcher = new ThreadPoolExecutor(0, 1,
+          0L, TimeUnit.MILLISECONDS,
+          new LinkedBlockingQueue<>(),
+          new CustomThreadFactory());
     }
 
     CompletableFuture<Void> start() {
@@ -50,7 +56,6 @@ final class Dispatcher<T> {
             return completionSignaller;
         }
 
-        dispatcher = newSingleThreadExecutor(new CustomThreadFactory());
         dispatcher.execute(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
@@ -68,8 +73,6 @@ final class Dispatcher<T> {
                         break;
                     }
                 }
-
-                completionSignaller.complete(null);
             } catch (Exception e) {
                 handle(e);
             } catch (Throwable e) {
