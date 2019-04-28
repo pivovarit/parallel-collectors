@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,6 +26,30 @@ import static java.util.Objects.requireNonNull;
  * @author Grzegorz Piwowarek
  */
 public final class ParallelCollectors {
+
+    public static void main(String[] args) {
+        ExecutorService executorService = Executors.newFixedThreadPool(100,
+          r -> {
+              Thread thread = new Thread(r);
+              thread.setDaemon(true);
+              return thread;
+          });
+        Stream.iterate(0, i -> i + 1)
+          .limit(100)
+          .collect(parallelMap(withRandomDelay(), executorService, 100))
+          .forEach(System.out::println);
+    }
+
+    private static Function<Integer, Integer> withRandomDelay() {
+        return i -> {
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(10000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return i;
+        };
+    }
 
     private ParallelCollectors() {
     }
