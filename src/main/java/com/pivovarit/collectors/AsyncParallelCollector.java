@@ -29,13 +29,13 @@ class AsyncParallelCollector<T, R, C>
 
     protected final CompletableFuture<C> result = new CompletableFuture<>();
 
-    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         return new AsyncParallelCollector<>(mapper, identity(), executor);
     }
 
-    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);

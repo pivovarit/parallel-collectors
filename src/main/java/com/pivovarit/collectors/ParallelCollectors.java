@@ -574,7 +574,7 @@ public final class ParallelCollectors {
      * @since 0.3.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
-        return AsyncParallelCollector.parallelToStream(mapper, executor);
+        return AsyncParallelCollector.collectingToStream(mapper, executor);
     }
 
     /**
@@ -605,7 +605,7 @@ public final class ParallelCollectors {
      * @since 0.3.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-        return AsyncParallelCollector.parallelToStream(mapper, executor, parallelism);
+        return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
     }
 
     /**

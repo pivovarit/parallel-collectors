@@ -37,7 +37,7 @@ final class AsyncParallelMapCollector<T, K, V, M extends Map<K, V>>
         super(toEntry(keyMapper, valueMapper), postProcess(duplicateKeyResolutionStrategy, mapFactory), executor);
     }
 
-    static <K, V, M extends Map<K, V>>Function<CompletableFuture<Stream<Entry<K, V>>>, CompletableFuture<M>> postProcess(BinaryOperator<V> duplicateKeyResolutionStrategy, Supplier<M> mapFactory) {
+    private static <K, V, M extends Map<K, V>>Function<CompletableFuture<Stream<Entry<K, V>>>, CompletableFuture<M>> postProcess(BinaryOperator<V> duplicateKeyResolutionStrategy, Supplier<M> mapFactory) {
         return result -> result.thenApply(futures -> futures.collect(toMap(Entry::getKey, Entry::getValue, duplicateKeyResolutionStrategy, mapFactory)));
     }
 
