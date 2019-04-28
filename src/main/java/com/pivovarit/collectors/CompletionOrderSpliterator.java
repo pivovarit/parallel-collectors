@@ -60,8 +60,8 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
         int counter = 0;
         for (CompletableFuture<T> f : futures) {
-            int i = counter++;
-            map.put(i, f.thenApply(value -> new AbstractMap.SimpleEntry<>(i, value)));
+            int index = counter++;
+            map.put(index, f.thenApply(value -> new AbstractMap.SimpleEntry<>(index, value)));
         }
         return map;
     }
