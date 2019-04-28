@@ -1,9 +1,12 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
+import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static java.util.concurrent.CompletableFuture.anyOf;
@@ -13,15 +16,19 @@ import static java.util.concurrent.CompletableFuture.anyOf;
  */
 final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
-    private final List<CompletableFuture<T>> futureQueue;
+    private final Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> indexAwareFutureMap = new HashMap<>();
 
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
-        this.futureQueue  = new ArrayList<>(futures);
+        AtomicInteger counter = new AtomicInteger();
+        futures.forEach(f -> {
+            int i = counter.getAndIncrement();
+            indexAwareFutureMap.put(i, f.thenApply(value -> new AbstractMap.SimpleEntry<>(i, value)));
+        });
     }
 
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
-        if (!futureQueue.isEmpty()) {
+        if (!indexAwareFutureMap.isEmpty()) {
             T next = takeNextCompleted();
             action.accept(next);
             return true;
@@ -31,20 +38,13 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     }
 
     private T takeNextCompleted() {
-        anyOf(futureQueue.toArray(new CompletableFuture[0])).join();
-
-        CompletableFuture<T> next = null;
-        int index = -1;
-        for (int i = 0; i < futureQueue.size(); i++) {
-            CompletableFuture<T> future = futureQueue.get(i);
-            if (future.isDone()) {
-                next = future;
-                index = i;
-                break;
-            }
-        }
-        futureQueue.remove(index);
-        return next.join();
+        return anyOf(indexAwareFutureMap.values()
+          .toArray(new CompletableFuture[0]))
+          .thenApply(result -> ((Map.Entry<Integer, T>) result))
+          .thenApply(result -> {
+              indexAwareFutureMap.remove(result.getKey());
+              return result.getValue();
+          }).join();
     }
 
     @Override
@@ -54,7 +54,7 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     @Override
     public long estimateSize() {
-        return futureQueue.size();
+        return indexAwareFutureMap.size();
     }
 
     @Override
