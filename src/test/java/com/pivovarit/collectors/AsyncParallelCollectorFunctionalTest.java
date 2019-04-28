@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 /**
  * @author Grzegorz Piwowarek
  */
-class AsyncStreamCollectorFunctionalTest {
+class AsyncParallelCollectorFunctionalTest {
 
     private static final Executor executor = Executors.newFixedThreadPool(100);
 

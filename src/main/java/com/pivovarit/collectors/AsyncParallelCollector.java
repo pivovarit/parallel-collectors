@@ -204,14 +204,14 @@ class AsyncParallelCollector<T, R, C>
         return HashMap::new;
     }
 
-    private static <V> BinaryOperator<V> uniqueKeyMerger() {
-        return (i1, i2) -> { throw new IllegalStateException("Duplicate key found"); };
-    }
-
-    private static void requireValidParallelism(int parallelism) {
+    static void requireValidParallelism(int parallelism) {
         if (parallelism < 1) {
             throw new IllegalArgumentException("Parallelism can't be lower than 1");
         }
+    }
+
+    private static <V> BinaryOperator<V> uniqueKeyMerger() {
+        return (i1, i2) -> { throw new IllegalStateException("Duplicate key found"); };
     }
 
     private static <K, V, M extends Map<K, V>>Function<CompletableFuture<Stream<Map.Entry<K, V>>>, CompletableFuture<M>> toMapStrategy(BinaryOperator<V> duplicateKeyResolutionStrategy, Supplier<M> mapFactory) {

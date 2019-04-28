@@ -8,25 +8,12 @@ import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.awaitility.Awaitility;
 import org.junit.runner.RunWith;
 
-import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToMap;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
-import static com.pivovarit.collectors.infrastructure.TestUtils.expectedDuration;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
-import static com.pivovarit.collectors.infrastructure.TestUtils.timed;
 import static java.time.Duration.ofMillis;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.Offset.offset;
 
 /**
  * @author Grzegorz Piwowarek
