@@ -20,7 +20,6 @@ abstract class AbstractSyncStreamCollector<T, R> implements Collector<T, List<Co
     private final Function<T, R> function;
     private final Function<List<CompletableFuture<R>>, Stream<R>> processor;
 
-
     AbstractSyncStreamCollector(
       Function<T, R> function,
       Function<List<CompletableFuture<R>>, Stream<R>> processor,
