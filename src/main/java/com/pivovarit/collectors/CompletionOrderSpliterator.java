@@ -36,8 +36,7 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     }
 
     private T nextCompleted() {
-        return anyOf(indexAwareFutureMap.values()
-          .toArray(new CompletableFuture[0]))
+        return anyOf(indexAwareFutureMap.values().toArray(new CompletableFuture[0]))
           .thenApply(result -> ((Map.Entry<Integer, T>) result))
           .thenApply(result -> {
               indexAwareFutureMap.remove(result.getKey());
