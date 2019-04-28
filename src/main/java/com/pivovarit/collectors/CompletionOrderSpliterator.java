@@ -15,15 +15,15 @@ import static java.util.concurrent.CompletableFuture.anyOf;
  */
 final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
-    private final Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> indexAwareFutureMap = new HashMap<>();
+    private final Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> indexedFutures;
 
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
-        populateFutureMap(futures);
+        indexedFutures = toIndexedFutures(futures);
     }
 
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
-        if (!indexAwareFutureMap.isEmpty()) {
+        if (!indexedFutures.isEmpty()) {
             action.accept(nextCompleted());
             return true;
         } else {
@@ -32,10 +32,10 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     }
 
     private T nextCompleted() {
-        return anyOf(indexAwareFutureMap.values().toArray(new CompletableFuture[0]))
+        return anyOf(indexedFutures.values().toArray(new CompletableFuture[0]))
           .thenApply(result -> ((Map.Entry<Integer, T>) result))
           .thenApply(result -> {
-              indexAwareFutureMap.remove(result.getKey());
+              indexedFutures.remove(result.getKey());
               return result.getValue();
           }).join();
     }
@@ -47,7 +47,7 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     @Override
     public long estimateSize() {
-        return indexAwareFutureMap.size();
+        return indexedFutures.size();
     }
 
     @Override
@@ -55,12 +55,15 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
         return SIZED & IMMUTABLE;
     }
 
-    private void populateFutureMap(List<CompletableFuture<T>> futures) {
+    private static <T> Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> toIndexedFutures(List<CompletableFuture<T>> futures) {
+        Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> map = new HashMap<>(futures.size(), 1);
+
         int counter = 0;
         for (CompletableFuture<T> f : futures) {
             int i = counter++;
-            indexAwareFutureMap.put(i, f.thenApply(value -> new AbstractMap.SimpleEntry<>(i, value)));
+            map.put(i, f.thenApply(value -> new AbstractMap.SimpleEntry<>(i, value)));
         }
+        return map;
     }
 }
 
