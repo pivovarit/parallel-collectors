@@ -51,6 +51,49 @@ class AsyncParallelCollector<T, R, C>
         return new AsyncParallelCollector<>(mapper, toCollectionStrategy(collectionSupplier), executor, parallelism);
     }
 
+    static <V, K, T> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor) {
+        return collectingToMap(keyMapper, valueMapper, defaultMapSupplier(), uniqueKeyMerger(), executor);
+    }
+
+    static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism) {
+        return collectingToMap(keyMapper, valueMapper, defaultMapSupplier(), uniqueKeyMerger(), executor, parallelism);
+    }
+
+    static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor) {
+        return collectingToMap(keyMapper, valueMapper, defaultMapSupplier(), merger, executor);
+    }
+
+    static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor, int parallelism) {
+        return collectingToMap(keyMapper, valueMapper, defaultMapSupplier(), merger, executor, parallelism);
+    }
+
+    static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor) {
+        return collectingToMap(keyMapper, valueMapper, mapSupplier, uniqueKeyMerger(), executor);
+    }
+
+    static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor, int parallelism) {
+        return collectingToMap(keyMapper, valueMapper, mapSupplier, uniqueKeyMerger(), executor, parallelism);
+    }
+
+    static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        return new AsyncParallelCollector<>(toEntry(keyMapper, valueMapper), toMapStrategy(merger, mapSupplier), executor);
+    }
+
+    static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> collectingToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(keyMapper, "keyMapper can't be null");
+        requireNonNull(valueMapper, "valueMapper can't be null");
+        requireNonNull(merger, "merger can't be null");
+        requireNonNull(mapSupplier, "mapSupplier can't be null");
+        requireValidParallelism(parallelism);
+        return new AsyncParallelCollector<>(toEntry(keyMapper, valueMapper), toMapStrategy(merger, mapSupplier), executor, parallelism);
+    }
+
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
@@ -170,7 +213,9 @@ class AsyncParallelCollector<T, R, C>
         return HashMap::new;
     }
 
-
+    private static <V> BinaryOperator<V> uniqueKeyMerger() {
+        return (i1, i2) -> { throw new IllegalStateException("Duplicate key found"); };
+    }
 
     private static void requireValidParallelism(int parallelism) {
         if (parallelism < 1) {
