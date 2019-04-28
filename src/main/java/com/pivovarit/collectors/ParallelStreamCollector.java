@@ -39,7 +39,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         this.function = function;
     }
 
-    ParallelStreamCollector(
+    private ParallelStreamCollector(
       Function<T, R> function,
       Function<List<CompletableFuture<R>>, Stream<R>> processor,
       Set<Characteristics> characteristics,
