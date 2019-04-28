@@ -13,7 +13,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
+import static java.util.function.Function.identity;
 
 /**
  * @author Grzegorz Piwowarek
@@ -26,6 +28,17 @@ class AsyncParallelCollector<T, R, C>
     private final Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor;
 
     protected final CompletableFuture<C> result = new CompletableFuture<>();
+
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
+        return parallelToStream(mapper, executor);
+    }
+
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireValidParallelism(parallelism);
+        return new AsyncParallelCollector<>(mapper, identity(), executor, parallelism);
+    }
 
     AsyncParallelCollector(
       Function<T, R> function,
@@ -105,6 +118,12 @@ class AsyncParallelCollector<T, R, C>
                       result.completeExceptionally(throwable);
                   }
               });
+        }
+    }
+
+    private static void requireValidParallelism(int parallelism) {
+        if (parallelism < 1) {
+            throw new IllegalArgumentException("Parallelism can't be lower than 1");
         }
     }
 }
