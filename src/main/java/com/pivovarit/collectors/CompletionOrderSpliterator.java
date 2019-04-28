@@ -18,9 +18,9 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     private final Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> indexAwareFutureMap = new HashMap<>();
 
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
-        final int[] counter = {0};
+        int counter = 0;
         for (CompletableFuture<T> f : futures) {
-            int i = counter[0]++;
+            int i = counter++;
             indexAwareFutureMap.put(i, f.thenApply(value -> new AbstractMap.SimpleEntry<>(i, value)));
         }
     }
@@ -28,15 +28,14 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
         if (!indexAwareFutureMap.isEmpty()) {
-            T next = takeNextCompleted();
-            action.accept(next);
+            action.accept(nextCompleted());
             return true;
         } else {
             return false;
         }
     }
 
-    private T takeNextCompleted() {
+    private T nextCompleted() {
         return anyOf(indexAwareFutureMap.values()
           .toArray(new CompletableFuture[0]))
           .thenApply(result -> ((Map.Entry<Integer, T>) result))
