@@ -3,7 +3,10 @@ package com.pivovarit.collectors;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -146,6 +149,14 @@ class AsyncParallelCollector<T, R, C>
 
     static <R> Supplier<List<R>> defaultListSupplier() {
         return ArrayList::new;
+    }
+
+    static <R> Supplier<Set<R>> defaultSetSupplier() {
+        return HashSet::new;
+    }
+
+    static <K, V> Supplier<Map<K, V>> defaultMapSupplier() {
+        return HashMap::new;
     }
 
     private static void requireValidParallelism(int parallelism) {
