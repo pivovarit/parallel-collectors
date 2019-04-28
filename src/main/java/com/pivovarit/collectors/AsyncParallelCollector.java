@@ -144,6 +144,10 @@ class AsyncParallelCollector<T, R, C>
         return result -> result.thenApply(futures -> futures.collect(toCollection(collectionFactory)));
     }
 
+    static <R> Supplier<List<R>> defaultListSupplier() {
+        return ArrayList::new;
+    }
+
     private static void requireValidParallelism(int parallelism) {
         if (parallelism < 1) {
             throw new IllegalArgumentException("Parallelism can't be lower than 1");

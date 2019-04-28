@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +17,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.AsyncParallelCollector.defaultListSupplier;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -142,9 +142,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollectionCollector<>(mapper, defaultListImpl(), executor);
+        return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor);
     }
 
     /**
@@ -172,10 +170,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelCollectionCollector<>(mapper, defaultListImpl(), executor, assertParallelismValid(parallelism));
+        return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor, parallelism);
     }
 
     /**
@@ -737,9 +732,5 @@ public final class ParallelCollectors {
 
     private static <K, V> Supplier<Map<K, V>> defaultMapImpl() {
         return HashMap::new;
-    }
-
-    private static <R> Supplier<List<R>> defaultListImpl() {
-        return ArrayList::new;
     }
 }
