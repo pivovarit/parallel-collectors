@@ -68,8 +68,6 @@ final class Dispatcher<T> {
                         break;
                     }
                 }
-
-                completionSignaller.complete(null);
             } catch (Exception e) {
                 handle(e);
             } catch (Throwable e) {
