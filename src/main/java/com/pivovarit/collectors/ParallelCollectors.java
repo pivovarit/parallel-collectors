@@ -82,10 +82,8 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
-        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollectionCollector<>(mapper, collectionSupplier, executor);
+        return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor);
+
     }
 
     /**
@@ -114,11 +112,7 @@ public final class ParallelCollectors {
      * @since 0.0.1
      */
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
-        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        assertParallelismValid(parallelism);
-        return new AsyncParallelCollectionCollector<>(mapper, collectionSupplier, executor, parallelism);
+        return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor, parallelism);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toCollection;
 
 /**
  * @author Grzegorz Piwowarek
@@ -28,6 +30,21 @@ class AsyncParallelCollector<T, R, C>
     private final Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor;
 
     protected final CompletableFuture<C> result = new CompletableFuture<>();
+
+    static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> collectingToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return new AsyncParallelCollector<>(mapper, toCollectionStrategy(collectionSupplier), executor);
+    }
+
+    static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> collectingToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+        requireNonNull(collectionSupplier, "collectionSupplier can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireValidParallelism(parallelism);
+        return new AsyncParallelCollector<>(mapper, toCollectionStrategy(collectionSupplier), executor, parallelism);
+    }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
@@ -121,6 +138,10 @@ class AsyncParallelCollector<T, R, C>
                   }
               });
         }
+    }
+
+    private static <R, C extends Collection<R>> Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> toCollectionStrategy(Supplier<C> collectionFactory) {
+        return result -> result.thenApply(futures -> futures.collect(toCollection(collectionFactory)));
     }
 
     private static void requireValidParallelism(int parallelism) {
