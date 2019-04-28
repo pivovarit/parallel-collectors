@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,6 +22,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * @author Grzegorz Piwowarek
@@ -147,6 +149,15 @@ class AsyncParallelCollector<T, R, C>
         return result -> result.thenApply(futures -> futures.collect(toCollection(collectionFactory)));
     }
 
+
+    static <K, V, M extends Map<K, V>>Function<CompletableFuture<Stream<Map.Entry<K, V>>>, CompletableFuture<M>> toMapStrategy(BinaryOperator<V> duplicateKeyResolutionStrategy, Supplier<M> mapFactory) {
+        return result -> result.thenApply(futures -> futures.collect(toMap(Map.Entry::getKey, Map.Entry::getValue, duplicateKeyResolutionStrategy, mapFactory)));
+    }
+
+    static <T, K, V> Function<T, Map.Entry<K, V>> toEntry(Function<T, K> keyMapper, Function<T, V> valueMapper) {
+        return entry -> new AbstractMap.SimpleEntry<>(keyMapper.apply(entry), valueMapper.apply(entry));
+    }
+
     static <R> Supplier<List<R>> defaultListSupplier() {
         return ArrayList::new;
     }
@@ -158,6 +169,8 @@ class AsyncParallelCollector<T, R, C>
     static <K, V> Supplier<Map<K, V>> defaultMapSupplier() {
         return HashMap::new;
     }
+
+
 
     private static void requireValidParallelism(int parallelism) {
         if (parallelism < 1) {
