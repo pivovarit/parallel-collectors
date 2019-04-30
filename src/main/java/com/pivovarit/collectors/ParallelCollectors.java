@@ -590,7 +590,6 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
      *
-     *
      * <br><br>
      * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
      *
