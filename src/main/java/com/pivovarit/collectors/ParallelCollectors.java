@@ -554,7 +554,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
-     * @since 0.4.0
+     * @since 1.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streaming(mapper, executor);
@@ -580,7 +580,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
-     * @since 0.4.0
+     * @since 1.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streaming(mapper, executor, parallelism);
@@ -611,7 +611,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
-     * @since 0.4.0
+     * @since 1.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor);
@@ -637,7 +637,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
-     * @since 0.4.0
+     * @since 1.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
