@@ -246,6 +246,7 @@ None - the library is implemented using core Java libraries.
 
 ### [1.0.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.0) (30-04-2019)
 - Removed deprecated methods
+- Introduced limited default parallelism (used to be unlimited)
 - Introduced new API methods: `parallelMap`/`parallelMapOrdered`
 ----
 
