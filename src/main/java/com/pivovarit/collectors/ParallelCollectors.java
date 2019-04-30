@@ -28,7 +28,7 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as a {@link CompletableFuture} containing a user-provided {@link Collection}<{@link R}> of these elements.
+     * and returning them as a {@link CompletableFuture} containing a user-provided {@link Collection} of these elements.
      *
      * <br><br>
      * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
@@ -48,6 +48,7 @@ public final class ParallelCollectors {
      * @param executor           the {@code Executor} to use for asynchronous execution
      * @param <T>                the type of the collected elements
      * @param <R>                the result returned by {@code mapper}
+     * @param <C>                the collection supplier
      *
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
@@ -78,6 +79,7 @@ public final class ParallelCollectors {
      * @param parallelism        the parallelism level
      * @param <T>                the type of the collected elements
      * @param <R>                the result returned by {@code mapper}
+     * @param <C>                the collection supplier
      *
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
@@ -641,4 +643,18 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
-}
+    /*
+    ] Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:2.7:jar (attach-javadocs) on project parallel-collectors: MavenReportException: Error while creating archive:
+      [ERROR] Exit code: 1 - /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:31: error: malformed HTML
+    [ERROR]      * and returning them as a {@link CompletableFuture} containing a user-provided {@link Collection}<{@link R}> of these elements.
+    [ERROR]                                                                                                       ^
+      [ERROR] /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:31: error: bad use of '>'
+      [ERROR]      * and returning them as a {@link CompletableFuture} containing a user-provided {@link Collection}<{@link R}> of these elements.
+    [ERROR]                                                                                                                 ^
+      [ERROR] /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:56: warning: no @param for <C>
+    [ERROR]     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
+    [ERROR]                                                                                         ^
+    [ERROR] /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:86: warning: no @param for <C>
+    [ERROR]     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
+*/
+        }
