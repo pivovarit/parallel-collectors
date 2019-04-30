@@ -244,6 +244,11 @@ None - the library is implemented using core Java libraries.
 ## Version History
 
 
+### [1.0.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.0) (30-04-2019)
+- Removed deprecated methods
+- Introduced new API methods: `parallelMap`/`parallelMapOrdered`
+----
+
 ### [0.3.0](https://github.com/pivovarit/parallel-collectors/releases/tag/0.3.0) (05-04-2019)
 - Introduced a new API method: `paralleltoStream`
 - Introduced a new API method: `paralleltoStreamOrdered`
