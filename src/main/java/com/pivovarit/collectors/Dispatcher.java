@@ -56,30 +56,23 @@ final class Dispatcher<T> {
             return completionSignaller;
         }
 
-        dispatcher.execute(() -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    Runnable task = workingQueue.take();
-                    if (task != POISON_PILL) {
-                        limiter.acquire();
-                        runAsync(() -> {
-                            try {
-                                task.run();
-                            } finally {
-                                limiter.release();
-                            }
-                        }, executor);
-                    } else {
-                        break;
-                    }
+        dispatcher.execute(() -> withExceptionHandling(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                Runnable task = workingQueue.take();
+                if (task == POISON_PILL) {
+                    break;
                 }
-            } catch (Exception e) {
-                handle(e);
-            } catch (Throwable e) {
-                handle(e);
-                throw e;
+
+                limiter.acquire();
+                runAsync(() -> {
+                    try {
+                        task.run();
+                    } finally {
+                        limiter.release();
+                    }
+                }, executor);
             }
-        });
+        }));
         try {
             return completionSignaller;
         } finally {
@@ -100,19 +93,23 @@ final class Dispatcher<T> {
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pending.add(future);
-        workingQueue.add(() -> {
-            try {
-                if (!shortCircuited) {
-                    future.complete(supplier.get());
-                }
-            } catch (Exception e) {
-                handle(e);
-            } catch (Throwable e) {
-                handle(e);
-                throw e;
+        workingQueue.add(() -> withExceptionHandling(() -> {
+            if (!shortCircuited) {
+                future.complete(supplier.get());
             }
-        });
+        }));
         return future;
+    }
+
+    private void withExceptionHandling(CheckedRunnable action) {
+        try {
+            action.run();
+        } catch (Exception e) {
+            handle(e);
+        } catch (Throwable e) {
+            handle(e);
+            throw e;
+        }
     }
 
     private void handle(Throwable e) {
@@ -136,6 +133,11 @@ final class Dispatcher<T> {
             thread.setDaemon(false);
             return thread;
         }
+    }
+
+    @FunctionalInterface
+    interface CheckedRunnable<T extends Exception> {
+        void run() throws T;
     }
 
     private static int getDefaultParallelism() {
