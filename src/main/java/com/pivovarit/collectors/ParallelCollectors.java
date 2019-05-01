@@ -14,7 +14,6 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultListSupplier;
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultSetSupplier;
-import static java.util.Objects.requireNonNull;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -56,7 +55,6 @@ public final class ParallelCollectors {
      */
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
         return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor);
-
     }
 
     /**
@@ -175,7 +173,6 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor);
-
     }
 
     /**
@@ -210,7 +207,6 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor, parallelism);
     }
-
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
@@ -467,7 +463,8 @@ public final class ParallelCollectors {
      * @since 0.2.0
      */
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
-        return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor, parallelism);
+        return AsyncParallelCollector
+          .collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor, parallelism);
     }
 
     /**
@@ -549,10 +546,10 @@ public final class ParallelCollectors {
      *   .collect(toList());
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
@@ -605,10 +602,10 @@ public final class ParallelCollectors {
      *   .collect(toList());
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
@@ -643,18 +640,4 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
-    /*
-    ] Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:2.7:jar (attach-javadocs) on project parallel-collectors: MavenReportException: Error while creating archive:
-      [ERROR] Exit code: 1 - /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:31: error: malformed HTML
-    [ERROR]      * and returning them as a {@link CompletableFuture} containing a user-provided {@link Collection}<{@link R}> of these elements.
-    [ERROR]                                                                                                       ^
-      [ERROR] /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:31: error: bad use of '>'
-      [ERROR]      * and returning them as a {@link CompletableFuture} containing a user-provided {@link Collection}<{@link R}> of these elements.
-    [ERROR]                                                                                                                 ^
-      [ERROR] /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:56: warning: no @param for <C>
-    [ERROR]     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
-    [ERROR]                                                                                         ^
-    [ERROR] /Users/grzegorzpiwowarek/Dev/parallel-collectors/src/main/java/com/pivovarit/collectors/ParallelCollectors.java:86: warning: no @param for <C>
-    [ERROR]     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
-*/
-        }
+}
