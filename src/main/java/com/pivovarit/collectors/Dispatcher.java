@@ -50,12 +50,7 @@ final class Dispatcher<T> {
     }
 
     CompletableFuture<Void> start() {
-        if (!started) {
-            started = true;
-        } else {
-            return completionSignaller;
-        }
-
+        started = true;
         dispatcher.execute(withExceptionHandling(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 Runnable task = workingQueue.take();
@@ -73,16 +68,14 @@ final class Dispatcher<T> {
                 }, executor);
             }
         }));
-        try {
-            return completionSignaller;
-        } finally {
-            dispatcher.shutdown();
-        }
+
+        return completionSignaller;
     }
 
     void stop() {
         if (started) {
             workingQueue.add(POISON_PILL);
+            dispatcher.shutdown();
         }
     }
 
