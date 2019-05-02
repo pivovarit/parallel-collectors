@@ -56,7 +56,7 @@ final class Dispatcher<T> {
             return completionSignaller;
         }
 
-        dispatcher.execute(() -> withExceptionHandling(() -> {
+        dispatcher.execute(withExceptionHandling(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 Runnable task = workingQueue.take();
                 if (task == POISON_PILL) {
@@ -93,7 +93,7 @@ final class Dispatcher<T> {
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
         pending.add(future);
-        workingQueue.add(() -> withExceptionHandling(() -> {
+        workingQueue.add(withExceptionHandling(() -> {
             if (!shortCircuited) {
                 future.complete(supplier.get());
             }
@@ -101,15 +101,17 @@ final class Dispatcher<T> {
         return future;
     }
 
-    private void withExceptionHandling(CheckedRunnable action) {
-        try {
-            action.run();
-        } catch (Exception e) {
-            handle(e);
-        } catch (Throwable e) {
-            handle(e);
-            throw e;
-        }
+    private Runnable withExceptionHandling(CheckedRunnable action) {
+        return () -> {
+            try {
+                action.run();
+            } catch (Exception e) {
+                handle(e);
+            } catch (Throwable e) {
+                handle(e);
+                throw e;
+            }
+        };
     }
 
     private void handle(Throwable e) {
