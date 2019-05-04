@@ -34,10 +34,9 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     private T nextCompleted() {
         return anyOf(indexedFutures.values().toArray(new CompletableFuture[0]))
           .thenApply(result -> ((Map.Entry<Integer, T>) result))
-          .thenApply(result -> {
-              indexedFutures.remove(result.getKey());
-              return result.getValue();
-          }).join();
+          .thenCompose(result -> indexedFutures.remove(result.getKey()))
+          .thenApply(Map.Entry::getValue)
+          .join();
     }
 
     @Override
