@@ -216,13 +216,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:1.0.0'
+    compile 'com.pivovarit:parallel-collectors:1.0.1'
 
 ### Dependencies
 
@@ -243,6 +243,8 @@ None - the library is implemented using core Java libraries.
 
 ## Version History
 
+### [1.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.1) (02-05-2019)
+- Removal of redundant/unused code
 
 ### [1.0.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.0) (30-04-2019)
 - Removed deprecated methods
