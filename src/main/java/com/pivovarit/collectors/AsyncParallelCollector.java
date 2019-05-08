@@ -109,10 +109,9 @@ class AsyncParallelCollector<T, R, C>
     private void startConsuming() {
         if (!dispatcher.isRunning()) {
             dispatcher.start()
-              .whenComplete((__, throwable) -> {
-                  if (throwable != null) {
-                      result.completeExceptionally(throwable);
-                  }
+              .exceptionally(throwable -> {
+                  result.completeExceptionally(throwable);
+                  return null;
               });
         }
     }
