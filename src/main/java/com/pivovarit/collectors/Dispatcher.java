@@ -67,6 +67,7 @@ final class Dispatcher<T> {
                     }
                 }, executor);
             }
+            completionSignaller.complete(null);
         }));
 
         return completionSignaller;
