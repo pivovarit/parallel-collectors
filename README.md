@@ -1,4 +1,4 @@
-# Parallel Collectors for Java 8 Stream API - overcoming limitations of standard Parallel Streams
+# Java Stream API Parallel Collectors - overcoming limitations of standard Parallel Streams
 
 [![Build Status](https://travis-ci.org/pivovarit/parallel-collectors.svg?branch=master)](https://travis-ci.org/pivovarit/parallel-collectors)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
@@ -10,47 +10,18 @@
 Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API. 
 
     list.stream()
-      .collect(parallelToList(i -> foo(i), executor, 2)).orTimeout(1000, MILLISECONDS)
-      .thenAccept(System.out::println)
-      .thenRun(() -> System.out.println("Finished!"));
+      .collect(parallelToList(i -> foo(i), executor, parallelism))
+        .orTimeout(1000, MILLISECONDS)
+        .thenAccept(System.out::println)
+        .thenRun(() -> System.out.println("Finished!"));
       
 They are:
-- lightweight (yes, you could achieve the same with Project Reactor, but that's often a tool way too big for the job)
+- lightweight (yes, you could achieve the same with Project Reactor, but that's often a way too big hammer for the job)
+- powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
 - non-blocking (no need to block the main thread while waiting for the result to arrive)
-- non-invasive (they are just custom implementations of `Collector` interface, no magic inside)
+- non-invasive (they are just custom implementations of `Collector` interface, no magic)
 - versatile (missing an API for your use case? just `parallelToStream` and continue with Stream API)
-- powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
-
-## Rationale
-
-Stream API is a great tool for processing collections, especially if you need to parallelize execution of CPU-intensive tasks, for example:
-
-    public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
-        Objects.requireNonNull(generator);
-        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
-    }
-    
-**However, all tasks managed by parallel Streams are executed on a shared `ForkJoinPool` instance**. 
-Unfortunately, it's not the best choice for running blocking operations (at least without `ManagedBlocker`) which could easily lead to the saturation of the common pool, and to serious performance degradation of everything that relies on it as well.
-
-For example:
-
-    List<String> result = list.parallelStream()
-      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
-      .collect(Collectors.toList());
-
-That problem's been already solved and the solution is simple - one needs to create a separate thread pool and offload the shared one from blocking operations... but there's a catch.
-
-**Sadly, Streams can run parallel computations only on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
-
-However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's considered harmful:
-
-> Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
-
-Says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776). 
-
-Plus, that approach was seriously flawed before JDK-10 - if a `Stream` was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool, and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
 
 ## Philosophy
 
@@ -69,14 +40,47 @@ Often, this library will turn out to be a wrong tool for the job, it's important
 
 **It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
 
+## Rationale
+
+Stream API is a great tool for collection processing, especially if you need to parallelize execution of CPU-intensive tasks, for example:
+
+    public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
+        Objects.requireNonNull(generator);
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
+    }
+    
+**However, Parallel Streams execute tasks on a shared `ForkJoinPool` instance**. 
+Unfortunately, it's not the best choice for running blocking operations even when using `ManagedBlocker` - [as explained here by Tagir Valeev](https://stackoverflow.com/a/37518272/2229438)) - this could easily lead to the saturation of the common pool, and to a performance degradation of everything that uses it.
+
+For example:
+
+    List<String> result = list.parallelStream()
+      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .collect(Collectors.toList());
+
+In order to avoid such problems, **the solution is to isolate blocking tasks** and run them on a separate thread pool... but there's a catch.
+
+**Sadly, Streams can only run parallel computations on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
+
+However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's considered harmful:
+
+> Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
+
+Says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776). 
+
+Not even mentioning that this approach was seriously flawed before JDK-10 - if a `Stream` was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool, and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
+
+
 ## Basic API
 
-The main entrypoint to the libary is the `com.pivovarit.collectors.ParallelCollectors` class - which mirrors the `java.util.stream.Collectors` class and contains static factory methods returning `java.util.stream.Collector` implementations enhanced with parallel processing capabilities.
+The main entrypoint to the libary is the `com.pivovarit.collectors.ParallelCollectors` class - which mirrors the `java.util.stream.Collectors` and contains static factory methods returning custom `java.util.stream.Collector` implementations enhanced with parallel processing capabilities.
 
 Since the library relies on a native `java.util.stream.Collector` mechanism, it was possible to achieve compatibility with Stream API without performing any intrusive surgery.
 
 
-#### Available Collectors:
+### Available Collectors:
+
+##### Sync:
 
 _parallelMap_:
 
@@ -87,6 +91,8 @@ _parallelMapOrdered_:
 
 - `parallelMapOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
 - `parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
+
+##### Async:
 
 _parallelToList_:
 
@@ -116,7 +122,7 @@ _parallelToStream_:
 
 ##### Blocking Semantics
 
-If you want to achieve blocking semantics, just add `.join()` straight after collection:
+If you want to achieve blocking semantics, just add `.join()` straight after collecting:
 
     ...
     .collect(parallelToList(i -> 42, executor))
@@ -124,13 +130,15 @@ If you want to achieve blocking semantics, just add `.join()` straight after col
 
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
  
-**By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
+- **By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
 
-**All those collectors are one-off and should not be reused unless you know what you're doing.**
+- **All those collectors are one-off and should not be reused unless you know what you're doing.**
+
+- **Will hang forever when used for consuming infinite streams**
 
 ### Leveraging CompletableFuture
 
-All Parallel Collectors™ expose resulting `Collection` wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
+All async Parallel Collectors™ expose resulting `Collection` wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallelToList(i -> foo(i), executor));
@@ -240,6 +248,7 @@ None - the library is implemented using core Java libraries.
 
 - short-circuiting after encountering an exception doesn't actually kill background tasks (`CompletableFuture` limitation)
 - collected `Stream` is always evaluated as a whole, even if the following operation is short-circuiting
+- can't be used for working with infinite streams
 
 ## Version History
 
