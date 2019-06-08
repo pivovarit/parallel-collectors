@@ -27,7 +27,7 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final ExecutorService dispatcher;
+    private final ExecutorService dispatcher = newLazySingleThreadExecutor();
 
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
@@ -44,10 +44,6 @@ final class Dispatcher<T> {
     Dispatcher(Executor executor, int permits) {
         this.executor = executor;
         this.limiter = new Semaphore(permits);
-        dispatcher = new ThreadPoolExecutor(0, 1,
-          0L, TimeUnit.MILLISECONDS,
-          new SynchronousQueue<>(),
-          new CustomThreadFactory());
     }
 
     CompletableFuture<Void> start() {
@@ -75,10 +71,8 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        if (started) {
-            workingQueue.add(POISON_PILL);
-            dispatcher.shutdown();
-        }
+        workingQueue.add(POISON_PILL);
+        dispatcher.shutdown();
     }
 
     boolean isRunning() {
@@ -110,26 +104,10 @@ final class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
-        pending.forEach(future -> future.completeExceptionally(e));
         completionSignaller.completeExceptionally(e);
+        pending.forEach(future -> future.completeExceptionally(e));
         shortCircuited = true;
         dispatcher.shutdownNow();
-    }
-
-    /**
-     * @author Grzegorz Piwowarek
-     */
-    private static class CustomThreadFactory implements ThreadFactory {
-
-        private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
-
-        @Override
-        public Thread newThread(Runnable task) {
-            Thread thread = defaultThreadFactory.newThread(task);
-            thread.setName("parallel-collector-" + thread.getName());
-            thread.setDaemon(false);
-            return thread;
-        }
     }
 
     @FunctionalInterface
@@ -139,5 +117,22 @@ final class Dispatcher<T> {
 
     private static int getDefaultParallelism() {
         return Math.max(getRuntime().availableProcessors() - 1, 1);
+    }
+
+    private static ThreadPoolExecutor newLazySingleThreadExecutor() {
+        return new ThreadPoolExecutor(0, 1,
+          0L, TimeUnit.MILLISECONDS,
+          new SynchronousQueue<>(),
+          new ThreadFactory() {
+              private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
+
+              @Override
+              public Thread newThread(Runnable task) {
+                  Thread thread = defaultThreadFactory.newThread(task);
+                  thread.setName("parallel-collector-" + thread.getName());
+                  thread.setDaemon(false);
+                  return thread;
+              }
+          });
     }
 }

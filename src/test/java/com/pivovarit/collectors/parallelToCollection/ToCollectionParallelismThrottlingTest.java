@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ToCollectionParallelismThrottlingTest {
 
     @Test
-    void shouldParallelizeToListAndRespectParallelizm() throws InterruptedException {
+    void shouldParallelizeToListAndRespectParallelizm() {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
@@ -37,7 +37,7 @@ class ToCollectionParallelismThrottlingTest {
     }
 
     @Test
-    void shouldParallelizeToListAndRespectParallelizmMapping() throws InterruptedException {
+    void shouldParallelizeToListAndRespectParallelizmMapping() {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
