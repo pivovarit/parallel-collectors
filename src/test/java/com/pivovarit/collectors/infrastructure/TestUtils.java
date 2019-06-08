@@ -21,13 +21,6 @@ public final class TestUtils {
 
     public static final int TRIALS = 5;
 
-    public static <T> Map.Entry<T, Long> timed(Supplier<T> runnable) {
-        Instant start = Instant.now();
-        return new AbstractMap.SimpleEntry<>(
-          runnable.get(),
-          Duration.between(start, Instant.now()).toMillis());
-    }
-
     public static <T> T returnWithDelayGaussian(T value, Duration duration) {
         try {
             Thread.sleep(Math.abs((long) (duration.toMillis() * new Random().nextGaussian())));
@@ -46,16 +39,6 @@ public final class TestUtils {
         }
 
         return value;
-    }
-
-    public static long expectedDuration(long parallelism, long unitsOfWork, long singleJobDuration) {
-        if (unitsOfWork < parallelism) {
-            return singleJobDuration;
-        } else if (unitsOfWork % parallelism == 0) {
-            return (unitsOfWork / parallelism) * singleJobDuration;
-        } else {
-            return (unitsOfWork / parallelism + 1) * singleJobDuration;
-        }
     }
 
     public static Integer incrementAndThrow(LongAdder counter) {
