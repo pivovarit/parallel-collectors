@@ -44,10 +44,7 @@ final class Dispatcher<T> {
     Dispatcher(Executor executor, int permits) {
         this.executor = executor;
         this.limiter = new Semaphore(permits);
-        dispatcher = new ThreadPoolExecutor(0, 1,
-          0L, TimeUnit.MILLISECONDS,
-          new SynchronousQueue<>(),
-          new CustomThreadFactory());
+        dispatcher = newLazySingleThreadExecutor();
     }
 
     CompletableFuture<Void> start() {
@@ -117,7 +114,7 @@ final class Dispatcher<T> {
     /**
      * @author Grzegorz Piwowarek
      */
-    private static class CustomThreadFactory implements ThreadFactory {
+    private static class ParallelCollectorsThreadFactory implements ThreadFactory {
 
         private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
@@ -128,8 +125,8 @@ final class Dispatcher<T> {
             thread.setDaemon(false);
             return thread;
         }
-    }
 
+    }
     @FunctionalInterface
     interface CheckedRunnable<T extends Exception> {
         void run() throws T;
@@ -137,5 +134,12 @@ final class Dispatcher<T> {
 
     private static int getDefaultParallelism() {
         return Math.max(getRuntime().availableProcessors() - 1, 1);
+    }
+
+    private static ThreadPoolExecutor newLazySingleThreadExecutor() {
+        return new ThreadPoolExecutor(0, 1,
+          0L, TimeUnit.MILLISECONDS,
+          new SynchronousQueue<>(),
+          new ParallelCollectorsThreadFactory());
     }
 }
