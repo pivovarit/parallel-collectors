@@ -81,8 +81,7 @@ class AsyncParallelCollector<T, R, C>
         return futures -> {
             dispatcher.stop();
 
-            processor
-              .apply(combined(futures))
+            processor.apply(combined(futures))
               .whenComplete((c, throwable) -> {
                   if (throwable == null) {
                       result.complete(c);

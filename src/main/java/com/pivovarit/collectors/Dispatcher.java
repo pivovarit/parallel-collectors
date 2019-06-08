@@ -75,10 +75,8 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        if (started) {
-            workingQueue.add(POISON_PILL);
-            dispatcher.shutdown();
-        }
+        workingQueue.add(POISON_PILL);
+        dispatcher.shutdown();
     }
 
     boolean isRunning() {
