@@ -1,30 +1,29 @@
 package com.pivovarit.collectors;
 
+import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Spliterator;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
+
+import static java.util.concurrent.CompletableFuture.anyOf;
 
 /**
  * @author Grzegorz Piwowarek
  */
 final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
-    private final int initialSize;
-    private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
-    private int remaining;
+    private final Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> indexedFutures;
 
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
-        this.initialSize = futures.size();
-        this.remaining = initialSize;
-        futures.forEach(f -> f.whenComplete((t, __) -> completed.add(f)));
+        indexedFutures = toIndexedFutures(futures);
     }
 
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
-        if (remaining > 0) {
+        if (!indexedFutures.isEmpty()) {
             nextCompleted().thenAccept(action).join();
             return true;
         } else {
@@ -33,13 +32,10 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     }
 
     private CompletableFuture<T> nextCompleted() {
-        remaining--;
-        try {
-            return completed.take();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-        }
+        return anyOf(indexedFutures.values().toArray(new CompletableFuture[0]))
+          .thenApply(result -> ((Map.Entry<Integer, T>) result))
+          .thenCompose(result -> indexedFutures.remove(result.getKey()))
+          .thenApply(Map.Entry::getValue);
     }
 
     @Override
@@ -49,12 +45,23 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     @Override
     public long estimateSize() {
-        return initialSize;
+        return indexedFutures.size();
     }
 
     @Override
     public int characteristics() {
         return SIZED | IMMUTABLE | NONNULL;
+    }
+
+    private static <T> Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> toIndexedFutures(List<CompletableFuture<T>> futures) {
+        Map<Integer, CompletableFuture<Map.Entry<Integer, T>>> map = new HashMap<>(futures.size(), 1);
+
+        int counter = 0;
+        for (CompletableFuture<T> future : futures) {
+            int index = counter++;
+            map.put(index, future.thenApply(value -> new AbstractMap.SimpleEntry<>(index, value)));
+        }
+        return map;
     }
 }
 
