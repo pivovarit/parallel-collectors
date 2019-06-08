@@ -24,19 +24,18 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
         if (!indexedFutures.isEmpty()) {
-            action.accept(nextCompleted());
+            nextCompleted().thenAccept(action).join();
             return true;
         } else {
             return false;
         }
     }
 
-    private T nextCompleted() {
+    private CompletableFuture<T> nextCompleted() {
         return anyOf(indexedFutures.values().toArray(new CompletableFuture[0]))
           .thenApply(result -> ((Map.Entry<Integer, T>) result))
           .thenCompose(result -> indexedFutures.remove(result.getKey()))
-          .thenApply(Map.Entry::getValue)
-          .join();
+          .thenApply(Map.Entry::getValue);
     }
 
     @Override
