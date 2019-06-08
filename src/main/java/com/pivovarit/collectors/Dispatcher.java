@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +46,7 @@ final class Dispatcher<T> {
         this.limiter = new Semaphore(permits);
         dispatcher = new ThreadPoolExecutor(0, 1,
           0L, TimeUnit.MILLISECONDS,
-          new LinkedBlockingQueue<>(),
+          new SynchronousQueue<>(),
           new CustomThreadFactory());
     }
 
