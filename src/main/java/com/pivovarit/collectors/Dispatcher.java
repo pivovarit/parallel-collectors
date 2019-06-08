@@ -105,8 +105,8 @@ final class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
-        pending.forEach(future -> future.completeExceptionally(e));
         completionSignaller.completeExceptionally(e);
+        pending.forEach(future -> future.completeExceptionally(e));
         shortCircuited = true;
         dispatcher.shutdownNow();
     }
@@ -127,6 +127,7 @@ final class Dispatcher<T> {
         }
 
     }
+
     @FunctionalInterface
     interface CheckedRunnable<T extends Exception> {
         void run() throws T;
