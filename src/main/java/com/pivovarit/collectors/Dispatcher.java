@@ -27,7 +27,7 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final ExecutorService dispatcher;
+    private final ExecutorService dispatcher = newLazySingleThreadExecutor();
 
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
@@ -44,7 +44,6 @@ final class Dispatcher<T> {
     Dispatcher(Executor executor, int permits) {
         this.executor = executor;
         this.limiter = new Semaphore(permits);
-        dispatcher = newLazySingleThreadExecutor();
     }
 
     CompletableFuture<Void> start() {
