@@ -25,17 +25,17 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
         if (remaining > 0) {
-            action.accept(nextCompleted());
+            nextCompleted().thenAccept(action).join();
             return true;
         } else {
             return false;
         }
     }
 
-    private T nextCompleted() {
+    private CompletableFuture<T> nextCompleted() {
         remaining--;
         try {
-            return completed.take().join();
+            return completed.take();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
