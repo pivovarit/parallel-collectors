@@ -1,7 +1,5 @@
 package com.pivovarit.collectors;
 
-import org.assertj.core.api.Assertions;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -35,10 +33,8 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.function.Function.identity;
 import static java.util.stream.Stream.of;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Awaitility.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
