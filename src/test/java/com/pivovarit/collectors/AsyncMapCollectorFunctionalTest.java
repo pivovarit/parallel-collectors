@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -61,6 +62,7 @@ class AsyncMapCollectorFunctionalTest {
           shouldCollectToEmpty(collector, name),
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
+          shouldInterruptOnException(collector, name),
           shouldNotSwallowException(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
           shouldBeConsistent(collector, name),
@@ -122,6 +124,31 @@ class AsyncMapCollectorFunctionalTest {
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
                 assertThat(counter.longValue()).isLessThan(elements.size());
+            }, size);
+        });
+    }
+
+    //@Test
+    private static <R extends Map<Integer, Integer>> DynamicTest shouldInterruptOnException(BiFunction<Map.Entry<Function<Integer, Integer>, Function<Integer, Integer>>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should interrupt on exception", name), () -> {
+            AtomicLong counter = new AtomicLong();
+            int size = 10;
+
+            runWithExecutor(e -> {
+                assertThatThrownBy(IntStream.range(0, 10).limit(size).boxed()
+                  .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> {
+                      try {
+                          Thread.sleep(100);
+                          if (i == 5) throw new NullPointerException();
+                          Thread.sleep(1000);
+                      } catch (InterruptedException ex) {
+                          counter.incrementAndGet();
+                      }
+                      return i;
+                  }, i -> i), e))::join)
+                  .hasCauseExactlyInstanceOf(NullPointerException.class);
+
+                await().until(() -> counter.get() == size - 1);
             }, size);
         });
     }

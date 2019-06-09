@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
@@ -16,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static java.lang.Runtime.getRuntime;
-import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * @author Grzegorz Piwowarek
@@ -30,6 +31,7 @@ final class Dispatcher<T> {
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
 
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
+    private final Queue<Future<Void>> cancellables = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
     private final Semaphore limiter;
@@ -56,13 +58,15 @@ final class Dispatcher<T> {
                 }
 
                 limiter.acquire();
-                runAsync(() -> {
+                FutureTask<Void> futureTask  = new FutureTask<>(() -> {
                     try {
                         task.run();
                     } finally {
                         limiter.release();
                     }
-                }, executor);
+                }, null);
+                cancellables.add(futureTask);
+                executor.execute(futureTask);
             }
             completionSignaller.complete(null);
         }));
@@ -104,9 +108,10 @@ final class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
+        shortCircuited = true;
         completionSignaller.completeExceptionally(e);
         pending.forEach(future -> future.completeExceptionally(e));
-        shortCircuited = true;
+        cancellables.forEach(future -> future.cancel(true));
         dispatcher.shutdownNow();
     }
 
@@ -124,6 +129,7 @@ final class Dispatcher<T> {
           0L, TimeUnit.MILLISECONDS,
           new SynchronousQueue<>(),
           new ThreadFactory() {
+
               private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
               @Override
