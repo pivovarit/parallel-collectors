@@ -58,7 +58,7 @@ final class Dispatcher<T> {
                 }
 
                 limiter.acquire();
-                FutureTask<Void> futureTask = new FutureTask<>(() -> {
+                FutureTask<Void> futureTask  = new FutureTask<>(() -> {
                     try {
                         task.run();
                     } finally {
