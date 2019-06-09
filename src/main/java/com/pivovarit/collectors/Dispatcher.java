@@ -108,10 +108,10 @@ final class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
+        shortCircuited = true;
         completionSignaller.completeExceptionally(e);
         pending.forEach(future -> future.completeExceptionally(e));
         cancellables.forEach(future -> future.cancel(true));
-        shortCircuited = true;
         dispatcher.shutdownNow();
     }
 
