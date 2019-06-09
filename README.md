@@ -253,10 +253,10 @@ None - the library is implemented using core Java libraries.
 ## Version History
 
 ### [1.0.3](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.3) (09-06-2019)
-- Reimplemented `CompletionStreamSpliterator` with throughput in mind
+- Reimplemented `CompletionOrderSpliterator` with throughput in mind
 
 ### [1.0.2](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.2) (03-06-2019)
-- Fixed improperly configured `CompletionStreamSpliterator`
+- Fixed improperly configured `CompletionOrderSpliterator`
 
 ### [1.0.1](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.1) (02-05-2019)
 - Removal of redundant/unused code
