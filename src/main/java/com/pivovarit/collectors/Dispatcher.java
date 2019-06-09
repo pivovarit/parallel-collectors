@@ -58,15 +58,15 @@ final class Dispatcher<T> {
                 }
 
                 limiter.acquire();
-                FutureTask<Void> f = new FutureTask<>(() -> {
+                FutureTask<Void> futureTask = new FutureTask<>(() -> {
                     try {
                         task.run();
                     } finally {
                         limiter.release();
                     }
                 }, null);
-                cancellables.add(f);
-                executor.execute(f);
+                cancellables.add(futureTask);
+                executor.execute(futureTask);
             }
             completionSignaller.complete(null);
         }));
@@ -129,6 +129,7 @@ final class Dispatcher<T> {
           0L, TimeUnit.MILLISECONDS,
           new SynchronousQueue<>(),
           new ThreadFactory() {
+
               private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
 
               @Override
