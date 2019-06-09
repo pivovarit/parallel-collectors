@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
@@ -16,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static java.lang.Runtime.getRuntime;
-import static java.util.concurrent.CompletableFuture.runAsync;
 
 /**
  * @author Grzegorz Piwowarek
@@ -30,6 +31,7 @@ final class Dispatcher<T> {
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
 
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
+    private final Queue<Future<Void>> cancellables = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
     private final Semaphore limiter;
@@ -56,13 +58,15 @@ final class Dispatcher<T> {
                 }
 
                 limiter.acquire();
-                runAsync(() -> {
+                FutureTask<Void> f = new FutureTask<>(() -> {
                     try {
                         task.run();
                     } finally {
                         limiter.release();
                     }
-                }, executor);
+                }, null);
+                cancellables.add(f);
+                executor.execute(f);
             }
             completionSignaller.complete(null);
         }));
@@ -106,6 +110,7 @@ final class Dispatcher<T> {
     private void handle(Throwable e) {
         completionSignaller.completeExceptionally(e);
         pending.forEach(future -> future.completeExceptionally(e));
+        cancellables.forEach(future -> future.cancel(true));
         shortCircuited = true;
         dispatcher.shutdownNow();
     }
