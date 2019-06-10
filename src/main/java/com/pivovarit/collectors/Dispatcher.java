@@ -1,7 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -32,8 +30,8 @@ final class Dispatcher<T> {
 
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
 
-    private final List<Future<Void>> cancellables = new ArrayList<>();
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
+    private final Queue<Future<Void>> cancellables = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
     private final Semaphore limiter;
