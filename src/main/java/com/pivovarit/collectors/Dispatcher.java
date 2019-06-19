@@ -58,15 +58,7 @@ final class Dispatcher<T> {
                 }
 
                 limiter.acquire();
-                FutureTask<Void> futureTask  = new FutureTask<>(() -> {
-                    try {
-                        task.run();
-                    } finally {
-                        limiter.release();
-                    }
-                }, null);
-                cancellables.add(futureTask);
-                executor.execute(futureTask);
+                executor.execute(cancellable(task));
             }
             completionSignaller.complete(null);
         }));
@@ -105,6 +97,18 @@ final class Dispatcher<T> {
                 throw e;
             }
         };
+    }
+
+    private FutureTask<Void> cancellable(Runnable task) {
+        FutureTask<Void> futureTask  = new FutureTask<>(() -> {
+            try {
+                task.run();
+            } finally {
+                limiter.release();
+            }
+        }, null);
+        cancellables.add(futureTask);
+        return futureTask;
     }
 
     private void handle(Throwable e) {
