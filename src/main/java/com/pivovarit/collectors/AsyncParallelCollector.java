@@ -82,13 +82,7 @@ class AsyncParallelCollector<T, R, C>
             dispatcher.stop();
 
             processor.apply(combined(futures))
-              .whenComplete((c, throwable) -> {
-                  if (throwable == null) {
-                      result.complete(c);
-                  } else {
-                      result.completeExceptionally(throwable);
-                  }
-              });
+              .whenComplete(processResult());
 
             return result;
         };
@@ -113,6 +107,16 @@ class AsyncParallelCollector<T, R, C>
                   return null;
               });
         }
+    }
+
+    private BiConsumer<C, Throwable> processResult() {
+        return (c, throwable) -> {
+            if (throwable == null) {
+                result.complete(c);
+            } else {
+                result.completeExceptionally(throwable);
+            }
+        };
     }
 
     private static <R, C extends Collection<R>> Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> toCollectionStrategy(Supplier<C> collectionFactory) {
