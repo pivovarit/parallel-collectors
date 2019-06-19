@@ -58,7 +58,7 @@ final class Dispatcher<T> {
                 }
 
                 limiter.acquire();
-                executor.execute(cancellable(task));
+                executor.execute(cancellable(combined(task, limiter::release)));
             }
             completionSignaller.complete(null);
         }));
@@ -99,14 +99,18 @@ final class Dispatcher<T> {
         };
     }
 
-    private FutureTask<Void> cancellable(Runnable task) {
-        FutureTask<Void> futureTask  = new FutureTask<>(() -> {
+    private static Runnable combined(Runnable task, Runnable finisher) {
+        return () -> {
             try {
                 task.run();
             } finally {
-                limiter.release();
+                finisher.run();
             }
-        }, null);
+        };
+    }
+
+    private FutureTask<Void> cancellable(Runnable task) {
+        FutureTask<Void> futureTask  = new FutureTask<>(task, null);
         cancellables.add(futureTask);
         return futureTask;
     }
