@@ -31,7 +31,7 @@ final class Dispatcher<T> {
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
 
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
-    private final Queue<Future<Void>> cancellables = new ConcurrentLinkedQueue<>();
+    private final Queue<Future<Void>> cancelables = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
     private final Executor executor;
     private final Semaphore limiter;
@@ -111,7 +111,7 @@ final class Dispatcher<T> {
 
     private FutureTask<Void> cancellable(Runnable task) {
         FutureTask<Void> futureTask  = new FutureTask<>(task, null);
-        cancellables.add(futureTask);
+        cancelables.add(futureTask);
         return futureTask;
     }
 
@@ -119,7 +119,7 @@ final class Dispatcher<T> {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
         pending.forEach(future -> future.completeExceptionally(e));
-        cancellables.forEach(future -> future.cancel(true));
+        cancelables.forEach(future -> future.cancel(true));
         dispatcher.shutdownNow();
     }
 
