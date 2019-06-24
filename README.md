@@ -12,7 +12,7 @@ Parallel Collectors is a toolkit easing parallel collection processing in Java u
     list.stream()
       .collect(parallelToList(i -> foo(i), executor, parallelism))
         .orTimeout(1000, MILLISECONDS)
-        .thenAccept(System.out::println)
+        .thenAcceptAsync(System.out::println, otherExecutor)
         .thenRun(() -> System.out.println("Finished!"));
       
 They are:
