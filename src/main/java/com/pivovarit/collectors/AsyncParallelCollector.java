@@ -81,7 +81,7 @@ class AsyncParallelCollector<T, R, C>
         return futures -> {
             dispatcher.stop();
 
-            processor.apply(combined(futures))
+            processor.apply(toCombined(futures))
               .whenComplete(processResult());
 
             return result;
@@ -93,7 +93,7 @@ class AsyncParallelCollector<T, R, C>
         return Collections.emptySet();
     }
 
-    private static <T> CompletableFuture<Stream<T>> combined(List<CompletableFuture<T>> futures) {
+    private static <T> CompletableFuture<Stream<T>> toCombined(List<CompletableFuture<T>> futures) {
         return allOf(futures.toArray(new CompletableFuture<?>[0]))
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join));
