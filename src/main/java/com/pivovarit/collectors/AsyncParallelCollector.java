@@ -31,28 +31,28 @@ class AsyncParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final Dispatcher<R> dispatcher;
-    private final Function<T, R> function;
+    private final Function<T, R> mapper;
     private final Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor;
 
     protected final CompletableFuture<C> result = new CompletableFuture<>();
 
     private AsyncParallelCollector(
-      Function<T, R> function,
+      Function<T, R> mapper,
       Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor,
       Executor executor,
       int parallelism) {
         this.dispatcher = new Dispatcher<>(executor, parallelism);
         this.processor = processor;
-        this.function = function;
+        this.mapper = mapper;
     }
 
     private AsyncParallelCollector(
-      Function<T, R> function,
+      Function<T, R> mapper,
       Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor,
       Executor executor) {
         this.dispatcher = new Dispatcher<>(executor);
         this.processor = processor;
-        this.function = function;
+        this.mapper = mapper;
     }
 
     @Override
@@ -72,7 +72,7 @@ class AsyncParallelCollector<T, R, C>
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             startConsuming();
-            acc.add(dispatcher.enqueue(() -> function.apply(e)));
+            acc.add(dispatcher.enqueue(() -> mapper.apply(e)));
         };
     }
 
