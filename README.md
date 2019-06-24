@@ -7,21 +7,21 @@
         <img src="https://img.shields.io/twitter/follow/pivovarit.svg?style=social&logo=twitter"
             alt="follow on Twitter"></a>
 
-Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API. 
+Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by Parallel Streams.
 
     list.stream()
       .collect(parallelToList(i -> foo(i), executor, parallelism))
         .orTimeout(1000, MILLISECONDS)
-        .thenAccept(System.out::println)
+        .thenAcceptAsync(System.out::println, otherExecutor)
         .thenRun(() -> System.out.println("Finished!"));
       
 They are:
 - lightweight (yes, you could achieve the same with Project Reactor, but that's often a way too big hammer for the job)
 - powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
-- non-blocking (no need to block the main thread while waiting for the result to arrive)
-- non-invasive (they are just custom implementations of `Collector` interface, no magic)
-- versatile (missing an API for your use case? just `parallelToStream` and continue with Stream API)
+- non-blocking (no need to block the calling thread while waiting for the result to arrive)
+- non-invasive (they are just custom implementations of `Collector` interface, no magic inside)
+- versatile (missing an API for your use case? just `parallelToStream` and process the resulting Stream with the whole generosity of Stream API)
 
 ## Philosophy
 
@@ -147,10 +147,10 @@ This makes it possible to conveniently apply callbacks, and compose with other `
 
     list.stream()
       .collect(parallelToList(i -> foo(i), executor))
-      .thenAccept(System.out::println)
+      .thenAcceptAsync(System.out::println, otherExecutor)
       .thenRun(() -> System.out.println("Finished!"));
       
-Or just `join()` if you just want to block and wait for the result:
+Or just `join()` if you just want to block the calling thread and wait for the result:
 
     List<String> result = list.stream()
       .collect(parallelToList(i -> foo(i), executor))
@@ -238,11 +238,12 @@ None - the library is implemented using core Java libraries.
 
 ### Good Practices
 
-- Always provide reasonable timeouts for `CompletableFuture`s [(how-to)](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit))
+- Consider providing reasonable timeouts for `CompletableFuture`s in order to not block for unreasonably long in case when something bad happens [(how-to)](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit))
 - Name your thread pools - it makes debugging easier [(how-to)](https://stackoverflow.com/a/9748697/2229438)
 - Limit the size of a working queue of your thread pool [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
 - Always limit the level of parallelism [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
+- Keep in mind that `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)` will blocking the calling thread. If this is problematic, use `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)Async` instead.
 
 ### Limitations
 
