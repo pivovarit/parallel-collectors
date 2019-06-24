@@ -19,9 +19,9 @@ They are:
 - lightweight (yes, you could achieve the same with Project Reactor, but that's often a way too big hammer for the job)
 - powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
-- non-blocking (no need to block the main thread while waiting for the result to arrive)
-- non-invasive (they are just custom implementations of `Collector` interface, no magic)
-- versatile (missing an API for your use case? just `parallelToStream` and continue with Stream API)
+- non-blocking (no need to block the calling thread while waiting for the result to arrive)
+- non-invasive (they are just custom implementations of `Collector` interface, no magic inside)
+- versatile (missing an API for your use case? just `parallelToStream` and process the resulting Stream with the whole generosity of Stream API)
 
 ## Philosophy
 
@@ -147,10 +147,10 @@ This makes it possible to conveniently apply callbacks, and compose with other `
 
     list.stream()
       .collect(parallelToList(i -> foo(i), executor))
-      .thenAccept(System.out::println)
+      .thenAcceptAsync(System.out::println, otherExecutor)
       .thenRun(() -> System.out.println("Finished!"));
       
-Or just `join()` if you just want to block and wait for the result:
+Or just `join()` if you just want to block the calling thread and wait for the result:
 
     List<String> result = list.stream()
       .collect(parallelToList(i -> foo(i), executor))
@@ -243,6 +243,7 @@ None - the library is implemented using core Java libraries.
 - Limit the size of a working queue of your thread pool [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
 - Always limit the level of parallelism [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
 - An unused `ExecutorService` should be shut down to allow reclamation of its resources
+- Keep in mind that `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)` will blocking the calling thread. If this is problematic, use `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)Async` instead.
 
 ### Limitations
 
