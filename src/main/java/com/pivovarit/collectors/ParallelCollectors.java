@@ -554,9 +554,11 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 1.0.0
+     * @deprecated use {@link ParallelCollectors#parallel(Function, Executor)} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor) {
-        return ParallelStreamCollector.streaming(mapper, executor);
+        return ParallelCollectors.parallel(mapper, executor);
     }
 
     /**
@@ -580,9 +582,11 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 1.0.0
+     * @deprecated use {@link ParallelCollectors#parallel(Function, Executor, int)} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor, int parallelism) {
-        return ParallelStreamCollector.streaming(mapper, executor, parallelism);
+        return ParallelCollectors.parallel(mapper, executor, parallelism);
     }
 
     /**
@@ -610,9 +614,11 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 1.0.0
+     * @deprecated use {@link ParallelCollectors#parallelOrdered(Function, Executor)} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor) {
-        return ParallelStreamCollector.streamingOrdered(mapper, executor);
+        return ParallelCollectors.parallelOrdered(mapper, executor);
     }
 
     /**
@@ -636,8 +642,123 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 1.0.0
+     * @deprecated use {@link ParallelCollectors#parallelOrdered(Function, Executor, int)} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
+        return ParallelCollectors.parallelOrdered(mapper, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning a {@link Stream} instance returning results in completion order
+     *
+     * <br><br>
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br><br>
+     * Instances should not be reused.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelMap(i -> foo(), executor))
+     *   .collect(toList());
+     * }</pre>
+     *
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 1.1.0
+     */
+    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor) {
+        return ParallelStreamCollector.streaming(mapper, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning a {@link Stream} instance returning results as they arrive.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelMap(i -> foo(), executor, 2))
+     *   .collect(toList());
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 1.1.0
+     */
+    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
+        return ParallelStreamCollector.streaming(mapper, executor, parallelism);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
+     *
+     * <br><br>
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br><br>
+     * Instances should not be reused.
+     * <br><br>
+     * Example:
+     * <pre>{@code
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelMapOrdered(i -> foo(), executor))
+     *   .collect(toList());
+     * }</pre>
+     *
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 1.1.0
+     */
+    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor) {
+        return ParallelStreamCollector.streamingOrdered(mapper, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * List<String> result = Stream.of(1, 2, 3)
+     *   .collect(parallelMapOrdered(i -> foo(), executor, 2))
+     *   .collect(toList());
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param parallelism the parallelism level
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
+     *
+     * @since 1.1.0
+     */
+    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
 }
