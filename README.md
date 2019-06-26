@@ -247,7 +247,6 @@ None - the library is implemented using core Java libraries.
 
 ### Limitations
 
-- short-circuiting after encountering an exception doesn't actually kill background tasks (`CompletableFuture` limitation)
 - collected `Stream` is always evaluated as a whole, even if the following operation is short-circuiting
 - can't be used for working with infinite streams
 
