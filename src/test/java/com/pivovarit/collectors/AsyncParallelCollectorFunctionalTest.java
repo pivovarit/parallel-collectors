@@ -203,6 +203,7 @@ class AsyncParallelCollectorFunctionalTest {
                 assertThatThrownBy(IntStream.range(0, size).boxed()
                   .collect(collector.apply(i -> {
                       try {
+                          Thread.sleep(50);
                           if (i == size - 1) throw new NullPointerException();
                           Thread.sleep(Integer.MAX_VALUE);
                       } catch (InterruptedException ex) {

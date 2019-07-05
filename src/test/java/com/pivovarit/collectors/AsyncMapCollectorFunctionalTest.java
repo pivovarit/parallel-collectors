@@ -126,6 +126,7 @@ class AsyncMapCollectorFunctionalTest {
                 assertThatThrownBy(IntStream.range(0, size).boxed()
                   .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> {
                       try {
+                          Thread.sleep(50);
                           if (i == size - 1) throw new NullPointerException();
                           Thread.sleep(Integer.MAX_VALUE);
                       } catch (InterruptedException ex) {
