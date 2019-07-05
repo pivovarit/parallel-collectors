@@ -199,10 +199,14 @@ class AsyncParallelCollectorFunctionalTest {
             AtomicLong counter = new AtomicLong();
             int size = 10;
 
+            CountDownLatch countDownLatch = new CountDownLatch(size);
+
             runWithExecutor(e -> {
                 assertThatThrownBy(IntStream.range(0, size).boxed()
                   .collect(collector.apply(i -> {
                       try {
+                          countDownLatch.countDown();
+                          countDownLatch.await();
                           Thread.sleep(50);
                           if (i == size - 1) throw new NullPointerException();
                           Thread.sleep(Integer.MAX_VALUE);

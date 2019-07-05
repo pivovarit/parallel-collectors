@@ -122,11 +122,14 @@ class AsyncMapCollectorFunctionalTest {
             AtomicLong counter = new AtomicLong();
             int size = 10;
 
+            CountDownLatch countDownLatch = new CountDownLatch(size);
+
             runWithExecutor(e -> {
                 assertThatThrownBy(IntStream.range(0, size).boxed()
                   .collect(collector.apply(new AbstractMap.SimpleEntry<>(i -> {
                       try {
-                          Thread.sleep(50);
+                          countDownLatch.countDown();
+                          countDownLatch.await();
                           if (i == size - 1) throw new NullPointerException();
                           Thread.sleep(Integer.MAX_VALUE);
                       } catch (InterruptedException ex) {
