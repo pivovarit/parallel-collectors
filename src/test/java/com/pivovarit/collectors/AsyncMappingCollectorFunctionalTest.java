@@ -190,12 +190,11 @@ class AsyncMappingCollectorFunctionalTest {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
             AtomicInteger counter = new AtomicInteger();
 
-            IntStream.iterate(1, i -> returnWithDelay(i + 1, ofMillis(100))).limit(2)
-              .boxed()
+            Stream.generate(() -> returnWithDelay(42, ofMillis(100))).limit(2)
               .collect(collector.apply(i -> counter.incrementAndGet(), executor));
 
             await()
-              .atMost(200, TimeUnit.MILLISECONDS)
+              .atMost(150, TimeUnit.MILLISECONDS)
               .until(() -> counter.get() > 0);
         });
     }
