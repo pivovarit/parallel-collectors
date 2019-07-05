@@ -20,7 +20,7 @@ They are:
 - powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously) 
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
 - non-blocking (no need to block the calling thread while waiting for the result to arrive)
-- non-invasive (they are just custom implementations of `Collector` interface, no magic inside)
+- non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies)
 - versatile (missing an API for your use case? just `parallelToStream` and process the resulting Stream with the whole generosity of Stream API)
 
 ## Philosophy
@@ -38,7 +38,7 @@ Even if this tool makes it easy to parallelize things, it doesn't always mean th
 
 Often, this library will turn out to be a wrong tool for the job, it's important to follow up on the root cause and double-check if parallelism is the way to go.
 
-**It often turns out that the root cause can be addressed, for example, by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
+**Often it will turn out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
 
 ## Rationale
 
@@ -49,7 +49,8 @@ Stream API is a great tool for collection processing, especially if you need to 
         IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
     }
     
-**However, Parallel Streams execute tasks on a shared `ForkJoinPool` instance**. 
+**However, Parallel Streams execute tasks on a shared `ForkJoinPool` instance**.
+ 
 Unfortunately, it's not the best choice for running blocking operations even when using `ManagedBlocker` - [as explained here by Tagir Valeev](https://stackoverflow.com/a/37518272/2229438)) - this could easily lead to the saturation of the common pool, and to a performance degradation of everything that uses it.
 
 For example:
@@ -73,24 +74,21 @@ Not even mentioning that this approach was seriously flawed before JDK-10 - if a
 
 ## Basic API
 
-The main entrypoint to the libary is the `com.pivovarit.collectors.ParallelCollectors` class - which mirrors the `java.util.stream.Collectors` and contains static factory methods returning custom `java.util.stream.Collector` implementations enhanced with parallel processing capabilities.
-
-Since the library relies on a native `java.util.stream.Collector` mechanism, it was possible to achieve compatibility with Stream API without performing any intrusive surgery.
-
+The main entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
 
 ### Available Collectors:
 
 ##### Sync:
 
-_parallelMap_:
+_parallel_:
 
-- `parallelMap(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
-- `parallelMap(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
+- `parallel(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
+- `parallel(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
 
-_parallelMapOrdered_:
+_parallelOrdered_:
 
-- `parallelMapOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
-- `parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
+- `parallelOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
+- `parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
 
 ##### Async:
 
@@ -122,7 +120,7 @@ _parallelToStream_:
 
 ##### Blocking Semantics
 
-If you want to achieve blocking semantics, just add `.join()` straight after collecting:
+If you want to achieve blocking semantics, just add `.join()` straight after the `collect()` call:
 
     ...
     .collect(parallelToList(i -> 42, executor))
@@ -132,9 +130,7 @@ Above can be used in conjunction with `Stream#collect` as any other `Collector` 
  
 - **By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
 
-- **All those collectors are one-off and should not be reused unless you know what you're doing.**
-
-- **Will hang forever when used for consuming infinite streams**
+- **All parallel collectors are one-off and should not be reused unless you know what you're doing.**
 
 ### Leveraging CompletableFuture
 
@@ -247,14 +243,16 @@ None - the library is implemented using core Java libraries.
 
 ### Limitations
 
-- collected `Stream` is always evaluated as a whole, even if the following operation is short-circuiting
-- can't be used for working with infinite streams
+Collected `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
+This means that none of these should be used for working with infinite streams.
+
+This limitation is imposed by the design of the `Collector` API.
 
 ## Version History
 
 ### [1.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.1.0) (24-06-2019)
 - Introduced interruptions/short-circuiting of tasks when at least one exceptional completion happens
-- Deprecated `parallelMap` and `parallelMapOrdered` and replace them with `parallel` and `parallelOrdered`
+- Deprecated `parallelMap` and `parallelMapOrdered` and replaced them with `parallel` and `parallelOrdered`
 
 ### [1.0.3](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.3) (09-06-2019)
 - Reimplemented `CompletionOrderSpliterator` with throughput in mind

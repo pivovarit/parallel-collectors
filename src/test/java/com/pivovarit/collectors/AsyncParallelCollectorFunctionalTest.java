@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -59,13 +60,13 @@ class AsyncParallelCollectorFunctionalTest {
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldNotSwallowException(collector, name),
+          shouldInterruptOnException(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
-          shouldBeConsistent(collector, name),
+          shouldRemainConsistent(collector, name),
           shouldStartConsumingImmediately(collector, name)
         );
     }
 
-    //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(toList());
@@ -77,7 +78,6 @@ class AsyncParallelCollectorFunctionalTest {
         });
     }
 
-    //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldCollectToEmpty(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect to empty", name), () -> {
             List<Integer> elements = IntStream.of().boxed().collect(toList());
@@ -88,7 +88,6 @@ class AsyncParallelCollectorFunctionalTest {
         });
     }
 
-    //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldCollect(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
@@ -100,7 +99,6 @@ class AsyncParallelCollectorFunctionalTest {
         });
     }
 
-    //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldShortCircuitOnException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should short circuit on exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 100).boxed().collect(toList());
@@ -120,7 +118,6 @@ class AsyncParallelCollectorFunctionalTest {
         });
     }
 
-    //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldNotSwallowException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
@@ -140,7 +137,6 @@ class AsyncParallelCollectorFunctionalTest {
         });
     }
 
-    //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldSurviveRejectedExecutionException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
@@ -154,14 +150,15 @@ class AsyncParallelCollectorFunctionalTest {
         });
     }
 
-    //@Test
-    private static <R extends Stream<Integer>> DynamicTest shouldBeConsistent(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Stream<Integer>> DynamicTest shouldRemainConsistent(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should remain consistent", name), () -> {
-            ExecutorService executor = Executors.newFixedThreadPool(1000);
-            try {
-                List<Integer> elements = IntStream.range(0, 1000).boxed().collect(toList());
+            int parallelism = 100;
 
-                CountDownLatch countDownLatch = new CountDownLatch(1000);
+            ExecutorService executor = Executors.newFixedThreadPool(parallelism);
+            try {
+                List<Integer> elements = IntStream.range(0, parallelism).boxed().collect(toList());
+
+                CountDownLatch countDownLatch = new CountDownLatch(parallelism);
 
                 R result = elements.stream()
                   .collect(collector.apply(i -> {
@@ -184,18 +181,44 @@ class AsyncParallelCollectorFunctionalTest {
         });
     }
 
-    //@Test
     private static <R extends Stream<Integer>> DynamicTest shouldStartConsumingImmediately(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
             AtomicInteger counter = new AtomicInteger();
 
-            IntStream.range(0, 3).boxed()
-              .map(i -> returnWithDelay(i, ofMillis(100)))
+            Stream.generate(() -> returnWithDelay(42, ofMillis(100))).limit(2)
               .collect(collector.apply(i -> counter.incrementAndGet(), executor));
 
             await()
-              .atMost(200, TimeUnit.MILLISECONDS)
+              .atMost(150, TimeUnit.MILLISECONDS)
               .until(() -> counter.get() > 0);
+        });
+    }
+
+    private static <R extends Stream<Integer>> DynamicTest shouldInterruptOnException(BiFunction<Function<Integer, Integer>, Executor, Collector<Integer, ?, CompletableFuture<Stream<Integer>>>> collector, String name) {
+        return dynamicTest(format("%s: should interrupt on exception", name), () -> {
+            AtomicLong counter = new AtomicLong();
+            int size = 10;
+
+            CountDownLatch countDownLatch = new CountDownLatch(size);
+
+            runWithExecutor(e -> {
+                assertThatThrownBy(IntStream.range(0, size).boxed()
+                  .collect(collector.apply(i -> {
+                      try {
+                          countDownLatch.countDown();
+                          countDownLatch.await();
+                          Thread.sleep(50);
+                          if (i == size - 1) throw new NullPointerException();
+                          Thread.sleep(Integer.MAX_VALUE);
+                      } catch (InterruptedException ex) {
+                          counter.incrementAndGet();
+                      }
+                      return i;
+                  }, e))::join)
+                  .hasCauseExactlyInstanceOf(NullPointerException.class);
+
+                await().until(() -> counter.get() == size - 1);
+            }, size);
         });
     }
 }
