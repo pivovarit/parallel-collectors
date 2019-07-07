@@ -1,10 +1,11 @@
 # Java Stream API Parallel Collectors - overcoming limitations of standard Parallel Streams
 
-[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
   <a href="https://twitter.com/intent/follow?screen_name=pivovarit">
         <img src="https://img.shields.io/twitter/follow/pivovarit.svg?style=social&logo=twitter"
             alt="follow on Twitter"></a>
+            
+[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by Parallel Streams.
 
