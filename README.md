@@ -253,6 +253,7 @@ This limitation is imposed by the design of the `Collector` API.
 ### [1.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.1.0) (24-06-2019)
 - Introduced interruptions/short-circuiting of tasks when at least one exceptional completion happens
 - Deprecated `parallelMap` and `parallelMapOrdered` and replaced them with `parallel` and `parallelOrdered`
+----
 
 ### [1.0.3](https://github.com/pivovarit/parallel-collectors/releases/tag/1.0.3) (09-06-2019)
 - Reimplemented `CompletionOrderSpliterator` with throughput in mind
