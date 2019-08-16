@@ -136,17 +136,11 @@ final class Dispatcher<T> {
         return new ThreadPoolExecutor(0, 1,
           0L, TimeUnit.MILLISECONDS,
           new SynchronousQueue<>(),
-          new ThreadFactory() {
-
-              private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
-
-              @Override
-              public Thread newThread(Runnable task) {
-                  Thread thread = defaultThreadFactory.newThread(task);
-                  thread.setName("parallel-collector-" + thread.getName());
-                  thread.setDaemon(false);
-                  return thread;
-              }
+          task -> {
+              Thread thread = Executors.defaultThreadFactory().newThread(task);
+              thread.setName("parallel-collector-" + thread.getName());
+              thread.setDaemon(false);
+              return thread;
           });
     }
 }
