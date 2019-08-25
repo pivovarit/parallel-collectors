@@ -12,7 +12,6 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -136,17 +135,11 @@ final class Dispatcher<T> {
         return new ThreadPoolExecutor(0, 1,
           0L, TimeUnit.MILLISECONDS,
           new SynchronousQueue<>(),
-          new ThreadFactory() {
-
-              private final ThreadFactory defaultThreadFactory = Executors.defaultThreadFactory();
-
-              @Override
-              public Thread newThread(Runnable task) {
-                  Thread thread = defaultThreadFactory.newThread(task);
-                  thread.setName("parallel-collector-" + thread.getName());
-                  thread.setDaemon(false);
-                  return thread;
-              }
+          task -> {
+              Thread thread = Executors.defaultThreadFactory().newThread(task);
+              thread.setName("parallel-collector-" + thread.getName());
+              thread.setDaemon(false);
+              return thread;
           });
     }
 }
