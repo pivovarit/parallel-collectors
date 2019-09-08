@@ -13,13 +13,18 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 class ArchitectureTest {
 
-    private static final ArchRule moduleRules = classes()
+    private static final ArchRule FACADE_RULE = classes()
       .that()
       .arePublic()
       .should().haveSimpleName("ParallelCollectors")
       .andShould().haveOnlyFinalFields()
       .andShould().haveOnlyPrivateConstructors()
       .andShould().resideInAPackage("com.pivovarit.collectors");
+
+    private static final ArchRule NO_DEPS_RULE = classes()
+      .that().resideInAPackage("com.pivovarit.collectors")
+      .should()
+      .dependOnClassesThat().resideInAPackage("java..");
 
     private static final JavaClasses classes = new ClassFileImporter()
       .importClasspath(new ImportOptions()
@@ -29,6 +34,7 @@ class ArchitectureTest {
 
     @Test
     void validate() {
-        moduleRules.check(classes);
+        FACADE_RULE.check(classes);
+        NO_DEPS_RULE.check(classes);
     }
 }
