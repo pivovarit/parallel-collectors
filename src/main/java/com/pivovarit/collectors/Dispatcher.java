@@ -123,8 +123,8 @@ final class Dispatcher<T> {
     }
 
     @FunctionalInterface
-    interface CheckedRunnable<T extends Exception> {
-        void run() throws T;
+    interface CheckedRunnable {
+        void run() throws Exception;
     }
 
     private static int getDefaultParallelism() {
