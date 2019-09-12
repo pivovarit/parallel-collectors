@@ -85,7 +85,7 @@ final class Dispatcher<T> {
         return future;
     }
 
-    private Runnable withExceptionHandling(CheckedRunnable<?> action) {
+    private Runnable withExceptionHandling(CheckedRunnable action) {
         return () -> {
             try {
                 action.run();
@@ -123,8 +123,8 @@ final class Dispatcher<T> {
     }
 
     @FunctionalInterface
-    interface CheckedRunnable<T extends Exception> {
-        void run() throws T;
+    interface CheckedRunnable {
+        void run() throws Exception;
     }
 
     private static int getDefaultParallelism() {
