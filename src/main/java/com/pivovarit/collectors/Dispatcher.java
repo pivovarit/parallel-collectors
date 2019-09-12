@@ -85,7 +85,7 @@ final class Dispatcher<T> {
         return future;
     }
 
-    private Runnable withExceptionHandling(CheckedRunnable action) {
+    private Runnable withExceptionHandling(CheckedRunnable<?> action) {
         return () -> {
             try {
                 action.run();
