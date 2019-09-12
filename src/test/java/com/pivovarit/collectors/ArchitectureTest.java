@@ -13,15 +13,17 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 
 class ArchitectureTest {
 
-    private static final ArchRule FACADE_RULE = classes()
-      .that()
-      .arePublic()
+    private static final ArchRule SINGLE_PACKAGE_RULE = classes()
+      .should().resideInAPackage("com.pivovarit.collectors");
+
+    private static final ArchRule ONE_FACADE_RULE = classes()
+      .that().arePublic()
       .should().haveSimpleName("ParallelCollectors")
       .andShould().haveOnlyFinalFields()
       .andShould().haveOnlyPrivateConstructors()
       .andShould().resideInAPackage("com.pivovarit.collectors");
 
-    private static final ArchRule NO_DEPS_RULE = classes()
+    private static final ArchRule ZERO_DEPS_RULE = classes()
       .that().resideInAPackage("com.pivovarit.collectors")
       .should()
       .dependOnClassesThat().resideInAPackage("java..");
@@ -34,7 +36,8 @@ class ArchitectureTest {
 
     @Test
     void validate() {
-        FACADE_RULE.check(classes);
-        NO_DEPS_RULE.check(classes);
+        ONE_FACADE_RULE.check(classes);
+        ZERO_DEPS_RULE.check(classes);
+        SINGLE_PACKAGE_RULE.check(classes);
     }
 }
