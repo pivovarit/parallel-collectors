@@ -57,7 +57,7 @@ final class Dispatcher<T> {
                 }
 
                 limiter.acquire();
-                executor.execute(cancellable(combined(task, limiter::release)));
+                executor.execute(cancellable(withFinally(task, limiter::release)));
             }
             completionSignaller.complete(null);
         }));
@@ -98,7 +98,7 @@ final class Dispatcher<T> {
         };
     }
 
-    private static Runnable combined(Runnable task, Runnable finisher) {
+    private static Runnable withFinally(Runnable task, Runnable finisher) {
         return () -> {
             try {
                 task.run();
