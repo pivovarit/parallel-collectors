@@ -143,7 +143,7 @@
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5-engine</artifactId>
-            <version>0.11.0</version>
+            <version>0.12.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
