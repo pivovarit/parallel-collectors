@@ -34,7 +34,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>5.5.1</junit.version>
+        <junit.version>5.5.2</junit.version>
         <assertj.version>3.14.0</assertj.version>
         <awaitility.version>4.0.1</awaitility.version>
         <quickcheck.version>0.9</quickcheck.version>
