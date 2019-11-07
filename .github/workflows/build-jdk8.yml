@@ -1,4 +1,4 @@
-name: Java CI
+name: Build with JDK8
 
 on: [push]
 
