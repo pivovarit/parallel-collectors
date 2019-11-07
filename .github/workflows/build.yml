@@ -1,5 +1,4 @@
-name: Build with JDK8
-
+name: Build against JDKs
 on: [push]
 
 jobs:
