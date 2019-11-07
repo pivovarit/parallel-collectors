@@ -1,0 +1,19 @@
+name: Build with JDK8
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ '8', '11', '13' ]
+    name: Java ${{ matrix.java }} sample
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup java
+        uses: actions/setup-java@v1.0.0
+        with:
+          java-version: ${{ matrix.java }}
+          architecture: x64
+      - run: mvn package
