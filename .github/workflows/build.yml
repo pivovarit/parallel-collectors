@@ -7,14 +7,15 @@ jobs:
     strategy:
       matrix:
         java: [ '8', '11', '13' ]
-    name: Build with JDK ${{ matrix.java }}
+        architecture: [ 'x64' ]
+    name: Build with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
     steps:
       - uses: actions/checkout@v1
       - name: Setup JDK
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
-          architecture: x64
+          architecture: ${{ matrix.architecture }}
       - name: Build with Maven
         run: mvn package
 
