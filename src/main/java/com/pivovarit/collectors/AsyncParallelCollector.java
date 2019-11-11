@@ -194,6 +194,14 @@ class AsyncParallelCollector<T, R, C>
         return new AsyncParallelCollector<>(mapper, identity(), executor, parallelism);
     }
 
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(collector, "collector can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireValidParallelism(parallelism);
+        return new AsyncParallelCollector<>(mapper, r -> r.thenApply(s -> s.collect(collector)), executor, parallelism);
+    }
+
     static <R> Supplier<List<R>> defaultListSupplier() {
         return ArrayList::new;
     }
