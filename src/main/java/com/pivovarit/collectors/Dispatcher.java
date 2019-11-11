@@ -51,13 +51,13 @@ final class Dispatcher<T> {
         started = true;
         dispatcher.execute(withExceptionHandling(() -> {
             while (!Thread.currentThread().isInterrupted()) {
-                Runnable task = workingQueue.take();
-                if (task == POISON_PILL) {
+                Runnable task;
+                if ((task = workingQueue.take()) != POISON_PILL) {
+                    limiter.acquire();
+                    executor.execute(cancellable(withFinally(task, limiter::release)));
+                } else {
                     break;
                 }
-
-                limiter.acquire();
-                executor.execute(cancellable(withFinally(task, limiter::release)));
             }
             completionSignaller.complete(null);
         }));
