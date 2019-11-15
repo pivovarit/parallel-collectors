@@ -94,7 +94,7 @@ class AsyncParallelCollector<T, R, C>
     }
 
     private static <T> CompletableFuture<Stream<T>> toCombined(List<CompletableFuture<T>> futures) {
-        return allOf(futures.toArray(new CompletableFuture<?>[0]))
+        return allOf(futures)
           .thenApply(__ -> futures.stream()
             .map(CompletableFuture::join));
     }
@@ -107,6 +107,17 @@ class AsyncParallelCollector<T, R, C>
                   return null;
               });
         }
+    }
+
+    private static <T> CompletableFuture<Void> allOf(List<CompletableFuture<T>> futures) {
+        CompletableFuture<Void> result = new CompletableFuture<>();
+
+        futures.forEach(f -> f.handle((__, ex) -> ex != null && result.completeExceptionally(ex)));
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+          .handle((__, ex) -> ex != null ? result.completeExceptionally(ex) : result.complete(null));
+
+        return result;
     }
 
     private BiConsumer<C, Throwable> processResult() {
