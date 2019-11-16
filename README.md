@@ -250,6 +250,12 @@ This limitation is imposed by the design of the `Collector` API.
 
 ## Version History
 
+### [1.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.2.0) (16-11-2019)
+- Added new `parallel` methods that are interoperable with `java.util.stream.Collector`s
+- Simplified internal implementations
+- Deprecated `parallelTo(List/Set/Map/Collection)` methods in favor of the above one
+----
+
 ### [1.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.1.0) (24-06-2019)
 - Introduced interruptions/short-circuiting of tasks when at least one exceptional completion happens
 - Deprecated `parallelMap` and `parallelMapOrdered` and replaced them with `parallel` and `parallelOrdered`
