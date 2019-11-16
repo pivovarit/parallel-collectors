@@ -369,6 +369,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, merger, executor);
     }
@@ -400,6 +401,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, merger, executor, parallelism);
     }
@@ -435,6 +437,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, executor);
     }
@@ -467,6 +470,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, executor, parallelism);
     }
@@ -501,6 +505,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor);
     }
@@ -533,6 +538,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
         return AsyncParallelCollector
           .collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor, parallelism);
@@ -564,6 +570,7 @@ public final class ParallelCollectors {
      *
      * @since 0.3.0
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToStream(mapper, executor);
     }
@@ -595,6 +602,7 @@ public final class ParallelCollectors {
      *
      * @since 0.3.0
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
     }
