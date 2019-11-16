@@ -6,14 +6,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithCollector;
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultListSupplier;
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultSetSupplier;
+import static java.util.stream.Collectors.toList;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -23,6 +28,60 @@ import static com.pivovarit.collectors.AsyncParallelCollector.defaultSetSupplier
 public final class ParallelCollectors {
 
     private ParallelCollectors() {
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link CompletableFuture} containing a result of the application of the user-provided {@link Collector}.
+     *
+     * <br><br>
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallel(toList(), i -> foo(i), executor));
+     * }</pre>
+     *
+     * @param mapper    a transformation to be performed in parallel
+     * @param collector the {@code Collector} describing the reduction
+     * @param executor  the {@code Executor} to use for asynchronous execution
+     * @param <T>       the type of the collected elements
+     * @param <R>       the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 1.2.0
+     */
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+        return collectingWithCollector(collector, mapper, executor);
+    }
+
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link CompletableFuture} containing a result of the application of the user-provided {@link Collector}.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallel(toList(), i -> foo(i), executor, 2));
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param collector   the {@code Collector} describing the reduction
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     * @param parallelism the parallelism level
+     *
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 1.2.0
+     */
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+        return collectingWithCollector(collector, mapper, executor, parallelism);
     }
 
     /**
@@ -52,7 +111,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor) {
         return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor);
     }
@@ -82,7 +143,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor, int)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor, parallelism);
     }
@@ -112,7 +175,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor);
     }
@@ -140,7 +205,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor, int)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor, parallelism);
     }
@@ -170,7 +237,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor);
     }
@@ -203,7 +272,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor, int)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor, parallelism);
     }
@@ -298,6 +369,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, merger, executor);
     }
@@ -329,6 +401,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, BinaryOperator<V> merger, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, merger, executor, parallelism);
     }
@@ -364,6 +437,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, executor);
     }
@@ -396,6 +470,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, executor, parallelism);
     }
@@ -430,6 +505,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor) {
         return AsyncParallelCollector.collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor);
     }
@@ -462,6 +538,7 @@ public final class ParallelCollectors {
      *
      * @since 0.2.0
      */
+    @Deprecated // for removal
     public static <T, K, V> Collector<T, ?, CompletableFuture<Map<K, V>>> parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Supplier<Map<K, V>> mapSupplier, BinaryOperator<V> merger, Executor executor, int parallelism) {
         return AsyncParallelCollector
           .collectingToMap(keyMapper, valueMapper, mapSupplier, merger, executor, parallelism);
@@ -493,6 +570,7 @@ public final class ParallelCollectors {
      *
      * @since 0.3.0
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToStream(mapper, executor);
     }
@@ -524,6 +602,7 @@ public final class ParallelCollectors {
      *
      * @since 0.3.0
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
     }
