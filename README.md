@@ -248,3 +248,6 @@ This means that none of these should be used for working with infinite streams.
 
 This limitation is imposed by the design of the `Collector` API.
 
+----
+See `CHANGELOG.MD` for a complete version history.
+
