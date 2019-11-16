@@ -8,9 +8,10 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -28,7 +29,7 @@ class ToSetParallelismThrottlingTest {
         CompletableFuture<Set<Long>> result =
           Stream.generate(() -> 42L)
             .limit(10)
-            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(toSet(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -47,7 +48,7 @@ class ToSetParallelismThrottlingTest {
         CompletableFuture<Set<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(toSet(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()

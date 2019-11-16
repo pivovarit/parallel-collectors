@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelMap;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +26,7 @@ public class ParallelBDDTest extends ExecutorAwareTest {
         executor = threadPoolExecutor(4);
 
         List<Integer> result = Stream.of(350, 200, 0, 400)
-          .collect(parallelMap(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
+          .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
           .limit(2)
           .collect(Collectors.toList());
 

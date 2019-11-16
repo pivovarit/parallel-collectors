@@ -10,10 +10,11 @@ import org.junit.runner.RunWith;
 
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * @author Grzegorz Piwowarek
@@ -28,7 +29,7 @@ public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
         Stream.generate(() -> 42)
           .limit(unitsOfWork)
-          .collect(parallelToSet(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+          .collect(parallel(toSet(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         Awaitility.await()
           .until(() -> executor.count() == parallelism);

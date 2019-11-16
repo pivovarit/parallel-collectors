@@ -21,13 +21,10 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallel;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToSet;
 import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.runWithExecutor;
@@ -54,10 +51,9 @@ class AsyncMappingCollectorFunctionalTest {
     @TestFactory
     Stream<DynamicTest> testCollectors() {
         return of(
-          forCollector((mapper, e) -> parallelToSet(mapper, e, PARALLELISM), format("parallelToSet(p=%d)", PARALLELISM)),
           forCollector((mapper, e) -> parallel(toList(), mapper, e, 1000), format("parallel(toList(), p=%d)", PARALLELISM)),
           forCollector((mapper, e) -> parallel(toSet(), mapper, e, 1000), format("parallel(toSet(), p=%d)", PARALLELISM)),
-          forCollector((mapper, e) -> parallelToCollection(mapper, LinkedList::new, e, 1000), format("parallelToCollection(p=%d)", PARALLELISM))
+          forCollector((mapper, e) -> parallel(toCollection(LinkedList::new), mapper, e, 1000), format("parallel(toCollection(), p=%d)", PARALLELISM))
         ).flatMap(identity());
     }
 

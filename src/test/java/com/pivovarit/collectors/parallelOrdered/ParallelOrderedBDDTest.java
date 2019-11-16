@@ -11,7 +11,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelMapOrdered;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToOrderedStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +28,7 @@ public class ParallelOrderedBDDTest extends ExecutorAwareTest {
         executor = threadPoolExecutor(unitsOfWork);
 
         List<Integer> result = IntStream.range(0, unitsOfWork).boxed()
-          .collect(parallelMapOrdered(i -> returnWithDelay(i, ofMillis(new Random().nextInt(20))), executor, parallelism))
+          .collect(parallelToOrderedStream(i -> returnWithDelay(i, ofMillis(new Random().nextInt(20))), executor, parallelism))
           .collect(Collectors.toList());
 
         assertThat(result).isSorted();

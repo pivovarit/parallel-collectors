@@ -13,12 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToCollection;
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelayGaussian;
 import static java.time.Duration.ofMillis;
+import static java.util.stream.Collectors.toCollection;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -45,8 +46,8 @@ public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest 
         // given
         executor = threadPoolExecutor(unitsOfWork);
         List<Integer> result = Stream.iterate(0, i -> i + 1).limit(20)
-          .collect(parallelToCollection(i -> returnWithDelayGaussian(i, Duration
-            .ofMillis(10)), ArrayList::new, executor, parallelism))
+          .collect(parallel(toCollection(ArrayList::new), i -> returnWithDelayGaussian(i, Duration
+            .ofMillis(10)), executor, parallelism))
           .join();
 
         assertThat(result).isSorted();
