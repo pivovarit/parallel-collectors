@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithCollector;
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultListSupplier;
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultSetSupplier;
 
@@ -23,6 +24,14 @@ import static com.pivovarit.collectors.AsyncParallelCollector.defaultSetSupplier
 public final class ParallelCollectors {
 
     private ParallelCollectors() {
+    }
+
+    <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+        return collectingWithCollector(collector, mapper, executor);
+    }
+
+    <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+        return collectingWithCollector(collector, mapper, executor, parallelism);
     }
 
     /**
