@@ -29,7 +29,7 @@ public class ToSetParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
         Stream.generate(() -> 42)
           .limit(unitsOfWork)
-          .collect(parallel(toSet(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+          .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), toSet(), executor, parallelism));
 
         Awaitility.await()
           .until(() -> executor.count() == parallelism);

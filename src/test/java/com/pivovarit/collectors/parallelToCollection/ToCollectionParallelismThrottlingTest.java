@@ -28,7 +28,7 @@ class ToCollectionParallelismThrottlingTest {
 
         CompletableFuture<ArrayList<Long>> result = Stream.generate(() -> 42L)
           .limit(10)
-          .collect(parallel(toCollection(ArrayList::new), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+          .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), toCollection(ArrayList::new), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -47,7 +47,7 @@ class ToCollectionParallelismThrottlingTest {
         CompletableFuture<ArrayList<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(parallel(toCollection(ArrayList::new), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), toCollection(ArrayList::new), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()

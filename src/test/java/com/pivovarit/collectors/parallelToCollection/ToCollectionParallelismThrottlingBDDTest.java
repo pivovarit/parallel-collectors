@@ -46,8 +46,8 @@ public class ToCollectionParallelismThrottlingBDDTest extends ExecutorAwareTest 
         // given
         executor = threadPoolExecutor(unitsOfWork);
         List<Integer> result = Stream.iterate(0, i -> i + 1).limit(20)
-          .collect(parallel(toCollection(ArrayList::new), i -> returnWithDelayGaussian(i, Duration
-            .ofMillis(10)), executor, parallelism))
+          .collect(parallel(i -> returnWithDelayGaussian(i, Duration
+            .ofMillis(10)), toCollection(ArrayList::new), executor, parallelism))
           .join();
 
         assertThat(result).isSorted();

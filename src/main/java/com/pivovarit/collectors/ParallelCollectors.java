@@ -1,12 +1,16 @@
 package com.pivovarit.collectors;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithCollector;
+import static java.util.stream.Collectors.toList;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -14,6 +18,13 @@ import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithColl
  * @author Grzegorz Piwowarek
  */
 public final class ParallelCollectors {
+
+    public static final ExecutorService e = Executors.newSingleThreadExecutor();
+
+    public static void main(String[] args) {
+        CompletableFuture<List<Integer>> v1 = Stream.of(1, 2, 3)
+          .collect(parallel(i -> i, toList(), e, 2));
+    }
 
     private ParallelCollectors() {
     }
@@ -42,7 +53,7 @@ public final class ParallelCollectors {
      *
      * @since 2.0.0
      */
-    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor) {
         return collectingWithCollector(collector, mapper, executor);
     }
 
@@ -68,10 +79,9 @@ public final class ParallelCollectors {
      *
      * @since 2.0.0
      */
-    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
         return collectingWithCollector(collector, mapper, executor, parallelism);
     }
-
 
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}

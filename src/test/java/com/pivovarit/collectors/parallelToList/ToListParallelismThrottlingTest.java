@@ -28,7 +28,7 @@ class ToListParallelismThrottlingTest {
         CompletableFuture<List<Long>> result =
           Stream.generate(() -> 42L)
             .limit(10)
-            .collect(parallel(toList(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), toList(), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -49,7 +49,7 @@ class ToListParallelismThrottlingTest {
         CompletableFuture<List<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(parallel(toList(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), toList(), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()

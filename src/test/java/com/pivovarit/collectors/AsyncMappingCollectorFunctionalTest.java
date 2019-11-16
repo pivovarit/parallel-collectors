@@ -51,9 +51,9 @@ class AsyncMappingCollectorFunctionalTest {
     @TestFactory
     Stream<DynamicTest> testCollectors() {
         return of(
-          forCollector((mapper, e) -> parallel(toList(), mapper, e, 1000), format("parallel(toList(), p=%d)", PARALLELISM)),
-          forCollector((mapper, e) -> parallel(toSet(), mapper, e, 1000), format("parallel(toSet(), p=%d)", PARALLELISM)),
-          forCollector((mapper, e) -> parallel(toCollection(LinkedList::new), mapper, e, 1000), format("parallel(toCollection(), p=%d)", PARALLELISM))
+          forCollector((mapper, e) -> parallel(mapper, toList(), e, 1000), format("parallel(toList(), p=%d)", PARALLELISM)),
+          forCollector((mapper, e) -> parallel(mapper, toSet(), e, 1000), format("parallel(toSet(), p=%d)", PARALLELISM)),
+          forCollector((mapper, e) -> parallel(mapper, toCollection(LinkedList::new), e, 1000), format("parallel(toCollection(), p=%d)", PARALLELISM))
         ).flatMap(identity());
     }
 
