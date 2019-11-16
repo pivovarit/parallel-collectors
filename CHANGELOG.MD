@@ -71,3 +71,6 @@
 #### [0.0.1-RC1](https://github.com/pivovarit/parallel-collectors/releases/tag/parallel-collectors-0.0.1-RC1) (27-01-2019)
 
 * Initial release providing basic functionality
+
+----
+See `CHANGELOG.MD` for a complete version history.
