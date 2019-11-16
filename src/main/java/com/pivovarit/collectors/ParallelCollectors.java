@@ -87,7 +87,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<Stream<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToStream(i -> foo(), executor));
+     *   .collect(parallel(i -> foo(), executor));
      * }</pre>
      *
      * @param mapper   a transformation to be performed in parallel
@@ -117,7 +117,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<Stream<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToStream(i -> foo(), executor, 2));
+     *   .collect(parallel(i -> foo(), executor, 2));
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
@@ -148,7 +148,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelMap(i -> foo(), executor))
+     *   .collect(parallelToStream(i -> foo(), executor))
      *   .collect(toList());
      * }</pre>
      *
@@ -173,7 +173,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelMap(i -> foo(), executor, 2))
+     *   .collect(parallelToStream(i -> foo(), executor, 2))
      *   .collect(toList());
      * }</pre>
      *
@@ -204,7 +204,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelMapOrdered(i -> foo(), executor))
+     *   .collect(parallelToOrderedStream(i -> foo(), executor))
      *   .collect(toList());
      * }</pre>
      *
@@ -229,7 +229,7 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * List<String> result = Stream.of(1, 2, 3)
-     *   .collect(parallelMapOrdered(i -> foo(), executor, 2))
+     *   .collect(parallelToOrderedStream(i -> foo(), executor, 2))
      *   .collect(toList());
      * }</pre>
      *
