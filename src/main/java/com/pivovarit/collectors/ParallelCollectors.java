@@ -6,15 +6,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithCollector;
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultListSupplier;
 import static com.pivovarit.collectors.AsyncParallelCollector.defaultSetSupplier;
+import static java.util.stream.Collectors.toList;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -26,11 +30,57 @@ public final class ParallelCollectors {
     private ParallelCollectors() {
     }
 
-    <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link CompletableFuture} containing a result of the application of the user-provided {@link Collector}.
+     *
+     * <br><br>
+     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallel(toList(), i -> foo(i), executor));
+     * }</pre>
+     *
+     * @param mapper    a transformation to be performed in parallel
+     * @param collector the {@code Collector} describing the reduction
+     * @param executor  the {@code Executor} to use for asynchronous execution
+     * @param <T>       the type of the collected elements
+     * @param <R>       the result returned by {@code mapper}
+     *
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 1.2.0
+     */
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
         return collectingWithCollector(collector, mapper, executor);
     }
 
-    <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+    /**
+     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * and returning them as a {@link CompletableFuture} containing a result of the application of the user-provided {@link Collector}.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
+     *   .collect(parallel(toList(), i -> foo(i), executor, 2));
+     * }</pre>
+     *
+     * @param mapper      a transformation to be performed in parallel
+     * @param collector   the {@code Collector} describing the reduction
+     * @param executor    the {@code Executor} to use for asynchronous execution
+     * @param <T>         the type of the collected elements
+     * @param <R>         the result returned by {@code mapper}
+     * @param parallelism the parallelism level
+     *
+     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
+     *
+     * @since 1.2.0
+     */
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
         return collectingWithCollector(collector, mapper, executor, parallelism);
     }
 
