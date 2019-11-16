@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
@@ -26,7 +27,7 @@ class ToStreamParallelismThrottlingTest {
         CompletableFuture<Stream<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(parallelToStream(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -47,7 +48,7 @@ class ToStreamParallelismThrottlingTest {
         CompletableFuture<Stream<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(parallelToStream(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()

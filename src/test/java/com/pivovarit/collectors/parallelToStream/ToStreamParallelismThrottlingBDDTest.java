@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
@@ -44,7 +45,7 @@ public class ToStreamParallelismThrottlingBDDTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(unitsOfWork);
         List<Integer> result = Stream.iterate(0, i -> i + 1).limit(20)
-          .collect(parallelToStream(i -> returnWithDelayGaussian(i, Duration.ofMillis(10)), executor, parallelism))
+          .collect(parallel(i -> returnWithDelayGaussian(i, Duration.ofMillis(10)), executor, parallelism))
           .join()
           .collect(Collectors.toList());
 

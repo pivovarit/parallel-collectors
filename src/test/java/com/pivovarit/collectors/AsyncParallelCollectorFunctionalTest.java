@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
@@ -49,7 +50,7 @@ class AsyncParallelCollectorFunctionalTest {
     @TestFactory
     Stream<DynamicTest> testCollectors() {
         return of(
-          forCollector((mapper, e) -> parallelToStream(mapper, e, 1000), "parallelToStream(p=1000)")
+          forCollector((mapper, e) -> parallel(mapper, e, 1000), "parallelToStream(p=1000)")
         ).flatMap(identity());
     }
 

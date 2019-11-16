@@ -12,7 +12,6 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithCollector;
@@ -26,6 +25,27 @@ import static java.util.stream.Collectors.toList;
  * @author Grzegorz Piwowarek
  */
 public final class ParallelCollectors {
+
+    public static void main(String[] args) {
+        ExecutorService e = Executors.newCachedThreadPool(r -> {
+            Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            return thread;
+        });
+
+        CompletableFuture<List<Integer>> withCollector = Stream.of(1, 2, 3)
+          .collect(parallel(toList(), i -> i, e, 2));
+
+        CompletableFuture<Stream<Integer>> raw = Stream.of(1, 2, 3)
+          .collect(parallel(i -> i, e, 2));
+
+        Stream<Integer> toStreamSync = Stream.of(1, 2, 3)
+          .collect(parallelToStream(i -> i, e, 2));
+
+
+        Stream<Integer> toOrderedStreamSync = Stream.of(1, 2, 3)
+          .collect(parallelToOrderedStream(i -> i, e, 2));
+    }
 
     private ParallelCollectors() {
     }
@@ -564,7 +584,7 @@ public final class ParallelCollectors {
      *
      * @since 0.3.0
      */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToStream(mapper, executor);
     }
 
@@ -595,7 +615,7 @@ public final class ParallelCollectors {
      *
      * @since 0.3.0
      */
-    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
     }
 
@@ -629,7 +649,7 @@ public final class ParallelCollectors {
      */
     @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor) {
-        return ParallelCollectors.parallel(mapper, executor);
+        return ParallelCollectors.parallelToStream(mapper, executor);
     }
 
     /**
@@ -657,7 +677,7 @@ public final class ParallelCollectors {
      */
     @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMap(Function<T, R> mapper, Executor executor, int parallelism) {
-        return ParallelCollectors.parallel(mapper, executor, parallelism);
+        return ParallelCollectors.parallelToStream(mapper, executor, parallelism);
     }
 
     /**
@@ -685,11 +705,11 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 1.0.0
-     * @deprecated use {@link ParallelCollectors#parallelOrdered(Function, Executor)} instead
+     * @deprecated use {@link ParallelCollectors#parallelToOrderedStream(Function, Executor)} instead
      */
     @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor) {
-        return ParallelCollectors.parallelOrdered(mapper, executor);
+        return ParallelCollectors.parallelToOrderedStream(mapper, executor);
     }
 
     /**
@@ -713,11 +733,11 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 1.0.0
-     * @deprecated use {@link ParallelCollectors#parallelOrdered(Function, Executor, int)} instead
+     * @deprecated use {@link ParallelCollectors#parallelToOrderedStream(Function, Executor, int)} instead
      */
     @Deprecated // for removal
     public static <T, R> Collector<T, ?, Stream<R>> parallelMapOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
-        return ParallelCollectors.parallelOrdered(mapper, executor, parallelism);
+        return ParallelCollectors.parallelToOrderedStream(mapper, executor, parallelism);
     }
 
     /**
@@ -747,7 +767,7 @@ public final class ParallelCollectors {
      *
      * @since 1.1.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streaming(mapper, executor);
     }
 
@@ -773,7 +793,7 @@ public final class ParallelCollectors {
      *
      * @since 1.1.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streaming(mapper, executor, parallelism);
     }
 
@@ -803,7 +823,7 @@ public final class ParallelCollectors {
      *
      * @since 1.1.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor);
     }
 
@@ -829,7 +849,7 @@ public final class ParallelCollectors {
      *
      * @since 1.1.0
      */
-    public static <T, R> Collector<T, ?, Stream<R>> parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
 }
