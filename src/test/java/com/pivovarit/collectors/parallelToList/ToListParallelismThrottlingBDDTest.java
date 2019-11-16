@@ -10,13 +10,15 @@ import org.junit.runner.RunWith;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelayGaussian;
 import static java.time.Duration.ofMillis;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -32,7 +34,7 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
         Stream.generate(() -> 42)
           .limit(unitsOfWork)
-          .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+          .collect(parallel(toList(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         Awaitility.await()
           .until(() -> executor.count() == parallelism);
@@ -43,7 +45,7 @@ public class ToListParallelismThrottlingBDDTest extends ExecutorAwareTest {
         // given
         executor = threadPoolExecutor(unitsOfWork);
         List<Integer> result = Stream.iterate(0, i -> i + 1).limit(20)
-          .collect(parallelToList(i -> returnWithDelayGaussian(i, Duration.ofMillis(10)), executor, parallelism))
+          .collect(parallel(toList(), i -> returnWithDelayGaussian(i, Duration.ofMillis(10)), executor, parallelism))
           .join();
 
         assertThat(result).isSorted();

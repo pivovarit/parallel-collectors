@@ -26,27 +26,6 @@ import static java.util.stream.Collectors.toList;
  */
 public final class ParallelCollectors {
 
-    public static void main(String[] args) {
-        ExecutorService e = Executors.newCachedThreadPool(r -> {
-            Thread thread = new Thread(r);
-            thread.setDaemon(true);
-            return thread;
-        });
-
-        CompletableFuture<List<Integer>> withCollector = Stream.of(1, 2, 3)
-          .collect(parallel(toList(), i -> i, e, 2));
-
-        CompletableFuture<Stream<Integer>> raw = Stream.of(1, 2, 3)
-          .collect(parallel(i -> i, e, 2));
-
-        Stream<Integer> toStreamSync = Stream.of(1, 2, 3)
-          .collect(parallelToStream(i -> i, e, 2));
-
-
-        Stream<Integer> toOrderedStreamSync = Stream.of(1, 2, 3)
-          .collect(parallelToOrderedStream(i -> i, e, 2));
-    }
-
     private ParallelCollectors() {
     }
 
@@ -74,7 +53,7 @@ public final class ParallelCollectors {
      *
      * @since 1.2.0
      */
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
         return collectingWithCollector(collector, mapper, executor);
     }
 
@@ -100,7 +79,7 @@ public final class ParallelCollectors {
      *
      * @since 1.2.0
      */
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
         return collectingWithCollector(collector, mapper, executor, parallelism);
     }
 
@@ -168,68 +147,6 @@ public final class ParallelCollectors {
     @Deprecated // for removal
     public static <T, R, C extends Collection<R>> Collector<T, ?, CompletableFuture<C>> parallelToCollection(Function<T, R> mapper, Supplier<C> collectionSupplier, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToCollection(mapper, collectionSupplier, executor, parallelism);
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
-     *
-     * <br><br>
-     * The parallelism level defaults to {@code Runtime.availableProcessors() - 1}
-     *
-     * <br><br>
-     * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor));
-     * }</pre>
-     *
-     * @param mapper   a transformation to be performed in parallel
-     * @param executor the {@code Executor} to use for asynchronous execution
-     * @param <T>      the type of the collected elements
-     * @param <R>      the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
-     *
-     * @since 0.0.1
-     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor)} )} instead
-     */
-    @Deprecated // for removal
-    public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor) {
-        return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor);
-    }
-
-    /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
-     * and returning them as {@link CompletableFuture} containing a {@link List} of these elements
-     *
-     * <br><br>
-     * Encounter order is preserved. Instances should not be reused.
-     *
-     * <br>
-     * Example:
-     * <pre>{@code
-     * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallelToList(i -> foo(), executor, 2));
-     * }</pre>
-     *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param parallelism the parallelism level
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
-     *
-     * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code List} in parallel
-     *
-     * @since 0.0.1
-     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor, int)} )} instead
-     */
-    @Deprecated // for removal
-    public static <T, R> Collector<T, ?, CompletableFuture<List<R>>> parallelToList(Function<T, R> mapper, Executor executor, int parallelism) {
-        return AsyncParallelCollector.collectingToCollection(mapper, defaultListSupplier(), executor, parallelism);
     }
 
     /**

@@ -8,9 +8,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.parallelToList;
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -27,7 +28,7 @@ class ToListParallelismThrottlingTest {
         CompletableFuture<List<Long>> result =
           Stream.generate(() -> 42L)
             .limit(10)
-            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(toList(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -48,7 +49,7 @@ class ToListParallelismThrottlingTest {
         CompletableFuture<List<Long>> result =
           Stream.generate(() -> 42)
             .limit(10)
-            .collect(parallelToList(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
+            .collect(parallel(toList(), i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
