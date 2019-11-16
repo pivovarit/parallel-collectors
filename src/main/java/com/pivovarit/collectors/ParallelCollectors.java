@@ -233,7 +233,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor);
     }
@@ -266,7 +268,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Set} in parallel
      *
      * @since 0.0.1
+     * @deprecated use {@link ParallelCollectors#parallel(Collector, Function, Executor, int)} )} instead
      */
+    @Deprecated // for removal
     public static <T, R> Collector<T, ?, CompletableFuture<Set<R>>> parallelToSet(Function<T, R> mapper, Executor executor, int parallelism) {
         return AsyncParallelCollector.collectingToCollection(mapper, defaultSetSupplier(), executor, parallelism);
     }
