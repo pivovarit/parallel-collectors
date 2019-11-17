@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallel;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelayGaussian;
@@ -26,6 +27,21 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @RunWith(JUnitQuickcheck.class)
 public class ParallelismThrottlingBDDTest extends ExecutorAwareTest {
+
+    @Property(trials = TRIALS)
+    public void shouldCollectToListInCompletionOrder() {
+        // given
+        executor = threadPoolExecutor(4);
+
+        List<Integer> result = Stream.of(350, 200, 0, 400)
+          .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
+          .limit(2)
+          .collect(Collectors.toList());
+
+        assertThat(result).isSorted();
+
+        executor.shutdownNow();
+    }
 
     @Property(trials = TRIALS)
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
