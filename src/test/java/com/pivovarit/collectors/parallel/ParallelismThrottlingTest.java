@@ -22,15 +22,15 @@ import static org.awaitility.Awaitility.await;
 class ParallelismThrottlingTest {
 
     @Test
-    void shouldParallelizeToSetAndRespectParallelizm() {
+    void shouldRespectParallelizm() {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
-        CompletableFuture<List<Long>> result =
+        CompletableFuture<Stream<Long>> result =
           Stream.generate(() -> 42L)
             .limit(10)
-            .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), toList(), executor, parallelism));
+            .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), executor, parallelism));
 
         assertThat(result)
           .isNotCompleted()
@@ -43,7 +43,7 @@ class ParallelismThrottlingTest {
 
 
     @Test
-    void shouldParallelizeToSetAndRespectParallelizmMapping() {
+    void shouldRespectParallelizmMapping() {
         // given
         int parallelism = 2;
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
