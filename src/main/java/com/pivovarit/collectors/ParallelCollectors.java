@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -10,7 +9,6 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithCollector;
-import static java.util.stream.Collectors.toList;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
