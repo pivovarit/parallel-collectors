@@ -30,19 +30,6 @@ import static org.awaitility.Awaitility.await;
 public class ParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListInCompletionOrder() {
-        // given
-        executor = threadPoolExecutor(4);
-
-        List<Integer> result = Stream.of(350, 200, 0, 400)
-          .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
-          .limit(2)
-          .collect(Collectors.toList());
-
-        assertThat(result).isSorted();
-    }
-
-    @Property(trials = TRIALS)
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
         // given
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();

@@ -59,6 +59,7 @@ class ParallelismThrottlingTest {
           .isNotCancelled();
 
         await()
+          .pollDelay(500, TimeUnit.MILLISECONDS)
           .until(() -> executor.count() == parallelism);
     }
 }
