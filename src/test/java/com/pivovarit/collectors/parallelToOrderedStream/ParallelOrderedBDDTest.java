@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.parallelOrdered;
+package com.pivovarit.collectors.parallelToOrderedStream;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;

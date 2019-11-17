@@ -49,7 +49,7 @@ class AsyncMappingCollectorFunctionalTest {
     private static final Executor executor = Executors.newFixedThreadPool(100);
 
     @TestFactory
-    Stream<DynamicTest> testCollectors() {
+    Stream<DynamicTest> collectors() {
         return of(
           forCollector((mapper, e) -> parallel(mapper, toList(), e, 1000), format("parallel(toList(), p=%d)", PARALLELISM)),
           forCollector((mapper, e) -> parallel(mapper, toSet(), e, 1000), format("parallel(toSet(), p=%d)", PARALLELISM)),
