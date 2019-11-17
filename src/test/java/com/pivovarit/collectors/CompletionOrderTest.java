@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class OrderingTest extends ExecutorAwareTest {
+public class CompletionOrderTest extends ExecutorAwareTest {
 
     @Property(trials = TRIALS)
     public void shouldCollectInCompletionOrder() {
