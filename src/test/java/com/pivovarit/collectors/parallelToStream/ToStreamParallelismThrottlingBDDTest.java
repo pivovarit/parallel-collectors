@@ -31,7 +31,7 @@ import static org.awaitility.Awaitility.await;
 public class ToStreamParallelismThrottlingBDDTest extends ExecutorAwareTest {
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
+    public void shouldCollectWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {
         // given
         TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
 
