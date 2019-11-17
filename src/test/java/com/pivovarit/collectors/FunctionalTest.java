@@ -57,16 +57,16 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> collectors() {
         return of(
-          forCollector((mapper, e, p) -> parallel(mapper, toList(), e, p), format("parallel(toList(), p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM))
+          tests((mapper, e, p) -> parallel(mapper, toList(), e, p), format("parallel(toList(), p=%d)", PARALLELISM)),
+          tests((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM)),
+          tests((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM)),
+          tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM)),
+          tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM)),
+          tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM))
         ).flatMap(identity());
     }
 
-    private static <R extends Collection<Integer>> Stream<DynamicTest> forCollector(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldCollect(collector, name),
           shouldCollectToEmpty(collector, name),
@@ -103,7 +103,7 @@ class FunctionalTest {
             executor = Executors.newFixedThreadPool(parallelism);
 
             LocalTime before = LocalTime.now();
-            Collection<Integer> result = Stream.generate(() -> 42)
+            Stream.generate(() -> 42)
               .limit(4)
               .collect(collector.apply(i -> returnWithDelay(i, ofMillis(delayMillis)), executor, parallelism))
               .join();
