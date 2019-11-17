@@ -35,9 +35,17 @@ class ArchitectureTest {
         .with(DO_NOT_INCLUDE_TESTS));
 
     @Test
-    void validate() {
+    void shouldHaveSingleFacade() {
         ONE_FACADE_RULE.check(classes);
+    }
+
+    @Test
+    void shouldHaveZeroDependencies() {
         ZERO_DEPS_RULE.check(classes);
+    }
+
+    @Test
+    void shouldHaveSinglePackage() {
         SINGLE_PACKAGE_RULE.check(classes);
     }
 }
