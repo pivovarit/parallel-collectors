@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 /**
  * @author Grzegorz Piwowarek
  */
-class AsyncMappingCollectorFunctionalTest {
+class FunctionalTest {
 
     private static final int PARALLELISM = 1000;
     private static final Executor executor = Executors.newFixedThreadPool(100);
