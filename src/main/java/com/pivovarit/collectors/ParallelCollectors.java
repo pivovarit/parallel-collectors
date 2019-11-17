@@ -21,11 +21,6 @@ public final class ParallelCollectors {
 
     public static final ExecutorService e = Executors.newSingleThreadExecutor();
 
-    public static void main(String[] args) {
-        CompletableFuture<List<Integer>> v1 = Stream.of(1, 2, 3)
-          .collect(parallel(i -> i, toList(), e, 2));
-    }
-
     private ParallelCollectors() {
     }
 
