@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 import java.time.Duration;
@@ -15,7 +16,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -64,6 +67,19 @@ class FunctionalTest {
           tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM), false),
           tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
+    }
+
+    @Test
+    void shouldCollectInCompletionOrder() {
+        // given
+        executor = threadPoolExecutor(4);
+
+        List<Integer> result = Stream.of(350, 200, 0, 400)
+          .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), executor, 4))
+          .limit(2)
+          .collect(toList());
+
+        assertThat(result).isSorted();
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
@@ -269,6 +285,12 @@ class FunctionalTest {
     private static Collector<Integer, ?, CompletableFuture<Collection<Integer>>> adaptAsync(Collector<Integer, ?, Stream<Integer>> input) {
         return collectingAndThen(input, stream -> CompletableFuture
           .supplyAsync(() -> stream.collect(toList()), Executors.newSingleThreadExecutor()));
+    }
+
+    private static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
+        return new ThreadPoolExecutor(unitsOfWork, unitsOfWork,
+          0L, TimeUnit.MILLISECONDS,
+          new LinkedBlockingQueue<>());
     }
 
     @FunctionalInterface
