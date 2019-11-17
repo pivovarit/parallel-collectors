@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ParallelOrderedBDDTest extends ExecutorAwareTest {
 
     @Property(trials = 10)
-    public void shouldCollectToListInEncounterOrder(@InRange(minInt = 3, maxInt = 10) int unitsOfWork, @InRange(minInt = 10, maxInt = 40) int parallelism) {
+    public void shouldCollectInEncounterOrder(@InRange(minInt = 3, maxInt = 10) int unitsOfWork, @InRange(minInt = 10, maxInt = 40) int parallelism) {
         // given
         executor = threadPoolExecutor(unitsOfWork);
 
@@ -38,7 +38,7 @@ public class ParallelOrderedBDDTest extends ExecutorAwareTest {
     }
 
     @Property(trials = TRIALS)
-    public void shouldCollectToListInCompletionOrder() {
+    public void shouldCollectInCompletionOrder() {
         // given
         executor = threadPoolExecutor(4);
 
