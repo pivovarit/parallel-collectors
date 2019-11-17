@@ -17,8 +17,6 @@ import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithColl
  */
 public final class ParallelCollectors {
 
-    public static final ExecutorService e = Executors.newSingleThreadExecutor();
-
     private ParallelCollectors() {
     }
 
