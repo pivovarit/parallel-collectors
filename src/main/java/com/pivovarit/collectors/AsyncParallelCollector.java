@@ -27,14 +27,14 @@ import static java.util.stream.Collectors.toMap;
 /**
  * @author Grzegorz Piwowarek
  */
-class AsyncParallelCollector<T, R, C>
+final class AsyncParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> mapper;
     private final Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor;
 
-    protected final CompletableFuture<C> result = new CompletableFuture<>();
+    private final CompletableFuture<C> result = new CompletableFuture<>();
 
     private AsyncParallelCollector(
       Function<T, R> mapper,
