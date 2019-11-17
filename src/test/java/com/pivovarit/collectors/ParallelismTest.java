@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.parallel;
+package com.pivovarit.collectors;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
@@ -24,7 +24,7 @@ import static org.awaitility.Awaitility.await;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class ParallelismThrottlingBDDTest extends ExecutorAwareTest {
+public class ParallelismTest extends ExecutorAwareTest {
 
     @Property(trials = TRIALS)
     public void shouldCollectToListWithThrottledParallelism(@InRange(minInt = 20, maxInt = 100) int unitsOfWork, @InRange(minInt = 1, maxInt = 20) int parallelism) {

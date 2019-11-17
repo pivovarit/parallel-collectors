@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.parallelToOrderedStream;
+package com.pivovarit.collectors;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.InRange;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Grzegorz Piwowarek
  */
 @RunWith(JUnitQuickcheck.class)
-public class ParallelOrderedBDDTest extends ExecutorAwareTest {
+public class OrderingTest extends ExecutorAwareTest {
 
     @Property(trials = 10)
     public void shouldCollectInEncounterOrder(@InRange(minInt = 3, maxInt = 10) int unitsOfWork, @InRange(minInt = 10, maxInt = 40) int parallelism) {
