@@ -21,6 +21,7 @@ import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelayG
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * @author Grzegorz Piwowarek
@@ -39,8 +40,6 @@ public class ParallelismThrottlingBDDTest extends ExecutorAwareTest {
           .collect(Collectors.toList());
 
         assertThat(result).isSorted();
-
-        executor.shutdownNow();
     }
 
     @Property(trials = TRIALS)
@@ -52,7 +51,7 @@ public class ParallelismThrottlingBDDTest extends ExecutorAwareTest {
           .limit(unitsOfWork)
           .collect(parallel(i -> returnWithDelay(42L, ofMillis(Integer.MAX_VALUE)), toList(), executor, parallelism));
 
-        Awaitility.await()
+        await()
           .until(() -> executor.count() == parallelism);
     }
 
@@ -65,7 +64,5 @@ public class ParallelismThrottlingBDDTest extends ExecutorAwareTest {
           .join();
 
         assertThat(result).isSorted();
-
-        executor.shutdownNow();
     }
 }

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallel;
@@ -13,6 +14,7 @@ import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * @author Grzegorz Piwowarek
@@ -34,7 +36,8 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Awaitility.await()
+        await()
+          .pollDelay(500, TimeUnit.MILLISECONDS)
           .until(() -> executor.count() == parallelism);
     }
 
@@ -55,7 +58,7 @@ class ParallelismThrottlingTest {
           .isNotCompleted()
           .isNotCancelled();
 
-        Awaitility.await()
+        await()
           .until(() -> executor.count() == parallelism);
     }
 }
