@@ -54,7 +54,7 @@ public final class ParallelCollectors {
      *
      * @since 1.2.0
      */
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
         return collectingWithCollector(collector, mapper, executor);
     }
 
@@ -80,7 +80,7 @@ public final class ParallelCollectors {
      *
      * @since 1.2.0
      */
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
         return collectingWithCollector(collector, mapper, executor, parallelism);
     }
 
