@@ -1,9 +1,10 @@
 package com.pivovarit.collectors;
 
-import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -26,6 +27,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallel;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToOrderedStream;
+import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.runWithExecutor;
@@ -49,7 +52,7 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 class FunctionalTest {
 
     private static final int PARALLELISM = 1000;
-    private static final Executor executor = Executors.newFixedThreadPool(100);
+    private static Executor executor = Executors.newFixedThreadPool(100);
 
     @TestFactory
     Stream<DynamicTest> collectors() {
@@ -57,7 +60,9 @@ class FunctionalTest {
           forCollector((mapper, e, p) -> parallel(mapper, toList(), e, p), format("parallel(toList(), p=%d)", PARALLELISM)),
           forCollector((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM)),
           forCollector((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM))
+          forCollector((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM)),
+          forCollector((mapper, e, p) -> adaptStream(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM)),
+          forCollector((mapper, e, p) -> adaptStream(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM))
         ).flatMap(identity());
     }
 
@@ -79,48 +84,46 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> c, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             assertTimeoutPreemptively(ofMillis(100), () ->
-              Stream.<Integer>empty().collect(c.apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), executor, PARALLELISM)), "returned blocking future");
+              Stream.<Integer>empty().collect(c
+                .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), executor, PARALLELISM)), "returned blocking future");
         });
     }
 
-
     private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect to empty", name), () -> {
-            assertThat(Stream.<Integer>empty().collect(collector.apply(i -> i, executor, PARALLELISM)).join()).isEmpty();
+            assertThat(Stream.<Integer>empty().collect(collector.apply(i -> i, executor, PARALLELISM)).join())
+              .isEmpty();
         });
     }
 
     private static <R extends Collection<Integer>> DynamicTest shouldRespectParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should respect parallelism", name), () -> {
             int parallelism = 2;
-            TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
+            int delayMillis = 500;
+            executor = Executors.newFixedThreadPool(parallelism);
 
-            CompletableFuture<R> result = Stream.generate(() -> 42)
-              .limit(10)
-              .collect(collector.apply(i -> i, executor, parallelism));
+            LocalTime before = LocalTime.now();
+            Collection<Integer> result = Stream.generate(() -> 42)
+              .limit(4)
+              .collect(collector.apply(i -> returnWithDelay(i, ofMillis(delayMillis)), executor, parallelism))
+              .join();
 
-            assertThat(result)
-              .isNotCompleted()
-              .isNotCancelled();
-
-            await()
-              .pollDelay(500, TimeUnit.MILLISECONDS)
-              .until(() -> executor.count() == parallelism);
+            LocalTime after = LocalTime.now();
+            assertThat(Duration.between(before, after)).isGreaterThan(Duration.ofMillis(delayMillis * parallelism));
         });
     }
-
 
     private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
-            Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor, PARALLELISM)).join();
+            Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor, PARALLELISM))
+              .join();
 
             assertThat(result)
               .hasSameSizeAs(elements)
               .containsOnlyElementsOf(elements);
         });
     }
-
 
     private static <R extends Collection<Integer>> DynamicTest shouldShortCircuitOnException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should short circuit on exception", name), () -> {
@@ -139,7 +142,6 @@ class FunctionalTest {
             }, size);
         });
     }
-
 
     private static <R extends Collection<Integer>> DynamicTest shouldNotSwallowException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
@@ -160,7 +162,6 @@ class FunctionalTest {
         });
     }
 
-
     private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
@@ -173,7 +174,6 @@ class FunctionalTest {
               .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
         });
     }
-
 
     private static <R extends Collection<Integer>> DynamicTest shouldRemainConsistent(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should remain consistent", name), () -> {
@@ -206,7 +206,6 @@ class FunctionalTest {
             }
         });
     }
-
 
     private static <R extends Collection<Integer>> DynamicTest shouldStartConsumingImmediately(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
@@ -249,6 +248,11 @@ class FunctionalTest {
 
     private static Collector<Integer, ?, CompletableFuture<Collection<Integer>>> adapt(Collector<Integer, ?, CompletableFuture<Stream<Integer>>> input) {
         return collectingAndThen(input, stream -> stream.thenApply(s -> s.collect(Collectors.toList())));
+    }
+
+    private static Collector<Integer, ?, CompletableFuture<Collection<Integer>>> adaptStream(Collector<Integer, ?, Stream<Integer>> input) {
+        return collectingAndThen(input, stream -> CompletableFuture
+          .supplyAsync(() -> stream.collect(toList()), Executors.newSingleThreadExecutor()));
     }
 
     @FunctionalInterface
