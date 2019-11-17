@@ -1,5 +1,8 @@
 # Version History
 
+### [1.2.1](https://github.com/pivovarit/parallel-collectors/releases/tag/1.2.1) (17-11-2019)
+- Adjusted visibility modifiers of some API methods
+
 ### [1.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/1.2.0) (16-11-2019)
 - Added new `parallel` methods that are interoperable with `java.util.stream.Collector`s
 - Simplified internal implementations
