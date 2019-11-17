@@ -61,8 +61,8 @@ class FunctionalTest {
           forCollector((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM)),
           forCollector((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM)),
           forCollector((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> adaptStream(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM)),
-          forCollector((mapper, e, p) -> adaptStream(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM))
+          forCollector((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM)),
+          forCollector((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM))
         ).flatMap(identity());
     }
 
@@ -250,7 +250,7 @@ class FunctionalTest {
         return collectingAndThen(input, stream -> stream.thenApply(s -> s.collect(Collectors.toList())));
     }
 
-    private static Collector<Integer, ?, CompletableFuture<Collection<Integer>>> adaptStream(Collector<Integer, ?, Stream<Integer>> input) {
+    private static Collector<Integer, ?, CompletableFuture<Collection<Integer>>> adaptAsync(Collector<Integer, ?, Stream<Integer>> input) {
         return collectingAndThen(input, stream -> CompletableFuture
           .supplyAsync(() -> stream.collect(toList()), Executors.newSingleThreadExecutor()));
     }
