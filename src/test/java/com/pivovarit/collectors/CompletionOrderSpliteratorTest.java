@@ -93,7 +93,7 @@ class CompletionOrderSpliteratorTest {
 
     static class ResultHolder<T> implements Consumer<T> {
 
-        private T result;
+        private volatile T result;
 
         @Override
         public void accept(T t) {
