@@ -57,22 +57,23 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> collectors() {
         return of(
-          tests((mapper, e, p) -> parallel(mapper, toList(), e, p), format("parallel(toList(), p=%d)", PARALLELISM)),
-          tests((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM)),
-          tests((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM)),
-          tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM)),
-          tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM)),
-          tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM))
+          tests((mapper, e, p) -> parallel(mapper, toList(), e, p), format("parallel(toList(), p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM), false),
+          tests((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM), false),
+          tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
     }
 
-    private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         return of(
           shouldCollect(collector, name),
           shouldCollectToEmpty(collector, name),
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
+          shouldMaintainOrder(collector, name, maintainsOrder),
           shouldRespectParallelism(collector, name),
           shouldNotSwallowException(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
@@ -122,6 +123,21 @@ class FunctionalTest {
             assertThat(result)
               .hasSameSizeAs(elements)
               .containsOnlyElementsOf(elements);
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldMaintainOrder(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean shouldRun) {
+        return dynamicTest(format("%s: should maintain order", name), () -> {
+            if (shouldRun) {
+                int parallelism = 4;
+                executor = Executors.newFixedThreadPool(parallelism);
+                Integer[] seq = {350, 200, 0, 400};
+
+                List<Integer> result = Stream.of(seq)
+                  .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), toList(), executor, parallelism)).join();
+
+                assertThat(result).containsExactly(seq);
+            }
         });
     }
 
