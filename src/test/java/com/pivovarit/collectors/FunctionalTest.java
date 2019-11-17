@@ -100,7 +100,7 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> DynamicTest shouldRespectParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should respect parallelism", name), () -> {
             int parallelism = 2;
-            int delayMillis = 500;
+            int delayMillis = 50;
             executor = Executors.newFixedThreadPool(parallelism);
 
             LocalTime before = LocalTime.now();
@@ -130,13 +130,11 @@ class FunctionalTest {
         return dynamicTest(format("%s: should maintain order", name), () -> {
             if (shouldRun) {
                 int parallelism = 4;
-                executor = Executors.newFixedThreadPool(parallelism);
-                Integer[] seq = {350, 200, 0, 400};
 
-                List<Integer> result = Stream.of(seq)
-                  .collect(parallel(i -> returnWithDelay(i, ofMillis(i)), toList(), executor, parallelism)).join();
+                List<Integer> result = IntStream.range(0, 100).boxed()
+                  .collect(parallel(i -> i, toList(), Executors.newFixedThreadPool(parallelism), parallelism)).join();
 
-                assertThat(result).containsExactly(seq);
+                assertThat(result).isSorted();
             }
         });
     }
@@ -227,11 +225,13 @@ class FunctionalTest {
         return dynamicTest(format("%s: should start consuming immediately", name), () -> {
             AtomicInteger counter = new AtomicInteger();
 
-            Stream.generate(() -> returnWithDelay(42, ofMillis(100))).limit(2)
+            Stream.iterate(0, i -> returnWithDelay(i + 1, ofMillis(100)))
+              .limit(2)
               .collect(collector.apply(i -> counter.incrementAndGet(), executor, PARALLELISM));
 
             await()
-              .atMost(150, TimeUnit.MILLISECONDS)
+              .pollInterval(Duration.ofMillis(10))
+              .atMost(50, TimeUnit.MILLISECONDS)
               .until(() -> counter.get() > 0);
         });
     }
