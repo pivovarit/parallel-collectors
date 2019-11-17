@@ -5,16 +5,13 @@ import com.pholser.junit.quickcheck.generator.InRange;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import com.pivovarit.collectors.infrastructure.ExecutorAwareTest;
 import com.pivovarit.collectors.infrastructure.TestUtils;
-import org.awaitility.Awaitility;
 import org.junit.runner.RunWith;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallel;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.infrastructure.TestUtils.TRIALS;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelayGaussian;

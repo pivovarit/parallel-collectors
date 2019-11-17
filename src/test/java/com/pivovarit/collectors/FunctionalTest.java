@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import com.pivovarit.collectors.infrastructure.TestUtils;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -67,6 +68,7 @@ class FunctionalTest {
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
+          shouldRespectParallelism(collector, name),
           shouldNotSwallowException(collector, name),
           shouldSurviveRejectedExecutionException(collector, name),
           shouldRemainConsistent(collector, name),
@@ -85,6 +87,25 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should collect to empty", name), () -> {
             assertThat(Stream.<Integer>empty().collect(collector.apply(i -> i, executor, PARALLELISM)).join()).isEmpty();
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldRespectParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should respect parallelism", name), () -> {
+            int parallelism = 2;
+            TestUtils.CountingExecutor executor = new TestUtils.CountingExecutor();
+
+            CompletableFuture<R> result = Stream.generate(() -> 42)
+              .limit(10)
+              .collect(collector.apply(i -> i, executor, parallelism));
+
+            assertThat(result)
+              .isNotCompleted()
+              .isNotCancelled();
+
+            await()
+              .pollDelay(500, TimeUnit.MILLISECONDS)
+              .until(() -> executor.count() == parallelism);
         });
     }
 
