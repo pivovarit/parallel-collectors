@@ -126,7 +126,7 @@ class FunctionalTest {
               .join();
 
             LocalTime after = LocalTime.now();
-            assertThat(Duration.between(before, after)).isGreaterThan(Duration.ofMillis(delayMillis * parallelism));
+            assertThat(Duration.between(before, after)).isGreaterThanOrEqualTo(Duration.ofMillis(delayMillis * parallelism));
         });
     }
 
