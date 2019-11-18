@@ -45,38 +45,6 @@ Parallel Collectors are unopinionated by design so it's up to their users to use
 
 Make sure to read API documentation before using these in production.
 
-## Rationale
-
-Stream API is a great tool for collection processing, especially if you need to parallelize execution of CPU-intensive tasks, for example:
-
-    public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
-        Objects.requireNonNull(generator);
-        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
-    }
-    
-**However, Parallel Streams execute tasks on a shared `ForkJoinPool` instance**.
- 
-Unfortunately, it's not the best choice for running blocking operations even when using `ManagedBlocker` - [as explained here by Tagir Valeev](https://stackoverflow.com/a/37518272/2229438)) - this could easily lead to the saturation of the common pool, and to a performance degradation of everything that uses it.
-
-For example:
-
-    List<String> result = list.parallelStream()
-      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
-      .collect(Collectors.toList());
-
-In order to avoid such problems, **the solution is to isolate blocking tasks** and run them on a separate thread pool... but there's a catch.
-
-**Sadly, Streams can only run parallel computations on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
-
-However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's not considered reliable:
-
-> Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
-
-Says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776). 
-
-Not even mentioning that this approach was seriously flawed before JDK-10 - if a `Stream` was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool, and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
-
-
 ## Basic API
 
 The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
@@ -145,6 +113,37 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
+
+## Rationale
+
+Stream API is a great tool for collection processing, especially if you need to parallelize execution of CPU-intensive tasks, for example:
+
+    public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
+        Objects.requireNonNull(generator);
+        IntStream.range(0, array.length).parallel().forEach(i -> { array[i] = generator.applyAsInt(i); });
+    }
+    
+**However, Parallel Streams execute tasks on a shared `ForkJoinPool` instance**.
+ 
+Unfortunately, it's not the best choice for running blocking operations even when using `ManagedBlocker` - [as explained here by Tagir Valeev](https://stackoverflow.com/a/37518272/2229438)) - this could easily lead to the saturation of the common pool, and to a performance degradation of everything that uses it.
+
+For example:
+
+    List<String> result = list.parallelStream()
+      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
+      .collect(Collectors.toList());
+
+In order to avoid such problems, **the solution is to isolate blocking tasks** and run them on a separate thread pool... but there's a catch.
+
+**Sadly, Streams can only run parallel computations on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
+
+However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's not considered reliable:
+
+> Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
+
+Says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776). 
+
+Not even mentioning that this approach was seriously flawed before JDK-10 - if a `Stream` was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool, and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
    
 ### Dependencies
 
