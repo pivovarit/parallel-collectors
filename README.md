@@ -83,14 +83,11 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 
 ### Available Collectors:
 
--  `parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism)`      - returns `CompletableFuture<List<T>>`
--  `parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor)`                       - returns `CompletableFuture<Stream<T>>`
+-  `parallel(Function, Collector, Executor, int)`       - returns `CompletableFuture<List<T>>`
 
--  `parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)`                             - returns `Stream<T>` with elements returned in the completion order
--  `parallelToStream(Function<T, R> mapper, Executor executor)`
+-  `parallelToStream(Function, Executor, int)`          - returns `Stream<T>` with elements returned in the completion order
 
--  `parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism)`                      - returns `Stream<T>` with elements returned in the original order             
--  `parallelToOrderedStream(Function<T, R> mapper, Executor executor)`
+-  `parallelToOrderedStream(Function, Executor, int)`   - returns `Stream<T>` with elements returned in the original order             
 
 ##### Blocking Semantics
 
