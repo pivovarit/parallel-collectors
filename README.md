@@ -56,9 +56,9 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 -  `Stream<T> parallelToStream(Function, Executor, parallelism)`
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
-- **By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
+**By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
 
-- **All parallel collectors are one-off and must not be reused.**
+**All parallel collectors are one-off and must not be reused.**
 
 ### Leveraging CompletableFuture
 
