@@ -52,6 +52,7 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 ### Available Collectors:
 
 -  `CompletableFuture<List<T>> parallel(Function, Collector, Executor, parallelism)`
+-  `CompletableFuture<List<T>> parallel(Function, Executor, parallelism)`
 
 -  `Stream<T> parallelToStream(Function, Executor, parallelism)`
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
