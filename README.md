@@ -87,56 +87,21 @@ Not even mentioning that this approach was seriously flawed before JDK-10 - if a
 
 ## Basic API
 
-The main entrypoint to the library is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
+The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
 
 ### Available Collectors:
 
-##### Sync:
-
-_parallel_:
-
-- `parallel(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
-- `parallel(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
-
-_parallelOrdered_:
-
-- `parallelOrdered(Function<T, R> mapper, Executor executor)` -> `Stream<R> `
-- `parallelOrdered(Function<T, R> mapper, Executor executor, int parallelism)` -> `Stream<R>`
-
-##### Async:
-
-_parallelToList_:
-
-- `parallelToList(Function<T, R> mapper, Executor executor)` -> `CompletableFuture<List<R>>`
-- `parallelToList(Function<T, R> mapper, Executor executor, int parallelism)` -> `CompletableFuture<List<R>>`
-
-_parallelToSet_:
-
-- `parallelToSet(Function<T, R> mapper, Executor executor)` -> `CompletableFuture<Set<R>>`
-- `parallelToSet(Function<T, R> mapper, Executor executor, int parallelism)` -> `CompletableFuture<Set<R>>`
-
-_parallelToMap_:
-
-- `parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor)` -> `CompletableFuture<Map<K, V>>`
-- `parallelToMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Executor executor, int parallelism)` -> `CompletableFuture<Map<K, V>>`
-- ...
-
-_parallelToCollection_:
-
-- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor)` -> `CompletableFuture<C>`
-- `parallelToCollection(Function<T, R> mapper, Supplier<C> collection, Executor executor, int parallelism)` -> `CompletableFuture<C>`
-
-_parallelToStream_:
-
-- `parallelToStream(Function<T, R> mapper, Executor executor)` -> `CompletableFuture<C>`
-- `parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)` -> `CompletableFuture<C>`
+-  `parallel(i -> i + 1, toList(), e, 3))`      - returns `CompletableFuture<List<T>>`
+-  `parallel(i -> i + 1, e, 3))`                - returns `CompletableFuture<Stream<T>>`
+-  `parallelToStream(i -> i + 1, e, 3))`        - returns `Stream<T>`
+-  `parallelToOrderedStream(i -> i + 1, e, 3))` - returns `Stream<T>`
 
 ##### Blocking Semantics
 
 If you want to achieve blocking semantics, just add `.join()` straight after the `collect()` call:
 
     ...
-    .collect(parallelToList(i -> 42, executor))
+    .collect(parallel(i -> 42, toList(), executor))
     .join(); // returns List<Integer>
 
 Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
