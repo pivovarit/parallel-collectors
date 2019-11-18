@@ -83,11 +83,9 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 
 ### Available Collectors:
 
--  `parallel(Function, Collector, Executor, int)`       - returns `CompletableFuture<List<T>>`
-
--  `parallelToStream(Function, Executor, int)`          - returns `Stream<T>` with elements returned in the completion order
-
--  `parallelToOrderedStream(Function, Executor, int)`   - returns `Stream<T>` with elements returned in the original order             
+-  `CompletableFuture<List<T>> parallel(Function, Collector, Executor, int)`
+-  `Stream<T> parallelToStream(Function, Executor, int)`
+-  `Stream<T> parallelToOrderedStream(Function, Executor, int)`
 
 ##### Blocking Semantics
 
