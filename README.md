@@ -21,7 +21,7 @@ They are:
 - configurable (it's possible to provide your own `Executor` and `parallelism`)
 - non-blocking (no need to block the calling thread while waiting for the result to arrive)
 - non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies)
-- versatile (missing an API for your use case? just process the resulting Stream with the whole generosity of Stream API)
+- versatile (missing an API for your use case? just process the resulting Stream with the whole generosity of Stream API by reusing already available `Collectors`)
 
 ### Maven Dependencies
 
@@ -91,10 +91,14 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 
 ### Available Collectors:
 
--  `parallel(i -> i + 1, toList(), e, 3))`      - returns `CompletableFuture<List<T>>`
--  `parallel(i -> i + 1, e, 3))`                - returns `CompletableFuture<Stream<T>>`
--  `parallelToStream(i -> i + 1, e, 3))`        - returns `Stream<T>` with elements returned in the completion order
--  `parallelToOrderedStream(i -> i + 1, e, 3))` - returns `Stream<T>` with elements returned in the original order
+-  `parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism)`      - returns `CompletableFuture<List<T>>`
+-  `parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor)`                       - returns `CompletableFuture<Stream<T>>`
+
+-  `parallelToStream(Function<T, R> mapper, Executor executor, int parallelism)`                             - returns `Stream<T>` with elements returned in the completion order
+-  `parallelToStream(Function<T, R> mapper, Executor executor)`
+
+-  `parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism)`                      - returns `Stream<T>` with elements returned in the original order             
+-  `parallelToOrderedStream(Function<T, R> mapper, Executor executor)`
 
 ##### Blocking Semantics
 
@@ -132,66 +136,28 @@ Or just `join()` if you just want to block the calling thread and wait for the r
       
 What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
       
-## In Action
+## Examples
 
-### 1. Parallelize and collect to List
-
-#### with ParallelCollectors™
-
-    Executor executor = ...
-
-    List<String> result = list.stream()
-      .collect(parallelToList(i -> foo(i), executor))
-      .join(); // on CompletableFuture<Set<String>>
-
-#### with Parallel Streams
-    List<String> result = list.parallelStream()
-      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
-      .collect(Collectors.toList());
-      
-### 2. Parallelize and collect to List non-blocking
-
-#### with ParallelCollectors™
+### 1. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `List`
 
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallelToList(i -> foo(i), executor));
-    
-#### with Parallel Streams
-    ¯\_(ツ)_/¯
+      .collect(parallel(i -> foo(i), toList(), executor));
       
-### 3. Parallelize and collect to List on a custom Executor
-
-#### with ParallelCollectors™
+### 2. Apply `i -> foo(i)` in parallel on a custom `Executor` with max parallelism of 4 and collect to `List`
 
     Executor executor = ...
 
-    List<String> result = list.stream()
-      .collect(parallelToList(i -> foo(i), executor))
-      .join(); // on CompletableFuture<Set<String>>
-    
-#### with Parallel Streams
-    ¯\_(ツ)_/¯
-
-### 4. Parallelize and collect to List and define parallelism
-
-#### with ParallelCollectors™
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(parallel(i -> foo(i), toList(), executor, 4));
+      
+### 3. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `List`
 
     Executor executor = ...
 
-    List<String> result = list.stream()
-      .collect(parallelToList(i -> foo(i), executor, 42))
-      .join(); // on CompletableFuture<Set<String>>
-    
-#### with Parallel Streams
-    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "42"); 
-    
-    // global settings ¯\_(ツ)_/¯
-    
-    List<String> result = list.parallelStream()
-      .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
-      .collect(Collectors.toList());
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(parallel(i -> foo(i), toList(), executor));
    
 ### Dependencies
 
@@ -208,7 +174,7 @@ None - the library is implemented using core Java libraries.
 
 ### Limitations
 
-Collected `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
+Upstream `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
 This means that none of these should be used for working with infinite streams.
 
 This limitation is imposed by the design of the `Collector` API.
