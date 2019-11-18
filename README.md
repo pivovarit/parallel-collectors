@@ -7,7 +7,7 @@
         <img src="https://img.shields.io/twitter/follow/pivovarit.svg?style=social&logo=twitter"
             alt="follow on Twitter"></a>
 
-Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by Parallel Streams.
+Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by standard Parallel Streams.
 
     list.stream()
       .collect(parallel(i -> foo(i), toList(), executor, parallelism))
