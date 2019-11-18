@@ -45,14 +45,6 @@ Parallel Collectors are unopinionated by design so it's up to their users to use
 
 Make sure to read API documentation before using these in production.
 
-## Words of Caution
-
-Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
-
-It's important to follow up on the root cause and double-check if parallelism is the way to go.
-
-**It often turns out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
-
 ## Rationale
 
 Stream API is a great tool for collection processing, especially if you need to parallelize execution of CPU-intensive tasks, for example:
@@ -163,6 +155,13 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 
 None - the library is implemented using core Java libraries.
 
+### Limitations
+
+Upstream `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
+This means that none of these should be used for working with infinite streams.
+
+This limitation is imposed by the design of the `Collector` API.
+
 ### Good Practices
 
 - Consider providing reasonable timeouts for `CompletableFuture`s in order to not block for unreasonably long in case when something bad happens [(how-to)](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit))
@@ -172,12 +171,13 @@ None - the library is implemented using core Java libraries.
 - A no-longer used `ExecutorService` should be shut down to allow reclamation of its resources
 - Keep in mind that `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)` might be executed by the calling thread. If this is not suitable, use `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)Async` instead, and provide a custom executor instance.
 
-### Limitations
+## Words of Caution
 
-Upstream `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
-This means that none of these should be used for working with infinite streams.
+Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
 
-This limitation is imposed by the design of the `Collector` API.
+It's important to follow up on the root cause and double-check if parallelism is the way to go.
+
+**It often turns out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
 
 ----
 See `CHANGELOG.MD` for a complete version history.
