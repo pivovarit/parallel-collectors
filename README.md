@@ -55,19 +55,9 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 -  `Stream<T> parallelToStream(Function, Executor, parallelism)`
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
-##### Blocking Semantics
-
-If you want to achieve blocking semantics, just add `.join()` straight after the `collect()` call:
-
-    ...
-    .collect(parallel(i -> 42, toList(), executor))
-    .join(); // returns List<Integer>
-
-Above can be used in conjunction with `Stream#collect` as any other `Collector` from `java.util.stream.Collectors`.
- 
 - **By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.**
 
-- **All parallel collectors are one-off and should not be reused unless you know what you're doing.**
+- **All parallel collectors are one-off and must not be reused.**
 
 ### Leveraging CompletableFuture
 
