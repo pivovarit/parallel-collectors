@@ -84,28 +84,28 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
       
 ## Examples
 
-#### 1. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `List`
+1. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `List`
 
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
       
-#### 2. Apply `i -> foo(i)` in parallel on a custom `Executor` with max parallelism of 4 and collect to `Set`
+2. Apply `i -> foo(i)` in parallel on a custom `Executor` with max parallelism of 4 and collect to `Set`
 
     Executor executor = ...
 
     CompletableFuture<Set<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toSet(), executor, 4));
       
-#### 3. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `LinkedList`
+3. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `LinkedList`
 
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toCollection(LinkedList::new), executor));
       
-#### 4. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in completion order
+4. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in completion order
 
     Executor executor = ...
 
@@ -113,7 +113,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
       .collect(parallelToStream(i -> foo(i), toCollection(LinkedList::new), executor))
       .forEach(i -> ...);
       
-#### 5. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in original order
+5. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in original order
 
     Executor executor = ...
 
