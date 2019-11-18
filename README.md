@@ -93,8 +93,8 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 
 -  `parallel(i -> i + 1, toList(), e, 3))`      - returns `CompletableFuture<List<T>>`
 -  `parallel(i -> i + 1, e, 3))`                - returns `CompletableFuture<Stream<T>>`
--  `parallelToStream(i -> i + 1, e, 3))`        - returns `Stream<T>`
--  `parallelToOrderedStream(i -> i + 1, e, 3))` - returns `Stream<T>`
+-  `parallelToStream(i -> i + 1, e, 3))`        - returns `Stream<T>` with elements returned in the completion order
+-  `parallelToOrderedStream(i -> i + 1, e, 3))` - returns `Stream<T>` with elements returned in the original order
 
 ##### Blocking Semantics
 
@@ -115,19 +115,19 @@ Above can be used in conjunction with `Stream#collect` as any other `Collector` 
 All async Parallel Collectors™ expose resulting `Collection` wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallelToList(i -> foo(i), executor));
+      .collect(parallel(i -> foo(i), toList(), executor));
 
 This makes it possible to conveniently apply callbacks, and compose with other `CompletableFuture`s:
 
     list.stream()
-      .collect(parallelToList(i -> foo(i), executor))
+      .collect(parallel(i -> foo(i), toSet(), executor))
       .thenAcceptAsync(System.out::println, otherExecutor)
       .thenRun(() -> System.out.println("Finished!"));
       
 Or just `join()` if you just want to block the calling thread and wait for the result:
 
     List<String> result = list.stream()
-      .collect(parallelToList(i -> foo(i), executor))
+      .collect(parallel(i -> foo(i), toList(), executor))
       .join();
       
 What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
