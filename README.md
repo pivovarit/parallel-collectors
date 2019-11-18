@@ -40,18 +40,18 @@ They are:
 
 Parallel Collectors are unopinionated by design so it's up to their users to use them responsibly, which involves things like:
 - proper configuration of a provided `Executor` and its lifecycle management
-- choosing the right parallelism level
+- choosing the appropriate parallelism level
 - making sure that the tool is applied in the right context
 
 Make sure to read API documentation before using these in production.
 
 ## Words of Caution
 
-Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than the starting point.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
+Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
 
-Often, this library will turn out to be a wrong tool for the job, it's important to follow up on the root cause and double-check if parallelism is the way to go.
+It's important to follow up on the root cause and double-check if parallelism is the way to go.
 
-**Often it will turn out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
+**It often turns out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
 
 ## Rationale
 
@@ -76,7 +76,7 @@ In order to avoid such problems, **the solution is to isolate blocking tasks** a
 
 **Sadly, Streams can only run parallel computations on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
 
-However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's considered harmful:
+However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's not considered reliable:
 
 > Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
 
