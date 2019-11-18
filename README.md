@@ -23,6 +23,19 @@ They are:
 - non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies)
 - versatile (missing an API for your use case? just `parallelToStream` and process the resulting Stream with the whole generosity of Stream API)
 
+### Maven Dependencies
+
+    <dependency>
+        <groupId>com.pivovarit</groupId>
+        <artifactId>parallel-collectors</artifactId>
+        <version>1.2.1</version>
+    </dependency>
+
+
+##### Gradle
+
+    compile 'com.pivovarit:parallel-collectors:1.2.1'
+
 ## Philosophy
 
 Parallel Collectors are unopinionated by design so it's up to their users to use them responsibly, which involves things like:
@@ -215,19 +228,6 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
       .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
       .collect(Collectors.toList());
    
-### Maven Dependencies
-
-    <dependency>
-        <groupId>com.pivovarit</groupId>
-        <artifactId>parallel-collectors</artifactId>
-        <version>1.2.1</version>
-    </dependency>
-
-
-##### Gradle
-
-    compile 'com.pivovarit:parallel-collectors:1.2.1'
-
 ### Dependencies
 
 None - the library is implemented using core Java libraries.
