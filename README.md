@@ -104,6 +104,22 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toCollection(LinkedList::new), executor));
+      
+### 4. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in completion order
+
+    Executor executor = ...
+
+    list.stream()
+      .collect(parallelToStream(i -> foo(i), toCollection(LinkedList::new), executor))
+      .forEach(i -> ...);
+      
+### 5. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in original order
+
+    Executor executor = ...
+
+    list.stream()
+      .collect(parallelToOrderedStream(i -> foo(i), toCollection(LinkedList::new), executor))
+      .forEach(i -> ...);
 
 ## Rationale
 
