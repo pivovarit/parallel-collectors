@@ -52,6 +52,7 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 ### Available Collectors:
 
 -  `CompletableFuture<List<T>> parallel(Function, Collector, Executor, parallelism)`
+
 -  `Stream<T> parallelToStream(Function, Executor, parallelism)`
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
@@ -61,7 +62,7 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 
 ### Leveraging CompletableFuture
 
-All async Parallel Collectors™ expose resulting `Collection` wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
+Parallel Collectors™ expose results wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
@@ -90,19 +91,19 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
       
-### 2. Apply `i -> foo(i)` in parallel on a custom `Executor` with max parallelism of 4 and collect to `List`
+### 2. Apply `i -> foo(i)` in parallel on a custom `Executor` with max parallelism of 4 and collect to `Set`
 
     Executor executor = ...
 
-    CompletableFuture<List<String>> result = list.stream()
-      .collect(parallel(i -> foo(i), toList(), executor, 4));
+    CompletableFuture<Set<String>> result = list.stream()
+      .collect(parallel(i -> foo(i), toSet(), executor, 4));
       
-### 3. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `List`
+### 3. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `LinkedList`
 
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallel(i -> foo(i), toList(), executor));
+      .collect(parallel(i -> foo(i), toCollection(LinkedList::new), executor));
 
 ## Rationale
 
