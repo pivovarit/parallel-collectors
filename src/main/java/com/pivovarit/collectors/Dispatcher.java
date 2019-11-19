@@ -116,7 +116,7 @@ final class Dispatcher<T> {
     private void handle(Throwable e) {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
-        inFlight.completeExceptionally(e);
+        inFlight.registerException(e);
         dispatcher.shutdownNow();
     }
 
@@ -153,7 +153,7 @@ final class Dispatcher<T> {
             cancellables.add(future);
         }
 
-        void completeExceptionally(Throwable e) {
+        void registerException(Throwable e) {
             pending.forEach(future -> future.completeExceptionally(e));
             cancellables.forEach(future -> future.cancel(true));
         }
