@@ -182,5 +182,5 @@ It's important to follow up on the root cause and double-check if parallelism is
 **It often turns out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
 
 ----
-See `CHANGELOG.MD` for a complete version history.
+See [CHANGELOG.MD](https://github.com/pivovarit/parallel-collectors/blob/master/CHANGELOG.MD) for a complete version history.
 
