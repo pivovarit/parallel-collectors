@@ -1,13 +1,10 @@
 package com.pivovarit.collectors;
 
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -27,11 +24,10 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final ExecutorService dispatcher = newLazySingleThreadExecutor();
-
-    private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
-    private final Queue<Future<Void>> cancellables = new ConcurrentLinkedQueue<>();
+    private final InFlight<T> inFlight = new InFlight<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
+
+    private final ExecutorService dispatcher = newLazySingleThreadExecutor();
     private final Executor executor;
     private final Semaphore limiter;
 
@@ -76,7 +72,7 @@ final class Dispatcher<T> {
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CompletableFuture<T> future = new CompletableFuture<>();
-        pending.add(future);
+        inFlight.registerPending(future);
         workingQueue.add(withExceptionHandling(() -> {
             if (!shortCircuited) {
                 future.complete(supplier.get());
@@ -110,15 +106,14 @@ final class Dispatcher<T> {
 
     private FutureTask<Void> cancellable(Runnable task) {
         FutureTask<Void> futureTask  = new FutureTask<>(task, null);
-        cancellables.add(futureTask);
+        inFlight.registerCancellable(futureTask);
         return futureTask;
     }
 
     private void handle(Throwable e) {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
-        pending.forEach(future -> future.completeExceptionally(e));
-        cancellables.forEach(future -> future.cancel(true));
+        inFlight.completeExceptionally(e);
         dispatcher.shutdownNow();
     }
 
