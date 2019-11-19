@@ -114,7 +114,6 @@ final class Dispatcher<T> {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
         inFlight.completeExceptionally(e);
-        inFlight.cancelAll();
         dispatcher.shutdownNow();
     }
 

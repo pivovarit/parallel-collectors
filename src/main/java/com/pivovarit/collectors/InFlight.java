@@ -4,6 +4,7 @@ import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 class InFlight<T> {
     private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
@@ -13,15 +14,12 @@ class InFlight<T> {
         pending.add(future);
     }
 
-    void registerCancellable(Future<Void> future) {
+    void registerCancellable(FutureTask<Void> future) {
         cancellables.add(future);
-    }
-
-    void cancelAll() {
-        cancellables.forEach(future -> future.cancel(true));
     }
 
     void completeExceptionally(Throwable e) {
         pending.forEach(future -> future.completeExceptionally(e));
+        cancellables.forEach(future -> future.cancel(true));
     }
 }
