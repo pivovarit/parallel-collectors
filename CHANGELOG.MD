@@ -1,5 +1,15 @@
 # Version History
 
+### [2.0.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.0.0) (20-11-2019)
+**Redesigned and simplified the public-facing API** to enable reuse of `java.util.stream.Collector` instances for providing custom reduction strategies which enabled reduction of the public API from 13 methods to just 4:
+
+-  `CompletableFuture<List<T>> parallel(Function, Collector, Executor, parallelism)`
+-  `CompletableFuture<Stream<T>> parallel(Function, Executor, parallelism)`
+
+-  `Stream<T> parallelToStream(Function, Executor, parallelism)`
+-  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
+----
+
 ### [1.2.1](https://github.com/pivovarit/parallel-collectors/releases/tag/1.2.1) (17-11-2019)
 - Adjusted visibility modifiers of some API methods
 
