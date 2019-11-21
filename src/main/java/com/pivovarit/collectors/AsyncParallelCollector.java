@@ -33,7 +33,7 @@ final class AsyncParallelCollector<T, R, C>
       Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor,
       Executor executor,
       int parallelism) {
-        this.dispatcher = new Dispatcher<>(executor, parallelism);
+        this.dispatcher = Dispatcher.limiting(executor, parallelism);
         this.processor = processor;
         this.mapper = mapper;
     }
@@ -42,7 +42,7 @@ final class AsyncParallelCollector<T, R, C>
       Function<T, R> mapper,
       Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor,
       Executor executor) {
-        this.dispatcher = new Dispatcher<>(executor);
+        this.dispatcher = Dispatcher.limiting(executor);
         this.processor = processor;
         this.mapper = mapper;
     }
