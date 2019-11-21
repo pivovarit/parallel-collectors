@@ -37,13 +37,27 @@ final class Dispatcher<T> {
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
-    Dispatcher(Executor executor) {
+    private Dispatcher(Executor executor) {
         this(executor, getDefaultParallelism());
     }
 
-    Dispatcher(Executor executor, int permits) {
+    private Dispatcher(Executor executor, int permits) {
         this.executor = executor;
         this.limiter = new Semaphore(permits);
+    }
+
+    static <T> Dispatcher<T> limiting(Executor executor, int permits) {
+        return new Dispatcher<>(executor, permits);
+    }
+
+
+    static <T> Dispatcher<T> limiting(Executor executor) {
+        return new Dispatcher<>(executor);
+    }
+
+
+    static <T> Dispatcher<T> unbounded(Executor executor) {
+        return new Dispatcher<>(executor, Integer.MAX_VALUE);
     }
 
     CompletableFuture<Void> start() {
