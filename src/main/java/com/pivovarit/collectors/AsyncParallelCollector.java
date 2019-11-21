@@ -220,14 +220,6 @@ final class AsyncParallelCollector<T, R, C>
         return new AsyncParallelCollector<>(mapper, r -> r.thenApply(s -> s.collect(collector)), executor, parallelism);
     }
 
-    static <R> Supplier<List<R>> defaultListSupplier() {
-        return ArrayList::new;
-    }
-
-    static <R> Supplier<Set<R>> defaultSetSupplier() {
-        return HashSet::new;
-    }
-
     static void requireValidParallelism(int parallelism) {
         if (parallelism < 1) {
             throw new IllegalArgumentException("Parallelism can't be lower than 1");
