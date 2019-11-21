@@ -35,7 +35,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
       Executor executor, int parallelism) {
         this.processor = processor;
         this.characteristics = characteristics;
-        this.dispatcher = new Dispatcher<>(executor, parallelism);
+        this.dispatcher = Dispatcher.limiting(executor, parallelism);
         this.function = function;
     }
 
@@ -45,7 +45,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
       Set<Characteristics> characteristics,
       Executor executor) {
         this.characteristics = characteristics;
-        this.dispatcher = new Dispatcher<>(executor);
+        this.dispatcher = Dispatcher.limiting(executor);
         this.function = function;
         this.processor = processor;
     }
