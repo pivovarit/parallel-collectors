@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -121,10 +122,18 @@ final class AsyncParallelCollector<T, R, C>
         };
     }
 
+
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         return new AsyncParallelCollector<>(mapper, t -> t, executor);
+    }
+
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> flattening(Function<T, Collection<R>> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireValidParallelism(parallelism);
+        return new AsyncParallelCollector<>(mapper, t -> t.thenApply(s -> s.flatMap(Collection::stream)), executor, parallelism);
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor, int parallelism) {
