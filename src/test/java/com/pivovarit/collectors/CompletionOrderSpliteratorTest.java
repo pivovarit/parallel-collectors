@@ -2,6 +2,7 @@ package com.pivovarit.collectors;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -19,17 +21,17 @@ class CompletionOrderSpliteratorTest {
 
     @Test
     void shouldTraverseInCompletionOrder() {
-        CompletableFuture<Integer> f1 = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        CompletableFuture<Integer> f3 = new CompletableFuture<>();
-        List<CompletableFuture<Integer>> futures = asList(f1, f2, f3);
+        CompletableFuture<List<Integer>> f1 = new CompletableFuture<>();
+        CompletableFuture<List<Integer>> f2 = new CompletableFuture<>();
+        CompletableFuture<List<Integer>> f3 = new CompletableFuture<>();
+        List<CompletableFuture<List<Integer>>> futures = asList(f1, f2, f3);
 
         CompletableFuture.runAsync(() -> {
-            f3.complete(3);
+            f3.complete(singletonList(3));
             sleep(100);
-            f1.complete(2);
+            f1.complete(singletonList(2));
             sleep(100);
-            f2.complete(1);
+            f2.complete(singletonList(1));
         });
         List<Integer> results = StreamSupport.stream(
           new CompletionOrderSpliterator<>(futures), false)
@@ -40,17 +42,17 @@ class CompletionOrderSpliteratorTest {
 
     @Test
     void shouldPropagateException() {
-        CompletableFuture<Integer> f1 = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        CompletableFuture<Integer> f3 = new CompletableFuture<>();
-        List<CompletableFuture<Integer>> futures = asList(f1, f2, f3);
+        CompletableFuture<List<Integer>> f1 = new CompletableFuture<>();
+        CompletableFuture<List<Integer>> f2 = new CompletableFuture<>();
+        CompletableFuture<List<Integer>> f3 = new CompletableFuture<>();
+        List<CompletableFuture<List<Integer>>> futures = asList(f1, f2, f3);
 
         CompletableFuture.runAsync(() -> {
-            f3.complete(3);
+            f3.complete(singletonList(3));
             sleep(100);
             f1.completeExceptionally(new RuntimeException());
             sleep(100);
-            f2.complete(1);
+            f2.complete(singletonList(1));
         });
         assertThatThrownBy(() -> StreamSupport.stream(
           new CompletionOrderSpliterator<>(futures), false)
@@ -70,8 +72,8 @@ class CompletionOrderSpliteratorTest {
     @Test
     void shouldStreamInCompletionOrder() {
         int value = 42;
-        List<CompletableFuture<Integer>> futures = asList(new CompletableFuture<>(), CompletableFuture
-          .completedFuture(value));
+        List<CompletableFuture<List<Integer>>> futures = asList(new CompletableFuture<>(), CompletableFuture
+          .completedFuture(Arrays.asList(value)));
 
         Optional<Integer> result = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).findAny();
 
@@ -80,7 +82,7 @@ class CompletionOrderSpliteratorTest {
 
     @Test
     void shouldNotConsumeOnEmpty() {
-        List<CompletableFuture<Integer>> futures = Collections.emptyList();
+        List<CompletableFuture<List<Integer>>> futures = Collections.emptyList();
 
         CompletionOrderSpliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
 

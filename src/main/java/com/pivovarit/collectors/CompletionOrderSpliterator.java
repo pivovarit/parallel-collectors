@@ -16,10 +16,18 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
     private int remaining;
 
-    CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
+    CompletionOrderSpliterator(List<CompletableFuture<List<T>>> futures) {
         this.initialSize = futures.size();
         this.remaining = initialSize;
-        futures.forEach(f -> f.whenComplete((t, __) -> completed.add(f)));
+        futures.forEach(f -> f.whenComplete((t, ex) -> {
+            if (ex == null) {
+                t.forEach(inner -> completed.add(f.thenApply(list -> inner)));
+            } else {
+                CompletableFuture<T> tCompletableFuture = new CompletableFuture<>();
+                tCompletableFuture.completeExceptionally(ex);
+                completed.add(tCompletableFuture);
+            }
+        }));
     }
 
     @Override

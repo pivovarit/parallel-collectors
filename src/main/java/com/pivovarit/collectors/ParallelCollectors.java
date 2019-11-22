@@ -2,13 +2,12 @@ package com.pivovarit.collectors;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.AsyncParallelCollector.collectingWithCollector;
+import static com.pivovarit.collectors.AsyncParallelPartitioningCollector.collectingToStream;
+import static com.pivovarit.collectors.AsyncParallelPartitioningCollector.collectingWithCollector;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -101,7 +100,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor) {
-        return AsyncParallelCollector.collectingToStream(mapper, executor);
+        return collectingToStream(mapper, executor);
     }
 
     /**
@@ -132,7 +131,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
-        return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
+        return collectingToStream(mapper, executor, parallelism);
     }
 
     /**

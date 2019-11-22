@@ -12,41 +12,45 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParallelism;
+import static com.pivovarit.collectors.AsyncParallelPartitioningCollector.partitioned;
+import static com.pivovarit.collectors.AsyncParallelPartitioningCollector.requireValidParallelism;
+import static java.lang.Runtime.getRuntime;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+class ParallelStreamCollector<T, R> implements Collector<List<T>, List<CompletableFuture<List<R>>>, Stream<R>> {
 
-    private final Dispatcher<R> dispatcher;
-    private final Function<T, R> function;
-    private final Function<List<CompletableFuture<R>>, Stream<R>> processor;
+    private final Dispatcher<List<R>> dispatcher;
+    private final Function<T, R> mapper;
+    private final Function<List<CompletableFuture<List<R>>>, Stream<R>> processor;
     private final Set<Characteristics> characteristics;
 
     private ParallelStreamCollector(
-      Function<T, R> function,
-      Function<List<CompletableFuture<R>>, Stream<R>> processor,
+      Function<T, R> mapper,
+      Function<List<CompletableFuture<List<R>>>, Stream<R>> processor,
       Set<Characteristics> characteristics,
       Executor executor, int parallelism) {
         this.processor = processor;
         this.characteristics = characteristics;
         this.dispatcher = Dispatcher.limiting(executor, parallelism);
-        this.function = function;
+        this.mapper = mapper;
     }
 
     private ParallelStreamCollector(
-      Function<T, R> function,
-      Function<List<CompletableFuture<R>>, Stream<R>> processor,
+      Function<T, R> mapper,
+      Function<List<CompletableFuture<List<R>>>, Stream<R>> processor,
       Set<Characteristics> characteristics,
       Executor executor) {
         this.characteristics = characteristics;
         this.dispatcher = Dispatcher.limiting(executor);
-        this.function = function;
+        this.mapper = mapper;
         this.processor = processor;
     }
 
@@ -57,20 +61,20 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     }
 
     @Override
-    public Supplier<List<CompletableFuture<R>>> supplier() {
+    public Supplier<List<CompletableFuture<List<R>>>> supplier() {
         return ArrayList::new;
     }
 
     @Override
-    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
+    public BiConsumer<List<CompletableFuture<List<R>>>, List<T>> accumulator() {
+        return (acc, chunk) -> {
             startConsuming();
-            acc.add(dispatcher.enqueue(() -> function.apply(e)));
+            acc.add(dispatcher.enqueue(() -> chunk.stream().map(mapper).collect(toList())));
         };
     }
 
     @Override
-    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
+    public BinaryOperator<List<CompletableFuture<List<R>>>> combiner() {
         return (left, right) -> {
             left.addAll(right);
             return left;
@@ -78,7 +82,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     }
 
     @Override
-    public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
+    public Function<List<CompletableFuture<List<R>>>, Stream<R>> finisher() {
         return processor
           .compose(i -> {
               dispatcher.stop();
@@ -94,7 +98,9 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), EnumSet.of(Characteristics.UNORDERED), executor);
+        return Collectors.collectingAndThen(toList(), list -> partitioned(list, getDefaultParallelism())
+          .collect(new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), Collections
+            .emptySet(), executor)));
 
     }
 
@@ -102,28 +108,38 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), EnumSet.of(Characteristics.UNORDERED), executor, parallelism);
+        return Collectors.collectingAndThen(toList(), list -> partitioned(list, parallelism)
+          .collect(new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), Collections
+            .emptySet(), executor)));
 
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), Collections.emptySet(), executor);
+        return Collectors.collectingAndThen(toList(), list -> partitioned(list, getDefaultParallelism())
+          .collect(new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), Collections.emptySet(), executor)));
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), Collections.emptySet(), executor, parallelism);
+        return Collectors.collectingAndThen(toList(), list -> partitioned(list, parallelism)
+          .collect(new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), Collections.emptySet(), executor)));
     }
 
-    private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
+    private static <R> Function<List<CompletableFuture<List<R>>>, Stream<R>> streamInCompletionOrderStrategy() {
         return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
     }
 
-    private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamOrderedStrategy() {
-        return futures -> futures.stream().map(CompletableFuture::join);
+    private static <R> Function<List<CompletableFuture<List<R>>>, Stream<R>> streamOrderedStrategy() {
+        return futures -> futures.stream().flatMap(f -> f.join().stream());
     }
+
+
+    private static int getDefaultParallelism() {
+        return Math.max(getRuntime().availableProcessors() - 1, 1);
+    }
+
 }

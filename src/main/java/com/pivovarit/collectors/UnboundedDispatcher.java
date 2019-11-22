@@ -21,7 +21,7 @@ import static java.lang.Runtime.getRuntime;
 /**
  * @author Grzegorz Piwowarek
  */
-final class Dispatcher<T> {
+final class UnboundedDispatcher<T> {
 
     private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
 
@@ -36,26 +36,8 @@ final class Dispatcher<T> {
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
-    private Dispatcher(Executor executor) {
-        this(executor, getDefaultParallelism());
-    }
-
-    private Dispatcher(Executor executor, int permits) {
+    public UnboundedDispatcher(Executor executor) {
         this.executor = executor;
-    }
-
-    static <T> Dispatcher<T> limiting(Executor executor, int permits) {
-        return new Dispatcher<>(executor, permits);
-    }
-
-
-    static <T> Dispatcher<T> limiting(Executor executor) {
-        return new Dispatcher<>(executor);
-    }
-
-
-    static <T> Dispatcher<T> unbounded(Executor executor) {
-        return new Dispatcher<>(executor, Integer.MAX_VALUE);
     }
 
     CompletableFuture<Void> start() {
@@ -64,7 +46,7 @@ final class Dispatcher<T> {
             while (!Thread.currentThread().isInterrupted()) {
                 Runnable task;
                 if ((task = workingQueue.take()) != POISON_PILL) {
-                    executor.execute(cancellable(withFinally(task, () -> {})));
+                    executor.execute(cancellable(task));
                 } else {
                     break;
                 }
