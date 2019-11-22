@@ -117,7 +117,7 @@ class FunctionalTest {
         return dynamicTest(format("%s: should respect parallelism", name), () -> {
             int parallelism = 2;
             int delayMillis = 50;
-            executor = Executors.newFixedThreadPool(parallelism);
+            executor = Executors.newCachedThreadPool();
 
             LocalTime before = LocalTime.now();
             Stream.generate(() -> 42)
