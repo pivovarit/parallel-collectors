@@ -105,8 +105,7 @@ final class AsyncParallelCollector<T, R, C>
 
         futures.forEach(f -> f.handle((__, ex) -> ex != null && result.completeExceptionally(ex)));
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-          .handle((__, ex) -> ex != null ? result.completeExceptionally(ex) : result.complete(null));
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(result::complete);
 
         return result;
     }
