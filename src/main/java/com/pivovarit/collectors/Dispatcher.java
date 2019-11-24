@@ -55,11 +55,6 @@ final class Dispatcher<T> {
         return new Dispatcher<>(executor);
     }
 
-
-    static <T> Dispatcher<T> unbounded(Executor executor) {
-        return new Dispatcher<>(executor, Integer.MAX_VALUE);
-    }
-
     CompletableFuture<Void> start() {
         started = true;
         dispatcher.execute(withExceptionHandling(() -> {
