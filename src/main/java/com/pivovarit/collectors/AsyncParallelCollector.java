@@ -29,19 +29,9 @@ final class AsyncParallelCollector<T, R, C>
 
     private AsyncParallelCollector(
       Function<T, R> mapper,
-      Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor,
-      Executor executor,
-      int parallelism) {
-        this.dispatcher = Dispatcher.limiting(executor, parallelism);
-        this.processor = processor;
-        this.mapper = mapper;
-    }
-
-    private AsyncParallelCollector(
-      Function<T, R> mapper,
-      Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor,
-      Executor executor) {
-        this.dispatcher = Dispatcher.limiting(executor);
+      Dispatcher<R> dispatcher,
+      Function<CompletableFuture<Stream<R>>, CompletableFuture<C>> processor) {
+        this.dispatcher = dispatcher;
         this.processor = processor;
         this.mapper = mapper;
     }
@@ -123,21 +113,21 @@ final class AsyncParallelCollector<T, R, C>
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, t -> t, executor);
+        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor), t -> t);
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new AsyncParallelCollector<>(mapper, t -> t, executor, parallelism);
+        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), t -> t);
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
         requireNonNull(collector, "collector can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, r -> r.thenApply(s -> s.collect(collector)), executor);
+        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor), r -> r.thenApply(s -> s.collect(collector)));
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
@@ -145,7 +135,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new AsyncParallelCollector<>(mapper, r -> r.thenApply(s -> s.collect(collector)), executor, parallelism);
+        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), r -> r.thenApply(s -> s.collect(collector)));
     }
 
     static void requireValidParallelism(int parallelism) {
