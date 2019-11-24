@@ -193,7 +193,7 @@ class FunctionalTest {
     }
 
     private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should not swallow exception", name), () -> {
+        return dynamicTest(format("%s: should survive rejected execution exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
             List<Integer> elements = IntStream.range(0, 1000).boxed().collect(toList());
 
