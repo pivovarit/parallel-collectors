@@ -1,1 +1,1 @@
-Related issue: *${link}*
+Related issue:
