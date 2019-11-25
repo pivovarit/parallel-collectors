@@ -82,22 +82,18 @@ final class AsyncParallelCollector<T, R, C>
 
     private void startConsuming() {
         if (!dispatcher.isRunning()) {
-            dispatcher.start()
-              .exceptionally(throwable -> {
-                  result.completeExceptionally(throwable);
-                  return null;
-              });
+            dispatcher.start().handle((__, ex) -> result.completeExceptionally(ex));
         }
     }
 
     private static <T> CompletableFuture<Void> allOf(List<CompletableFuture<T>> futures) {
-        CompletableFuture<Void> result = new CompletableFuture<>();
+        CompletableFuture<Void> future = new CompletableFuture<>();
 
-        futures.forEach(f -> f.handle((__, ex) -> ex != null && result.completeExceptionally(ex)));
+        futures.forEach(f -> f.handle((__, ex) -> ex != null && future.completeExceptionally(ex)));
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(result::complete);
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(future::complete);
 
-        return result;
+        return future;
     }
 
     private BiConsumer<C, Throwable> processResult() {
