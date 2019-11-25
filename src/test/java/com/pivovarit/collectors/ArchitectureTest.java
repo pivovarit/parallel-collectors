@@ -1,11 +1,14 @@
 package com.pivovarit.collectors;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOptions;
+import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.Test;
 
+import static com.tngtech.archunit.core.domain.JavaModifier.*;
 import static com.tngtech.archunit.core.importer.ImportOption.Predefined.DO_NOT_INCLUDE_ARCHIVES;
 import static com.tngtech.archunit.core.importer.ImportOption.Predefined.DO_NOT_INCLUDE_JARS;
 import static com.tngtech.archunit.core.importer.ImportOption.Predefined.DO_NOT_INCLUDE_TESTS;
@@ -21,12 +24,17 @@ class ArchitectureTest {
       .should().haveSimpleName("ParallelCollectors")
       .andShould().haveOnlyFinalFields()
       .andShould().haveOnlyPrivateConstructors()
-      .andShould().resideInAPackage("com.pivovarit.collectors");
+      .andShould().haveModifier(FINAL)
+      .andShould().resideInAPackage("com.pivovarit.collectors")
+      .as("all public factory methods should be accessible from the ParallelCollectors class")
+      .because("users of ParallelCollectors should have a single entry point");
 
     private static final ArchRule ZERO_DEPS_RULE = classes()
       .that().resideInAPackage("com.pivovarit.collectors")
       .should()
-      .dependOnClassesThat().resideInAPackage("java..");
+      .dependOnClassesThat().resideInAPackage("java..")
+      .as("the library should depend only on core Java classes")
+      .because("users appreciate not experiencing a dependency hell");
 
     private static final JavaClasses classes = new ClassFileImporter()
       .importClasspath(new ImportOptions()
