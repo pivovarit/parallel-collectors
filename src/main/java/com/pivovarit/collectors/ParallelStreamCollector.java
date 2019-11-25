@@ -68,11 +68,10 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     @Override
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
-        return processor
-          .compose(i -> {
-              dispatcher.stop();
-              return i;
-          });
+        return acc -> {
+            dispatcher.stop();
+            return processor.apply(acc);
+        };
     }
 
     @Override
