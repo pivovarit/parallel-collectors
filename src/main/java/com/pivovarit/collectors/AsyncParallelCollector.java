@@ -62,7 +62,7 @@ final class AsyncParallelCollector<T, R, C>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         return futures -> {
             dispatcher.stop();
-            processor.apply(toCombined(futures)).handle(processResult());
+            processor.apply(toCombined(futures)).handle(result());
             return result;
         };
     }
@@ -94,7 +94,7 @@ final class AsyncParallelCollector<T, R, C>
         return future;
     }
 
-    private BiFunction<C, Throwable, Object> processResult() {
+    private BiFunction<C, Throwable, Object> result() {
         return (c, ex) -> ex == null ? result.complete(c) : result.completeExceptionally(ex);
     }
 
