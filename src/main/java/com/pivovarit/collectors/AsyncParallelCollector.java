@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -61,10 +62,7 @@ final class AsyncParallelCollector<T, R, C>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         return futures -> {
             dispatcher.stop();
-
-            processor.apply(toCombined(futures))
-              .whenComplete(processResult());
-
+            processor.apply(toCombined(futures)).handle(result());
             return result;
         };
     }
@@ -96,14 +94,8 @@ final class AsyncParallelCollector<T, R, C>
         return future;
     }
 
-    private BiConsumer<C, Throwable> processResult() {
-        return (c, throwable) -> {
-            if (throwable == null) {
-                result.complete(c);
-            } else {
-                result.completeExceptionally(throwable);
-            }
-        };
+    private BiFunction<C, Throwable, Object> result() {
+        return (c, ex) -> ex == null ? result.complete(c) : result.completeExceptionally(ex);
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
