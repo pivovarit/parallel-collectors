@@ -22,12 +22,12 @@ import static java.lang.Runtime.getRuntime;
  */
 final class Dispatcher<T> {
 
-    private static final FutureTask<Void> POISON_PILL = new FutureTask<>(() -> System.out.println("Why so serious?"), null);
+    private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
     private final InFlight<T> inFlight = new InFlight<>();
-    private final BlockingQueue<FutureTask<Void>> workingQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
 
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
     private final Executor executor;
@@ -58,7 +58,7 @@ final class Dispatcher<T> {
         started = true;
         dispatcher.execute(withExceptionHandling(() -> {
             while (!Thread.currentThread().isInterrupted()) {
-                FutureTask<Void> task;
+                Runnable task;
                 if ((task = workingQueue.take()) != POISON_PILL) {
                     limiter.acquire();
                     executor.execute(withFinally(task, limiter::release));
