@@ -158,7 +158,7 @@ final class Dispatcher<T> {
         }
     }
 
-    static class CancellableCompletableFuture<T> extends CompletableFuture<T> {
+    static final class CancellableCompletableFuture<T> extends CompletableFuture<T> {
         private volatile FutureTask<Void> backingTask;
 
         public FutureTask<Void> completedBy(Runnable task) {
