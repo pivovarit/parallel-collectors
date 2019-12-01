@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -23,12 +22,12 @@ import static java.lang.Runtime.getRuntime;
  */
 final class Dispatcher<T> {
 
-    private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
+    private static final FutureTask<Void> POISON_PILL = new FutureTask<>(() -> System.out.println("Why so serious?"), null);
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
     private final InFlight<T> inFlight = new InFlight<>();
-    private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<FutureTask<Void>> workingQueue = new LinkedBlockingQueue<>();
 
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
     private final Executor executor;
@@ -59,10 +58,10 @@ final class Dispatcher<T> {
         started = true;
         dispatcher.execute(withExceptionHandling(() -> {
             while (!Thread.currentThread().isInterrupted()) {
-                Runnable task;
+                FutureTask<Void> task;
                 if ((task = workingQueue.take()) != POISON_PILL) {
                     limiter.acquire();
-                    executor.execute(cancellable(withFinally(task, limiter::release)));
+                    executor.execute(withFinally(task, limiter::release));
                 } else {
                     break;
                 }
@@ -83,13 +82,13 @@ final class Dispatcher<T> {
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
-        CompletableFuture<T> future = new CompletableFuture<>();
+        CancellableCompletableFuture<T> future = new CancellableCompletableFuture<>();
         inFlight.registerPending(future);
-        workingQueue.add(withExceptionHandling(() -> {
+        workingQueue.add(future.completedBy(withExceptionHandling(() -> {
             if (!shortCircuited) {
                 future.complete(supplier.get());
             }
-        }));
+        })));
         return future;
     }
 
@@ -114,12 +113,6 @@ final class Dispatcher<T> {
                 finisher.run();
             }
         };
-    }
-
-    private FutureTask<Void> cancellable(Runnable task) {
-        FutureTask<Void> futureTask  = new FutureTask<>(task, null);
-        inFlight.registerCancellable(futureTask);
-        return futureTask;
     }
 
     private void handle(Throwable e) {
@@ -151,20 +144,34 @@ final class Dispatcher<T> {
     }
 
     static class InFlight<T> {
-        private final Queue<CompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
-        private final Queue<Future<?>> cancellables = new ConcurrentLinkedQueue<>();
+        private final Queue<CancellableCompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
 
-        void registerPending(CompletableFuture<T> future) {
+        void registerPending(CancellableCompletableFuture<T> future) {
             pending.add(future);
         }
 
-        void registerCancellable(FutureTask<Void> future) {
-            cancellables.add(future);
+        void registerException(Throwable e) {
+            pending.forEach(future -> {
+                future.completeExceptionally(e);
+                future.cancel(true);
+            });
+        }
+    }
+
+    static class CancellableCompletableFuture<T> extends CompletableFuture<T> {
+        private volatile FutureTask<Void> backingTask;
+
+        public FutureTask<Void> completedBy(Runnable task) {
+            this.backingTask = new FutureTask<>(task, null);
+            return this.backingTask;
         }
 
-        void registerException(Throwable e) {
-            pending.forEach(future -> future.completeExceptionally(e));
-            cancellables.forEach(future -> future.cancel(true));
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (backingTask != null) {
+                backingTask.cancel(mayInterruptIfRunning);
+            }
+            return super.cancel(mayInterruptIfRunning);
         }
     }
 }
