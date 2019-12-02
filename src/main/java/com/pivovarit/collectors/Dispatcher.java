@@ -3,6 +3,7 @@ package com.pivovarit.collectors;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -159,18 +160,17 @@ final class Dispatcher<T> {
     }
 
     static final class CancellableCompletableFuture<T> extends CompletableFuture<T> {
-        private volatile FutureTask<Void> backingTask;
+        private final Queue<FutureTask<?>> backingTasks = new ConcurrentLinkedDeque<>();
 
         public FutureTask<Void> completedBy(Runnable task) {
-            this.backingTask = new FutureTask<>(task, null);
-            return this.backingTask;
+            FutureTask<Void> futureTask = new FutureTask<>(task, null);
+            backingTasks.add(futureTask);
+            return futureTask;
         }
 
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
-            if (backingTask != null) {
-                backingTask.cancel(mayInterruptIfRunning);
-            }
+            backingTasks.forEach(task -> task.cancel(mayInterruptIfRunning));
             return super.cancel(mayInterruptIfRunning);
         }
     }
