@@ -20,7 +20,7 @@ import static java.lang.Runtime.getRuntime;
 /**
  * @author Grzegorz Piwowarek
  */
-final class gDispatcher<T> {
+final class Dispatcher<T> {
 
     private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
 
