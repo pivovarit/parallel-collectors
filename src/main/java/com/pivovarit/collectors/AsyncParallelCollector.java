@@ -49,7 +49,9 @@ final class AsyncParallelCollector<T, R, C>
 
     @Override
     public BinaryOperator<List<CompletableFuture<R>>> combiner() {
-        return (left, right) -> {throw new UnsupportedOperationException();};
+        return (left, right) -> {
+            throw new UnsupportedOperationException();
+        };
     }
 
     @Override
