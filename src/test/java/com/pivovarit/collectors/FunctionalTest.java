@@ -145,9 +145,7 @@ class FunctionalTest {
             Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor, PARALLELISM))
               .join();
 
-            assertThat(result)
-              .hasSameSizeAs(elements)
-              .containsOnlyElementsOf(elements);
+            assertThat(result).hasSameElementsAs(elements);
         });
     }
 
