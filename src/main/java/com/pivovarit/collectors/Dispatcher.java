@@ -55,7 +55,7 @@ final class Dispatcher<T> {
     }
 
     public static <R> Dispatcher<List<R>> unbounded(Executor executor) {
-        return null; // TODO
+        return limiting(executor, Integer.MAX_VALUE);
     }
 
     CompletableFuture<Void> start() {
