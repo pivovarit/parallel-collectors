@@ -33,7 +33,7 @@ class CompletionOrderSpliteratorTest {
             f2.complete(1);
         });
         List<Integer> results = StreamSupport.stream(
-          CompletionOrderSpliterator.instance(futures), false)
+          new CompletionOrderSpliterator<>(futures), false)
           .collect(Collectors.toList());
 
         assertThat(results).containsExactly(3, 2, 1);
@@ -54,7 +54,7 @@ class CompletionOrderSpliteratorTest {
             f2.complete(1);
         });
         assertThatThrownBy(() -> StreamSupport.stream(
-          CompletionOrderSpliterator.instance(futures), false)
+          new CompletionOrderSpliterator<>(futures), false)
           .collect(Collectors.toList()))
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RuntimeException.class);
@@ -74,7 +74,7 @@ class CompletionOrderSpliteratorTest {
         List<CompletableFuture<Integer>> futures = asList(new CompletableFuture<>(), CompletableFuture
           .completedFuture(value));
 
-        Optional<Integer> result = StreamSupport.stream(CompletionOrderSpliterator.instance(futures), false).findAny();
+        Optional<Integer> result = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).findAny();
 
         assertThat(result).contains(value);
     }
@@ -83,7 +83,7 @@ class CompletionOrderSpliteratorTest {
     void shouldNotConsumeOnEmpty() {
         List<CompletableFuture<Integer>> futures = Collections.emptyList();
 
-        Spliterator<Integer> spliterator = CompletionOrderSpliterator.instance(futures);
+        Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
 
         ResultHolder<Integer> result = new ResultHolder<>();
         boolean consumed = spliterator.tryAdvance(result);

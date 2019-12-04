@@ -10,16 +10,26 @@ import java.util.function.Consumer;
 /**
  * @author Grzegorz Piwowarek
  */
-final class CompletionOrderSpliterator<T> implements Spliterator<T> {
+final class CompletionOrderBatchingSpliterator<T> implements Spliterator<T> {
 
     private final int initialSize;
     private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
     private int remaining;
 
-    CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
+    CompletionOrderBatchingSpliterator(List<CompletableFuture<List<T>>> futures) {
         this.initialSize = futures.size();
         this.remaining = initialSize;
-        futures.forEach(f -> f.whenComplete((t, __) -> completed.add(f)));
+        futures.forEach(batch -> {
+            batch.whenComplete((ts, throwable) -> {
+                if (throwable != null) {
+                    CompletableFuture<T> failedFuture = new CompletableFuture<>();
+                    failedFuture.completeExceptionally(throwable);
+                    completed.add(failedFuture);
+                } else {
+                    ts.forEach(v -> completed.add(CompletableFuture.completedFuture(v)));
+                }
+            });
+        });
     }
 
     @Override

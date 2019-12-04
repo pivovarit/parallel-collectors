@@ -38,6 +38,7 @@ import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.TestUtils.runWithExecutor;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
@@ -67,6 +68,7 @@ class FunctionalTest {
           tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true),
           tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
           tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true),
+          //
           tests((mapper, e, p) -> Batching.parallel(mapper, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
           tests((mapper, e, p) -> Batching.parallel(mapper, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
           tests((mapper, e, p) -> Batching.parallel(mapper, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
@@ -270,7 +272,10 @@ class FunctionalTest {
                   .collect(collector.apply(i -> {
                       try {
                           countDownLatch.countDown();
+                          System.out.println("Processing: " + i + " :: " + countDownLatch.getCount());
                           countDownLatch.await();
+                          System.out.println("sruuuu: " + Thread.currentThread().getName());
+                          System.out.println("Processing: " + i + " Size -1 == " + (size - 1));
                           if (i == size - 1) throw new NullPointerException();
                           Thread.sleep(Integer.MAX_VALUE);
                       } catch (InterruptedException ex) {
@@ -280,7 +285,7 @@ class FunctionalTest {
                   }, e, PARALLELISM))::join)
                   .hasCauseExactlyInstanceOf(NullPointerException.class);
 
-                await().until(() -> counter.get() == size - 1);
+                await().atMost(1, SECONDS).until(() -> counter.get() == size - 1);
             }, size);
         });
     }

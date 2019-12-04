@@ -128,7 +128,9 @@ final class AsyncParallelPartitioningCollector<T, R, C>
             leftElements = leftElements - chunkSize;
             chunkSize = (int) Math.ceil(((double) leftElements) / --numberOfParts);
         }
-        return builder.build();
+        List<List<T>> collect = builder.build().collect(toList());
+        System.out.println("chunk: " + collect.toString());
+        return collect.stream();
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {

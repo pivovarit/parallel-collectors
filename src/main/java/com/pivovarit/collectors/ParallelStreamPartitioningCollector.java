@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -38,7 +39,7 @@ class ParallelStreamPartitioningCollector<T, R> implements Collector<List<T>, Li
       Executor executor, int parallelism) {
         this.processor = processor;
         this.characteristics = characteristics;
-        this.dispatcher = Dispatcher.limiting(executor, parallelism);
+        this.dispatcher = Dispatcher.unbounded(executor);
         this.mapper = mapper;
     }
 
@@ -48,7 +49,7 @@ class ParallelStreamPartitioningCollector<T, R> implements Collector<List<T>, Li
       Set<Characteristics> characteristics,
       Executor executor) {
         this.characteristics = characteristics;
-        this.dispatcher = Dispatcher.limiting(executor);
+        this.dispatcher = Dispatcher.unbounded(executor);
         this.mapper = mapper;
         this.processor = processor;
     }
@@ -129,7 +130,7 @@ class ParallelStreamPartitioningCollector<T, R> implements Collector<List<T>, Li
     }
 
     private static <R> Function<List<CompletableFuture<List<R>>>, Stream<R>> streamInCompletionOrderStrategy() {
-        return futures -> StreamSupport.stream(CompletionOrderSpliterator.batching(futures), false);
+        return futures -> StreamSupport.stream(new CompletionOrderBatchingSpliterator<>(futures), false);
     }
 
     private static <R> Function<List<CompletableFuture<List<R>>>, Stream<R>> streamOrderedStrategy() {
