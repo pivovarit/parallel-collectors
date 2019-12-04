@@ -136,7 +136,7 @@ final class AsyncParallelCollector<T, R, C>
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return collectingToStream(mapper, executor, getDefaultParallelism());
+        return collectingToStreamInBatches(mapper, executor, getDefaultParallelism());
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -152,7 +152,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(collector, "collector can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return collectingWithCollector(collector, mapper, executor, getDefaultParallelism());
+        return collectingWithCollectorInBatches(collector, mapper, executor, getDefaultParallelism());
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {

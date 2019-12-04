@@ -2,7 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -22,8 +21,8 @@ import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParall
 import static com.pivovarit.collectors.Dispatcher.limiting;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
 import static java.lang.Runtime.getRuntime;
+import static java.util.Collections.*;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collector.Characteristics.UNORDERED;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
@@ -31,6 +30,8 @@ import static java.util.stream.Collectors.toList;
  * @author Grzegorz Piwowarek
  */
 class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+
+    private static final EnumSet<Characteristics> UNORDERED = EnumSet.of(Characteristics.UNORDERED);
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
@@ -91,7 +92,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), EnumSet.of(UNORDERED), limiting(executor));
+        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor));
 
     }
 
@@ -99,7 +100,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), EnumSet.of(UNORDERED), limiting(executor, parallelism));
+        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor, parallelism));
 
     }
 
@@ -108,7 +109,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(mapper, "mapper can't be null");
 
         return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list,getDefaultParallelism())
-          .collect(new ParallelStreamCollector<>(batch(mapper), streamInCompletionOrderStrategy(), EnumSet.of(UNORDERED), unbounded(executor)))), s -> s.flatMap(Collection::stream));
+          .collect(new ParallelStreamCollector<>(batch(mapper), streamInCompletionOrderStrategy(), UNORDERED, unbounded(executor)))), s -> s.flatMap(Collection::stream));
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -116,28 +117,27 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return batched(new ParallelStreamCollector<>(batch(mapper), streamInCompletionOrderStrategy(), EnumSet.of(UNORDERED), unbounded(executor)), parallelism);
+        return batched(new ParallelStreamCollector<>(batch(mapper), streamInCompletionOrderStrategy(), UNORDERED, unbounded(executor)), parallelism);
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), Collections.emptySet(), limiting(executor));
+        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor));
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), Collections.emptySet(), limiting(executor, parallelism));
+        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrderedInBatches(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
 
-        return batched(new ParallelStreamCollector<>(batch(mapper), streamOrderedStrategy(), Collections
-          .emptySet(), unbounded(executor)), getDefaultParallelism());
+        return batched(new ParallelStreamCollector<>(batch(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), getDefaultParallelism());
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrderedInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -145,7 +145,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return batched(new ParallelStreamCollector<>(batch(mapper), streamOrderedStrategy(), Collections.emptySet(), unbounded(executor)), parallelism);
+        return batched(new ParallelStreamCollector<>(batch(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), parallelism);
     }
 
     private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
