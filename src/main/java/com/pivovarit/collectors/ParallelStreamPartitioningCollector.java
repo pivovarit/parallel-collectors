@@ -130,7 +130,8 @@ class ParallelStreamPartitioningCollector<T, R> implements Collector<List<T>, Li
     }
 
     private static <R> Function<List<CompletableFuture<List<R>>>, Stream<R>> streamInCompletionOrderStrategy() {
-        return futures -> StreamSupport.stream(new CompletionOrderBatchingSpliterator<>(futures), false);
+        return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false)
+          .flatMap(Collection::stream);
     }
 
     private static <R> Function<List<CompletableFuture<List<R>>>, Stream<R>> streamOrderedStrategy() {
