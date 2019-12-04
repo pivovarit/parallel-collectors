@@ -49,10 +49,7 @@ final class AsyncParallelCollector<T, R, C>
 
     @Override
     public BinaryOperator<List<CompletableFuture<R>>> combiner() {
-        return (left, right) -> {
-            left.addAll(right);
-            return left;
-        };
+        return (left, right) -> {throw new UnsupportedOperationException();};
     }
 
     @Override
@@ -145,7 +142,8 @@ final class AsyncParallelCollector<T, R, C>
         requireValidParallelism(parallelism);
 
         return collectingAndThen(toList(), list -> partitioned(list, parallelism)
-          .collect(new AsyncParallelCollector<>(batch(mapper), unbounded(executor), cf -> cf.thenApply(s -> s.flatMap(Collection::stream)))));
+          .collect(new AsyncParallelCollector<>(batch(mapper), unbounded(executor), cf -> cf
+            .thenApply(s -> s.flatMap(Collection::stream)))));
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {

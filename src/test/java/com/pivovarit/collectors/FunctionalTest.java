@@ -11,8 +11,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -20,7 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -38,6 +39,7 @@ import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.TestUtils.runWithExecutor;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -62,19 +64,25 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> collectors() {
         return of(
-          tests((mapper, e, p) -> parallel(mapper, toList(), e, p), format("ParallelCollectors.parallel(toList(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("ParallelCollectors.parallel(toSet(), p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("ParallelCollectors.parallel(toCollection(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> parallel(m, toList(), e, p), format("ParallelCollectors.parallel(toList(), p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> parallel(m, toSet(), e, p), format("ParallelCollectors.parallel(toSet(), p=%d)", PARALLELISM), false),
+          tests((m, e, p) -> parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> adapt(parallel(m, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> adaptAsync(parallelToStream(m, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
+          tests((m, e, p) -> adaptAsync(parallelToOrderedStream(m, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true),
           //
-          tests((mapper, e, p) -> Batching.parallel(mapper, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> Batching.parallel(mapper, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> Batching.parallel(mapper, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adapt(Batching.parallel(mapper, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adaptAsync(Batching.parallelToStream(mapper, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> adaptAsync(Batching.parallelToOrderedStream(mapper, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
+          tests((m, e, p) -> Batching.parallel(m, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
+          batch((m, e, p) -> Batching.parallel(m, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> Batching.parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
+          batch((m, e, p) -> Batching.parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
+          tests((m, e, p) -> Batching.parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          batch((m, e, p) -> Batching.parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
+          batch((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
+          batch((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
+          tests((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true),
+          batch((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
     }
 
@@ -107,6 +115,12 @@ class FunctionalTest {
         );
     }
 
+    private static <R extends Collection<Integer>> Stream<DynamicTest> batch(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
+        return of(
+          shouldProcessOnNThreadsETParallelism(collector, name)
+        );
+    }
+
     private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> c, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             assertTimeoutPreemptively(ofMillis(100), () ->
@@ -135,7 +149,27 @@ class FunctionalTest {
               .join();
 
             LocalTime after = LocalTime.now();
-            assertThat(Duration.between(before, after)).isGreaterThanOrEqualTo(Duration.ofMillis(delayMillis * parallelism));
+            assertThat(Duration.between(before, after))
+              .isGreaterThanOrEqualTo(Duration.ofMillis(delayMillis * parallelism));
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldProcessOnNThreadsETParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should batch", name), () -> {
+            int parallelism = 2;
+            executor = Executors.newFixedThreadPool(10);
+
+            Set<String> threads = new ConcurrentSkipListSet<>();
+
+            Stream.generate(() -> 42)
+              .limit(100)
+              .collect(collector.apply(i -> {
+                  threads.add(Thread.currentThread().getName());
+                  return i;
+              }, executor, parallelism))
+              .join();
+
+            assertThat(threads).hasSize(parallelism);
         });
     }
 
@@ -254,7 +288,7 @@ class FunctionalTest {
 
             await()
               .pollInterval(Duration.ofMillis(10))
-              .atMost(50, TimeUnit.MILLISECONDS)
+              .atMost(50, MILLISECONDS)
               .until(() -> counter.get() > 0);
         });
     }
@@ -296,7 +330,7 @@ class FunctionalTest {
 
     private static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
         return new ThreadPoolExecutor(unitsOfWork, unitsOfWork,
-          0L, TimeUnit.MILLISECONDS,
+          0L, MILLISECONDS,
           new LinkedBlockingQueue<>());
     }
 
