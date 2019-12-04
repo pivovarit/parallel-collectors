@@ -492,5 +492,4 @@ public final class ParallelCollectors {
             return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
         }
     }
-
 }
