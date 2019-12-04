@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +15,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.Dispatcher.unbounded;
+import static java.lang.Runtime.getRuntime;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author Grzegorz Piwowarek
@@ -115,7 +120,8 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(collector, "collector can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor), r -> r.thenApply(s -> s.collect(collector)));
+        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor), r -> r
+          .thenApply(s -> s.collect(collector)));
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
@@ -123,7 +129,61 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), r -> r.thenApply(s -> s.collect(collector)));
+        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), r -> r
+          .thenApply(s -> s.collect(collector)));
+    }
+
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return collectingToStream(mapper, executor, getDefaultParallelism());
+    }
+
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireValidParallelism(parallelism);
+
+        return collectingAndThen(toList(), list -> partitioned(list, parallelism)
+          .collect(new AsyncParallelCollector<>(batch -> batch.stream().map(mapper).collect(toList()),
+            unbounded(executor), cf -> cf.thenApply(s -> s.flatMap(Collection::stream)))));
+    }
+
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+        requireNonNull(collector, "collector can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        return collectingWithCollector(collector, mapper, executor, getDefaultParallelism());
+    }
+
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+        requireNonNull(collector, "collector can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+        requireValidParallelism(parallelism);
+
+        return collectingAndThen(toList(), list -> partitioned(list, parallelism)
+          .collect(new AsyncParallelCollector<>(batch -> batch.stream().map(mapper).collect(toList()),
+            unbounded(executor), cf -> cf.thenApply(s -> s.flatMap(Collection::stream).collect(collector)))));
+    }
+
+    static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
+        Stream.Builder<List<T>> builder = Stream.builder();
+        int size = list.size();
+        int chunkSize = (int) Math.ceil(((double) size) / numberOfParts);
+        int leftElements = size;
+        int i = 0;
+        while (i < size && numberOfParts != 0) {
+            builder.add(list.subList(i, i + chunkSize));
+            i = i + chunkSize;
+            leftElements = leftElements - chunkSize;
+            chunkSize = (int) Math.ceil(((double) leftElements) / --numberOfParts);
+        }
+        return builder.build();
+    }
+
+    private static int getDefaultParallelism() {
+        return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
 
     static void requireValidParallelism(int parallelism) {
