@@ -111,7 +111,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     Executor executor = ...
 
     list.stream()
-      .collect(parallelToStream(i -> foo(i), toCollection(LinkedList::new), executor))
+      .collect(parallelToStream(i -> foo(i), executor))
       .forEach(i -> ...);
       
 ##### 5. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in original order
@@ -119,7 +119,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
     Executor executor = ...
 
     list.stream()
-      .collect(parallelToOrderedStream(i -> foo(i), toCollection(LinkedList::new), executor))
+      .collect(parallelToOrderedStream(i -> foo(i), executor))
       .forEach(i -> ...);
 
 ## Rationale
