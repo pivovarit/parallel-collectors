@@ -429,7 +429,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamPartitioningCollector.streaming(mapper, executor, parallelism);
+            return ParallelStreamCollector.streamingInBatches(mapper, executor, parallelism);
         }
 
         /**
