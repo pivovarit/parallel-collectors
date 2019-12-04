@@ -16,10 +16,39 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
     private int remaining;
 
-    CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
-        this.initialSize = futures.size();
+    private CompletionOrderSpliterator(int size) {
+        this.initialSize = size;
         this.remaining = initialSize;
-        futures.forEach(f -> f.whenComplete((t, __) -> completed.add(f)));
+    }
+
+    static <T> Spliterator<T> instance(List<CompletableFuture<T>> futures) {
+        return new CompletionOrderSpliterator<T>(futures.size()).from(futures);
+    }
+
+    static <T> Spliterator<T> batching(List<CompletableFuture<List<T>>> futures) {
+        return new CompletionOrderSpliterator<T>(futures.size()).fromPartitioned(futures);
+    }
+
+    private CompletionOrderSpliterator<T> from(List<CompletableFuture<T>> futures) {
+        futures.forEach(f -> f.whenComplete((t, __) -> this.nextCompleted(f)));
+        return this;
+    }
+
+    private CompletionOrderSpliterator<T> fromPartitioned(List<CompletableFuture<List<T>>> futures) {
+        futures.forEach(f -> f.whenComplete((t, ex) -> {
+            if (ex == null) {
+                t.forEach(inner -> this.nextCompleted(f.thenApply(list -> inner)));
+            } else {
+                CompletableFuture<T> exFuture = new CompletableFuture<>();
+                exFuture.completeExceptionally(ex);
+                this.nextCompleted(exFuture);
+            }
+        }));
+        return this;
+    }
+
+    private void nextCompleted(CompletableFuture<T> future) {
+        completed.add(future);
     }
 
     @Override

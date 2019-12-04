@@ -108,7 +108,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     }
 
     private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
-        return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
+        return futures -> StreamSupport.stream(CompletionOrderSpliterator.instance(futures), false);
     }
 
     private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamOrderedStrategy() {

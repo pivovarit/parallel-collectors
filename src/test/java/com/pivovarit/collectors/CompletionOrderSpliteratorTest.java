@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -32,7 +33,7 @@ class CompletionOrderSpliteratorTest {
             f2.complete(1);
         });
         List<Integer> results = StreamSupport.stream(
-          new CompletionOrderSpliterator<>(futures), false)
+          CompletionOrderSpliterator.instance(futures), false)
           .collect(Collectors.toList());
 
         assertThat(results).containsExactly(3, 2, 1);
@@ -53,7 +54,7 @@ class CompletionOrderSpliteratorTest {
             f2.complete(1);
         });
         assertThatThrownBy(() -> StreamSupport.stream(
-          new CompletionOrderSpliterator<>(futures), false)
+          CompletionOrderSpliterator.instance(futures), false)
           .collect(Collectors.toList()))
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RuntimeException.class);
@@ -73,7 +74,7 @@ class CompletionOrderSpliteratorTest {
         List<CompletableFuture<Integer>> futures = asList(new CompletableFuture<>(), CompletableFuture
           .completedFuture(value));
 
-        Optional<Integer> result = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).findAny();
+        Optional<Integer> result = StreamSupport.stream(CompletionOrderSpliterator.instance(futures), false).findAny();
 
         assertThat(result).contains(value);
     }
@@ -82,7 +83,7 @@ class CompletionOrderSpliteratorTest {
     void shouldNotConsumeOnEmpty() {
         List<CompletableFuture<Integer>> futures = Collections.emptyList();
 
-        CompletionOrderSpliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
+        Spliterator<Integer> spliterator = CompletionOrderSpliterator.instance(futures);
 
         ResultHolder<Integer> result = new ResultHolder<>();
         boolean consumed = spliterator.tryAdvance(result);

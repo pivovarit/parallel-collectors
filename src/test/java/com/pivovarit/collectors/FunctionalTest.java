@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import com.pivovarit.collectors.ParallelCollectors.Batching;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -60,12 +61,18 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> collectors() {
         return of(
-          tests((mapper, e, p) -> parallel(mapper, toList(), e, p), format("parallel(toList(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM), true)
+          tests((mapper, e, p) -> parallel(mapper, toList(), e, p), format("ParallelCollectors.parallel(toList(), p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("ParallelCollectors.parallel(toSet(), p=%d)", PARALLELISM), false),
+          tests((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("ParallelCollectors.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
+          tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> Batching.parallel(mapper, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> Batching.parallel(mapper, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
+          tests((mapper, e, p) -> Batching.parallel(mapper, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> adapt(Batching.parallel(mapper, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
+          tests((mapper, e, p) -> adaptAsync(Batching.parallelToStream(mapper, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
+          tests((mapper, e, p) -> adaptAsync(Batching.parallelToOrderedStream(mapper, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
     }
 
