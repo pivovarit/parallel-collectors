@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.infrastructure;
+package com.pivovarit.collectors;
 
 import java.time.Duration;
 import java.util.Random;
@@ -8,10 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 
-/**
- * @author Grzegorz Piwowarek
- */
-public final class TestUtils {
+final class TestUtils {
     private TestUtils() {
     }
 
