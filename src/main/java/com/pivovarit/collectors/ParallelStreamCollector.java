@@ -160,8 +160,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return futures -> futures.stream().map(CompletableFuture::join);
     }
 
-    private static <T, R> Collector<T, Object, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> collector, int parallelism) {
-        return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, parallelism)
-          .collect(collector)), s -> s.flatMap(Collection::stream));
+    private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> collector, int parallelism) {
+        return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, parallelism).collect(collector)), s -> s.flatMap(Collection::stream));
     }
 }
