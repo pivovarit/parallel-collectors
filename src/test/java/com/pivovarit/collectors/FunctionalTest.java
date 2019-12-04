@@ -272,10 +272,7 @@ class FunctionalTest {
                   .collect(collector.apply(i -> {
                       try {
                           countDownLatch.countDown();
-                          System.out.println("Processing: " + i + " :: " + countDownLatch.getCount());
                           countDownLatch.await();
-                          System.out.println("sruuuu: " + Thread.currentThread().getName());
-                          System.out.println("Processing: " + i + " Size -1 == " + (size - 1));
                           if (i == size - 1) throw new NullPointerException();
                           Thread.sleep(Integer.MAX_VALUE);
                       } catch (InterruptedException ex) {
