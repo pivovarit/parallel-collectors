@@ -16,6 +16,7 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.Dispatcher.unbounded;
+import static com.pivovarit.collectors.PartitioningIterator.partitioned;
 import static java.lang.Runtime.getRuntime;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -173,21 +174,6 @@ final class AsyncParallelCollector<T, R, C>
 
     static <T, R> Function<List<T>, List<R>> batch(Function<T, R> mapper) {
         return batch -> batch.stream().map(mapper).collect(toList());
-    }
-
-    static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
-        Stream.Builder<List<T>> builder = Stream.builder();
-        int size = list.size();
-        int chunkSize = (int) Math.ceil(((double) size) / numberOfParts);
-        int leftElements = size;
-        int i = 0;
-        while (i < size && numberOfParts != 0) {
-            builder.add(list.subList(i, i + chunkSize));
-            i = i + chunkSize;
-            leftElements = leftElements - chunkSize;
-            chunkSize = (int) Math.ceil(((double) leftElements) / --numberOfParts);
-        }
-        return builder.build();
     }
 
     private static int getDefaultParallelism() {
