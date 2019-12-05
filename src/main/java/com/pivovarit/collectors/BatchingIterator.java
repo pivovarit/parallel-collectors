@@ -31,7 +31,8 @@ final class BatchingIterator<T> implements Iterator<List<T>> {
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
-        return stream(spliteratorUnknownSize(from(list, numberOfParts), ORDERED), false);
+        return stream(spliteratorUnknownSize(from(list, numberOfParts), ORDERED), false)
+          .peek(System.out::println);
     }
 
     @Override
