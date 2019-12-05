@@ -19,7 +19,7 @@ import static com.pivovarit.collectors.AsyncParallelCollector.batch;
 import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParallelism;
 import static com.pivovarit.collectors.Dispatcher.limiting;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
-import static com.pivovarit.collectors.PartitioningIterator.partitioned;
+import static com.pivovarit.collectors.BatchingIterator.partitioned;
 import static java.lang.Runtime.getRuntime;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
