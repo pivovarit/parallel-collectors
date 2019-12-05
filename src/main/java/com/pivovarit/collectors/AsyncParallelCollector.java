@@ -15,9 +15,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.BatchingStream.defaultBatchAmount;
+import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
-import static com.pivovarit.collectors.BatchingIterator.partitioned;
-import static java.lang.Runtime.getRuntime;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
@@ -137,7 +137,7 @@ final class AsyncParallelCollector<T, R, C>
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return collectingToStreamInBatches(mapper, executor, getDefaultParallelism());
+        return collectingToStreamInBatches(mapper, executor, defaultBatchAmount());
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -154,7 +154,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(collector, "collector can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
-        return collectingWithCollectorInBatches(collector, mapper, executor, getDefaultParallelism());
+        return collectingWithCollectorInBatches(collector, mapper, executor, defaultBatchAmount());
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
@@ -174,10 +174,6 @@ final class AsyncParallelCollector<T, R, C>
 
     static <T, R> Function<List<T>, List<R>> batch(Function<T, R> mapper) {
         return batch -> batch.stream().map(mapper).collect(toList());
-    }
-
-    private static int getDefaultParallelism() {
-        return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
 
     static void requireValidParallelism(int parallelism) {

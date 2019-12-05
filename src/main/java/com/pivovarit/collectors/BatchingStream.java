@@ -4,11 +4,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static java.lang.Runtime.getRuntime;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
-final class BatchingIterator<T> implements Iterator<List<T>> {
+final class BatchingStream<T> implements Iterator<List<T>> {
 
     private final List<T> source;
     private final int size;
@@ -18,7 +19,7 @@ final class BatchingIterator<T> implements Iterator<List<T>> {
     private int leftElements;
     private int i;
 
-    private BatchingIterator(List<T> list, int numberOfParts) {
+    private BatchingStream(List<T> list, int numberOfParts) {
         source = list;
         size = list.size();
         chunks = numberOfParts;
@@ -27,12 +28,15 @@ final class BatchingIterator<T> implements Iterator<List<T>> {
     }
 
     private static <T> Iterator<List<T>> from(List<T> source, int chunks) {
-        return new BatchingIterator<>(source, chunks);
+        return new BatchingStream<>(source, chunks);
+    }
+
+    static int defaultBatchAmount() {
+        return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
-        return stream(spliteratorUnknownSize(from(list, numberOfParts), ORDERED), false)
-          .peek(System.out::println);
+        return stream(spliteratorUnknownSize(from(list, numberOfParts), ORDERED), false);
     }
 
     @Override
