@@ -66,8 +66,9 @@ final class AsyncParallelCollector<T, R, C>
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         return futures -> {
             dispatcher.stop();
-            processor.apply(toCombined(futures)).handle(result());
-            return result;
+            return processor.apply(toCombined(futures))
+              .handle(result())
+              .thenCompose(__ -> result);
         };
     }
 
