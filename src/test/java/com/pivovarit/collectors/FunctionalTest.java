@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import com.pivovarit.collectors.ParallelCollectors.Batching;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -10,8 +11,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -32,11 +34,13 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToOrderedStream;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
-import static com.pivovarit.collectors.infrastructure.TestUtils.incrementAndThrow;
-import static com.pivovarit.collectors.infrastructure.TestUtils.returnWithDelay;
-import static com.pivovarit.collectors.infrastructure.TestUtils.runWithExecutor;
+import static com.pivovarit.collectors.TestUtils.incrementAndThrow;
+import static com.pivovarit.collectors.TestUtils.returnWithDelay;
+import static com.pivovarit.collectors.TestUtils.runWithExecutor;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
@@ -60,12 +64,24 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> collectors() {
         return of(
-          tests((mapper, e, p) -> parallel(mapper, toList(), e, p), format("parallel(toList(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> parallel(mapper, toSet(), e, p), format("parallel(toSet(), p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> parallel(mapper, toCollection(LinkedList::new), e, p), format("parallel(toCollection(), p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adapt(parallel(mapper, e, p)), format("parallel(p=%d)", PARALLELISM), true),
-          tests((mapper, e, p) -> adaptAsync(parallelToStream(mapper, e, p)), format("parallelToStream(p=%d)", PARALLELISM), false),
-          tests((mapper, e, p) -> adaptAsync(parallelToOrderedStream(mapper, e, p)), format("parallelToOrderedStream(p=%d)", PARALLELISM), true)
+          tests((m, e, p) -> parallel(m, toList(), e, p), format("ParallelCollectors.parallel(toList(), p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> parallel(m, toSet(), e, p), format("ParallelCollectors.parallel(toSet(), p=%d)", PARALLELISM), false),
+          tests((m, e, p) -> parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> adapt(parallel(m, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true),
+          tests((m, e, p) -> adaptAsync(parallelToStream(m, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
+          tests((m, e, p) -> adaptAsync(parallelToOrderedStream(m, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true)
+        ).flatMap(identity());
+    }
+
+    @TestFactory
+    Stream<DynamicTest> batching_collectors() {
+        return of(
+          batch((m, e, p) -> Batching.parallel(m, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
+          batch((m, e, p) -> Batching.parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
+          batch((m, e, p) -> Batching.parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          batch((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
+          batch((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
+          batch((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
     }
 
@@ -98,6 +114,12 @@ class FunctionalTest {
         );
     }
 
+    private static <R extends Collection<Integer>> Stream<DynamicTest> batch(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
+        return Stream.concat(
+          tests(collector, name, maintainsOrder),
+          of(shouldProcessOnNThreadsETParallelism(collector, name)));
+    }
+
     private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> c, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             assertTimeoutPreemptively(ofMillis(100), () ->
@@ -126,7 +148,27 @@ class FunctionalTest {
               .join();
 
             LocalTime after = LocalTime.now();
-            assertThat(Duration.between(before, after)).isGreaterThanOrEqualTo(Duration.ofMillis(delayMillis * parallelism));
+            assertThat(Duration.between(before, after))
+              .isGreaterThanOrEqualTo(Duration.ofMillis(delayMillis * parallelism));
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldProcessOnNThreadsETParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should batch", name), () -> {
+            int parallelism = 2;
+            executor = Executors.newFixedThreadPool(10);
+
+            Set<String> threads = new ConcurrentSkipListSet<>();
+
+            Stream.generate(() -> 42)
+              .limit(100)
+              .collect(collector.apply(i -> {
+                  threads.add(Thread.currentThread().getName());
+                  return i;
+              }, executor, parallelism))
+              .join();
+
+            assertThat(threads).hasSize(parallelism);
         });
     }
 
@@ -136,9 +178,7 @@ class FunctionalTest {
             Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor, PARALLELISM))
               .join();
 
-            assertThat(result)
-              .hasSameSizeAs(elements)
-              .containsOnlyElementsOf(elements);
+            assertThat(result).hasSameElementsAs(elements);
         });
     }
 
@@ -247,7 +287,7 @@ class FunctionalTest {
 
             await()
               .pollInterval(Duration.ofMillis(10))
-              .atMost(50, TimeUnit.MILLISECONDS)
+              .atMost(50, MILLISECONDS)
               .until(() -> counter.get() > 0);
         });
     }
@@ -273,7 +313,7 @@ class FunctionalTest {
                   }, e, PARALLELISM))::join)
                   .hasCauseExactlyInstanceOf(NullPointerException.class);
 
-                await().until(() -> counter.get() == size - 1);
+                await().atMost(1, SECONDS).until(() -> counter.get() == size - 1);
             }, size);
         });
     }
@@ -289,7 +329,7 @@ class FunctionalTest {
 
     private static ThreadPoolExecutor threadPoolExecutor(int unitsOfWork) {
         return new ThreadPoolExecutor(unitsOfWork, unitsOfWork,
-          0L, TimeUnit.MILLISECONDS,
+          0L, MILLISECONDS,
           new LinkedBlockingQueue<>());
     }
 

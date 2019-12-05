@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -82,7 +83,7 @@ class CompletionOrderSpliteratorTest {
     void shouldNotConsumeOnEmpty() {
         List<CompletableFuture<Integer>> futures = Collections.emptyList();
 
-        CompletionOrderSpliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
+        Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
 
         ResultHolder<Integer> result = new ResultHolder<>();
         boolean consumed = spliterator.tryAdvance(result);

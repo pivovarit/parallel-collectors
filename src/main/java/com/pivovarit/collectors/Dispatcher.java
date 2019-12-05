@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -51,6 +52,10 @@ final class Dispatcher<T> {
 
     static <T> Dispatcher<T> limiting(Executor executor) {
         return new Dispatcher<>(executor);
+    }
+
+    public static <R> Dispatcher<List<R>> unbounded(Executor executor) {
+        return limiting(executor, Integer.MAX_VALUE);
     }
 
     CompletableFuture<Void> start() {
