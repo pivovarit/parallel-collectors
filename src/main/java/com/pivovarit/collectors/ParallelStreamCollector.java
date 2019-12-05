@@ -17,10 +17,10 @@ import java.util.stream.StreamSupport;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.batch;
 import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParallelism;
+import static com.pivovarit.collectors.BatchingStream.defaultBatchAmount;
+import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.limiting;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
-import static com.pivovarit.collectors.BatchingIterator.partitioned;
-import static java.lang.Runtime.getRuntime;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -105,7 +105,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
 
-        return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, getDefaultParallelism())
+        return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, defaultBatchAmount())
           .collect(new ParallelStreamCollector<>(batch(mapper), streamInCompletionOrderStrategy(), UNORDERED, unbounded(executor)))), s -> s
           .flatMap(Collection::stream));
     }
@@ -135,7 +135,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
 
-        return batched(new ParallelStreamCollector<>(batch(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), getDefaultParallelism());
+        return batched(new ParallelStreamCollector<>(batch(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), defaultBatchAmount());
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrderedInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -148,10 +148,6 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
         return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
-    }
-
-    private static int getDefaultParallelism() {
-        return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
 
     private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamOrderedStrategy() {
