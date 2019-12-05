@@ -8,7 +8,7 @@ import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
-class BatchingIterator<T> implements Iterator<List<T>> {
+final class BatchingIterator<T> implements Iterator<List<T>> {
 
     private final List<T> source;
     private final int size;
