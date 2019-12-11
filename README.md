@@ -49,6 +49,10 @@ Make sure to read API documentation before using these in production.
 
 The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
 
+By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.
+
+All parallel collectors are one-off and must not be reused.
+
 ### Available Collectors:
 
 -  `CompletableFuture<Collection<T>> parallel(Function, Collector, Executor, parallelism)`
@@ -57,9 +61,11 @@ The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class -
 -  `Stream<T> parallelToStream(Function, Executor, parallelism)`
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
-By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.
+#### Batching Collectors
+By default, all `ExecutorService` threads _compete_ for each operation separately - which results in a basic form of _work-stealing_.
 
-All parallel collectors are one-off and must not be reused.
+However, this creates extra overhead for a thread pool (N operations to process) if this is not desired, there are batching alternatives available under the `ParallelCollectors.Batching` namespace, where threads compete for N/${parallelism} batches of operations instead.
+
 
 ### Leveraging CompletableFuture
 
