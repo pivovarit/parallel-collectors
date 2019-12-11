@@ -1,5 +1,15 @@
 # Version History
 
+### [2.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.1.0) (11-12-2019)
+Introduced a new subset of drop-in replacement collectors `ParallelCollectors.Batching`. 
+
+These implement a different task-splitting strategy where operations are performed in batches and not separately (one object in a thread pool's worker queue represents a batch of operations to be performed by a single thread):
+
+`ParallelCollectors.Batching`:
+- `parallel(...)`
+- `parallelToStream(...)`
+- `parallelToOrderedStream(...)`
+
 ### [2.0.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.0.0) (20-11-2019)
 **Redesigned and simplified the public-facing API** to enable reuse of `java.util.stream.Collector` instances for providing custom reduction strategies which enabled reduction of the public API from 13 methods to just 4:
 
