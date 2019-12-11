@@ -64,7 +64,7 @@ All parallel collectors are one-off and must not be reused.
 #### Batching Collectors
 By default, all `ExecutorService` threads _compete_ for each operation separately - which results in a basic form of _work-stealing_.
 
-However, this creates extra overhead for a thread pool (N operations to process) if this is not desired, there are batching alternatives available under the `ParallelCollectors.Batching` namespace, where threads compete for batches of operations instead (N/${batch-size} elements to process).
+However, this creates extra overhead for a thread pool (N operations to process) if this is not desired, there are batching alternatives available under the `ParallelCollectors.Batching` namespace, where threads compete for N/${parallelism} batches of operations instead.
 
 
 ### Leveraging CompletableFuture
