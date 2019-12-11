@@ -246,6 +246,9 @@ public final class ParallelCollectors {
         return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
 
+    /**
+     * A subset of collectors which perform operations in batches and not separately (one object in a thread pool's worker queue represents a batch of operations to be performed by a single thread)
+     */
     static class Batching {
 
         /**
