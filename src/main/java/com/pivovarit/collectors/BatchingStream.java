@@ -31,10 +31,6 @@ final class BatchingStream<T> implements Iterator<List<T>> {
         return new BatchingStream<>(source, chunks);
     }
 
-    static int defaultBatchAmount() {
-        return Math.max(getRuntime().availableProcessors() - 1, 1);
-    }
-
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
         return stream(spliteratorUnknownSize(from(list, numberOfParts), ORDERED), false);
     }

@@ -15,7 +15,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.BatchingStream.defaultBatchAmount;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
 import static java.util.Objects.requireNonNull;
@@ -134,12 +133,6 @@ final class AsyncParallelCollector<T, R, C>
           .thenApply(s -> s.collect(collector)));
     }
 
-    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return collectingToStreamInBatches(mapper, executor, defaultBatchAmount());
-    }
-
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
@@ -148,13 +141,6 @@ final class AsyncParallelCollector<T, R, C>
         return collectingAndThen(toList(), list -> partitioned(list, parallelism)
           .collect(new AsyncParallelCollector<>(batch(mapper), unbounded(executor), cf -> cf
             .thenApply(s -> s.flatMap(Collection::stream)))));
-    }
-
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
-        requireNonNull(collector, "collector can't be null");
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return collectingWithCollectorInBatches(collector, mapper, executor, defaultBatchAmount());
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
