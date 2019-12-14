@@ -4,5 +4,6 @@ template: |
   $CHANGES
 
   ----
+  ### Authors
 
   $CONTRIBUTORS
