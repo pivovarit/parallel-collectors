@@ -1,4 +1,4 @@
-name: Build against JDKs
+name: basic-build
 on: [push]
 
 jobs:
