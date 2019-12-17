@@ -1,5 +1,6 @@
 # Java Stream API Parallel Collectors - overcoming limitations of standard Parallel Streams
 
+ <a href="https://github.com/actions/toolkit"><img alt="GitHub Actions status" src="https://github.com/actions/pivovarit/workflows/basic-build/badge.svg"></a>
 [![Build Status](https://travis-ci.org/pivovarit/parallel-collectors.svg?branch=master)](https://travis-ci.org/pivovarit/parallel-collectors)
 [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
