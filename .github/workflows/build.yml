@@ -1,4 +1,4 @@
-name: basic-build
+name: build
 on: [push]
 
 jobs:
