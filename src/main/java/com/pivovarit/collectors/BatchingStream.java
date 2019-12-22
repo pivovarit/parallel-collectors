@@ -9,6 +9,9 @@ import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
+/**
+ * @author Grzegorz Piwowarek
+ */
 final class BatchingStream<T> implements Iterator<List<T>> {
 
     private final List<T> source;
