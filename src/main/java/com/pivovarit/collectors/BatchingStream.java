@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import static java.lang.Runtime.getRuntime;
 import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliterator;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
@@ -35,7 +36,7 @@ final class BatchingStream<T> implements Iterator<List<T>> {
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
-        return stream(spliteratorUnknownSize(from(list, numberOfParts), ORDERED), false);
+        return stream(spliterator(from(list, numberOfParts), numberOfParts, ORDERED), false);
     }
 
     @Override
