@@ -139,7 +139,7 @@ final class AsyncParallelCollector<T, R, C>
         requireValidParallelism(parallelism);
 
         return collectingAndThen(toList(), list -> partitioned(list, parallelism)
-          .collect(new AsyncParallelCollector<>(batch(mapper), unbounded(executor), cf -> cf
+          .collect(new AsyncParallelCollector<>(batching(mapper), unbounded(executor), cf -> cf
             .thenApply(s -> s.flatMap(Collection::stream)))));
     }
 
@@ -154,11 +154,10 @@ final class AsyncParallelCollector<T, R, C>
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batching(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
         return collectingAndThen(toList(), list -> partitioned(list, parallelism)
-          .collect(new AsyncParallelCollector<>(batch(mapper),
-            unbounded(executor), cf -> cf.thenApply(s -> s.flatMap(Collection::stream).collect(collector)))));
+          .collect(new AsyncParallelCollector<>(batching(mapper), unbounded(executor), cf -> cf.thenApply(s -> s.flatMap(Collection::stream).collect(collector)))));
     }
 
-    static <T, R> Function<List<T>, List<R>> batch(Function<T, R> mapper) {
+    static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
         return batch -> batch.stream().map(mapper).collect(toList());
     }
 
