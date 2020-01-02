@@ -88,11 +88,11 @@ final class Dispatcher<T> {
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CancellableCompletableFuture<T> future = new CancellableCompletableFuture<>();
         inFlight.registerPending(future);
-        workingQueue.add(future.completedBy(withExceptionHandling(() -> {
+        workingQueue.add(future.completedBy(new FutureTask<>(withExceptionHandling(() -> {
             if (!shortCircuited) {
                 future.complete(supplier.get());
             }
-        })));
+        }), null)));
         return future;
     }
 
@@ -165,10 +165,9 @@ final class Dispatcher<T> {
     static final class CancellableCompletableFuture<T> extends CompletableFuture<T> {
         private volatile FutureTask<?> backingTask;
 
-        private FutureTask<Void> completedBy(Runnable task) {
-            FutureTask<Void> futureTask = new FutureTask<>(task, null);
-            backingTask = futureTask;
-            return futureTask;
+        private FutureTask<Void> completedBy(FutureTask<Void> task) {
+            backingTask = task;
+            return task;
         }
 
         @Override
