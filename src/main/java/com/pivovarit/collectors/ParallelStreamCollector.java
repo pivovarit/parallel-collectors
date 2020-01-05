@@ -15,7 +15,6 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.pivovarit.collectors.AsyncParallelCollector.batching;
 import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParallelism;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.limiting;
@@ -100,13 +99,6 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor, parallelism));
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streamingInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        requireValidParallelism(parallelism);
-
-        return batched(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), UNORDERED, unbounded(executor)), parallelism);
-    }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
@@ -121,13 +113,6 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streamingOrderedInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        requireValidParallelism(parallelism);
-
-        return batched(new ParallelStreamCollector<>(batching(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), parallelism);
-    }
 
     private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
         return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
@@ -137,8 +122,33 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return futures -> futures.stream().map(CompletableFuture::join);
     }
 
-    private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> collector, int parallelism) {
-        return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, parallelism)
-          .collect(collector)), s -> s.flatMap(Collection::stream));
+    static final class Batching {
+        private Batching() {
+        }
+
+        static <T, R> Collector<T, ?, Stream<R>> streamingInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
+            requireNonNull(executor, "executor can't be null");
+            requireNonNull(mapper, "mapper can't be null");
+            requireValidParallelism(parallelism);
+
+            return batched(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), UNORDERED, unbounded(executor)), parallelism);
+        }
+
+        static <T, R> Collector<T, ?, Stream<R>> streamingOrderedInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
+            requireNonNull(executor, "executor can't be null");
+            requireNonNull(mapper, "mapper can't be null");
+            requireValidParallelism(parallelism);
+
+            return batched(new ParallelStreamCollector<>(batching(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), parallelism);
+        }
+
+        private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> collector, int parallelism) {
+            return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, parallelism)
+              .collect(collector)), s -> s.flatMap(Collection::stream));
+        }
+
+        private static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
+            return batch -> batch.stream().map(mapper).collect(toList());
+        }
     }
 }
