@@ -63,9 +63,9 @@ All parallel collectors are one-off and must not be reused.
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
 #### Batching Collectors
-By default, all `ExecutorService` threads _compete_ for each operation separately - which results in a basic form of _work-stealing_.
+By default, all `ExecutorService` threads _compete_ for each operation separately - which results in a basic form of _work-stealing_ which, unfortunately, is not free.
 
-However, this creates extra overhead for a thread pool (N operations to process) if this is not desired, there are batching alternatives available under the `ParallelCollectors.Batching` namespace, where threads compete for N/${parallelism} batches of operations instead.
+However, if one finds it unnecessary, there are batching alternatives available under the `ParallelCollectors.Batching` namespace, where threads compete for max N/${parallelism} batches of operations instead.
 
 
 ### Leveraging CompletableFuture
