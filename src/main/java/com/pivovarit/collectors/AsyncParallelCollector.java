@@ -171,8 +171,7 @@ final class AsyncParallelCollector<T, R, C>
             return batch -> {
                 List<R> list = new ArrayList<>();
                 for (T t : batch) {
-                    R r = mapper.apply(t);
-                    list.add(r);
+                    list.add(mapper.apply(t));
                 }
                 return list;
             };
