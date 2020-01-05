@@ -182,7 +182,7 @@ This limitation is imposed by the design of the `Collector` API.
 
 ## Words of Caution
 
-Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
+Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than not using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
 
 It's important to follow up on the root cause and double-check if parallelism is the way to go.
 
