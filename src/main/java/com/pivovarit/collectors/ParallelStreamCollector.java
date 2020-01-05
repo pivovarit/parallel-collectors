@@ -151,5 +151,4 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
             return batch -> batch.stream().map(mapper).collect(toList());
         }
     }
-
 }
