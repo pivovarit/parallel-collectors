@@ -133,37 +133,42 @@ final class AsyncParallelCollector<T, R, C>
           .thenApply(s -> s.collect(collector)));
     }
 
-    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        requireValidParallelism(parallelism);
-
-        return collectingAndThen(toList(), list -> partitioned(list, parallelism)
-          .collect(new AsyncParallelCollector<>(batching(mapper), unbounded(executor), cf -> cf
-            .thenApply(s -> s.flatMap(Collection::stream)))));
-    }
-
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
-        requireNonNull(collector, "collector can't be null");
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        requireValidParallelism(parallelism);
-
-        return batching(collector, mapper, executor, parallelism);
-    }
-
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batching(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
-        return collectingAndThen(toList(), list -> partitioned(list, parallelism)
-          .collect(new AsyncParallelCollector<>(batching(mapper), unbounded(executor), cf -> cf.thenApply(s -> s.flatMap(Collection::stream).collect(collector)))));
-    }
-
-    static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
-        return batch -> batch.stream().map(mapper).collect(toList());
-    }
-
     static void requireValidParallelism(int parallelism) {
         if (parallelism < 1) {
             throw new IllegalArgumentException("Parallelism can't be lower than 1");
+        }
+    }
+
+    static final class Batching {
+
+        private Batching() {
+        }
+
+        static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+            requireNonNull(collector, "collector can't be null");
+            requireNonNull(executor, "executor can't be null");
+            requireNonNull(mapper, "mapper can't be null");
+            requireValidParallelism(parallelism);
+
+            return batching(collector, mapper, executor, parallelism);
+        }
+
+        static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
+            requireNonNull(executor, "executor can't be null");
+            requireNonNull(mapper, "mapper can't be null");
+            requireValidParallelism(parallelism);
+
+            return collectingAndThen(toList(), list -> partitioned(list, parallelism)
+              .collect(new AsyncParallelCollector<>(batching(mapper), unbounded(executor), cf -> cf
+                .thenApply(s -> s.flatMap(Collection::stream)))));
+        }
+        private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batching(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+            return collectingAndThen(toList(), list -> partitioned(list, parallelism)
+              .collect(new AsyncParallelCollector<>(batching(mapper), unbounded(executor), cf -> cf.thenApply(s -> s.flatMap(Collection::stream).collect(collector)))));
+        }
+
+        private static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
+            return batch -> batch.stream().map(mapper).collect(toList());
         }
     }
 }

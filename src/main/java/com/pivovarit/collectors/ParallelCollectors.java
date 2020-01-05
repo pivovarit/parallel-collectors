@@ -276,7 +276,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-            return AsyncParallelCollector.collectingWithCollectorInBatches(collector, mapper, executor, parallelism);
+            return AsyncParallelCollector.Batching.collectingWithCollectorInBatches(collector, mapper, executor, parallelism);
         }
 
         /**
@@ -309,7 +309,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
-            return AsyncParallelCollector.collectingToStreamInBatches(mapper, executor, parallelism);
+            return AsyncParallelCollector.Batching.collectingToStreamInBatches(mapper, executor, parallelism);
         }
 
 
@@ -338,7 +338,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.streamingInBatches(mapper, executor, parallelism);
+            return ParallelStreamCollector.Batching.streamingInBatches(mapper, executor, parallelism);
         }
 
         /**
@@ -362,11 +362,12 @@ public final class ParallelCollectors {
          * @param <R>         the result returned by {@code mapper}
          *
          * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
-         *
+         *s
+         * gigi
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.streamingOrderedInBatches(mapper, executor, parallelism);
+            return ParallelStreamCollector.Batching.streamingOrderedInBatches(mapper, executor, parallelism);
         }
     }
 }
