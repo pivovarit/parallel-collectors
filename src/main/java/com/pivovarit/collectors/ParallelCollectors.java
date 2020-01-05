@@ -362,8 +362,7 @@ public final class ParallelCollectors {
          * @param <R>         the result returned by {@code mapper}
          *
          * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
-         *s
-         * gigi
+         *
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
