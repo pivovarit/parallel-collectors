@@ -64,7 +64,7 @@ final class Dispatcher<T> {
     }
 
     public static <R> Dispatcher<List<R>> unbounded(Executor executor) {
-        return new Dispatcher<>(executor, -1, (__, e, task) -> e.execute(task));
+        return new Dispatcher<>(executor, -1, (e, __, task) -> e.execute(task));
     }
 
     CompletableFuture<Void> start() {
@@ -73,7 +73,7 @@ final class Dispatcher<T> {
             while (!Thread.currentThread().isInterrupted()) {
                 Runnable task;
                 if ((task = workingQueue.take()) != POISON_PILL) {
-                    scheduler.scheduleOn(limiter, executor, task);
+                    scheduler.scheduleOn(executor, limiter, task);
                 } else {
                     break;
                 }
@@ -141,9 +141,9 @@ final class Dispatcher<T> {
     }
 
     private Scheduler limitingScheduler() {
-        return (semaphore, e, task) -> {
-            semaphore.acquire();
-            e.execute(withFinally(task, semaphore::release));
+        return (e, limiter, task) -> {
+            limiter.acquire();
+            e.execute(withFinally(task, limiter::release));
         };
     }
     @FunctionalInterface
@@ -185,7 +185,7 @@ final class Dispatcher<T> {
     }
 
     private interface Scheduler {
-        void scheduleOn(Semaphore semaphore, Executor executor, Runnable task) throws InterruptedException;
+        void scheduleOn(Executor executor, Semaphore semaphore, Runnable task) throws InterruptedException;
     }
 
     static final class CancellableCompletableFuture<T> extends CompletableFuture<T> {
