@@ -18,17 +18,6 @@ import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 
-/*
-Benchmark                (parallelism)   Mode  Cnt     Score     Error  Units
-Bench.parallel                       1  thrpt    5    63.495 ±   1.101  ops/s
-Bench.parallel_batching              1  thrpt    5  8683.955 ± 227.077  ops/s
-Bench.parallel                      10  thrpt    5    91.673 ±   1.137  ops/s
-Bench.parallel_batching             10  thrpt    5  6274.509 ± 185.763  ops/s
-Bench.parallel                     100  thrpt    5   620.897 ±  71.591  ops/s
-Bench.parallel_batching            100  thrpt    5  2346.040 ± 137.642  ops/s
-Bench.parallel                    1000  thrpt    5   749.441 ±  71.090  ops/s
-Bench.parallel_batching           1000  thrpt    5   972.762 ±  78.602  ops/s
- */
 public class Bench {
 
     @State(Scope.Benchmark)
@@ -55,17 +44,31 @@ public class Bench {
       .collect(toList());
 
     @Benchmark
-    public List<Integer> parallel(BenchmarkState state) {
+    public List<Integer> parallel_collect(BenchmarkState state) {
         return source.stream()
           .collect(ParallelCollectors.parallel(i -> i, toList(), state.executor, state.parallelism))
           .join();
     }
 
     @Benchmark
-    public List<Integer> parallel_batching(BenchmarkState state) {
+    public List<Integer> parallel_batch_collect(BenchmarkState state) {
         return source.stream()
           .collect(ParallelCollectors.Batching.parallel(i -> i, toList(), state.executor, state.parallelism))
           .join();
+    }
+
+    @Benchmark
+    public List<Integer> parallel_streaming(BenchmarkState state) {
+        return source.stream()
+          .collect(ParallelCollectors.parallelToStream(i -> i, state.executor, state.parallelism))
+          .collect(toList());
+    }
+
+    @Benchmark
+    public List<Integer> parallel_batch_streaming_collect(BenchmarkState state) {
+        return source.stream()
+          .collect(ParallelCollectors.Batching.parallelToStream(i -> i, state.executor, state.parallelism))
+          .collect(toList());
     }
 
     public static void main(String[] args) throws RunnerException {
