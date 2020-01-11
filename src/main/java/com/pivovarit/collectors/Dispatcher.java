@@ -46,7 +46,7 @@ final class Dispatcher<T> {
     private Dispatcher(Executor executor, int permits) {
         this.executor = executor;
         this.limiter = resolveLimiter(permits);
-        this.scheduler = limitingScheduler(executor);
+        this.scheduler = limitingScheduler();
     }
 
     private Dispatcher(Executor executor, int permits, Scheduler scheduler) {
@@ -140,10 +140,10 @@ final class Dispatcher<T> {
         return permits > -1 ? new Semaphore(permits) : null;
     }
 
-    private Scheduler limitingScheduler(Executor executor) {
-        return (semaphore, executor1, task) -> {
-            limiter.acquire();
-            executor.execute(withFinally(task, limiter::release));
+    private Scheduler limitingScheduler() {
+        return (semaphore, e, task) -> {
+            semaphore.acquire();
+            e.execute(withFinally(task, semaphore::release));
         };
     }
     @FunctionalInterface
