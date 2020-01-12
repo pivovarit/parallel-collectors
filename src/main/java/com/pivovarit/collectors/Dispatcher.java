@@ -34,8 +34,6 @@ final class Dispatcher<T> {
     private final Executor executor;
     private final Semaphore limiter;
 
-    private final Scheduler scheduler;
-
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
@@ -45,14 +43,7 @@ final class Dispatcher<T> {
 
     private Dispatcher(Executor executor, int permits) {
         this.executor = executor;
-        this.limiter = resolveLimiter(permits);
-        this.scheduler = limitingScheduler();
-    }
-
-    private Dispatcher(Executor executor, int permits, Scheduler scheduler) {
-        this.executor = executor;
-        this.limiter = resolveLimiter(permits);
-        this.scheduler = scheduler;
+        this.limiter = new Semaphore(permits);
     }
 
     static <T> Dispatcher<T> limiting(Executor executor, int permits) {
@@ -64,7 +55,7 @@ final class Dispatcher<T> {
     }
 
     public static <R> Dispatcher<List<R>> unbounded(Executor executor) {
-        return new Dispatcher<>(executor, -1, (e, __, task) -> e.execute(task));
+        return limiting(executor, Integer.MAX_VALUE);
     }
 
     CompletableFuture<Void> start() {
@@ -73,7 +64,8 @@ final class Dispatcher<T> {
             while (!Thread.currentThread().isInterrupted()) {
                 Runnable task;
                 if ((task = workingQueue.take()) != POISON_PILL) {
-                    scheduler.scheduleOn(executor, limiter, task);
+                    limiter.acquire();
+                    executor.execute(withFinally(task, limiter::release));
                 } else {
                     break;
                 }
@@ -119,13 +111,6 @@ final class Dispatcher<T> {
         };
     }
 
-    private void handle(Throwable e) {
-        shortCircuited = true;
-        completionSignaller.completeExceptionally(e);
-        inFlight.registerException(e);
-        dispatcher.shutdownNow();
-    }
-
     private static Runnable withFinally(Runnable task, Runnable finisher) {
         return () -> {
             try {
@@ -136,19 +121,15 @@ final class Dispatcher<T> {
         };
     }
 
-    private static Semaphore resolveLimiter(int permits) {
-        return permits > -1 ? new Semaphore(permits) : null;
+    private void handle(Throwable e) {
+        shortCircuited = true;
+        completionSignaller.completeExceptionally(e);
+        inFlight.registerException(e);
+        dispatcher.shutdownNow();
     }
 
-    private Scheduler limitingScheduler() {
-        return (e, limiter, task) -> {
-            limiter.acquire();
-            e.execute(withFinally(task, limiter::release));
-        };
-    }
     @FunctionalInterface
     interface CheckedRunnable {
-
         void run() throws Exception;
     }
 
@@ -169,7 +150,6 @@ final class Dispatcher<T> {
     }
 
     static final class InFlight<T> {
-
         private final Queue<CancellableCompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
 
         void registerPending(CancellableCompletableFuture<T> future) {
@@ -184,12 +164,7 @@ final class Dispatcher<T> {
         }
     }
 
-    private interface Scheduler {
-        void scheduleOn(Executor executor, Semaphore semaphore, Runnable task) throws InterruptedException;
-    }
-
     static final class CancellableCompletableFuture<T> extends CompletableFuture<T> {
-
         private volatile FutureTask<?> backingTask;
 
         private void completedBy(FutureTask<Void> task) {
