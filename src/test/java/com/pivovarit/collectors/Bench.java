@@ -101,3 +101,24 @@ Bench.parallel_streaming                           10  thrpt    5     94.064 ± 
 Bench.parallel_streaming                          100  thrpt    5    619.749 ±  52.431  ops/s
 Bench.parallel_streaming                         1000  thrpt    5    998.359 ± 116.077  ops/s
  */
+
+
+/*
+Benchmark                               (parallelism)   Mode  Cnt      Score     Error  Units
+Bench.parallel_batch_collect                        1  thrpt    5  10322.716 ± 205.674  ops/s
+Bench.parallel_batch_collect                       10  thrpt    5   8069.709 ± 565.910  ops/s
+Bench.parallel_batch_collect                      100  thrpt    5   2464.723 ± 211.265  ops/s
+Bench.parallel_batch_collect                     1000  thrpt    5   1098.746 ±  62.746  ops/s
+Bench.parallel_batch_streaming_collect              1  thrpt    5  10558.572 ± 149.537  ops/s
+Bench.parallel_batch_streaming_collect             10  thrpt    5   7962.604 ± 193.840  ops/s
+Bench.parallel_batch_streaming_collect            100  thrpt    5   2920.520 ± 250.607  ops/s
+Bench.parallel_batch_streaming_collect           1000  thrpt    5    990.883 ±  85.655  ops/s
+Bench.parallel_collect                              1  thrpt    5  10246.722 ± 233.566  ops/s
+Bench.parallel_collect                             10  thrpt    5    103.467 ±   4.369  ops/s
+Bench.parallel_collect                            100  thrpt    5    738.842 ±  42.034  ops/s
+Bench.parallel_collect                           1000  thrpt    5   1003.320 ± 106.542  ops/s
+Bench.parallel_streaming                            1  thrpt    5  10810.950 ±  79.055  ops/s
+Bench.parallel_streaming                           10  thrpt    5     96.465 ±   4.228  ops/s
+Bench.parallel_streaming                          100  thrpt    5    634.921 ±  39.763  ops/s
+Bench.parallel_streaming                         1000  thrpt    5   1016.447 ± 119.117  ops/s
+ */
