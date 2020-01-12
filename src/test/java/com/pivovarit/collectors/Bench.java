@@ -81,3 +81,23 @@ public class Bench {
             .build()).run();
     }
 }
+
+/* 972ffbb @ Intel i7-4980HQ (8) @ 2.80GHz, 8u222
+Benchmark                               (parallelism)   Mode  Cnt      Score     Error  Units
+Bench.parallel_batch_collect                        1  thrpt    5  10218.766 ± 131.633  ops/s
+Bench.parallel_batch_collect                       10  thrpt    5   8096.380 ± 197.893  ops/s
+Bench.parallel_batch_collect                      100  thrpt    5   2441.829 ± 207.863  ops/s
+Bench.parallel_batch_collect                     1000  thrpt    5   1092.730 ±  54.745  ops/s
+Bench.parallel_batch_streaming_collect              1  thrpt    5  10715.432 ±  78.383  ops/s
+Bench.parallel_batch_streaming_collect             10  thrpt    5   7894.899 ± 229.013  ops/s
+Bench.parallel_batch_streaming_collect            100  thrpt    5   3089.166 ± 181.723  ops/s
+Bench.parallel_batch_streaming_collect           1000  thrpt    5   1001.557 ±  68.654  ops/s
+Bench.parallel_collect                              1  thrpt    5     67.891 ±   1.357  ops/s
+Bench.parallel_collect                             10  thrpt    5    105.943 ±   7.940  ops/s
+Bench.parallel_collect                            100  thrpt    5    597.102 ±  78.423  ops/s
+Bench.parallel_collect                           1000  thrpt    5    948.764 ±  84.439  ops/s
+Bench.parallel_streaming                            1  thrpt    5     50.920 ±   1.569  ops/s
+Bench.parallel_streaming                           10  thrpt    5     94.064 ±   4.054  ops/s
+Bench.parallel_streaming                          100  thrpt    5    619.749 ±  52.431  ops/s
+Bench.parallel_streaming                         1000  thrpt    5    998.359 ± 116.077  ops/s
+ */
