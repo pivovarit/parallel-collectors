@@ -1,5 +1,10 @@
 # Version History
 
+### [2.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.2.0) (19-01-2020)
+Introduced multiple performance improvements:
+- avoiding excessive allocations
+- optimizing edge cases where `parallelism == 1`
+
 ### [2.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.1.0) (11-12-2019)
 Introduced a new subset of drop-in replacement collectors `ParallelCollectors.Batching`. 
 
