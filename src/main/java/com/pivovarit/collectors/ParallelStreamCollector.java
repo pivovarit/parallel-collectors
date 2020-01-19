@@ -188,7 +188,9 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
         @Override
         public BinaryOperator<List<R>> combiner() {
-            throw new UnsupportedOperationException();
+            return (rs, rs2) -> {
+                throw new UnsupportedOperationException();
+            };
         }
 
         @Override
