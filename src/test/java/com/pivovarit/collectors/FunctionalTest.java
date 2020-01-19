@@ -100,7 +100,8 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         return of(
-          shouldCollect(collector, name),
+          shouldCollect(collector, name, 1),
+          shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldNotBlockWhenReturningFuture(collector, name),
           shouldShortCircuitOnException(collector, name),
@@ -172,10 +173,10 @@ class FunctionalTest {
         });
     }
 
-    private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, int parallelism) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
-            Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor, PARALLELISM))
+            Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor, parallelism))
               .join();
 
             assertThat(result).hasSameElementsAs(elements);
