@@ -132,7 +132,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-              ? collectingAndThen(toList(), list -> list.stream().map(mapper))
+              ? MappingCollector.of(mapper)
               : batched(new ParallelStreamCollector<>(
                 batching(mapper), streamInCompletionOrderStrategy(), UNORDERED, unbounded(executor)), parallelism);
         }
@@ -143,7 +143,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-              ? collectingAndThen(toList(), list -> list.stream().map(mapper))
+              ? MappingCollector.of(mapper)
               : batched(new ParallelStreamCollector<>(
                 batching(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), parallelism);
         }
@@ -161,6 +161,44 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
                 }
                 return list;
             };
+        }
+    }
+
+    private static class MappingCollector<T, R> implements Collector<T, List<R>, Stream<R>> {
+
+        private final Function<T, R> mapper;
+
+        private MappingCollector(Function<T, R> mapper) {
+            this.mapper = mapper;
+        }
+
+        static <T, R> MappingCollector<T, R> of(Function<T, R> mapper) {
+            return new MappingCollector<>(mapper);
+        }
+
+        @Override
+        public Supplier<List<R>> supplier() {
+            return ArrayList::new;
+        }
+
+        @Override
+        public BiConsumer<List<R>, T> accumulator() {
+            return (rs, t) -> rs.add(mapper.apply(t));
+        }
+
+        @Override
+        public BinaryOperator<List<R>> combiner() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Function<List<R>, Stream<R>> finisher() {
+            return Collection::stream;
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return emptySet();
         }
     }
 }
