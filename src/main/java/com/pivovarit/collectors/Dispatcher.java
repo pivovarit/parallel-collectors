@@ -27,7 +27,7 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final InFlight<T> inFlight = new InFlight<>();
+    private final Queue<CancellableCompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
 
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
@@ -87,7 +87,7 @@ final class Dispatcher<T> {
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CancellableCompletableFuture<T> future = new CancellableCompletableFuture<>();
-        inFlight.registerPending(future);
+        pending.add(future);
         FutureTask<Void> task = new FutureTask<>(withExceptionHandling(() -> {
             if (!shortCircuited) {
                 future.complete(supplier.get());
@@ -124,7 +124,10 @@ final class Dispatcher<T> {
     private void handle(Throwable e) {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
-        inFlight.registerException(e);
+        pending.forEach(future -> {
+            future.completeExceptionally(e);
+            future.cancel(true);
+        });
         dispatcher.shutdownNow();
     }
 
@@ -147,21 +150,6 @@ final class Dispatcher<T> {
               thread.setDaemon(false);
               return thread;
           });
-    }
-
-    static final class InFlight<T> {
-        private final Queue<CancellableCompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
-
-        void registerPending(CancellableCompletableFuture<T> future) {
-            pending.add(future);
-        }
-
-        void registerException(Throwable e) {
-            pending.forEach(future -> {
-                future.completeExceptionally(e);
-                future.cancel(true);
-            });
-        }
     }
 
     static final class CancellableCompletableFuture<T> extends CompletableFuture<T> {
