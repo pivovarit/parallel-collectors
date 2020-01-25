@@ -129,11 +129,6 @@ final class Dispatcher<T> {
         };
     }
 
-    @FunctionalInterface
-    interface CheckedRunnable {
-        void run() throws Exception;
-    }
-
     private static int getDefaultParallelism() {
         return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
