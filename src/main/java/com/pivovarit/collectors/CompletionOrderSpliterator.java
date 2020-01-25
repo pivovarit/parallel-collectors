@@ -19,7 +19,7 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
         this.initialSize = futures.size();
         this.remaining = initialSize;
-        futures.forEach(f -> f.whenComplete((t, __) -> completed.add(f)));
+        futures.forEach(f -> f.whenComplete((__, ___) -> completed.add(f)));
     }
 
     @Override

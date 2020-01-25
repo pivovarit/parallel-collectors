@@ -20,10 +20,9 @@ class FutureCollectors {
                 .collect(collector));
 
             for (CompletableFuture<T> f : list) {
-                f.whenComplete((integer, throwable) -> {
-                    if (throwable != null) {
-                        future.completeExceptionally(throwable);
-                    }
+                f.exceptionally((throwable) -> {
+                    future.completeExceptionally(throwable);
+                    return null;
                 });
             }
 

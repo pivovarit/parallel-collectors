@@ -1,10 +1,8 @@
 package com.pivovarit.collectors;
 
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,7 +25,6 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final Queue<CancellableCompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
 
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
@@ -58,7 +55,7 @@ final class Dispatcher<T> {
         return limiting(executor, Integer.MAX_VALUE);
     }
 
-    CompletableFuture<Void> start() {
+    void start() {
         started = true;
         dispatcher.execute(withExceptionHandling(() -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -70,10 +67,7 @@ final class Dispatcher<T> {
                     break;
                 }
             }
-            completionSignaller.complete(null);
         }));
-
-        return completionSignaller;
     }
 
     void stop() {
@@ -87,7 +81,12 @@ final class Dispatcher<T> {
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CancellableCompletableFuture<T> future = new CancellableCompletableFuture<>();
-        pending.add(future);
+        completionSignaller.exceptionally(throwable -> {
+            future.completeExceptionally(throwable);
+            future.cancel(true);
+            return null;
+        });
+
         FutureTask<Void> task = new FutureTask<>(withExceptionHandling(() -> {
             if (!shortCircuited) {
                 future.complete(supplier.get());
@@ -124,10 +123,6 @@ final class Dispatcher<T> {
     private void handle(Throwable e) {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
-        pending.forEach(future -> {
-            future.completeExceptionally(e);
-            future.cancel(true);
-        });
         dispatcher.shutdownNow();
     }
 
