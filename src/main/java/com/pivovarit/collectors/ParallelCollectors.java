@@ -1,10 +1,14 @@
 package com.pivovarit.collectors;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -373,6 +377,22 @@ public final class ParallelCollectors {
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
             return ParallelStreamCollector.Batching.streamingOrderedInBatches(mapper, executor, parallelism);
+        }
+
+        /**
+         * TODO
+         * @since 2.3.0
+         */
+        public static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
+            return FutureCollectors.toFuture(collector);
+        }
+
+        /**
+         * TODO
+         * @since 2.3.0
+         */
+        public static <T> Collector<CompletableFuture<T>, ?, CompletableFuture<List<T>>> toFuture() {
+            return FutureCollectors.toFuture();
         }
     }
 }
