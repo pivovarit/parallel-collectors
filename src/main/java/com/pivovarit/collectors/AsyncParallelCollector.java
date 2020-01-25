@@ -13,10 +13,12 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
+import static com.pivovarit.collectors.FutureCollectors.toFuture;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
@@ -90,13 +92,11 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     private static <T> CompletableFuture<Void> allOf(List<CompletableFuture<T>> futures) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
+        CompletableFuture<Void> result = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
-        futures.forEach(f -> f.handle((__, ex) -> ex != null && future.completeExceptionally(ex)));
+        futures.forEach(f -> f.handle((__, ex) -> ex != null && result.completeExceptionally(ex)));
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(future::complete);
-
-        return future;
+        return result;
     }
 
     private BiFunction<C, Throwable, Object> result() {
