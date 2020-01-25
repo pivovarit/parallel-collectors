@@ -58,17 +58,21 @@ final class Dispatcher<T> {
 
     void start() {
         started = true;
-        dispatcher.execute(withExceptionHandling(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                Runnable task;
-                if ((task = workingQueue.take()) != POISON_PILL) {
-                    limiter.acquire();
-                    executor.execute(withFinally(task, limiter::release));
-                } else {
-                    break;
+        dispatcher.execute(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    Runnable task;
+                    if ((task = workingQueue.take()) != POISON_PILL) {
+                        limiter.acquire();
+                        executor.execute(withFinally(task, limiter::release));
+                    } else {
+                        break;
+                    }
                 }
+            } catch (Throwable e) {
+                handle(e);
             }
-        }));
+        });
     }
 
     void stop() {
@@ -88,23 +92,17 @@ final class Dispatcher<T> {
     }
 
     private FutureTask<Void> completionTask(Supplier<T> supplier, CancellableCompletableFuture<T> future) {
-        FutureTask<Void> task = new FutureTask<>(withExceptionHandling(() -> {
-            if (!shortCircuited) {
-                future.complete(supplier.get());
-            }
-        }), null);
-        future.completedBy(task);
-        return task;
-    }
-
-    private Runnable withExceptionHandling(CheckedRunnable action) {
-        return () -> {
+        FutureTask<Void> task = new FutureTask<>(() -> {
             try {
-                action.run();
+                if (!shortCircuited) {
+                    future.complete(supplier.get());
+                }
             } catch (Throwable e) {
                 handle(e);
             }
-        };
+        }, null);
+        future.completedBy(task);
+        return task;
     }
 
     private void handle(Throwable e) {
