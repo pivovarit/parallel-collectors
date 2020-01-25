@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
 
 class FutureCollectors {
-    public static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
+    static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
         return Collectors.collectingAndThen(toList(), list -> {
             CompletableFuture<R> future = CompletableFuture
               .allOf(list.toArray(new CompletableFuture[0]))
@@ -28,7 +28,7 @@ class FutureCollectors {
         });
     }
 
-    public static <T> Collector<CompletableFuture<T>, ?, CompletableFuture<List<T>>> toFuture() {
+    static <T> Collector<CompletableFuture<T>, ?, CompletableFuture<List<T>>> toFuture() {
         return toFuture(toList());
     }
 }
