@@ -12,6 +12,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.lang.Runtime.getRuntime;
@@ -81,32 +82,42 @@ final class Dispatcher<T> {
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CancellableCompletableFuture<T> future = new CancellableCompletableFuture<>();
-        completionSignaller.exceptionally(throwable -> {
-            future.completeExceptionally(throwable);
-            future.cancel(true);
-            return null;
-        });
+        workingQueue.add(completionTask(supplier, future));
+        completionSignaller.exceptionally(shortcircuit(future));
+        return future;
+    }
 
+    private FutureTask<Void> completionTask(Supplier<T> supplier, CancellableCompletableFuture<T> future) {
         FutureTask<Void> task = new FutureTask<>(withExceptionHandling(() -> {
             if (!shortCircuited) {
                 future.complete(supplier.get());
             }
         }), null);
         future.completedBy(task);
-        workingQueue.add(task);
-        return future;
+        return task;
     }
 
     private Runnable withExceptionHandling(CheckedRunnable action) {
         return () -> {
             try {
                 action.run();
-            } catch (Exception e) {
-                handle(e);
             } catch (Throwable e) {
                 handle(e);
-                throw e;
             }
+        };
+    }
+
+    private void handle(Throwable e) {
+        shortCircuited = true;
+        completionSignaller.completeExceptionally(e);
+        dispatcher.shutdownNow();
+    }
+
+    private static Function<Throwable, Void> shortcircuit(CancellableCompletableFuture<?> future) {
+        return throwable -> {
+            future.completeExceptionally(throwable);
+            future.cancel(true);
+            return null;
         };
     }
 
@@ -118,12 +129,6 @@ final class Dispatcher<T> {
                 finisher.run();
             }
         };
-    }
-
-    private void handle(Throwable e) {
-        shortCircuited = true;
-        completionSignaller.completeExceptionally(e);
-        dispatcher.shutdownNow();
     }
 
     @FunctionalInterface
