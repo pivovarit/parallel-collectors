@@ -90,13 +90,17 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     private static <T> CompletableFuture<Void> allOf(List<CompletableFuture<T>> futures) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
+        CompletableFuture<Void> result = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
-        futures.forEach(f -> f.handle((__, ex) -> ex != null && future.completeExceptionally(ex)));
+        for (CompletableFuture<T> f : futures) {
+            f.whenComplete((integer, throwable) -> {
+                if (throwable != null) {
+                    result.completeExceptionally(throwable);
+                }
+            });
+        }
 
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(future::complete);
-
-        return future;
+        return result;
     }
 
     private BiFunction<C, Throwable, Object> result() {
