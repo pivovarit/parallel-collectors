@@ -5,10 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -380,7 +377,16 @@ public final class ParallelCollectors {
         }
 
         /**
-         * TODO
+         * A convenience {@code Collector} for collecting a Stream<CompletableFuture<T>
+         * into a CompletableFuture<R> using a provided Collector<T, ?, R>
+         *
+         * @param collector the {@code Collector} describing the reduction
+         * @param <T>       the type of the collected elements
+         * @param <R>       the result of the transformation
+         *
+         * @return a {@code Collector} which collects all futures and combines them into a single future
+         * using the provided downstream {@code Collector}
+         *
          * @since 2.3.0
          */
         public static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
@@ -388,7 +394,13 @@ public final class ParallelCollectors {
         }
 
         /**
-         * TODO
+         * A convenience {@code Collector} for collecting a Stream<CompletableFuture<T> into a CompletableFuture<List<T>>
+         *
+         * @param <T> the type of the collected elements
+         *
+         * @return a {@code Collector} which collects all futures and combines them into a single future
+         * returning a list of results
+         *
          * @since 2.3.0
          */
         public static <T> Collector<CompletableFuture<T>, ?, CompletableFuture<List<T>>> toFuture() {
