@@ -85,7 +85,7 @@ final class AsyncParallelCollector<T, R, C>
 
     private void startConsuming() {
         if (!dispatcher.isRunning()) {
-            dispatcher.start().handle((__, ex) -> result.completeExceptionally(ex));
+            dispatcher.start();
         }
     }
 
@@ -93,10 +93,9 @@ final class AsyncParallelCollector<T, R, C>
         CompletableFuture<Void> result = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
         for (CompletableFuture<T> f : futures) {
-            f.whenComplete((integer, throwable) -> {
-                if (throwable != null) {
-                    result.completeExceptionally(throwable);
-                }
+            f.exceptionally(ex -> {
+                result.completeExceptionally(ex);
+                return null;
             });
         }
 

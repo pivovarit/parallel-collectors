@@ -103,15 +103,15 @@ class FunctionalTest {
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
-          shouldNotBlockWhenReturningFuture(collector, name),
-          shouldShortCircuitOnException(collector, name),
-          shouldInterruptOnException(collector, name),
+          shouldStartConsumingImmediately(collector, name),
+          shouldNotBlockTheCallingThread(collector, name),
           shouldMaintainOrder(collector, name, maintainsOrder),
           shouldRespectParallelism(collector, name),
-          shouldNotSwallowException(collector, name),
-          shouldSurviveRejectedExecutionException(collector, name),
-          shouldRemainConsistent(collector, name),
-          shouldStartConsumingImmediately(collector, name)
+          shouldHandleThrowable(collector, name),
+          shouldShortCircuitOnException(collector, name),
+          shouldInterruptOnException(collector, name),
+          shouldHandleRejectedExecutionException(collector, name),
+          shouldRemainConsistent(collector, name)
         );
     }
 
@@ -121,11 +121,11 @@ class FunctionalTest {
           of(shouldProcessOnNThreadsETParallelism(collector, name)));
     }
 
-    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockWhenReturningFuture(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> c, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockTheCallingThread(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> c, String name) {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             assertTimeoutPreemptively(ofMillis(100), () ->
               Stream.<Integer>empty().collect(c
-                .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), executor, PARALLELISM)), "returned blocking future");
+                .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), executor, 1)), "returned blocking future");
         });
     }
 
@@ -214,7 +214,7 @@ class FunctionalTest {
         });
     }
 
-    private static <R extends Collection<Integer>> DynamicTest shouldNotSwallowException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldHandleThrowable(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
 
@@ -233,7 +233,7 @@ class FunctionalTest {
         });
     }
 
-    private static <R extends Collection<Integer>> DynamicTest shouldSurviveRejectedExecutionException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+    private static <R extends Collection<Integer>> DynamicTest shouldHandleRejectedExecutionException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should survive rejected execution exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
             List<Integer> elements = IntStream.range(0, 1000).boxed().collect(toList());

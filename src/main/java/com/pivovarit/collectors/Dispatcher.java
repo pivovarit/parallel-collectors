@@ -1,10 +1,8 @@
 package com.pivovarit.collectors;
 
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,6 +12,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.lang.Runtime.getRuntime;
@@ -27,7 +26,6 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
-    private final Queue<CancellableCompletableFuture<T>> pending = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
 
     private final ExecutorService dispatcher = newLazySingleThreadExecutor();
@@ -58,22 +56,23 @@ final class Dispatcher<T> {
         return limiting(executor, Integer.MAX_VALUE);
     }
 
-    CompletableFuture<Void> start() {
+    void start() {
         started = true;
-        dispatcher.execute(withExceptionHandling(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                Runnable task;
-                if ((task = workingQueue.take()) != POISON_PILL) {
-                    limiter.acquire();
-                    executor.execute(withFinally(task, limiter::release));
-                } else {
-                    break;
+        dispatcher.execute(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    Runnable task;
+                    if ((task = workingQueue.take()) != POISON_PILL) {
+                        limiter.acquire();
+                        executor.execute(withFinally(task, limiter::release));
+                    } else {
+                        break;
+                    }
                 }
+            } catch (Throwable e) {
+                handle(e);
             }
-            completionSignaller.complete(null);
-        }));
-
-        return completionSignaller;
+        });
     }
 
     void stop() {
@@ -87,27 +86,36 @@ final class Dispatcher<T> {
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         CancellableCompletableFuture<T> future = new CancellableCompletableFuture<>();
-        pending.add(future);
-        FutureTask<Void> task = new FutureTask<>(withExceptionHandling(() -> {
-            if (!shortCircuited) {
-                future.complete(supplier.get());
-            }
-        }), null);
-        future.completedBy(task);
-        workingQueue.add(task);
+        workingQueue.add(completionTask(supplier, future));
+        completionSignaller.exceptionally(shortcircuit(future));
         return future;
     }
 
-    private Runnable withExceptionHandling(CheckedRunnable action) {
-        return () -> {
+    private FutureTask<Void> completionTask(Supplier<T> supplier, CancellableCompletableFuture<T> future) {
+        FutureTask<Void> task = new FutureTask<>(() -> {
             try {
-                action.run();
-            } catch (Exception e) {
-                handle(e);
+                if (!shortCircuited) {
+                    future.complete(supplier.get());
+                }
             } catch (Throwable e) {
                 handle(e);
-                throw e;
             }
+        }, null);
+        future.completedBy(task);
+        return task;
+    }
+
+    private void handle(Throwable e) {
+        shortCircuited = true;
+        completionSignaller.completeExceptionally(e);
+        dispatcher.shutdownNow();
+    }
+
+    private static Function<Throwable, Void> shortcircuit(CancellableCompletableFuture<?> future) {
+        return throwable -> {
+            future.completeExceptionally(throwable);
+            future.cancel(true);
+            return null;
         };
     }
 
@@ -119,21 +127,6 @@ final class Dispatcher<T> {
                 finisher.run();
             }
         };
-    }
-
-    private void handle(Throwable e) {
-        shortCircuited = true;
-        completionSignaller.completeExceptionally(e);
-        pending.forEach(future -> {
-            future.completeExceptionally(e);
-            future.cancel(true);
-        });
-        dispatcher.shutdownNow();
-    }
-
-    @FunctionalInterface
-    interface CheckedRunnable {
-        void run() throws Exception;
     }
 
     private static int getDefaultParallelism() {
