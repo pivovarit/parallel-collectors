@@ -125,7 +125,7 @@ class FunctionalTest {
         return dynamicTest(format("%s: should not block when returning future", name), () -> {
             assertTimeoutPreemptively(ofMillis(100), () ->
               Stream.<Integer>empty().collect(c
-                .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), executor, PARALLELISM)), "returned blocking future");
+                .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), executor, 1)), "returned blocking future");
         });
     }
 
