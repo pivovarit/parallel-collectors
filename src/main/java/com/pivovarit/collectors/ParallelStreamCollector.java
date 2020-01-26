@@ -155,7 +155,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
         private static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
             return batch -> {
-                List<R> list = new ArrayList<>();
+                List<R> list = new ArrayList<>(batch.size());
                 for (T t : batch) {
                     list.add(mapper.apply(t));
                 }
