@@ -129,7 +129,7 @@ final class Dispatcher<T> {
         };
     }
 
-    private static int getDefaultParallelism() {
+    static int getDefaultParallelism() {
         return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
 

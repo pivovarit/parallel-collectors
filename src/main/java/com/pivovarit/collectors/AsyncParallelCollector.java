@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
+import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -99,10 +100,7 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-
-        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor), t -> t);
+        return collectingToStream(mapper, executor, getDefaultParallelism());
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -114,11 +112,7 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
-        requireNonNull(collector, "collector can't be null");
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-
-        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor), s -> s.collect(collector));
+        return collectingWithCollector(collector, mapper, executor, getDefaultParallelism());
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
