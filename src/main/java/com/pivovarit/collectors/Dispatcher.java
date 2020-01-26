@@ -35,10 +35,6 @@ final class Dispatcher<T> {
     private volatile boolean started = false;
     private volatile boolean shortCircuited = false;
 
-    private Dispatcher(Executor executor) {
-        this(executor, getDefaultParallelism());
-    }
-
     private Dispatcher(Executor executor, int permits) {
         this.executor = executor;
         this.limiter = new Semaphore(permits);
