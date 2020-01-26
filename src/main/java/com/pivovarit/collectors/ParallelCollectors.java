@@ -68,9 +68,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-        return parallelism == 1
-          ? AsyncParallelCollector.Batching.collectingWithCollector(collector, mapper, executor, parallelism)
-          : AsyncParallelCollector.collectingWithCollector(collector, mapper, executor, parallelism);
+        return AsyncParallelCollector.collectingWithCollector(collector, mapper, executor, parallelism);
     }
 
     /**
@@ -131,9 +129,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
-        return parallelism == 1
-          ? AsyncParallelCollector.Batching.collectingToStream(mapper, executor, parallelism)
-          : AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
+        return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
     }
 
     /**
@@ -190,9 +186,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-        return parallelism == 1
-          ? ParallelStreamCollector.Batching.streaming(mapper, executor, parallelism)
-          : ParallelStreamCollector.streaming(mapper, executor, parallelism);
+        return ParallelStreamCollector.streaming(mapper, executor, parallelism);
     }
 
     /**
@@ -248,9 +242,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
-        return parallelism == 1
-          ? ParallelStreamCollector.Batching.streamingOrdered(mapper, executor, parallelism)
-          : ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
+        return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
 
 

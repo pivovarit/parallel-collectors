@@ -100,6 +100,25 @@ Bench.parallel_streaming                            1  thrpt    5     50.920 ± 
 Bench.parallel_streaming                           10  thrpt    5     94.064 ±   4.054  ops/s
 Bench.parallel_streaming                          100  thrpt    5    619.749 ±  52.431  ops/s
 Bench.parallel_streaming                         1000  thrpt    5    998.359 ± 116.077  ops/s
+
+677be167 @ Intel i7-4980HQ (8) @ 2.80GHz, 8u222
+Benchmark                               (parallelism)   Mode  Cnt      Score      Error  Units
+Bench.parallel_batch_collect                        1  thrpt    5  32233.522 ±  235.439  ops/s
+Bench.parallel_batch_collect                       10  thrpt    5   8060.083 ±   94.752  ops/s
+Bench.parallel_batch_collect                      100  thrpt    5   2426.542 ±  193.879  ops/s
+Bench.parallel_batch_collect                     1000  thrpt    5    934.644 ±   55.999  ops/s
+Bench.parallel_batch_streaming_collect              1  thrpt    5  77694.159 ± 2116.185  ops/s
+Bench.parallel_batch_streaming_collect             10  thrpt    5   7870.352 ±  348.309  ops/s
+Bench.parallel_batch_streaming_collect            100  thrpt    5   2879.023 ±  201.298  ops/s
+Bench.parallel_batch_streaming_collect           1000  thrpt    5    967.816 ±   38.293  ops/s
+Bench.parallel_collect                              1  thrpt    5  32098.014 ±  172.707  ops/s
+Bench.parallel_collect                             10  thrpt    5    100.167 ±    1.716  ops/s
+Bench.parallel_collect                            100  thrpt    5    575.142 ±   38.363  ops/s
+Bench.parallel_collect                           1000  thrpt    5    838.213 ±  104.457  ops/s
+Bench.parallel_streaming                            1  thrpt    5  76688.156 ±  345.348  ops/s
+Bench.parallel_streaming                           10  thrpt    5     94.536 ±    3.537  ops/s
+Bench.parallel_streaming                          100  thrpt    5    568.705 ±   43.813  ops/s
+Bench.parallel_streaming                         1000  thrpt    5    661.632 ±  125.598  ops/s
  */
 
 

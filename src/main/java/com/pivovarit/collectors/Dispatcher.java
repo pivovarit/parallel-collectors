@@ -48,10 +48,6 @@ final class Dispatcher<T> {
         return new Dispatcher<>(executor, permits);
     }
 
-    static <T> Dispatcher<T> limiting(Executor executor) {
-        return new Dispatcher<>(executor);
-    }
-
     public static <R> Dispatcher<List<R>> unbounded(Executor executor) {
         return limiting(executor, Integer.MAX_VALUE);
     }
@@ -129,7 +125,7 @@ final class Dispatcher<T> {
         };
     }
 
-    private static int getDefaultParallelism() {
+    static int getDefaultParallelism() {
         return Math.max(getRuntime().availableProcessors() - 1, 1);
     }
 
