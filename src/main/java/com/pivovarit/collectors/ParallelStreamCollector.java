@@ -148,16 +148,16 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         }
 
         private static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Set<Characteristics> characteristics) {
-            return batched(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, unbounded(executor)), parallelism);
+            return
+              collectingAndThen(
+                collectingAndThen(
+                  toList(),
+                  list -> partitioned(list, parallelism).collect(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, unbounded(executor)))),
+                s -> s.flatMap(Collection::stream));
         }
 
         private static <T, R> Collector<T, List<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
             return Collector.of(ArrayList::new, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> { throw new UnsupportedOperationException(); }, Collection::stream);
-        }
-
-        private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> collector, int parallelism) {
-            return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, parallelism)
-              .collect(collector)), s -> s.flatMap(Collection::stream));
         }
     }
 }
