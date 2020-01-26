@@ -191,7 +191,7 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return parallelism == 1
-          ? ParallelStreamCollector.Batching.streamingInBatches(mapper, executor, parallelism)
+          ? ParallelStreamCollector.Batching.streaming(mapper, executor, parallelism)
           : ParallelStreamCollector.streaming(mapper, executor, parallelism);
     }
 
@@ -249,7 +249,7 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return parallelism == 1
-          ? ParallelStreamCollector.Batching.streamingOrderedInBatches(mapper, executor, parallelism)
+          ? ParallelStreamCollector.Batching.streamingOrdered(mapper, executor, parallelism)
           : ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
 
@@ -377,7 +377,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.Batching.streamingInBatches(mapper, executor, parallelism);
+            return ParallelStreamCollector.Batching.streaming(mapper, executor, parallelism);
         }
 
         /**
@@ -405,7 +405,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.Batching.streamingOrderedInBatches(mapper, executor, parallelism);
+            return ParallelStreamCollector.Batching.streamingOrdered(mapper, executor, parallelism);
         }
     }
 }

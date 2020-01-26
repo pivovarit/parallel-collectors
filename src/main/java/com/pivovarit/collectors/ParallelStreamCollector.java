@@ -127,7 +127,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         private Batching() {
         }
 
-        static <T, R> Collector<T, ?, Stream<R>> streamingInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
+        static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor, int parallelism) {
             requireNonNull(executor, "executor can't be null");
             requireNonNull(mapper, "mapper can't be null");
             requireValidParallelism(parallelism);
@@ -137,7 +137,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
               : batchingCollector(mapper, executor, parallelism, UNORDERED);
         }
 
-        static <T, R> Collector<T, ?, Stream<R>> streamingOrderedInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
+        static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
             requireNonNull(executor, "executor can't be null");
             requireNonNull(mapper, "mapper can't be null");
             requireValidParallelism(parallelism);
