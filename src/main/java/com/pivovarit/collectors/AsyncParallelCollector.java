@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
 import static java.util.Objects.requireNonNull;
@@ -140,18 +141,18 @@ final class AsyncParallelCollector<T, R, C>
         private Batching() {
         }
 
-        static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollectorInBatches(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
+        static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
             requireNonNull(collector, "collector can't be null");
             requireNonNull(executor, "executor can't be null");
             requireNonNull(mapper, "mapper can't be null");
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-              ? collectingAndThen(toList(), list -> supplyAsync(() -> list.stream().map(mapper).collect(collector), executor))
-              : batching(collector, mapper, executor, parallelism);
+              ? asyncCollector(mapper, executor, s -> s.collect(collector))
+              : batchingCollector(mapper, executor, parallelism, s -> s.collect(collector));
         }
 
-        static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStreamInBatches(
+        static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(
           Function<T, R> mapper,
           Executor executor, int parallelism) {
             requireNonNull(executor, "executor can't be null");
@@ -159,29 +160,20 @@ final class AsyncParallelCollector<T, R, C>
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-              ? collectingAndThen(toList(), list -> supplyAsync(() -> list.stream().map(mapper), executor))
-              : collectingAndThen(toList(), list -> partitioned(list, parallelism).collect(
-                new AsyncParallelCollector<>(
-                  batching(mapper), unbounded(executor),
-                  s -> s.flatMap(Collection::stream))));
+              ? asyncCollector(mapper, executor, i -> i)
+              : batchingCollector(mapper, executor, parallelism, s -> s);
         }
 
-        private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batching(
-          Collector<R, ?, RR> collector, Function<T, R> mapper,
-          Executor executor, int parallelism) {
-            return collectingAndThen(toList(), list -> partitioned(list, parallelism)
-              .collect(new AsyncParallelCollector<>(batching(mapper), unbounded(executor),
-                s -> s.flatMap(Collection::stream).collect(collector))));
+        private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
+            return collectingAndThen(toList(), list -> supplyAsync(() -> finisher.apply(list.stream().map(mapper)), executor));
         }
 
-        private static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
-            return batch -> {
-                List<R> list = new ArrayList<>(batch.size());
-                for (T t : batch) {
-                    list.add(mapper.apply(t));
-                }
-                return list;
-            };
+        private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
+            return collectingAndThen(
+              toList(),
+              list -> partitioned(list, parallelism).collect(
+                new AsyncParallelCollector<>(batching(mapper), unbounded(executor),
+                  listStream -> finisher.apply(listStream.flatMap(Collection::stream)))));
         }
     }
 }

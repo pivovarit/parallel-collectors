@@ -1,7 +1,9 @@
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.lang.Runtime.getRuntime;
@@ -37,6 +39,17 @@ final class BatchingStream<T> implements Iterator<List<T>> {
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
         return stream(spliterator(from(list, numberOfParts), numberOfParts, ORDERED), false);
+    }
+
+
+    static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
+        return batch -> {
+            List<R> list = new ArrayList<>(batch.size());
+            for (T t : batch) {
+                list.add(mapper.apply(t));
+            }
+            return list;
+        };
     }
 
     @Override

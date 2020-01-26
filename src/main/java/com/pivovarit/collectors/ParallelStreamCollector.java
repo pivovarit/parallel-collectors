@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParallelism;
+import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.limiting;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
@@ -132,9 +133,8 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-              ? MappingCollector.of(mapper)
-              : batched(new ParallelStreamCollector<>(
-                batching(mapper), streamInCompletionOrderStrategy(), UNORDERED, unbounded(executor)), parallelism);
+              ? syncCollector(mapper)
+              : batchingCollector(mapper, executor, parallelism, UNORDERED);
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streamingOrderedInBatches(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -143,64 +143,21 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-              ? MappingCollector.of(mapper)
-              : batched(new ParallelStreamCollector<>(
-                batching(mapper), streamOrderedStrategy(), emptySet(), unbounded(executor)), parallelism);
+              ? syncCollector(mapper)
+              : batchingCollector(mapper, executor, parallelism, emptySet());
+        }
+
+        private static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Set<Characteristics> characteristics) {
+            return batched(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, unbounded(executor)), parallelism);
+        }
+
+        private static <T, R> Collector<T, List<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
+            return Collector.of(ArrayList::new, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> { throw new UnsupportedOperationException(); }, Collection::stream);
         }
 
         private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> collector, int parallelism) {
             return collectingAndThen(collectingAndThen(toList(), list -> partitioned(list, parallelism)
               .collect(collector)), s -> s.flatMap(Collection::stream));
-        }
-
-        private static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
-            return batch -> {
-                List<R> list = new ArrayList<>(batch.size());
-                for (T t : batch) {
-                    list.add(mapper.apply(t));
-                }
-                return list;
-            };
-        }
-    }
-
-    private static class MappingCollector<T, R> implements Collector<T, List<R>, Stream<R>> {
-
-        private final Function<T, R> mapper;
-
-        private MappingCollector(Function<T, R> mapper) {
-            this.mapper = mapper;
-        }
-
-        static <T, R> MappingCollector<T, R> of(Function<T, R> mapper) {
-            return new MappingCollector<>(mapper);
-        }
-
-        @Override
-        public Supplier<List<R>> supplier() {
-            return ArrayList::new;
-        }
-
-        @Override
-        public BiConsumer<List<R>, T> accumulator() {
-            return (rs, t) -> rs.add(mapper.apply(t));
-        }
-
-        @Override
-        public BinaryOperator<List<R>> combiner() {
-            return (rs, rs2) -> {
-                throw new UnsupportedOperationException();
-            };
-        }
-
-        @Override
-        public Function<List<R>, Stream<R>> finisher() {
-            return Collection::stream;
-        }
-
-        @Override
-        public Set<Characteristics> characteristics() {
-            return emptySet();
         }
     }
 }
