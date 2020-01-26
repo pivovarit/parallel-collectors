@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.AsyncParallelCollector.Batching.asyncCollector;
 import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
@@ -108,7 +109,9 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), t -> t);
+        return parallelism == 1
+          ? asyncCollector(mapper, executor, i -> i)
+          : new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), t -> t);
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
@@ -121,7 +124,9 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), s -> s.collect(collector));
+        return parallelism == 1
+          ? asyncCollector(mapper, executor, s -> s.collect(collector))
+          : new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), s -> s.collect(collector));
     }
 
     static void requireValidParallelism(int parallelism) {
@@ -158,7 +163,7 @@ final class AsyncParallelCollector<T, R, C>
               : batchingCollector(mapper, executor, parallelism, s -> s);
         }
 
-        private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
+        static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
             return collectingAndThen(toList(), list -> supplyAsync(() -> finisher.apply(list.stream().map(mapper)), executor));
         }
 

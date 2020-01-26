@@ -97,7 +97,10 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor, parallelism));
+
+        return parallelism == 1
+          ? Batching.syncCollector(mapper)
+          : new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor, parallelism));
     }
 
 
@@ -111,7 +114,10 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
-        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
+
+        return parallelism == 1
+          ? Batching.syncCollector(mapper)
+          : new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
     }
 
 
