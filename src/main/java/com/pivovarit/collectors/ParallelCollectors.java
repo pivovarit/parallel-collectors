@@ -69,7 +69,7 @@ public final class ParallelCollectors {
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
         return parallelism == 1
-          ? AsyncParallelCollector.Batching.collectingWithCollectorInBatches(collector, mapper, executor, parallelism)
+          ? AsyncParallelCollector.Batching.collectingWithCollector(collector, mapper, executor, parallelism)
           : AsyncParallelCollector.collectingWithCollector(collector, mapper, executor, parallelism);
     }
 
@@ -132,7 +132,7 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
         return parallelism == 1
-          ? AsyncParallelCollector.Batching.collectingToStreamInBatches(mapper, executor, parallelism)
+          ? AsyncParallelCollector.Batching.collectingToStream(mapper, executor, parallelism)
           : AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
     }
 
@@ -191,7 +191,7 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return parallelism == 1
-          ? ParallelStreamCollector.Batching.streamingInBatches(mapper, executor, parallelism)
+          ? ParallelStreamCollector.Batching.streaming(mapper, executor, parallelism)
           : ParallelStreamCollector.streaming(mapper, executor, parallelism);
     }
 
@@ -249,7 +249,7 @@ public final class ParallelCollectors {
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return parallelism == 1
-          ? ParallelStreamCollector.Batching.streamingOrderedInBatches(mapper, executor, parallelism)
+          ? ParallelStreamCollector.Batching.streamingOrdered(mapper, executor, parallelism)
           : ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
 
@@ -315,7 +315,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-            return AsyncParallelCollector.Batching.collectingWithCollectorInBatches(collector, mapper, executor, parallelism);
+            return AsyncParallelCollector.Batching.collectingWithCollector(collector, mapper, executor, parallelism);
         }
 
         /**
@@ -348,7 +348,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
-            return AsyncParallelCollector.Batching.collectingToStreamInBatches(mapper, executor, parallelism);
+            return AsyncParallelCollector.Batching.collectingToStream(mapper, executor, parallelism);
         }
 
 
@@ -377,7 +377,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.Batching.streamingInBatches(mapper, executor, parallelism);
+            return ParallelStreamCollector.Batching.streaming(mapper, executor, parallelism);
         }
 
         /**
@@ -405,7 +405,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.Batching.streamingOrderedInBatches(mapper, executor, parallelism);
+            return ParallelStreamCollector.Batching.streamingOrdered(mapper, executor, parallelism);
         }
     }
 }
