@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static java.lang.Runtime.getRuntime;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliterator;
-import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
 /**
