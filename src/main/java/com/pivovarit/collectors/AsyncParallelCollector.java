@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.AsyncParallelCollector.Batching.asyncCollector;
 import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
@@ -135,6 +134,10 @@ final class AsyncParallelCollector<T, R, C>
         }
     }
 
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
+        return collectingAndThen(toList(), list -> supplyAsync(() -> finisher.apply(list.stream().map(mapper)), executor));
+    }
+
     static final class Batching {
 
         private Batching() {
@@ -161,10 +164,6 @@ final class AsyncParallelCollector<T, R, C>
             return parallelism == 1
               ? asyncCollector(mapper, executor, i -> i)
               : batchingCollector(mapper, executor, parallelism, s -> s);
-        }
-
-        static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
-            return collectingAndThen(toList(), list -> supplyAsync(() -> finisher.apply(list.stream().map(mapper)), executor));
         }
 
         private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
