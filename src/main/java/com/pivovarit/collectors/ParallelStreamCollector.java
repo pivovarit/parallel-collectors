@@ -18,6 +18,7 @@ import java.util.stream.StreamSupport;
 import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParallelism;
 import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
+import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
 import static com.pivovarit.collectors.Dispatcher.limiting;
 import static com.pivovarit.collectors.Dispatcher.unbounded;
 import static java.util.Collections.emptySet;
@@ -88,9 +89,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor));
+        return streaming(mapper, executor, getDefaultParallelism());
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -103,11 +102,8 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
           : new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor, parallelism));
     }
 
-
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
-        requireNonNull(executor, "executor can't be null");
-        requireNonNull(mapper, "mapper can't be null");
-        return new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor));
+        return streamingOrdered(mapper, executor, getDefaultParallelism());
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
