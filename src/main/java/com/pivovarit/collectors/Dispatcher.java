@@ -77,13 +77,13 @@ final class Dispatcher<T> {
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
-        CancellableCompletableFuture<T> future = new CancellableCompletableFuture<>();
+        InterruptibleCompletableFuture<T> future = new InterruptibleCompletableFuture<>();
         workingQueue.add(completionTask(supplier, future));
         completionSignaller.exceptionally(shortcircuit(future));
         return future;
     }
 
-    private FutureTask<Void> completionTask(Supplier<T> supplier, CancellableCompletableFuture<T> future) {
+    private FutureTask<Void> completionTask(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) {
         FutureTask<Void> task = new FutureTask<>(() -> {
             try {
                 if (!shortCircuited) {
@@ -103,7 +103,7 @@ final class Dispatcher<T> {
         dispatcher.shutdownNow();
     }
 
-    private static Function<Throwable, Void> shortcircuit(CancellableCompletableFuture<?> future) {
+    private static Function<Throwable, Void> shortcircuit(InterruptibleCompletableFuture<?> future) {
         return throwable -> {
             future.completeExceptionally(throwable);
             future.cancel(true);
@@ -137,7 +137,7 @@ final class Dispatcher<T> {
           });
     }
 
-    static final class CancellableCompletableFuture<T> extends CompletableFuture<T> {
+    static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
         private volatile FutureTask<?> backingTask;
 
         private void completedBy(FutureTask<Void> task) {
