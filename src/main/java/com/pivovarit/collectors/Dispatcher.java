@@ -44,7 +44,7 @@ final class Dispatcher<T> {
         return new Dispatcher<>(executor, permits);
     }
 
-    public static <R> Dispatcher<List<R>> unbounded(Executor executor) {
+    static <R> Dispatcher<List<R>> of(Executor executor) {
         return limiting(executor, Integer.MAX_VALUE);
     }
 

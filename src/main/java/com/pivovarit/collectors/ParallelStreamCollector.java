@@ -20,7 +20,7 @@ import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
 import static com.pivovarit.collectors.Dispatcher.limiting;
-import static com.pivovarit.collectors.Dispatcher.unbounded;
+import static com.pivovarit.collectors.Dispatcher.of;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -154,7 +154,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
               collectingAndThen(
                 collectingAndThen(
                   toList(),
-                  list -> partitioned(list, parallelism).collect(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, unbounded(executor)))),
+                  list -> partitioned(list, parallelism).collect(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, of(executor)))),
                 s -> s.flatMap(Collection::stream));
         }
 
