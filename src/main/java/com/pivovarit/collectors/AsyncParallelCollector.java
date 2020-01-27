@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
-import static com.pivovarit.collectors.Dispatcher.unbounded;
+import static com.pivovarit.collectors.Dispatcher.of;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -170,7 +170,7 @@ final class AsyncParallelCollector<T, R, C>
             return collectingAndThen(
               toList(),
               list -> partitioned(list, parallelism).collect(
-                new AsyncParallelCollector<>(batching(mapper), unbounded(executor),
+                new AsyncParallelCollector<>(batching(mapper), of(executor),
                   listStream -> finisher.apply(listStream.flatMap(Collection::stream)))));
         }
     }
