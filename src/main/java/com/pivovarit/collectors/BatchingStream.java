@@ -36,9 +36,10 @@ final class BatchingStream<T> implements Iterator<List<T>> {
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
-        return stream(spliterator(from(list, numberOfParts), numberOfParts, ORDERED), false);
+        return numberOfParts == 1
+          ? Stream.of(list)
+          : stream(spliterator(from(list, numberOfParts), numberOfParts, ORDERED), false);
     }
-
 
     static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
         return batch -> {
