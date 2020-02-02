@@ -9,6 +9,8 @@ import java.util.stream.Stream;
 
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliterator;
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
 import static java.util.stream.StreamSupport.stream;
 
 /**
@@ -37,12 +39,14 @@ final class BatchingStream<T> implements Iterator<List<T>> {
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
-        if (list.size() == numberOfParts) {
+        int size = list.size();
+
+        if (size == numberOfParts) {
             return list.stream().map(Collections::singletonList);
+        } else if (size == 0) {
+            return empty();
         } else if (numberOfParts == 1) {
-            return Stream.of(list);
-        } else if (list.isEmpty()) {
-            return Stream.empty();
+            return of(list);
         } else {
             return stream(spliterator(from(list, numberOfParts), numberOfParts, ORDERED), false);
         }
