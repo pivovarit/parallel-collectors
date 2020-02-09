@@ -116,7 +116,6 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
           : new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
     }
 
-
     private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
         return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
     }
@@ -152,14 +151,17 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         private static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Set<Characteristics> characteristics) {
             return
               collectingAndThen(
-                collectingAndThen(
-                  toList(),
-                  list -> partitioned(list, parallelism).collect(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, of(executor)))),
-                s -> s.flatMap(Collection::stream));
+                toList(),
+                list -> partitioned(list, parallelism)
+                  .collect(collectingAndThen(
+                    new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, of(executor)),
+                    s -> s.flatMap(Collection::stream))));
         }
 
         private static <T, R> Collector<T, List<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
-            return Collector.of(ArrayList::new, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> { throw new UnsupportedOperationException(); }, Collection::stream);
+            return Collector.of(ArrayList::new, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
+                throw new UnsupportedOperationException();
+            }, Collection::stream);
         }
     }
 }
