@@ -247,8 +247,8 @@ public final class ParallelCollectors {
 
 
     /**
-     * A convenience {@code Collector} for collecting a Stream<CompletableFuture<T>
-     * into a CompletableFuture<R> using a provided Collector<T, ?, R>
+     * A convenience {@code Collector} for collecting a {@code Stream<CompletableFuture<T>>}
+     * into a {@code CompletableFuture<R>} using a provided {@code Collector<T, ?, R>}
      *
      * @param collector the {@code Collector} describing the reduction
      * @param <T>       the type of the collected elements
@@ -264,7 +264,7 @@ public final class ParallelCollectors {
     }
 
     /**
-     * A convenience {@code Collector} for collecting a Stream<CompletableFuture<T> into a CompletableFuture<List<T>>
+     * A convenience {@code Collector} for collecting a {@code Stream<CompletableFuture<T>>} into a {@code CompletableFuture<List<T>>}
      *
      * @param <T> the type of the collected elements
      *
