@@ -135,7 +135,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batchingCollector(mapper, executor, parallelism, UNORDERED);
+              : batched(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), UNORDERED, of(executor)), parallelism);
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -145,17 +145,14 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batchingCollector(mapper, executor, parallelism, emptySet());
+              : batched(new ParallelStreamCollector<>(batching(mapper), streamOrderedStrategy(), emptySet(), of(executor)), parallelism);
         }
 
-        private static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Set<Characteristics> characteristics) {
-            return
-              collectingAndThen(
-                toList(),
-                list -> partitioned(list, parallelism)
-                  .collect(collectingAndThen(
-                    new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), characteristics, of(executor)),
-                    s -> s.flatMap(Collection::stream))));
+        private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> downstream, int parallelism) {
+            return collectingAndThen(
+              toList(),
+              list -> partitioned(list, parallelism)
+                .collect(collectingAndThen(downstream, s -> s.flatMap(Collection::stream))));
         }
 
         private static <T, R> Collector<T, List<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
