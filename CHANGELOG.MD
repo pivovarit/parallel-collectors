@@ -1,5 +1,10 @@
 # Version History
 
+### [2.3.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.3.0) (09-02-2020)
+- introduced ParallelCollectors#toFuture
+- fixed the issue with improper ordering of batched streams
+- introduced multiple performance improvements
+
 ### [2.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.2.0) (19-01-2020)
 Introduced multiple performance improvements:
 - avoiding excessive allocations
