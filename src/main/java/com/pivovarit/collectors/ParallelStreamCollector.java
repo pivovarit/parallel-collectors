@@ -98,7 +98,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireValidParallelism(parallelism);
 
         return parallelism == 1
-          ? Batching.syncCollector(mapper)
+          ? BatchingCollectors.syncCollector(mapper)
           : new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor, parallelism));
     }
 
@@ -112,7 +112,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireValidParallelism(parallelism);
 
         return parallelism == 1
-          ? Batching.syncCollector(mapper)
+          ? BatchingCollectors.syncCollector(mapper)
           : new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
     }
 
@@ -124,8 +124,8 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return futures -> futures.stream().map(CompletableFuture::join);
     }
 
-    static final class Batching {
-        private Batching() {
+    static final class BatchingCollectors {
+        private BatchingCollectors() {
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor, int parallelism) {

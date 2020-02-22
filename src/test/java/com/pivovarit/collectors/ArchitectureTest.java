@@ -58,4 +58,12 @@ class ArchitectureTest {
           .should().resideInAPackage("com.pivovarit.collectors")
           .check(classes);
     }
+
+    @Test
+    void shouldHaveTwoPublicClasses() {
+        classes()
+          .that().haveSimpleName("ParallelCollectors").or().haveSimpleName("Batching")
+          .should().bePublic()
+          .check(classes);
+    }
 }
