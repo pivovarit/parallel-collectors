@@ -23,13 +23,21 @@ class ArchitectureTest {
     void shouldHaveSingleFacade() {
         classes()
           .that().arePublic()
-          .should().haveSimpleName("ParallelCollectors")
+          .should().haveSimpleName("ParallelCollectors").orShould().haveSimpleName("Batching")
           .andShould().haveOnlyFinalFields()
           .andShould().haveOnlyPrivateConstructors()
           .andShould().haveModifier(FINAL)
-          .andShould().resideInAPackage("com.pivovarit.collectors")
-          .as("all public factory methods should be accessible from the ParallelCollectors class")
+          .as("all public factory methods should be accessible from the ParallelCollectors and ParallelCollectors.Batching classes")
           .because("users of ParallelCollectors should have a single entry point")
+          .check(classes);
+    }
+
+    @Test
+    void shouldHaveBatchingClassesInsideParallelCollectors() {
+        classes()
+          .that().arePublic().and().haveSimpleName("Batching")
+          .should().beNestedClasses()
+          .as("all Batching classes are sub namespaces of ParallelCollectors")
           .check(classes);
     }
 
@@ -48,6 +56,14 @@ class ArchitectureTest {
     void shouldHaveSinglePackage() {
         classes()
           .should().resideInAPackage("com.pivovarit.collectors")
+          .check(classes);
+    }
+
+    @Test
+    void shouldHaveTwoPublicClasses() {
+        classes()
+          .that().haveSimpleName("ParallelCollectors").or().haveSimpleName("Batching")
+          .should().bePublic()
           .check(classes);
     }
 }

@@ -280,7 +280,10 @@ public final class ParallelCollectors {
     /**
      * A subset of collectors which perform operations in batches and not separately (one object in a thread pool's worker queue represents a batch of operations to be performed by a single thread)
      */
-    static class Batching {
+    public static final class Batching {
+
+        private Batching() {
+        }
 
         /**
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
@@ -307,7 +310,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-            return AsyncParallelCollector.Batching.collectingWithCollector(collector, mapper, executor, parallelism);
+            return AsyncParallelCollector.BatchingCollectors.collectingWithCollector(collector, mapper, executor, parallelism);
         }
 
         /**
@@ -340,7 +343,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
-            return AsyncParallelCollector.Batching.collectingToStream(mapper, executor, parallelism);
+            return AsyncParallelCollector.BatchingCollectors.collectingToStream(mapper, executor, parallelism);
         }
 
 
@@ -369,7 +372,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.Batching.streaming(mapper, executor, parallelism);
+            return ParallelStreamCollector.BatchingCollectors.streaming(mapper, executor, parallelism);
         }
 
         /**
@@ -397,7 +400,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.Batching.streamingOrdered(mapper, executor, parallelism);
+            return ParallelStreamCollector.BatchingCollectors.streamingOrdered(mapper, executor, parallelism);
         }
     }
 }

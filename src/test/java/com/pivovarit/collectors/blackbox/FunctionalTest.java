@@ -1,4 +1,4 @@
-package com.pivovarit.collectors;
+package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors.Batching;
 import org.junit.jupiter.api.DynamicTest;

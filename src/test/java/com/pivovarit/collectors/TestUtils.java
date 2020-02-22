@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 
-final class TestUtils {
+public final class TestUtils {
     private TestUtils() {
     }
 
