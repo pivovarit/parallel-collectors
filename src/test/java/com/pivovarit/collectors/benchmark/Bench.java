@@ -1,5 +1,6 @@
-package com.pivovarit.collectors;
+package com.pivovarit.collectors.benchmark;
 
+import com.pivovarit.collectors.ParallelCollectors;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Param;
