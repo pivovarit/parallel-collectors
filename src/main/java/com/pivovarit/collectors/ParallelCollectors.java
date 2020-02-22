@@ -289,8 +289,6 @@ public final class ParallelCollectors {
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning them as a {@link CompletableFuture} containing a result of the application of the user-provided {@link Collector}.
          *
-         * @implNote this collector processed elements in batches and not separately
-         *
          * <br>
          * Example:
          * <pre>{@code
@@ -316,8 +314,6 @@ public final class ParallelCollectors {
         /**
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements.
-         *
-         * @implNote this collector processed elements in batches and not separately
          *
          * <br><br>
          * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
@@ -351,8 +347,6 @@ public final class ParallelCollectors {
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning a {@link Stream} instance returning results as they arrive.
          *
-         * @implNote this collector processed elements in batches and not separately
-         *
          * <br>
          * Example:
          * <pre>{@code
@@ -378,8 +372,6 @@ public final class ParallelCollectors {
         /**
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
-         *
-         * @implNote this collector processed elements in batches and not separately
          *
          * <br>
          * Example:
