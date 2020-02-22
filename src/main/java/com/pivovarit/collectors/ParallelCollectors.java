@@ -36,6 +36,7 @@ public final class ParallelCollectors {
      * @param executor  the {@code Executor} to use for asynchronous execution
      * @param <T>       the type of the collected elements
      * @param <R>       the result returned by {@code mapper}
+     * @param <RR>      the reduction result {@code collector}
      *
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
@@ -299,9 +300,10 @@ public final class ParallelCollectors {
          * @param mapper      a transformation to be performed in parallel
          * @param collector   the {@code Collector} describing the reduction
          * @param executor    the {@code Executor} to use for asynchronous execution
+         * @param parallelism the max parallelism level
          * @param <T>         the type of the collected elements
          * @param <R>         the result returned by {@code mapper}
-         * @param parallelism the max parallelism level
+         * @param <RR>        the reduction result {@code collector}
          *
          * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
          *
