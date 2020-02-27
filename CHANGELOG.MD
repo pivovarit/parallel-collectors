@@ -1,5 +1,8 @@
 # Version History
 
+### [2.3.2](https://github.com/pivovarit/parallel-collectors/releases/tag/2.3.2) (27-02-2020)
+- fixed unwanted lazy semantics when parallelism == 1
+
 ### [2.3.1](https://github.com/pivovarit/parallel-collectors/releases/tag/2.3.1) (22-02-2020)
 - fixed ParallelCollectors.Batching visibility issues 
 
