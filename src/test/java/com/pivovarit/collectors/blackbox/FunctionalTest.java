@@ -1,7 +1,6 @@
 package com.pivovarit.collectors.blackbox;
 
 import com.pivovarit.collectors.ParallelCollectors.Batching;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -49,7 +48,6 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
@@ -79,12 +77,18 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> batching_collectors() {
         return of(
-          batchTests((m, e, p) -> Batching.parallel(m, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
-          batchTests((m, e, p) -> Batching.parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
-          batchTests((m, e, p) -> Batching.parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
-          batchTests((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
-          batchTests((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
-          batchTests((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
+          batchTests((m, e, p) -> Batching
+            .parallel(m, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
+          batchTests((m, e, p) -> Batching
+            .parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
+          batchTests((m, e, p) -> Batching
+            .parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
+          batchTests((m, e, p) -> adapt(Batching
+            .parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
+          batchTests((m, e, p) -> adaptAsync(Batching
+            .parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
+          batchTests((m, e, p) -> adaptAsync(Batching
+            .parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
     }
 
@@ -109,8 +113,9 @@ class FunctionalTest {
         try {
             List<String> list = Arrays.asList("A", "B");
 
-            list.stream()
+            Stream<String> stream = list.stream()
               .collect(parallel(s -> {
+                  System.out.println("Running on " + Thread.currentThread().getName());
                   executions.incrementAndGet();
                   return s;
               }, countingExecutor, 1))
@@ -119,7 +124,7 @@ class FunctionalTest {
             executor.shutdown();
         }
 
-        assertThat(countingExecutor.getInvocations()).isEqualTo(2);
+        assertThat(countingExecutor.getInvocations()).isEqualTo(1);
         assertThat(executions.get()).isEqualTo(2);
     }
 
