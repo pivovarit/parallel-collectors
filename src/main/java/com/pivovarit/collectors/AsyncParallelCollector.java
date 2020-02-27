@@ -138,8 +138,7 @@ final class AsyncParallelCollector<T, R, C>
         return collectingAndThen(toList(), list -> supplyAsync(() -> {
             List<R> acc = new ArrayList<>(list.size());
             for (T t : list) {
-                R r = mapper.apply(t);
-                acc.add(r);
+                acc.add(mapper.apply(t));
             }
             return finisher.apply(acc.stream());
         }, executor));
