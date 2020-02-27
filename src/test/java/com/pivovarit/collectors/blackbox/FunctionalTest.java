@@ -1,12 +1,14 @@
-package com.pivovarit.collectors.test;
+package com.pivovarit.collectors.blackbox;
 
 import com.pivovarit.collectors.ParallelCollectors.Batching;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -47,6 +49,7 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.of;
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
@@ -96,6 +99,28 @@ class FunctionalTest {
           .collect(toList());
 
         assertThat(result).isSorted();
+    }
+
+    @Test
+    void shouldExecuteEagerlyOnProvidedThreadPool() {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountingExecutor countingExecutor = new CountingExecutor(executor);
+        AtomicInteger executions = new AtomicInteger();
+        try {
+            List<String> list = Arrays.asList("A", "B");
+
+            list.stream()
+              .collect(parallel(s -> {
+                  executions.incrementAndGet();
+                  return s;
+              }, countingExecutor, 1))
+              .join();
+        } finally {
+            executor.shutdown();
+        }
+
+        assertThat(countingExecutor.getInvocations()).isEqualTo(2);
+        assertThat(executions.get()).isEqualTo(2);
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {

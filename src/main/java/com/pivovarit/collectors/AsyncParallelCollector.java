@@ -135,7 +135,7 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
-        return collectingAndThen(toList(), list -> supplyAsync(() -> finisher.apply(list.stream().map(mapper)), executor));
+        return collectingAndThen(toList(), list -> supplyAsync(() -> finisher.apply(list.stream().map(mapper).collect(toList()).stream()), executor));
     }
 
     static final class BatchingCollectors {
