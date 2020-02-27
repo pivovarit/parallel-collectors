@@ -138,6 +138,8 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results in completion order
      *
+     * For the parallelism of 1, the stream is executed by the calling thread.
+     *
      * <br><br>
      * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
      *
@@ -169,6 +171,8 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive.
      *
+     * For the parallelism of 1, the stream is executed by the calling thread.
+     *
      * <br>
      * Example:
      * <pre>{@code
@@ -194,6 +198,8 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
+     *
+     * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br><br>
      * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
@@ -224,6 +230,8 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
+     *
+     * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br>
      * Example:
@@ -350,6 +358,8 @@ public final class ParallelCollectors {
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning a {@link Stream} instance returning results as they arrive.
          *
+         * For the parallelism of 1, the stream is executed by the calling thread.
+         *
          * <br>
          * Example:
          * <pre>{@code
@@ -375,6 +385,8 @@ public final class ParallelCollectors {
         /**
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
+         *
+         * For the parallelism of 1, the stream is executed by the calling thread.
          *
          * <br>
          * Example:

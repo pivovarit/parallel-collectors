@@ -1,4 +1,4 @@
-package com.pivovarit.collectors.test;
+package com.pivovarit.collectors.blackbox;
 
 import com.pivovarit.collectors.ParallelCollectors.Batching;
 import org.junit.jupiter.api.DynamicTest;
@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestFactory;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -96,6 +97,29 @@ class FunctionalTest {
           .collect(toList());
 
         assertThat(result).isSorted();
+    }
+
+    @Test
+    void shouldExecuteEagerlyOnProvidedThreadPool() {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountingExecutor countingExecutor = new CountingExecutor(executor);
+        AtomicInteger executions = new AtomicInteger();
+        try {
+            List<String> list = Arrays.asList("A", "B");
+
+            Stream<String> stream = list.stream()
+              .collect(parallel(s -> {
+                  System.out.println("Running on " + Thread.currentThread().getName());
+                  executions.incrementAndGet();
+                  return s;
+              }, countingExecutor, 1))
+              .join();
+        } finally {
+            executor.shutdown();
+        }
+
+        assertThat(countingExecutor.getInvocations()).isEqualTo(1);
+        assertThat(executions.get()).isEqualTo(2);
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
