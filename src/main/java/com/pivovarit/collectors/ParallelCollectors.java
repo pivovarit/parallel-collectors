@@ -228,6 +228,7 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 2.0.0
+     * @deprecated use {@link ParallelCollectors#parallelToOrderedStream(Function, Executor, int)}
      */
     @Deprecated // for removal in 3.0.0
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor) {
