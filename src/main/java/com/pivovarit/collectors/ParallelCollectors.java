@@ -41,7 +41,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
      * @since 2.0.0
+     * @deprecated use {@link ParallelCollectors#parallel(Function, Collector, Executor, int)}
      */
+    @Deprecated // for removal in 3.0.0
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor) {
         return AsyncParallelCollector.collectingWithCollector(collector, mapper, executor);
     }
@@ -98,7 +100,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 2.0.0
+     * @deprecated use {@link ParallelCollectors#parallel(Function, Executor, int)}
      */
+    @Deprecated // for removal in 3.0.0
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToStream(mapper, executor);
     }
@@ -162,7 +166,9 @@ public final class ParallelCollectors {
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
      * @since 2.0.0
+     * @deprecated use {@link ParallelCollectors#parallelToStream(Function, Executor, int)}
      */
+    @Deprecated // for removal in 3.0.0
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streaming(mapper, executor);
     }
@@ -223,6 +229,7 @@ public final class ParallelCollectors {
      *
      * @since 2.0.0
      */
+    @Deprecated // for removal in 3.0.0
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor);
     }
