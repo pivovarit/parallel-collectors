@@ -176,7 +176,7 @@ final class AsyncParallelCollector<T, R, C>
             return collectingAndThen(
               toList(),
               list -> partitioned(list, parallelism).collect(
-                new AsyncParallelCollector<>(batching(mapper), of(executor),
+                new AsyncParallelCollector<>(batching(mapper), Dispatcher.of(executor),
                   listStream -> finisher.apply(listStream.flatMap(Collection::stream)))));
         }
     }
