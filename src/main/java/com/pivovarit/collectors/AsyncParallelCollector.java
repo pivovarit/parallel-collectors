@@ -136,11 +136,11 @@ final class AsyncParallelCollector<T, R, C>
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
         return collectingAndThen(toList(), list -> supplyAsync(() -> {
-            List<R> acc = new ArrayList<>(list.size());
+            Stream.Builder<R> acc = Stream.builder();
             for (T t : list) {
                 acc.add(mapper.apply(t));
             }
-            return finisher.apply(acc.stream());
+            return finisher.apply(acc.build());
         }, executor));
     }
 
