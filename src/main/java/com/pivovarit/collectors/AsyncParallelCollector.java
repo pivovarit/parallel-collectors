@@ -17,7 +17,6 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
-import static com.pivovarit.collectors.Dispatcher.of;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
