@@ -141,7 +141,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results in completion order
-     *
+     * <p>
      * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br><br>
@@ -176,7 +176,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive.
-     *
+     * <p>
      * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br>
@@ -204,7 +204,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
-     *
+     * <p>
      * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br><br>
@@ -238,7 +238,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
      * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
-     *
+     * <p>
      * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br>
@@ -262,7 +262,6 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
     }
-
 
     /**
      * A convenience {@code Collector} for collecting a {@code Stream<CompletableFuture<T>>}
@@ -327,7 +326,8 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-            return AsyncParallelCollector.BatchingCollectors.collectingWithCollector(collector, mapper, executor, parallelism);
+            return AsyncParallelCollector.BatchingCollectors
+              .collectingWithCollector(collector, mapper, executor, parallelism);
         }
 
         /**
@@ -361,11 +361,10 @@ public final class ParallelCollectors {
             return AsyncParallelCollector.BatchingCollectors.collectingToStream(mapper, executor, parallelism);
         }
 
-
         /**
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning a {@link Stream} instance returning results as they arrive.
-         *
+         * <p>
          * For the parallelism of 1, the stream is executed by the calling thread.
          *
          * <br>
@@ -393,7 +392,7 @@ public final class ParallelCollectors {
         /**
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
-         *
+         * <p>
          * For the parallelism of 1, the stream is executed by the calling thread.
          *
          * <br>

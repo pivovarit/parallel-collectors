@@ -20,7 +20,6 @@ import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
 import static com.pivovarit.collectors.Dispatcher.limiting;
-import static com.pivovarit.collectors.Dispatcher.of;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
