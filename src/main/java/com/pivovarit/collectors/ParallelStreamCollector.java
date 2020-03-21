@@ -29,18 +29,18 @@ import static java.util.stream.Collectors.toList;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<CompletableFuture<R>>, Stream<R>> {
 
     private static final EnumSet<Characteristics> UNORDERED = EnumSet.of(Characteristics.UNORDERED);
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
-    private final Function<List<CompletableFuture<R>>, Stream<R>> processor;
+    private final Function<Stream<CompletableFuture<R>>, Stream<R>> processor;
     private final Set<Characteristics> characteristics;
 
     private ParallelStreamCollector(
       Function<T, R> function,
-      Function<List<CompletableFuture<R>>, Stream<R>> processor,
+      Function<Stream<CompletableFuture<R>>, Stream<R>> processor,
       Set<Characteristics> characteristics,
       Dispatcher<R> dispatcher) {
         this.processor = processor;
@@ -56,12 +56,12 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     }
 
     @Override
-    public Supplier<List<CompletableFuture<R>>> supplier() {
-        return ArrayList::new;
+    public Supplier<Stream.Builder<CompletableFuture<R>>> supplier() {
+        return Stream::builder;
     }
 
     @Override
-    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
+    public BiConsumer<Stream.Builder<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             startConsuming();
             acc.add(dispatcher.enqueue(() -> function.apply(e)));
@@ -69,17 +69,17 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     }
 
     @Override
-    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
+    public BinaryOperator<Stream.Builder<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
             throw new UnsupportedOperationException();
         };
     }
 
     @Override
-    public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
+    public Function<Stream.Builder<CompletableFuture<R>>, Stream<R>> finisher() {
         return acc -> {
             dispatcher.stop();
-            return processor.apply(acc);
+            return processor.apply(acc.build());
         };
     }
 
@@ -116,12 +116,12 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
           : new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
     }
 
-    private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
+    private static <R> Function<Stream<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
         return futures -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false);
     }
 
-    private static <R> Function<List<CompletableFuture<R>>, Stream<R>> streamOrderedStrategy() {
-        return futures -> futures.stream().map(CompletableFuture::join);
+    private static <R> Function<Stream<CompletableFuture<R>>, Stream<R>> streamOrderedStrategy() {
+        return futures -> futures.map(CompletableFuture::join);
     }
 
     static final class BatchingCollectors {
