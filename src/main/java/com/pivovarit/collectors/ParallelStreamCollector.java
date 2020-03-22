@@ -154,10 +154,10 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
                 .collect(collectingAndThen(downstream, s -> s.flatMap(Collection::stream))));
         }
 
-        private static <T, R> Collector<T, List<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
-            return Collector.of(ArrayList::new, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
+        private static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
+            return Collector.of(Stream::builder, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
                 throw new UnsupportedOperationException();
-            }, Collection::stream);
+            }, Stream.Builder::build);
         }
     }
 }
