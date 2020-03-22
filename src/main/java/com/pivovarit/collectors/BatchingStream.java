@@ -39,7 +39,7 @@ final class BatchingStream<T> implements Spliterator<List<T>> {
         int size = list.size();
 
         if (size == numberOfParts) {
-            return list.stream().map(Collections::singletonList);
+            return asSingletonListStream(list);
         } else if (size == 0) {
             return empty();
         } else if (numberOfParts == 1) {
@@ -47,6 +47,14 @@ final class BatchingStream<T> implements Spliterator<List<T>> {
         } else {
             return stream(new BatchingStream<>(list, numberOfParts), false);
         }
+    }
+
+    private static <T> Stream<List<T>> asSingletonListStream(List<T> list) {
+        Stream.Builder<List<T>> acc = Stream.builder();
+        for (T t : list) {
+            acc.add(Collections.singletonList(t));
+        }
+        return acc.build();
     }
 
     static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
