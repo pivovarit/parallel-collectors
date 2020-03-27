@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
