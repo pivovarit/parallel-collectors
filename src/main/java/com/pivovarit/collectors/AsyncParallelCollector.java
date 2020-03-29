@@ -1,9 +1,8 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -27,7 +26,7 @@ import static java.util.stream.Collectors.toList;
  * @author Grzegorz Piwowarek
  */
 final class AsyncParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
+  implements Collector<T, Stream.Builder<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final Dispatcher<R> dispatcher;
     private final Function<T, R> mapper;
@@ -45,19 +44,19 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     @Override
-    public Supplier<List<CompletableFuture<R>>> supplier() {
-        return ArrayList::new;
+    public Supplier<Stream.Builder<CompletableFuture<R>>> supplier() {
+        return Stream::builder;
     }
 
     @Override
-    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
+    public BinaryOperator<Stream.Builder<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
             throw new UnsupportedOperationException();
         };
     }
 
     @Override
-    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
+    public BiConsumer<Stream.Builder<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             if (!dispatcher.isRunning()) {
                 dispatcher.start();
@@ -67,11 +66,11 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     @Override
-    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
+    public Function<Stream.Builder<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
         return futures -> {
             dispatcher.stop();
 
-            return toCombined(futures)
+            return toCombined(futures.build())
               .thenApply(processor)
               .handle((c, ex) -> ex == null ? result.complete(c) : result.completeExceptionally(ex))
               .thenCompose(__ -> result);
@@ -83,12 +82,13 @@ final class AsyncParallelCollector<T, R, C>
         return Collections.emptySet();
     }
 
-    private static <T> CompletableFuture<Stream<T>> toCombined(List<CompletableFuture<T>> futures) {
-        CompletableFuture<Stream<T>> combined = allOf(futures.toArray(new CompletableFuture[0]))
-          .thenApply(__ -> futures.stream()
+    private static <T> CompletableFuture<Stream<T>> toCombined(Stream<CompletableFuture<T>> futures) {
+        CompletableFuture<T>[] futuresArray = futures.toArray(CompletableFuture[]::new);
+        CompletableFuture<Stream<T>> combined = allOf(futuresArray)
+          .thenApply(__ -> Arrays.stream(futuresArray)
             .map(CompletableFuture::join));
 
-        for (CompletableFuture<T> f : futures) {
+        for (CompletableFuture<?> f : futuresArray) {
             f.exceptionally(ex -> {
                 combined.completeExceptionally(ex);
                 return null;
