@@ -83,10 +83,9 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     private static <T> CompletableFuture<Stream<T>> toCombined(Stream<CompletableFuture<T>> futures) {
-        CompletableFuture<T>[] futuresArray = futures.toArray(CompletableFuture[]::new);
+        CompletableFuture<T>[] futuresArray = (CompletableFuture<T>[]) futures.toArray(CompletableFuture[]::new);
         CompletableFuture<Stream<T>> combined = allOf(futuresArray)
-          .thenApply(__ -> Arrays.stream(futuresArray)
-            .map(CompletableFuture::join));
+          .thenApply(__ -> Arrays.stream(futuresArray).map(CompletableFuture::join));
 
         for (CompletableFuture<?> f : futuresArray) {
             f.exceptionally(ex -> {

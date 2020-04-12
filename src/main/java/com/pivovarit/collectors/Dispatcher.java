@@ -68,8 +68,14 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        workingQueue.add(POISON_PILL);
-        dispatcher.shutdown();
+        try {
+            workingQueue.put(POISON_PILL);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            completionSignaller.completeExceptionally(e);
+        } finally {
+            dispatcher.shutdown();
+        }
     }
 
     boolean isRunning() {
