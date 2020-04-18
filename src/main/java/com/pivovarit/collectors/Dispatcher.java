@@ -71,7 +71,6 @@ final class Dispatcher<T> {
         try {
             workingQueue.put(POISON_PILL);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             completionSignaller.completeExceptionally(e);
         } finally {
             dispatcher.shutdown();
