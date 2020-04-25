@@ -52,7 +52,7 @@ final class Dispatcher<T> {
         started = true;
         dispatcher.execute(() -> {
             try {
-                while (!Thread.currentThread().isInterrupted()) {
+                while (true) {
                     Runnable task;
                     if ((task = workingQueue.take()) != POISON_PILL) {
                         limiter.acquire();
