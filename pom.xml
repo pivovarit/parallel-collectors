@@ -19,7 +19,7 @@
 
     <groupId>com.pivovarit</groupId>
     <artifactId>parallel-collectors</artifactId>
-    <version>2.3.3-SNAPSHOT</version>
+    <version>2.3.3</version>
 
     <packaging>jar</packaging>
 
