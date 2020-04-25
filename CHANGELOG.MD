@@ -1,5 +1,9 @@
 # Version History
 
+### [2.3.3](https://github.com/pivovarit/parallel-collectors/releases/tag/2.3.3) (25-04-2020)
+- fixed potential concurrency issue when dispatcher thread gets interrupted before it starts waiting on `Semaphore#acquire`
+- ensured progress when poison pill can't be added to the working queue
+
 ### [2.3.2](https://github.com/pivovarit/parallel-collectors/releases/tag/2.3.2) (27-02-2020)
 - fixed unwanted lazy semantics when parallelism == 1
 
