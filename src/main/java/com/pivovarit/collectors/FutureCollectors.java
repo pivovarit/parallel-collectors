@@ -19,10 +19,12 @@ class FutureCollectors {
                 .map(CompletableFuture::join)
                 .collect(collector));
 
+            // CompletableFuture#allOf doesn't shortcircuit on exception so that requires manual handling
             for (CompletableFuture<T> f : list) {
-                f.exceptionally((throwable) -> {
-                    future.completeExceptionally(throwable);
-                    return null;
+                f.whenComplete((t, throwable) -> {
+                    if (throwable != null) {
+                        future.completeExceptionally(throwable);
+                    }
                 });
             }
 
