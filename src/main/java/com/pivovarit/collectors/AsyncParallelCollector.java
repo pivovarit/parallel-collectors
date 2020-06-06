@@ -49,7 +49,7 @@ final class AsyncParallelCollector<T, R, C>
     @Override
     public BinaryOperator<Stream.Builder<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
         };
     }
 
