@@ -32,8 +32,6 @@ final class AsyncParallelCollector<T, R, C>
     private final Function<T, R> mapper;
     private final Function<Stream<R>, C> processor;
 
-    private final CompletableFuture<C> result = new CompletableFuture<>();
-
     private AsyncParallelCollector(
       Function<T, R> mapper,
       Dispatcher<R> dispatcher,
@@ -71,9 +69,7 @@ final class AsyncParallelCollector<T, R, C>
             dispatcher.stop();
 
             return toCombined(futures.build())
-              .thenApply(processor)
-              .handle((c, ex) -> ex == null ? result.complete(c) : result.completeExceptionally(ex))
-              .thenCompose(__ -> result);
+              .thenApply(processor);
         };
     }
 
