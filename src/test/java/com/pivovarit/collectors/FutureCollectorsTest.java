@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 class FutureCollectorsTest {
 
     @Test
-    void shouldCollect() throws Exception {
+    void shouldCollect() {
         List<Integer> list = Arrays.asList(1, 2, 3);
 
         CompletableFuture<List<Integer>> result = list.stream()
@@ -29,7 +29,7 @@ class FutureCollectorsTest {
     }
 
     @Test
-    void shouldCollectToList() throws Exception {
+    void shouldCollectToList() {
         List<Integer> list = Arrays.asList(1, 2, 3);
 
         CompletableFuture<List<Integer>> result = list.stream()
@@ -40,7 +40,7 @@ class FutureCollectorsTest {
     }
 
     @Test
-    void shouldShortcircuit() throws Exception {
+    void shouldShortcircuit() {
         List<Integer> list = IntStream.range(0, 10).boxed().collect(toList());
 
         ExecutorService e = Executors.newFixedThreadPool(10);

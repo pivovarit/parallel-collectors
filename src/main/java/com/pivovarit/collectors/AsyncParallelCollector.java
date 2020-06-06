@@ -32,8 +32,6 @@ final class AsyncParallelCollector<T, R, C>
     private final Function<T, R> mapper;
     private final Function<Stream<R>, C> processor;
 
-    private final CompletableFuture<C> result = new CompletableFuture<>();
-
     private AsyncParallelCollector(
       Function<T, R> mapper,
       Dispatcher<R> dispatcher,
@@ -51,7 +49,7 @@ final class AsyncParallelCollector<T, R, C>
     @Override
     public BinaryOperator<Stream.Builder<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
         };
     }
 
@@ -70,10 +68,7 @@ final class AsyncParallelCollector<T, R, C>
         return futures -> {
             dispatcher.stop();
 
-            return toCombined(futures.build())
-              .thenApply(processor)
-              .handle((c, ex) -> ex == null ? result.complete(c) : result.completeExceptionally(ex))
-              .thenCompose(__ -> result);
+            return combine(futures.build()).thenApply(processor);
         };
     }
 
@@ -82,7 +77,7 @@ final class AsyncParallelCollector<T, R, C>
         return Collections.emptySet();
     }
 
-    private static <T> CompletableFuture<Stream<T>> toCombined(Stream<CompletableFuture<T>> futures) {
+    private static <T> CompletableFuture<Stream<T>> combine(Stream<CompletableFuture<T>> futures) {
         CompletableFuture<T>[] futuresArray = (CompletableFuture<T>[]) futures.toArray(CompletableFuture[]::new);
         CompletableFuture<Stream<T>> combined = allOf(futuresArray)
           .thenApply(__ -> Arrays.stream(futuresArray).map(CompletableFuture::join));
