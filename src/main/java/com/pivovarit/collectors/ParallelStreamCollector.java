@@ -18,7 +18,7 @@ import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParall
 import static com.pivovarit.collectors.BatchingStream.batching;
 import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
-import static com.pivovarit.collectors.Dispatcher.limiting;
+import static com.pivovarit.collectors.Dispatcher.of;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -69,7 +69,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
     @Override
     public BinaryOperator<Stream.Builder<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
         };
     }
 
@@ -97,7 +97,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         return parallelism == 1
           ? BatchingCollectors.syncCollector(mapper)
-          : new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, limiting(executor, parallelism));
+          : new ParallelStreamCollector<>(mapper, streamInCompletionOrderStrategy(), UNORDERED, of(executor, parallelism));
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
@@ -111,7 +111,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         return parallelism == 1
           ? BatchingCollectors.syncCollector(mapper)
-          : new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), limiting(executor, parallelism));
+          : new ParallelStreamCollector<>(mapper, streamOrderedStrategy(), emptySet(), of(executor, parallelism));
     }
 
     private static <R> Function<Stream<CompletableFuture<R>>, Stream<R>> streamInCompletionOrderStrategy() {
@@ -133,7 +133,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batched(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), UNORDERED, Dispatcher.of(executor)), parallelism);
+              : batched(new ParallelStreamCollector<>(batching(mapper), streamInCompletionOrderStrategy(), UNORDERED, Dispatcher.of(executor, parallelism)), parallelism);
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -143,7 +143,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batched(new ParallelStreamCollector<>(batching(mapper), streamOrderedStrategy(), emptySet(), Dispatcher.of(executor)), parallelism);
+              : batched(new ParallelStreamCollector<>(batching(mapper), streamOrderedStrategy(), emptySet(), Dispatcher.of(executor, parallelism)), parallelism);
         }
 
         private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> downstream, int parallelism) {
@@ -155,7 +155,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         private static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
             return Collector.of(Stream::builder, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
-                throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
             }, Stream.Builder::build);
         }
     }

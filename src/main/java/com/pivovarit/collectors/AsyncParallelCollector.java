@@ -103,7 +103,7 @@ final class AsyncParallelCollector<T, R, C>
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, i -> i)
-          : new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), t -> t);
+          : new AsyncParallelCollector<>(mapper, Dispatcher.of(executor, parallelism), t -> t);
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
@@ -118,7 +118,7 @@ final class AsyncParallelCollector<T, R, C>
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, s -> s.collect(collector))
-          : new AsyncParallelCollector<>(mapper, Dispatcher.limiting(executor, parallelism), s -> s.collect(collector));
+          : new AsyncParallelCollector<>(mapper, Dispatcher.of(executor, parallelism), s -> s.collect(collector));
     }
 
     static void requireValidParallelism(int parallelism) {
@@ -169,7 +169,7 @@ final class AsyncParallelCollector<T, R, C>
             return collectingAndThen(
               toList(),
               list -> partitioned(list, parallelism).collect(
-                new AsyncParallelCollector<>(batching(mapper), Dispatcher.of(executor),
+                new AsyncParallelCollector<>(batching(mapper), Dispatcher.of(executor, parallelism),
                   listStream -> finisher.apply(listStream.flatMap(Collection::stream)))));
         }
     }

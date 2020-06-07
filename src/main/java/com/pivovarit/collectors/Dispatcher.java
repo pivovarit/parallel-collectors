@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -40,12 +39,8 @@ final class Dispatcher<T> {
         this.limiter = new Semaphore(permits);
     }
 
-    static <T> Dispatcher<T> limiting(Executor executor, int permits) {
+    static <T> Dispatcher<T> of(Executor executor, int permits) {
         return new Dispatcher<>(executor, permits);
-    }
-
-    static <R> Dispatcher<List<R>> of(Executor executor) {
-        return limiting(executor, Integer.MAX_VALUE);
     }
 
     void start() {
