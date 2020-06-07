@@ -69,7 +69,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
     @Override
     public BinaryOperator<Stream.Builder<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
         };
     }
 
@@ -155,7 +155,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         private static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
             return Collector.of(Stream::builder, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
-                throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
             }, Stream.Builder::build);
         }
     }
