@@ -19,7 +19,6 @@ import static com.pivovarit.collectors.BatchingStream.partitioned;
 import static com.pivovarit.collectors.CompletionStrategy.ordered;
 import static com.pivovarit.collectors.CompletionStrategy.unordered;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
-import static com.pivovarit.collectors.Dispatcher.of;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -98,7 +97,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         return parallelism == 1
           ? BatchingCollectors.syncCollector(mapper)
-          : new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, of(executor, parallelism));
+          : new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.of(executor, parallelism));
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
@@ -112,7 +111,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         return parallelism == 1
           ? BatchingCollectors.syncCollector(mapper)
-          : new ParallelStreamCollector<>(mapper, ordered(), emptySet(), of(executor, parallelism));
+          : new ParallelStreamCollector<>(mapper, ordered(), emptySet(), Dispatcher.of(executor, parallelism));
     }
 
     static final class BatchingCollectors {
