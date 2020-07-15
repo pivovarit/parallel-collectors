@@ -5,6 +5,22 @@ template: |
 
   $CHANGES
 
-  ## Authors
-
+  ## Contributors
   $CONTRIBUTORS
+
+  Special thanks to all external contributors! 👏
+
+categories:
+  - title: Features & Enhancements
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: Fixes
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: Dependencies
+    label: dependencies
+  - title: Other
+    label: other
