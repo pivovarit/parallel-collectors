@@ -22,5 +22,8 @@ categories:
       - 'bug'
   - title: Dependencies
     label: dependencies
-  - title: Other
-    label: other
+  - title: Documentation
+    label: documentation
+    
+exclude-labels:
+  - 'internal'
