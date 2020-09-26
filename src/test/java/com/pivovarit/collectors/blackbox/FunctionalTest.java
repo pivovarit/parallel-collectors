@@ -68,9 +68,7 @@ class FunctionalTest {
           tests((m, e, p) -> parallel(m, toList(), e, p), format("ParallelCollectors.parallel(toList(), p=%d)", PARALLELISM), true),
           tests((m, e, p) -> parallel(m, toSet(), e, p), format("ParallelCollectors.parallel(toSet(), p=%d)", PARALLELISM), false),
           tests((m, e, p) -> parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.parallel(toCollection(), p=%d)", PARALLELISM), true),
-          tests((m, e, p) -> adapt(parallel(m, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true),
-          tests((m, e, p) -> adaptAsync(parallelToStream(m, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
-          tests((m, e, p) -> adaptAsync(parallelToOrderedStream(m, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true)
+          tests((m, e, p) -> adapt(parallel(m, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
     }
 
@@ -80,9 +78,23 @@ class FunctionalTest {
           batchTests((m, e, p) -> Batching.parallel(m, toList(), e, p), format("ParallelCollectors.Batching.parallel(toList(), p=%d)", PARALLELISM), true),
           batchTests((m, e, p) -> Batching.parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
           batchTests((m, e, p) -> Batching.parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
-          batchTests((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true),
-          batchTests((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
-          batchTests((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
+          batchTests((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true)
+        ).flatMap(identity());
+    }
+
+    @TestFactory
+    Stream<DynamicTest> streaming_collectors() {
+        return of(
+          streamingTests((m, e, p) -> adaptAsync(parallelToStream(m, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
+          streamingTests((m, e, p) -> adaptAsync(parallelToOrderedStream(m, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true)
+        ).flatMap(identity());
+    }
+
+    @TestFactory
+    Stream<DynamicTest> streaming_batching_collectors() {
+        return of(
+          batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
+          batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(identity());
     }
 
@@ -139,9 +151,31 @@ class FunctionalTest {
         );
     }
 
+    private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
+        return of(
+          shouldCollect(collector, name, 1),
+          shouldCollect(collector, name, PARALLELISM),
+          shouldCollectToEmpty(collector, name),
+          shouldStartConsumingImmediately(collector, name),
+          shouldNotBlockTheCallingThread(collector, name),
+          shouldMaintainOrder(collector, name, maintainsOrder),
+          shouldRespectParallelism(collector, name),
+          shouldHandleThrowable(collector, name),
+          shouldShortCircuitOnException(collector, name),
+          shouldHandleRejectedExecutionException(collector, name),
+          shouldRemainConsistent(collector, name)
+        );
+    }
+
     private static <R extends Collection<Integer>> Stream<DynamicTest> batchTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         return Stream.concat(
           tests(collector, name, maintainsOrder),
+          of(shouldProcessOnNThreadsETParallelism(collector, name)));
+    }
+
+    private static <R extends Collection<Integer>> Stream<DynamicTest> batchStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
+        return Stream.concat(
+          streamingTests(collector, name, maintainsOrder),
           of(shouldProcessOnNThreadsETParallelism(collector, name)));
     }
 
@@ -258,15 +292,19 @@ class FunctionalTest {
     }
 
     private static <R extends Collection<Integer>> DynamicTest shouldHandleRejectedExecutionException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should survive rejected execution exception", name), () -> {
+        return dynamicTest(format("%s: should propagate rejected execution exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
             List<Integer> elements = IntStream.range(0, 1000).boxed().collect(toList());
 
             assertThatThrownBy(() -> elements.stream()
               .collect(collector.apply(i -> returnWithDelay(i, ofMillis(10000)), executor, PARALLELISM))
               .join())
-              .isInstanceOf(CompletionException.class)
-              .hasCauseExactlyInstanceOf(RejectedExecutionException.class);
+              .isInstanceOfAny(RejectedExecutionException.class, CompletionException.class)
+              .matches(ex -> {
+                  if (ex instanceof CompletionException) {
+                      return ex.getCause() instanceof RejectedExecutionException;
+                  } else return true;
+              });
         });
     }
 
