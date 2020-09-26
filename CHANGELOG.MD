@@ -1,5 +1,9 @@
 # Version History
 
+### [2.4.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.4.0) (26-09-2020)
+- removed a redundant intermediate `CompletableFuture` instance creation
+- streaming collectors offload the work to the calling thread instead of creating a new thread
+
 ### [2.3.3](https://github.com/pivovarit/parallel-collectors/releases/tag/2.3.3) (25-04-2020)
 - fixed potential concurrency issue when dispatcher thread gets interrupted before it starts waiting on `Semaphore#acquire`
 - ensured progress when poison pill can't be added to the working queue
