@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -31,26 +32,22 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
     private static final EnumSet<Characteristics> UNORDERED = EnumSet.of(Characteristics.UNORDERED);
 
-    private final Dispatcher<R> dispatcher;
     private final Function<T, R> function;
     private final CompletionStrategy<R> completionStrategy;
     private final Set<Characteristics> characteristics;
+    private final Semaphore limiter;
+    private final Executor executor;
 
     private ParallelStreamCollector(
       Function<T, R> function,
       CompletionStrategy<R> completionStrategy,
       Set<Characteristics> characteristics,
-      Dispatcher<R> dispatcher) {
+      Executor executor, int parallelism) {
         this.completionStrategy = completionStrategy;
         this.characteristics = characteristics;
-        this.dispatcher = dispatcher;
+        this.limiter = new Semaphore(parallelism);
         this.function = function;
-    }
-
-    private void startConsuming() {
-        if (!dispatcher.isRunning()) {
-            dispatcher.start();
-        }
+        this.executor = executor;
     }
 
     @Override
@@ -61,8 +58,19 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
     @Override
     public BiConsumer<Stream.Builder<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
-            startConsuming();
-            acc.add(dispatcher.enqueue(() -> function.apply(e)));
+            try {
+                limiter.acquire();
+                acc.add(CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return function.apply(e);
+                    } finally {
+                        limiter.release();
+                    }
+                }, executor));
+            } catch (InterruptedException interruptedException) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(interruptedException);
+            }
         };
     }
 
@@ -75,10 +83,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
     @Override
     public Function<Stream.Builder<CompletableFuture<R>>, Stream<R>> finisher() {
-        return acc -> {
-            dispatcher.stop();
-            return completionStrategy.apply(acc.build());
-        };
+        return acc -> completionStrategy.apply(acc.build());
     }
 
     @Override
@@ -97,7 +102,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         return parallelism == 1
           ? BatchingCollectors.syncCollector(mapper)
-          : new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.of(executor, parallelism));
+          : new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, executor, parallelism);
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
@@ -111,7 +116,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
         return parallelism == 1
           ? BatchingCollectors.syncCollector(mapper)
-          : new ParallelStreamCollector<>(mapper, ordered(), emptySet(), Dispatcher.of(executor, parallelism));
+          : new ParallelStreamCollector<>(mapper, ordered(), emptySet(), executor, parallelism);
     }
 
     static final class BatchingCollectors {
@@ -125,7 +130,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batched(new ParallelStreamCollector<>(batching(mapper), unordered(), UNORDERED, Dispatcher.of(executor, parallelism)), parallelism);
+              : batched(new ParallelStreamCollector<>(batching(mapper), unordered(), UNORDERED, executor, parallelism), parallelism);
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -135,7 +140,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batched(new ParallelStreamCollector<>(batching(mapper), ordered(), emptySet(), Dispatcher.of(executor, parallelism)), parallelism);
+              : batched(new ParallelStreamCollector<>(batching(mapper), ordered(), emptySet(), executor, parallelism), parallelism);
         }
 
         private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> downstream, int parallelism) {
