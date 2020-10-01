@@ -135,13 +135,25 @@ class FunctionalTest {
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
-        return of(
+        return maintainsOrder ? of(
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
-          shouldMaintainOrder(collector, name, maintainsOrder),
+          shouldMaintainOrder(collector, name),
+          shouldRespectParallelism(collector, name),
+          shouldHandleThrowable(collector, name),
+          shouldShortCircuitOnException(collector, name),
+          shouldInterruptOnException(collector, name),
+          shouldHandleRejectedExecutionException(collector, name),
+          shouldRemainConsistent(collector, name)
+        ) : of(
+          shouldCollect(collector, name, 1),
+          shouldCollect(collector, name, PARALLELISM),
+          shouldCollectToEmpty(collector, name),
+          shouldStartConsumingImmediately(collector, name),
+          shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
@@ -152,13 +164,24 @@ class FunctionalTest {
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
-        return of(
+        return maintainsOrder ? of(
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
-          shouldMaintainOrder(collector, name, maintainsOrder),
+          shouldMaintainOrder(collector, name),
+          shouldRespectParallelism(collector, name),
+          shouldHandleThrowable(collector, name),
+          shouldShortCircuitOnException(collector, name),
+          shouldHandleRejectedExecutionException(collector, name),
+          shouldRemainConsistent(collector, name)
+        ) : of(
+          shouldCollect(collector, name, 1),
+          shouldCollect(collector, name, PARALLELISM),
+          shouldCollectToEmpty(collector, name),
+          shouldStartConsumingImmediately(collector, name),
+          shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
@@ -241,16 +264,13 @@ class FunctionalTest {
         });
     }
 
-    private static <R extends Collection<Integer>> DynamicTest shouldMaintainOrder(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean shouldRun) {
+    private static <R extends Collection<Integer>> DynamicTest shouldMaintainOrder(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should maintain order", name), () -> {
-            if (shouldRun) {
-                int parallelism = 4;
+            int parallelism = 4;
+            List<Integer> result = IntStream.range(0, 100).boxed()
+              .collect(parallel(i -> i, toList(), Executors.newFixedThreadPool(parallelism), parallelism)).join();
 
-                List<Integer> result = IntStream.range(0, 100).boxed()
-                  .collect(parallel(i -> i, toList(), Executors.newFixedThreadPool(parallelism), parallelism)).join();
-
-                assertThat(result).isSorted();
-            }
+            assertThat(result).isSorted();
         });
     }
 
