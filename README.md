@@ -20,9 +20,9 @@ They are:
 - powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously)
 - configurable (it's possible to provide your own `Executor`, `parallelism`)
 - non-blocking (no need to block the calling thread while waiting for the result to arrive)
-- short-circuiting (if one of operations raises an exception, remaining tasks will get interrupted)  
+- short-circuiting (if one of the operations raises an exception, remaining tasks will get interrupted)  
 - non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies)
-- versatile (missing an API for your use case? just process the resulting Stream with the whole generosity of Stream API by reusing already available `Collectors`)
+- versatile (missing an API for your use case? process the resulting Stream with the whole generosity of Stream API by reusing already available `Collectors`)
 
 ### Maven Dependencies
 
@@ -39,7 +39,7 @@ They are:
 
 ## Philosophy
 
-Parallel Collectors are unopinionated by design so it's up to their users to use them responsibly, which involves things like:
+Parallel Collectors are unopinionated by design, so it's up to their users to use them responsibly, which involves things like:
 - proper configuration of a provided `Executor` and its lifecycle management
 - choosing the appropriate parallelism level
 - making sure that the tool is applied in the right context
@@ -63,7 +63,7 @@ All parallel collectors are one-off and must not be reused.
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
 #### Batching Collectors
-By default, all `ExecutorService` threads _compete_ for each operation separately - which results in a basic form of _work-stealing_ which, unfortunately, is not free.
+By default, all `ExecutorService` threads _compete_ for each operation separately - which results in a basic form of _work-stealing_, which, unfortunately, is not free.
 
 However, if one finds it unnecessary, there are batching alternatives available under the `ParallelCollectors.Batching` namespace, where threads compete for max N/${parallelism} batches of operations instead.
 
@@ -177,14 +177,14 @@ This limitation is imposed by the design of the `Collector` API.
 - Name your thread pools - it makes debugging easier [(how-to)](https://stackoverflow.com/a/9748697/2229438)
 - Limit the size of a working queue of your thread pool [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
 - Limit the level of parallelism [(source)](https://mechanical-sympathy.blogspot.com/2012/05/apply-back-pressure-when-overloaded.html)
-- A no-longer used `ExecutorService` should be shut down to allow reclamation of its resources
+- A no-longer-used `ExecutorService` should be shut down to allow reclamation of its resources
 - Keep in mind that `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)` might be executed by the calling thread. If this is not suitable, use `CompletableFuture#then(Apply|Combine|Consume|Run|Accept)Async` instead, and provide a custom executor instance.
 
 ## Words of Caution
 
-Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price which can be often higher than not using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
+Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price that can be often higher than not using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
 
-It's important to follow up on the root cause and double-check if parallelism is the way to go.
+It's essential to follow up on the root cause and double-check if parallelism is the way to go.
 
 **It often turns out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
 
