@@ -10,7 +10,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * @author Grzegorz Piwowarek
  */
-class FutureCollectors {
+final class FutureCollectors {
     static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
         return Collectors.collectingAndThen(toList(), list -> {
             CompletableFuture<R> future = CompletableFuture
