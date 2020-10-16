@@ -67,12 +67,4 @@ class ArchitectureTest {
           .should().bePublic().andShould().haveModifier(FINAL)
           .check(classes);
     }
-
-    @Test
-    void shouldHaveNestedBatchingClass() {
-        classes()
-          .that().haveSimpleName("Batching")
-          .should().beNestedClasses()
-          .check(classes);
-    }
 }
