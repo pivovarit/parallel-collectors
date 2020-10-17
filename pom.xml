@@ -115,36 +115,6 @@
                 <extensions>true</extensions>
             </plugin>
 
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <phase>process-sources</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <includePluginDependencies>true</includePluginDependencies>
-                            <mainClass>org.openjdk.jmh.generators.bytecode.JmhBytecodeGenerator</mainClass>
-                            <arguments>
-                                <argument>${project.basedir}/target/classes/</argument>
-                                <argument>${project.basedir}/target/generated-sources/jmh/</argument>
-                                <argument>${project.basedir}/target/classes/</argument>
-                                <argument>${jmh.generator}</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.openjdk.jmh</groupId>
-                        <artifactId>jmh-generator-bytecode</artifactId>
-                        <version>${jmh.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
         </plugins>
     </build>
 
@@ -160,6 +130,46 @@
             <url>https://4comprehension.com</url>
         </developer>
     </developers>
+
+    <profiles>
+        <profile>
+            <id>jmh</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <includePluginDependencies>true</includePluginDependencies>
+                                    <mainClass>org.openjdk.jmh.generators.bytecode.JmhBytecodeGenerator</mainClass>
+                                    <arguments>
+                                        <argument>${project.basedir}/target/classes/</argument>
+                                        <argument>${project.basedir}/target/generated-sources/jmh/</argument>
+                                        <argument>${project.basedir}/target/classes/</argument>
+                                        <argument>${jmh.generator}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.openjdk.jmh</groupId>
+                                <artifactId>jmh-generator-bytecode</artifactId>
+                                <version>${jmh.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
