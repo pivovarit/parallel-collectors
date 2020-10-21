@@ -141,13 +141,17 @@
                         <artifactId>pitest-maven</artifactId>
                         <version>1.5.2</version>
                         <configuration>
-                            <mutationUnitSize>10</mutationUnitSize>
-                            <timeoutConstant>10000</timeoutConstant>
-                            <excludedClasses>
-                                <excludedClass>*/Architecture*</excludedClass>
-                            </excludedClasses>
+                            <mutationEngine>descartes</mutationEngine>
+                            <excludedTestClasses>
+                                <excludedTestClass>*ArchitectureTest</excludedTestClass>
+                            </excludedTestClasses>
                         </configuration>
                         <dependencies>
+                            <dependency>
+                                <groupId>eu.stamp-project</groupId>
+                                <artifactId>descartes</artifactId>
+                                <version>1.2.6</version>
+                            </dependency>
                             <dependency>
                                 <groupId>org.pitest</groupId>
                                 <artifactId>pitest-junit5-plugin</artifactId>
