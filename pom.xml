@@ -143,6 +143,9 @@
                         <configuration>
                             <mutationUnitSize>10</mutationUnitSize>
                             <timeoutConstant>10000</timeoutConstant>
+                            <excludedClasses>
+                                <excludedClass>*/Architecture*</excludedClass>
+                            </excludedClasses>
                         </configuration>
                         <dependencies>
                             <dependency>
