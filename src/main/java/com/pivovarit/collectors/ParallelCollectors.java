@@ -3,13 +3,9 @@ package com.pivovarit.collectors;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -17,17 +13,6 @@ import static java.util.stream.Collectors.toList;
  * @author Grzegorz Piwowarek
  */
 public final class ParallelCollectors {
-
-    public static void main(String[] args) {
-
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-        List<Integer> join = Stream.of(1, 2, 3)
-          .collect(ParallelCollectors.parallel(i -> i, toList(), executorService, 2))
-          .join();
-
-        System.out.println(join);
-        executorService.shutdown();
-    }
 
     private ParallelCollectors() {
     }
