@@ -159,7 +159,8 @@ class FunctionalTest {
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
           shouldHandleRejectedExecutionException(collector, name),
-          shouldRemainConsistent(collector, name)
+          shouldRemainConsistent(collector, name),
+          shouldRejectInvalidParallelism(collector, name)
         );
     }
 
@@ -186,7 +187,8 @@ class FunctionalTest {
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldHandleRejectedExecutionException(collector, name),
-          shouldRemainConsistent(collector, name)
+          shouldRemainConsistent(collector, name),
+          shouldRejectInvalidParallelism(collector, name)
         );
     }
 
@@ -357,6 +359,13 @@ class FunctionalTest {
             } finally {
                 executor.shutdownNow();
             }
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldRejectInvalidParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should reject invalid parallelism", name), () -> {
+            assertThatThrownBy(() -> collector.apply(i -> i, executor, -1))
+              .isExactlyInstanceOf(IllegalArgumentException.class);
         });
     }
 
