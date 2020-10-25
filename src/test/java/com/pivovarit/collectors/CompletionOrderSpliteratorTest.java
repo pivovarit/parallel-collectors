@@ -1,20 +1,29 @@
 package com.pivovarit.collectors;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 
 class CompletionOrderSpliteratorTest {
 
@@ -90,6 +99,30 @@ class CompletionOrderSpliteratorTest {
 
         assertThat(consumed).isFalse();
         assertThat(result.result).isNull();
+    }
+
+    @Test
+    void shouldRestoreInterrupt() throws InterruptedException {
+        Thread executorThread = new Thread(() -> {
+            Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(Stream.of(new CompletableFuture<>()));
+            try {
+                spliterator.tryAdvance(i -> {});
+            } catch (Exception e) {
+                while (true) {
+
+                }
+            }
+        });
+
+        executorThread.start();
+
+        Thread.sleep(100);
+
+        executorThread.interrupt();
+
+        await()
+          .pollDelay(ofMillis(100))
+          .until(executorThread::isInterrupted);
     }
 
     static class ResultHolder<T> implements Consumer<T> {
