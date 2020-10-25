@@ -23,6 +23,18 @@ class BatchingStreamTest {
     }
 
     @Test
+    void shouldSplitInNSingletonLists() {
+        List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
+
+        List<List<Integer>> result = BatchingStream.partitioned(list, 10).collect(Collectors.toList());
+
+        assertThat(result)
+          .hasSize(10)
+          .extracting(List::size)
+          .containsOnly(1);
+    }
+
+    @Test
     void shouldReturnNestedListIfOneBatch() {
         List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
 

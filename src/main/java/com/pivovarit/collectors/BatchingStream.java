@@ -24,7 +24,7 @@ final class BatchingStream<T> implements Spliterator<List<T>> {
     private int chunks;
     private int chunkSize;
     private int leftElements;
-    private int i;
+    private int consumed;
 
     private BatchingStream(List<T> list, int numberOfParts) {
         source = list;
@@ -69,9 +69,9 @@ final class BatchingStream<T> implements Spliterator<List<T>> {
 
     @Override
     public boolean tryAdvance(Consumer<? super List<T>> action) {
-        if (i < size && chunks != 0) {
-            List<T> batch = source.subList(i, i + chunkSize);
-            i = i + chunkSize;
+        if (consumed < size && chunks != 0) {
+            List<T> batch = source.subList(consumed, consumed + chunkSize);
+            consumed = consumed + chunkSize;
             leftElements = leftElements - chunkSize;
             chunkSize = (int) Math.ceil(((double) leftElements) / --chunks);
             action.accept(batch);
