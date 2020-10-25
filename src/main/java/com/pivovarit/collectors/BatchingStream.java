@@ -40,7 +40,7 @@ final class BatchingStream<T> implements Spliterator<List<T>> {
 
         if (size == numberOfParts) {
             return asSingletonListStream(list);
-        } else if (size == 0) {
+        } else if (size == 0 || numberOfParts == 0) {
             return empty();
         } else if (numberOfParts == 1) {
             return of(list);
