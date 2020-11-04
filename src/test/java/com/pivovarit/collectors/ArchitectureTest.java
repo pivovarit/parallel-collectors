@@ -15,10 +15,10 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 class ArchitectureTest {
 
     private static final JavaClasses classes = new ClassFileImporter()
-      .importClasspath(new ImportOptions()
-        .with(DO_NOT_INCLUDE_JARS)
-        .with(DO_NOT_INCLUDE_ARCHIVES)
-        .with(DO_NOT_INCLUDE_TESTS));
+      .withImportOption(DO_NOT_INCLUDE_TESTS)
+      .withImportOption(DO_NOT_INCLUDE_JARS)
+      .withImportOption(DO_NOT_INCLUDE_ARCHIVES)
+      .importPackages("com.pivovarit");
 
     @Test
     void shouldHaveSingleFacade() {
