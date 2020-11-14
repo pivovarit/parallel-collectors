@@ -5,6 +5,8 @@ on:
       - master
     paths-ignore:
       - '**.md'
+      - '**.yml'
+      - '**.yaml'
 
 jobs:
   build:
