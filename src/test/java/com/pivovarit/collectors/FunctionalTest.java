@@ -241,7 +241,7 @@ class FunctionalTest {
     }
 
     private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name, int parallelism) {
-        return dynamicTest(format("%s: should collect", name), () -> {
+        return dynamicTest(format("%s: should collect with parallelism %s", name, parallelism), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
             Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, executor, parallelism);
             Collection<Integer> result = elements.stream().collect(ctor)
