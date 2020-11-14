@@ -1,10 +1,11 @@
-package com.pivovarit.collectors.blackbox;
+package com.pivovarit.collectors;
 
 import com.pivovarit.collectors.ParallelCollectors.Batching;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -42,7 +43,6 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
@@ -69,7 +69,7 @@ class FunctionalTest {
           tests((m, e, p) -> parallel(m, toSet(), e, p), format("ParallelCollectors.parallel(toSet(), p=%d)", PARALLELISM), false),
           tests((m, e, p) -> parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.parallel(toCollection(), p=%d)", PARALLELISM), true),
           tests((m, e, p) -> adapt(parallel(m, e, p)), format("ParallelCollectors.parallel(p=%d)", PARALLELISM), true)
-        ).flatMap(identity());
+        ).flatMap(i -> i);
     }
 
     @TestFactory
@@ -79,7 +79,7 @@ class FunctionalTest {
           batchTests((m, e, p) -> Batching.parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM), false),
           batchTests((m, e, p) -> Batching.parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM), true),
           batchTests((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM), true)
-        ).flatMap(identity());
+        ).flatMap(i -> i);
     }
 
     @TestFactory
@@ -87,7 +87,7 @@ class FunctionalTest {
         return of(
           streamingTests((m, e, p) -> adaptAsync(parallelToStream(m, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
           streamingTests((m, e, p) -> adaptAsync(parallelToOrderedStream(m, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true)
-        ).flatMap(identity());
+        ).flatMap(i -> i);
     }
 
     @TestFactory
@@ -95,7 +95,7 @@ class FunctionalTest {
         return of(
           batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
           batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
-        ).flatMap(identity());
+        ).flatMap(i -> i);
     }
 
     @Test
@@ -121,7 +121,6 @@ class FunctionalTest {
 
             Stream<String> stream = list.stream()
               .collect(parallel(s -> {
-                  System.out.println("Running on " + Thread.currentThread().getName());
                   executions.incrementAndGet();
                   return s;
               }, countingExecutor, 1))
@@ -135,24 +134,12 @@ class FunctionalTest {
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
-        return maintainsOrder ? of(
+        Stream<DynamicTest> tests = of(
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
-          shouldNotBlockTheCallingThread(collector, name),
-          shouldMaintainOrder(collector, name),
-          shouldRespectParallelism(collector, name),
-          shouldHandleThrowable(collector, name),
-          shouldShortCircuitOnException(collector, name),
-          shouldInterruptOnException(collector, name),
-          shouldHandleRejectedExecutionException(collector, name),
-          shouldRemainConsistent(collector, name)
-        ) : of(
-          shouldCollect(collector, name, 1),
-          shouldCollect(collector, name, PARALLELISM),
-          shouldCollectToEmpty(collector, name),
-          shouldStartConsumingImmediately(collector, name),
+          shouldTerminateAfterConsumingAllElements(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldHandleThrowable(collector, name),
@@ -162,26 +149,19 @@ class FunctionalTest {
           shouldRemainConsistent(collector, name),
           shouldRejectInvalidParallelism(collector, name)
         );
+
+        return maintainsOrder
+          ? Stream.concat(tests, Stream.of(shouldMaintainOrder(collector, name)))
+          : tests;
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
-        return maintainsOrder ? of(
+        Stream<DynamicTest> tests = of(
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
-          shouldNotBlockTheCallingThread(collector, name),
-          shouldMaintainOrder(collector, name),
-          shouldRespectParallelism(collector, name),
-          shouldHandleThrowable(collector, name),
-          shouldShortCircuitOnException(collector, name),
-          shouldHandleRejectedExecutionException(collector, name),
-          shouldRemainConsistent(collector, name)
-        ) : of(
-          shouldCollect(collector, name, 1),
-          shouldCollect(collector, name, PARALLELISM),
-          shouldCollectToEmpty(collector, name),
-          shouldStartConsumingImmediately(collector, name),
+          shouldTerminateAfterConsumingAllElements(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldHandleThrowable(collector, name),
@@ -190,6 +170,10 @@ class FunctionalTest {
           shouldRemainConsistent(collector, name),
           shouldRejectInvalidParallelism(collector, name)
         );
+
+        return maintainsOrder
+          ? Stream.concat(tests, Stream.of(shouldMaintainOrder(collector, name)))
+          : tests;
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> batchTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
@@ -256,23 +240,48 @@ class FunctionalTest {
         });
     }
 
-    private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, int parallelism) {
+    private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name, int parallelism) {
         return dynamicTest(format("%s: should collect", name), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
-            Collection<Integer> result = elements.stream().collect(collector.apply(i -> i, executor, parallelism))
+            Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, executor, parallelism);
+            Collection<Integer> result = elements.stream().collect(ctor)
               .join();
 
             assertThat(result).hasSameElementsAs(elements);
         });
     }
 
+    private static <R extends Collection<Integer>> DynamicTest shouldTerminateAfterConsumingAllElements(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name) {
+        return dynamicTest(format("%s: should terminate after consuming all elements", name), () -> {
+            List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
+            Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, executor, 10);
+            Collection<Integer> result = elements.stream().collect(ctor)
+              .join();
+
+            assertThat(result).hasSameElementsAs(elements);
+
+            if (ctor instanceof AsyncParallelCollector) {
+                Field dispatcherField = AsyncParallelCollector.class.getDeclaredField("dispatcher");
+                dispatcherField.setAccessible(true);
+                Dispatcher<?> dispatcher = (Dispatcher<?>) dispatcherField.get(ctor);
+                Field innerDispatcherField = Dispatcher.class.getDeclaredField("dispatcher");
+                innerDispatcherField.setAccessible(true);
+                ExecutorService executor = (ExecutorService) innerDispatcherField.get(dispatcher);
+
+                await()
+                  .atMost(Duration.ofSeconds(2))
+                  .until(executor::isTerminated);
+            }
+        });
+    }
+
     private static <R extends Collection<Integer>> DynamicTest shouldMaintainOrder(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should maintain order", name), () -> {
             int parallelism = 4;
-            List<Integer> result = IntStream.range(0, 100).boxed()
-              .collect(parallel(i -> i, toList(), Executors.newFixedThreadPool(parallelism), parallelism)).join();
+            Collection<Integer> join = IntStream.range(0, 100).boxed()
+              .collect(collector.apply(i -> i, Executors.newFixedThreadPool(parallelism), parallelism)).join();
 
-            assertThat(result).isSorted();
+            assertThat((List<Integer>) join).isSorted();
         });
     }
 
@@ -428,5 +437,26 @@ class FunctionalTest {
     @FunctionalInterface
     interface CollectorSupplier<T1, T2, T3, R> {
         R apply(T1 t1, T2 t2, T3 t3);
+    }
+
+    private static class CountingExecutor implements Executor {
+
+        private final AtomicInteger counter = new AtomicInteger();
+
+        private final Executor delegate;
+
+        public CountingExecutor(Executor delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            counter.incrementAndGet();
+            delegate.execute(command);
+        }
+
+        public Integer getInvocations() {
+            return counter.get();
+        }
     }
 }
