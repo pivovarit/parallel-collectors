@@ -30,13 +30,13 @@ They are:
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>2.4.0</version>
+        <version>2.4.1</version>
     </dependency>
 
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:2.4.0'
+    compile 'com.pivovarit:parallel-collectors:2.4.1'
 
 ## Philosophy
 
