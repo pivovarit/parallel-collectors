@@ -1,5 +1,9 @@
 # Version History
 
+### [2.4.1](https://github.com/pivovarit/parallel-collectors/releases/tag/2.4.1) (22-11-2020)
+- removed redundant JMH artifacts from the jar
+- add missing project metadata to the _MANIFEST.MF_ file
+
 ### [2.4.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.4.0) (26-09-2020)
 - removed a redundant intermediate `CompletableFuture` instance creation
 - streaming collectors offload the work to the calling thread instead of creating a new thread
