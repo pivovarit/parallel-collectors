@@ -1,8 +1,14 @@
 name: build
 on:
   push:
+    branches:
+      - master
     paths-ignore:
       - '**.md'
+      - '**.yml'
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
