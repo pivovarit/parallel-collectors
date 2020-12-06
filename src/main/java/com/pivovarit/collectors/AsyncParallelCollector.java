@@ -168,11 +168,22 @@ final class AsyncParallelCollector<T, R, C>
         private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
             return collectingAndThen(
               toList(),
-              list -> partitioned(list, parallelism)
-                .collect(new AsyncParallelCollector<>(
-                  batching(mapper),
-                  Dispatcher.of(executor, parallelism),
-                  listStream -> finisher.apply(listStream.flatMap(Collection::stream)))));
+              list -> {
+                  // no sense to repack into batches of size 1
+                  if (list.size() == parallelism) {
+                      return list.stream()
+                        .collect(new AsyncParallelCollector<>(
+                          mapper,
+                          Dispatcher.of(executor, parallelism),
+                          finisher));
+                  } else {
+                      return partitioned(list, parallelism)
+                        .collect(new AsyncParallelCollector<>(
+                          batching(mapper),
+                          Dispatcher.of(executor, parallelism),
+                          listStream -> finisher.apply(listStream.flatMap(Collection::stream))));
+                  }
+              });
         }
     }
 }

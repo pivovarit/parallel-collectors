@@ -137,6 +137,8 @@ class FunctionalTest {
         Stream<DynamicTest> tests = of(
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
+          shouldCollectNElementsWithNParallelism(collector, name, 1),
+          shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldTerminateAfterConsumingAllElements(collector, name),
@@ -243,6 +245,18 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name, int parallelism) {
         return dynamicTest(format("%s: should collect with parallelism %s", name, parallelism), () -> {
             List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
+            Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, executor, parallelism);
+            Collection<Integer> result = elements.stream().collect(ctor)
+              .join();
+
+            assertThat(result).hasSameElementsAs(elements);
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldCollectNElementsWithNParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name, int parallelism) {
+        return dynamicTest(format("%s: should collect %s elements with parallelism %s", name, parallelism, parallelism), () -> {
+
+            List<Integer> elements = IntStream.iterate(0, i -> i + 1).limit(parallelism).boxed().collect(toList());
             Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, executor, parallelism);
             Collection<Integer> result = elements.stream().collect(ctor)
               .join();
