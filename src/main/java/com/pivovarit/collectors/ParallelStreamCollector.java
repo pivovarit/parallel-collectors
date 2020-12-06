@@ -2,7 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -130,7 +129,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batched(new ParallelStreamCollector<>(batching(mapper), unordered(), UNORDERED, executor, parallelism), parallelism);
+              : batchingCollector(mapper, executor, parallelism);
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -140,14 +139,33 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
 
             return parallelism == 1
               ? syncCollector(mapper)
-              : batched(new ParallelStreamCollector<>(batching(mapper), ordered(), emptySet(), executor, parallelism), parallelism);
+              : batchingCollector(mapper, executor, parallelism);
         }
 
-        private static <T, R> Collector<T, ?, Stream<R>> batched(ParallelStreamCollector<List<T>, List<R>> downstream, int parallelism) {
+        private static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism) {
             return collectingAndThen(
               toList(),
-              list -> partitioned(list, parallelism)
-                .collect(collectingAndThen(downstream, s -> s.flatMap(Collection::stream))));
+              list -> {
+                  // no sense to repack into batches of size 1
+                  if (list.size() == parallelism) {
+                      return list.stream()
+                        .collect(new ParallelStreamCollector<>(
+                          mapper,
+                          ordered(),
+                          emptySet(),
+                          executor,
+                          parallelism));
+                  } else {
+                      return partitioned(list, parallelism)
+                        .collect(collectingAndThen(new ParallelStreamCollector<>(
+                          batching(mapper),
+                          ordered(),
+                          emptySet(),
+                          executor,
+                          parallelism),
+                          s -> s.flatMap(Collection::stream)));
+                  }
+              });
         }
 
         private static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
