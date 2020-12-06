@@ -33,7 +33,6 @@ They are:
         <version>2.4.1</version>
     </dependency>
 
-
 ##### Gradle
 
     compile 'com.pivovarit:parallel-collectors:2.4.1'
@@ -64,9 +63,13 @@ All parallel collectors are one-off and must not be reused.
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
 #### Batching Collectors
-By default, all `ExecutorService` threads _compete_ for each operation separately - which results in a basic form of _work-stealing_, which, unfortunately, is not free.
+By default, all `ExecutorService` threads _compete_ for each task separately - which results in a basic form of _work-stealing_, which, unfortunately, is not free, but can decrease processing time for subtasks with varying processing time.
 
-However, if one finds it unnecessary, there are batching alternatives available under the `ParallelCollectors.Batching` namespace, where threads compete for max N/${parallelism} batches of operations instead.
+However, if the processing time for all subtasks is similar, it might be better to distribute tasks in N/${parallelism} batches to avoid excessive contention:
+
+![](docs/batching.png)
+
+Batching alternatives are available under the `ParallelCollectors.Batching` namespace.
 
 
 ### Leveraging CompletableFuture
