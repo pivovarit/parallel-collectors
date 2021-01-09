@@ -18,21 +18,19 @@ import static java.util.stream.StreamSupport.stream;
 final class BatchingStream<T> implements Spliterator<List<T>> {
 
     private final List<T> source;
-    private final int size;
     private final int maxChunks;
 
     private int chunks;
     private int chunkSize;
-    private int leftElements;
+    private int remaining;
     private int consumed;
 
     private BatchingStream(List<T> list, int numberOfParts) {
         source = list;
-        size = list.size();
         chunks = numberOfParts;
         maxChunks = numberOfParts;
-        chunkSize = (int) Math.ceil(((double) size) / numberOfParts);
-        leftElements = size;
+        chunkSize = (int) Math.ceil(((double) source.size()) / numberOfParts);
+        remaining = source.size();
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
@@ -69,11 +67,11 @@ final class BatchingStream<T> implements Spliterator<List<T>> {
 
     @Override
     public boolean tryAdvance(Consumer<? super List<T>> action) {
-        if (consumed < size && chunks != 0) {
+        if (consumed < source.size() && chunks != 0) {
             List<T> batch = source.subList(consumed, consumed + chunkSize);
             consumed = consumed + chunkSize;
-            leftElements = leftElements - chunkSize;
-            chunkSize = (int) Math.ceil(((double) leftElements) / --chunks);
+            remaining = remaining - chunkSize;
+            chunkSize = (int) Math.ceil(((double) remaining) / --chunks);
             action.accept(batch);
             return true;
         } else {
