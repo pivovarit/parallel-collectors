@@ -2,11 +2,14 @@ package com.pivovarit.collectors;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BatchingSpliteratorTest {
 
@@ -14,7 +17,7 @@ class BatchingSpliteratorTest {
     void shouldSplitInNBatches() {
         List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
 
-        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 2).collect(Collectors.toList());
+        List<List<Integer>> result = partitioned(list, 2).collect(Collectors.toList());
 
         assertThat(result)
           .hasSize(2)
@@ -26,7 +29,7 @@ class BatchingSpliteratorTest {
     void shouldSplitInNSingletonLists() {
         List<Integer> list = Stream.generate(() -> 42).limit(5).collect(Collectors.toList());
 
-        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 10).collect(Collectors.toList());
+        List<List<Integer>> result = partitioned(list, 10).collect(Collectors.toList());
 
         assertThat(result)
           .hasSize(5)
@@ -38,17 +41,13 @@ class BatchingSpliteratorTest {
     void shouldReturnNestedListIfOneBatch() {
         List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
 
-        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 1).collect(Collectors.toList());
+        List<List<Integer>> result = partitioned(list, 1).collect(Collectors.toList());
 
         assertThat(result.get(0)).containsExactlyElementsOf(list);
     }
 
     @Test
     void shouldReturnEmptyIfZeroParts() {
-        List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
-
-        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 0).collect(Collectors.toList());
-
-        assertThat(result).isEmpty();
+        assertThatThrownBy(() -> partitioned(Arrays.asList(1, 2, 3), 0).collect(Collectors.toList()));
     }
 }
