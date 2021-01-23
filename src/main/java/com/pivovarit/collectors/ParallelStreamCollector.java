@@ -14,8 +14,8 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.AsyncParallelCollector.requireValidParallelism;
-import static com.pivovarit.collectors.BatchingStream.batching;
-import static com.pivovarit.collectors.BatchingStream.partitioned;
+import static com.pivovarit.collectors.BatchingSpliterator.batching;
+import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static com.pivovarit.collectors.CompletionStrategy.ordered;
 import static com.pivovarit.collectors.CompletionStrategy.unordered;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
