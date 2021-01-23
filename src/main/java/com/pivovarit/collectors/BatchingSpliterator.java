@@ -24,11 +24,14 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
     private int chunkSize;
     private int consumed;
 
-    private BatchingSpliterator(List<T> list, int numberOfParts) {
+    private BatchingSpliterator(List<T> list, int batches) {
+        if (batches < 1) {
+            throw new IllegalArgumentException("batches can't be lower than one");
+        }
         source = list;
-        chunks = numberOfParts;
-        maxChunks = Math.min(list.size(), numberOfParts);
-        chunkSize = (int) Math.ceil(((double) source.size()) / numberOfParts);
+        chunks = batches;
+        maxChunks = Math.min(list.size(), batches);
+        chunkSize = (int) Math.ceil(((double) source.size()) / batches);
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
@@ -36,7 +39,7 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
         if (size <= numberOfParts) {
             return asSingletonListStream(list);
-        } else if (size == 0 || numberOfParts == 0) {
+        } else if (size == 0) {
             return empty();
         } else if (numberOfParts == 1) {
             return of(list);
