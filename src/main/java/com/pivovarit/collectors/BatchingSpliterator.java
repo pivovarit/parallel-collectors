@@ -15,35 +15,33 @@ import static java.util.stream.StreamSupport.stream;
 /**
  * @author Grzegorz Piwowarek
  */
-final class BatchingStream<T> implements Spliterator<List<T>> {
+final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     private final List<T> source;
     private final int maxChunks;
 
     private int chunks;
     private int chunkSize;
-    private int remaining;
     private int consumed;
 
-    private BatchingStream(List<T> list, int numberOfParts) {
+    private BatchingSpliterator(List<T> list, int numberOfParts) {
         source = list;
         chunks = numberOfParts;
-        maxChunks = numberOfParts;
+        maxChunks = Math.min(list.size(), numberOfParts);
         chunkSize = (int) Math.ceil(((double) source.size()) / numberOfParts);
-        remaining = source.size();
     }
 
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
         int size = list.size();
 
-        if (size == numberOfParts) {
+        if (size <= numberOfParts) {
             return asSingletonListStream(list);
         } else if (size == 0 || numberOfParts == 0) {
             return empty();
         } else if (numberOfParts == 1) {
             return of(list);
         } else {
-            return stream(new BatchingStream<>(list, numberOfParts), false);
+            return stream(new BatchingSpliterator<>(list, numberOfParts), false);
         }
     }
 
@@ -69,9 +67,8 @@ final class BatchingStream<T> implements Spliterator<List<T>> {
     public boolean tryAdvance(Consumer<? super List<T>> action) {
         if (consumed < source.size() && chunks != 0) {
             List<T> batch = source.subList(consumed, consumed + chunkSize);
-            consumed = consumed + chunkSize;
-            remaining = remaining - chunkSize;
-            chunkSize = (int) Math.ceil(((double) remaining) / --chunks);
+            consumed += chunkSize;
+            chunkSize = (int) Math.ceil(((double) (source.size() - consumed)) / --chunks);
             action.accept(batch);
             return true;
         } else {

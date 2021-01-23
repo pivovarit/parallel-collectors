@@ -8,13 +8,13 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BatchingStreamTest {
+class BatchingSpliteratorTest {
 
     @Test
     void shouldSplitInNBatches() {
         List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
 
-        List<List<Integer>> result = BatchingStream.partitioned(list, 2).collect(Collectors.toList());
+        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 2).collect(Collectors.toList());
 
         assertThat(result)
           .hasSize(2)
@@ -24,12 +24,12 @@ class BatchingStreamTest {
 
     @Test
     void shouldSplitInNSingletonLists() {
-        List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
+        List<Integer> list = Stream.generate(() -> 42).limit(5).collect(Collectors.toList());
 
-        List<List<Integer>> result = BatchingStream.partitioned(list, 10).collect(Collectors.toList());
+        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 10).collect(Collectors.toList());
 
         assertThat(result)
-          .hasSize(10)
+          .hasSize(5)
           .extracting(List::size)
           .containsOnly(1);
     }
@@ -38,7 +38,7 @@ class BatchingStreamTest {
     void shouldReturnNestedListIfOneBatch() {
         List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
 
-        List<List<Integer>> result = BatchingStream.partitioned(list, 1).collect(Collectors.toList());
+        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 1).collect(Collectors.toList());
 
         assertThat(result.get(0)).containsExactlyElementsOf(list);
     }
@@ -47,7 +47,7 @@ class BatchingStreamTest {
     void shouldReturnEmptyIfZeroParts() {
         List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
 
-        List<List<Integer>> result = BatchingStream.partitioned(list, 0).collect(Collectors.toList());
+        List<List<Integer>> result = BatchingSpliterator.partitioned(list, 0).collect(Collectors.toList());
 
         assertThat(result).isEmpty();
     }

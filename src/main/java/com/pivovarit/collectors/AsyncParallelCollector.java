@@ -13,8 +13,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.BatchingStream.batching;
-import static com.pivovarit.collectors.BatchingStream.partitioned;
+import static com.pivovarit.collectors.BatchingSpliterator.batching;
+import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
