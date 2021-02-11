@@ -122,13 +122,13 @@ class FunctionalTest {
             Stream.of(1, 10000, 1, 0)
               .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), executor, 2))
               .forEach(i -> {
-                  if (i == 0) {
+                  if (i == 1) {
                       result.set(true);
                   }
               });
         });
 
-        Awaitility.await()
+        await()
           .atMost(1, SECONDS)
           .until(result::get);
     }
