@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import com.pivovarit.collectors.ParallelCollectors.Batching;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -24,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
@@ -109,6 +111,26 @@ class FunctionalTest {
           .collect(toList());
 
         assertThat(result).isSorted();
+    }
+
+    @Test
+    void shouldCollectEagerlyInCompletionOrder() {
+        // given
+        executor = threadPoolExecutor(4);
+        AtomicBoolean result = new AtomicBoolean(false);
+        CompletableFuture.runAsync(() -> {
+            Stream.of(1, 10000, 1, 0)
+              .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), executor, 2))
+              .forEach(i -> {
+                  if (i == 0) {
+                      result.set(true);
+                  }
+              });
+        });
+
+        Awaitility.await()
+          .atMost(1, SECONDS)
+          .until(result::get);
     }
 
     @Test
