@@ -1,5 +1,9 @@
 # Version History
 
+### [2.5.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.5.0) (11-02-2021)
+- fixed a bug causing lack of eager consumption of items when processed using streaming collectors
+- optimized batching logic when collection size is equal to parallelism
+
 ### [2.4.1](https://github.com/pivovarit/parallel-collectors/releases/tag/2.4.1) (22-11-2020)
 - removed redundant JMH artifacts from the jar
 - add missing project metadata to the _MANIFEST.MF_ file
