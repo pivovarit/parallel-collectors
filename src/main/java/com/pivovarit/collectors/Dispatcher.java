@@ -122,7 +122,7 @@ final class Dispatcher<T> {
     }
 
     static int getDefaultParallelism() {
-        return Math.max(getRuntime().availableProcessors() - 1, 1);
+        return Math.max(getRuntime().availableProcessors() - 1, 4);
     }
 
     private static ThreadPoolExecutor newLazySingleThreadExecutor() {
