@@ -112,9 +112,6 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements.
      *
      * <br><br>
-     * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
-     *
-     * <br><br>
      * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
      *
      * <br>
@@ -333,9 +330,6 @@ public final class ParallelCollectors {
         /**
          * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
          * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements.
-         *
-         * <br><br>
-         * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
          *
          * <br><br>
          * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
