@@ -43,7 +43,6 @@ public final class ParallelCollectors {
      * @since 2.0.0
      * @deprecated use {@link ParallelCollectors#parallel(Function, Collector, Executor, int)}
      */
-    @Deprecated // for removal in 3.0.0
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor) {
         return AsyncParallelCollector.collectingWithCollector(collector, mapper, executor);
     }
@@ -80,7 +79,7 @@ public final class ParallelCollectors {
      * and returning them as {@link CompletableFuture} containing a {@link Stream} of these elements
      *
      * <br><br>
-     * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1} but not less than 4
      *
      * <br><br>
      * The collector maintains the order of processed {@link Stream}. Instances should not be reused.
@@ -102,7 +101,6 @@ public final class ParallelCollectors {
      * @since 2.0.0
      * @deprecated use {@link ParallelCollectors#parallel(Function, Executor, int)}
      */
-    @Deprecated // for removal in 3.0.0
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor) {
         return AsyncParallelCollector.collectingToStream(mapper, executor);
     }
@@ -142,7 +140,7 @@ public final class ParallelCollectors {
      * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br><br>
-     * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1} but not less than 4
      *
      * <br><br>
      * Instances should not be reused.
@@ -165,7 +163,6 @@ public final class ParallelCollectors {
      * @since 2.0.0
      * @deprecated use {@link ParallelCollectors#parallelToStream(Function, Executor, int)}
      */
-    @Deprecated // for removal in 3.0.0
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streaming(mapper, executor);
     }
@@ -205,7 +202,7 @@ public final class ParallelCollectors {
      * For the parallelism of 1, the stream is executed by the calling thread.
      *
      * <br><br>
-     * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1}
+     * The max parallelism level defaults to {@code Runtime.availableProcessors() - 1} but not less than 4
      *
      * <br><br>
      * Instances should not be reused.
@@ -227,7 +224,6 @@ public final class ParallelCollectors {
      * @since 2.0.0
      * @deprecated use {@link ParallelCollectors#parallelToOrderedStream(Function, Executor, int)}
      */
-    @Deprecated // for removal in 3.0.0
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor) {
         return ParallelStreamCollector.streamingOrdered(mapper, executor);
     }
