@@ -17,12 +17,14 @@ jobs:
       matrix:
         java: [ '8', '11', '16' ]
         architecture: [ 'x64' ]
+        distribution: [ 'zulu' ]
     name: Build with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
     steps:
       - uses: actions/checkout@v2.3.4
       - name: Setup JDK
         uses: actions/setup-java@v1
         with:
+          distribution: '${{ matrix.distribution }}'
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
           
