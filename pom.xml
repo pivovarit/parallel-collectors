@@ -38,7 +38,7 @@
         <assertj.version>3.19.0</assertj.version>
         <awaitility.version>4.1.0</awaitility.version>
         <quickcheck.version>0.9</quickcheck.version>
-        <jmh.version>1.30</jmh.version>
+        <jmh.version>1.31</jmh.version>
         <jmh.generator>default</jmh.generator>
     </properties>
 
