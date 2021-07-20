@@ -195,3 +195,8 @@ It's essential to follow up on the root cause and double-check if parallelism is
 ----
 See [CHANGELOG.MD](https://github.com/pivovarit/parallel-collectors/blob/master/CHANGELOG.MD) for a complete version history.
 
+## Stargazers Over Time
+
+[![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg)](https://starchart.cc/pivovarit/parallel-collectors)
+      
+
