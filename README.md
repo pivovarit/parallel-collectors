@@ -7,6 +7,8 @@
 <a href="https://twitter.com/intent/follow?screen_name=pivovarit">
         <img src="https://img.shields.io/twitter/follow/pivovarit.svg?style=social&logo=twitter"
             alt="follow on Twitter"></a>
+            
+[![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg)](https://starchart.cc/pivovarit/parallel-collectors)
 
 Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by standard Parallel Streams.
 
@@ -194,9 +196,5 @@ It's essential to follow up on the root cause and double-check if parallelism is
 
 ----
 See [CHANGELOG.MD](https://github.com/pivovarit/parallel-collectors/blob/master/CHANGELOG.MD) for a complete version history.
-
-## Stargazers Over Time
-
-[![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg)](https://starchart.cc/pivovarit/parallel-collectors)
       
 
