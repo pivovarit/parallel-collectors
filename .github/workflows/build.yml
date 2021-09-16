@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '8', '11', '16' ]
+        java: [ '8', '11', '17' ]
         architecture: [ 'x64' ]
         distribution: [ 'zulu' ]
     name: Build with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
