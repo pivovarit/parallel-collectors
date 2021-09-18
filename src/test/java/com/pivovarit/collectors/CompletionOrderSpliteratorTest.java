@@ -1,10 +1,7 @@
 package com.pivovarit.collectors;
 
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -12,11 +9,8 @@ import java.util.Optional;
 import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.time.Duration.ofMillis;
@@ -42,7 +36,7 @@ class CompletionOrderSpliteratorTest {
             f2.complete(1);
         });
         List<Integer> results = StreamSupport.stream(
-          new CompletionOrderSpliterator<>(futures.stream()), false)
+            new CompletionOrderSpliterator<>(futures), false)
           .collect(Collectors.toList());
 
         assertThat(results).containsExactly(3, 2, 1);
@@ -63,7 +57,7 @@ class CompletionOrderSpliteratorTest {
             f2.complete(1);
         });
         assertThatThrownBy(() -> StreamSupport.stream(
-          new CompletionOrderSpliterator<>(futures.stream()), false)
+            new CompletionOrderSpliterator<>(futures), false)
           .collect(Collectors.toList()))
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RuntimeException.class);
@@ -83,7 +77,7 @@ class CompletionOrderSpliteratorTest {
         List<CompletableFuture<Integer>> futures = asList(new CompletableFuture<>(), CompletableFuture
           .completedFuture(value));
 
-        Optional<Integer> result = StreamSupport.stream(new CompletionOrderSpliterator<>(futures.stream()), false).findAny();
+        Optional<Integer> result = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).findAny();
 
         assertThat(result).contains(value);
     }
@@ -92,7 +86,7 @@ class CompletionOrderSpliteratorTest {
     void shouldNotConsumeOnEmpty() {
         List<CompletableFuture<Integer>> futures = Collections.emptyList();
 
-        Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures.stream());
+        Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
 
         ResultHolder<Integer> result = new ResultHolder<>();
         boolean consumed = spliterator.tryAdvance(result);
@@ -104,7 +98,7 @@ class CompletionOrderSpliteratorTest {
     @Test
     void shouldRestoreInterrupt() throws InterruptedException {
         Thread executorThread = new Thread(() -> {
-            Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(Stream.of(new CompletableFuture<>()));
+            Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(Arrays.asList(new CompletableFuture<>()));
             try {
                 spliterator.tryAdvance(i -> {});
             } catch (Exception e) {

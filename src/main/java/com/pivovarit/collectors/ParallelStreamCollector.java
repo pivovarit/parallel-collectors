@@ -1,7 +1,9 @@
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -26,7 +28,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<CompletableFuture<R>>, Stream<R>> {
+class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
     private static final EnumSet<Characteristics> UNORDERED = EnumSet.of(Characteristics.UNORDERED);
 
@@ -53,12 +55,12 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
     }
 
     @Override
-    public Supplier<Stream.Builder<CompletableFuture<R>>> supplier() {
-        return Stream::builder;
+    public Supplier<List<CompletableFuture<R>>> supplier() {
+        return ArrayList::new;
     }
 
     @Override
-    public BiConsumer<Stream.Builder<CompletableFuture<R>>, T> accumulator() {
+    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             startConsuming();
             acc.add(dispatcher.enqueue(() -> function.apply(e)));
@@ -66,17 +68,17 @@ class ParallelStreamCollector<T, R> implements Collector<T, Stream.Builder<Compl
     }
 
     @Override
-    public BinaryOperator<Stream.Builder<CompletableFuture<R>>> combiner() {
+    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
             throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
         };
     }
 
     @Override
-    public Function<Stream.Builder<CompletableFuture<R>>, Stream<R>> finisher() {
+    public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
         return acc -> {
             dispatcher.stop();
-            return completionStrategy.apply(acc.build());
+            return completionStrategy.apply(acc);
         };
     }
 
