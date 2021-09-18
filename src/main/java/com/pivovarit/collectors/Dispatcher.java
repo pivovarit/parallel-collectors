@@ -11,6 +11,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -31,7 +32,8 @@ final class Dispatcher<T> {
     private final Executor executor;
     private final Semaphore limiter;
 
-    private volatile boolean started = false;
+    private final AtomicBoolean started = new AtomicBoolean(false);
+
     private volatile boolean shortCircuited = false;
 
     private Dispatcher(Executor executor, int permits) {
@@ -44,22 +46,23 @@ final class Dispatcher<T> {
     }
 
     void start() {
-        started = true;
-        dispatcher.execute(() -> {
-            try {
-                while (true) {
-                    Runnable task;
-                    if ((task = workingQueue.take()) != POISON_PILL) {
-                        limiter.acquire();
-                        executor.execute(withFinally(task, limiter::release));
-                    } else {
-                        break;
+        if (!started.getAndSet(true)) {
+            dispatcher.execute(() -> {
+                try {
+                    while (true) {
+                        Runnable task;
+                        if ((task = workingQueue.take()) != POISON_PILL) {
+                            limiter.acquire();
+                            executor.execute(withFinally(task, limiter::release));
+                        } else {
+                            break;
+                        }
                     }
+                } catch (Throwable e) {
+                    handle(e);
                 }
-            } catch (Throwable e) {
-                handle(e);
-            }
-        });
+            });
+        }
     }
 
     void stop() {
@@ -73,7 +76,7 @@ final class Dispatcher<T> {
     }
 
     boolean isRunning() {
-        return started;
+        return started.get();
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
