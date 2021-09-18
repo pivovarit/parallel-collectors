@@ -1,4 +1,4 @@
-name: build
+name: Build with Sonar
 on:
   push:
     branches:
@@ -7,15 +7,45 @@ on:
       - '**.md'
       - '**.yml'
   pull_request:
-    branches:
-      - master
-
+    types: [opened, synchronize, reopened]
 jobs:
-  build:
+  main-build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Maven packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Build and analyze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B package org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=pivovarit_parallel-collectors
+  jdks:
+    needs: main-build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '8', '11', '17' ]
+        java: [ '11', '17' ]
         architecture: [ 'x64' ]
         distribution: [ 'zulu' ]
     name: Build with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
@@ -27,13 +57,12 @@ jobs:
           distribution: '${{ matrix.distribution }}'
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
-          
+
       - uses: actions/cache@v2.1.6
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
-               
+
       - name: Build with Maven
         run: mvn package
-

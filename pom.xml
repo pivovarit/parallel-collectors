@@ -40,6 +40,8 @@
         <quickcheck.version>0.9</quickcheck.version>
         <jmh.version>1.33</jmh.version>
         <jmh.generator>default</jmh.generator>
+        <sonar.organization>pivovarit</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <build>
