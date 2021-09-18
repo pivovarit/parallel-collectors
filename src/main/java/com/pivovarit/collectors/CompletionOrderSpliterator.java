@@ -1,12 +1,11 @@
 package com.pivovarit.collectors;
 
+import java.util.List;
 import java.util.Spliterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * @author Grzegorz Piwowarek
@@ -17,15 +16,10 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
     private int remaining;
 
-    CompletionOrderSpliterator(Stream<CompletableFuture<T>> futures) {
-        AtomicInteger size = new AtomicInteger();
-        futures.forEach(f -> {
-            f.whenComplete((__, ___) -> completed.add(f));
-            size.incrementAndGet();
-        });
-
-        this.initialSize = size.get();
+    CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
+        this.initialSize = futures.size();
         this.remaining = initialSize;
+        futures.forEach(f -> f.whenComplete((__, ___) -> completed.add(f)));
     }
 
     @Override

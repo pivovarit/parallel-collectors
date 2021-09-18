@@ -1,7 +1,6 @@
 package com.pivovarit.collectors;
 
 import com.pivovarit.collectors.ParallelCollectors.Batching;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
