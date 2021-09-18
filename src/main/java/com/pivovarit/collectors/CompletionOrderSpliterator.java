@@ -5,9 +5,7 @@ import java.util.Spliterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * @author Grzegorz Piwowarek
