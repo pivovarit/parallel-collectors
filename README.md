@@ -3,10 +3,6 @@
  <a href="https://github.com/actions/toolkit"><img alt="GitHub Actions status" src="https://github.com/pivovarit/parallel-collectors/workflows/build/badge.svg"></a>
   <a href="https://pivovarit.github.io/parallel-collectors/"><img alt="GitHub Actions status" src="https://github.com/pivovarit/parallel-collectors/workflows/pitest/badge.svg"></a>
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
-
-<a href="https://twitter.com/intent/follow?screen_name=pivovarit">
-        <img src="https://img.shields.io/twitter/follow/pivovarit.svg?style=social&logo=twitter"
-            alt="follow on Twitter"></a>
             
 [![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg)](https://starchart.cc/pivovarit/parallel-collectors)
 
