@@ -14,15 +14,27 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class BatchingSpliteratorTest {
 
     @Test
+    void shouldSplitInNEvenBatches() {
+        List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
+
+        List<List<Integer>> result = partitioned(list, 3).collect(Collectors.toList());
+
+        assertThat(result)
+            .hasSize(3)
+            .extracting(List::size)
+            .contains(4, 3);
+    }
+
+    @Test
     void shouldSplitInNBatches() {
         List<Integer> list = Stream.generate(() -> 42).limit(10).collect(Collectors.toList());
 
         List<List<Integer>> result = partitioned(list, 2).collect(Collectors.toList());
 
         assertThat(result)
-          .hasSize(2)
-          .extracting(List::size)
-          .containsOnly(5);
+            .hasSize(2)
+            .extracting(List::size)
+            .containsOnly(5);
     }
 
     @Test
