@@ -35,7 +35,7 @@ jobs:
         run: mvn package -Ppitest org.pitest:pitest-maven:mutationCoverage
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3.9.0
+        uses: peaceiris/actions-gh-pages@v3.9.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./target/pit-reports/*/
