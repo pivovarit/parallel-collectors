@@ -37,7 +37,6 @@
         <junit.version>5.9.1</junit.version>
         <assertj.version>3.24.2</assertj.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <quickcheck.version>0.9</quickcheck.version>
         <jmh.version>1.36</jmh.version>
         <jmh.generator>default</jmh.generator>
     </properties>
