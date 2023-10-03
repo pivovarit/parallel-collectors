@@ -1,7 +1,6 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -79,14 +78,14 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     private static <T> CompletableFuture<Stream<T>> combine(List<CompletableFuture<T>> futures) {
-        CompletableFuture<T>[] futuresArray = (CompletableFuture<T>[]) futures.toArray(new CompletableFuture[0]);
-        CompletableFuture<Stream<T>> combined = allOf(futuresArray)
-          .thenApply(__ -> Arrays.stream(futuresArray).map(CompletableFuture::join));
+        var combined = allOf(futures.toArray(CompletableFuture[]::new))
+          .thenApply(__ -> futures.stream().map(CompletableFuture::join));
 
-        for (CompletableFuture<?> f : futuresArray) {
-            f.exceptionally(ex -> {
-                combined.completeExceptionally(ex);
-                return null;
+        for (var future : futures) {
+            future.whenComplete((o, ex) -> {
+                if (ex != null) {
+                    combined.completeExceptionally(ex);
+                }
             });
         }
 
