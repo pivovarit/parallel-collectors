@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '21-ea' ]
+        java: [ '21' ]
         architecture: [ 'x64' ]
     name: Mutation Testing with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
     steps:
@@ -23,7 +23,7 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
-          distribution: 'temurin'
+          distribution: 'oracle'
           
       - uses: actions/cache@v3.3.2
         with:
