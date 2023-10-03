@@ -15,8 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static java.lang.Runtime.getRuntime;
-
 /**
  * @author Grzegorz Piwowarek
  */
@@ -35,6 +33,11 @@ final class Dispatcher<T> {
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     private volatile boolean shortCircuited = false;
+
+    private Dispatcher(int permits) {
+        this.executor = defaultExecutorService();
+        this.limiter = new Semaphore(permits);
+    }
 
     private Dispatcher(Executor executor, int permits) {
         this.executor = executor;
@@ -124,10 +127,6 @@ final class Dispatcher<T> {
         };
     }
 
-    static int getDefaultParallelism() {
-        return Math.max(getRuntime().availableProcessors() - 1, 4);
-    }
-
     private static ThreadPoolExecutor newLazySingleThreadExecutor() {
         return new ThreadPoolExecutor(0, 1,
           0L, TimeUnit.MILLISECONDS,
@@ -141,8 +140,8 @@ final class Dispatcher<T> {
     }
 
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
-        private volatile FutureTask<?> backingTask;
 
+        private volatile FutureTask<?> backingTask;
         private void completedBy(FutureTask<Void> task) {
             backingTask = task;
         }
@@ -154,5 +153,9 @@ final class Dispatcher<T> {
             }
             return super.cancel(mayInterruptIfRunning);
         }
+
+    }
+    private static ExecutorService defaultExecutorService() {
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 }

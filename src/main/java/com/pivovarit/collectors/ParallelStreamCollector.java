@@ -19,7 +19,6 @@ import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static com.pivovarit.collectors.CompletionStrategy.ordered;
 import static com.pivovarit.collectors.CompletionStrategy.unordered;
-import static com.pivovarit.collectors.Dispatcher.getDefaultParallelism;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -85,20 +84,12 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return characteristics;
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor) {
-        return streaming(mapper, executor, getDefaultParallelism());
-    }
-
     static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
         return new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.of(executor, parallelism));
-    }
-
-    static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
-        return streamingOrdered(mapper, executor, getDefaultParallelism());
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor,
