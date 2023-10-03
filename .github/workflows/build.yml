@@ -23,7 +23,7 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: 'oracle'
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
           cache: 'maven'
