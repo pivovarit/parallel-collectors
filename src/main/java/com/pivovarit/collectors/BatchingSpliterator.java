@@ -51,7 +51,7 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
     private static <T> Stream<List<T>> asSingletonListStream(List<T> list) {
         Stream.Builder<List<T>> acc = Stream.builder();
         for (T t : list) {
-            acc.add(Collections.singletonList(t));
+            acc.add(List.of(t));
         }
         return acc.build();
     }
