@@ -8,10 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -21,12 +19,12 @@ import java.util.function.Supplier;
 final class Dispatcher<T> {
 
     private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
+    private static final AtomicInteger DISPATCHER_COUNTER = new AtomicInteger();
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
 
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
 
-    private final ExecutorService dispatcher = newLazySingleThreadExecutor();
     private final Executor executor;
     private final Semaphore limiter;
 
@@ -54,7 +52,7 @@ final class Dispatcher<T> {
 
     void start() {
         if (!started.getAndSet(true)) {
-            dispatcher.execute(() -> {
+            new Thread(() -> {
                 try {
                     while (true) {
                         Runnable task;
@@ -76,7 +74,7 @@ final class Dispatcher<T> {
                 } catch (Throwable e) {
                     handle(e);
                 }
-            });
+            }, "parallel-collectors-dispatcher-" + DISPATCHER_COUNTER.getAndIncrement()).start();
         }
     }
 
@@ -85,8 +83,6 @@ final class Dispatcher<T> {
             workingQueue.put(POISON_PILL);
         } catch (InterruptedException e) {
             completionSignaller.completeExceptionally(e);
-        } finally {
-            dispatcher.shutdown();
         }
     }
 
@@ -118,7 +114,6 @@ final class Dispatcher<T> {
     private void handle(Throwable e) {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
-        dispatcher.shutdownNow();
     }
 
     private static Function<Throwable, Void> shortcircuit(InterruptibleCompletableFuture<?> future) {
@@ -129,19 +124,10 @@ final class Dispatcher<T> {
         };
     }
 
-    private static ThreadPoolExecutor newLazySingleThreadExecutor() {
-        return new ThreadPoolExecutor(1, 1,
-          0L, TimeUnit.MILLISECONDS,
-          new SynchronousQueue<>(), // dispatcher always executes a single task
-          Thread.ofPlatform()
-            .name("parallel-collectors-dispatcher-", 0)
-            .daemon(false)
-            .factory());
-    }
-
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
 
         private volatile FutureTask<?> backingTask;
+
         private void completedBy(FutureTask<Void> task) {
             backingTask = task;
         }
@@ -153,8 +139,8 @@ final class Dispatcher<T> {
             }
             return super.cancel(mayInterruptIfRunning);
         }
-
     }
+
     private static ExecutorService defaultExecutorService() {
         return Executors.newVirtualThreadPerTaskExecutor();
     }
