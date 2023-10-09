@@ -44,8 +44,12 @@ final class Dispatcher<T> {
         this.limiter = new Semaphore(permits);
     }
 
-    static <T> Dispatcher<T> of(Executor executor, int permits) {
+    static <T> Dispatcher<T> from(Executor executor, int permits) {
         return new Dispatcher<>(executor, permits);
+    }
+
+    static <T> Dispatcher<T> virtual(int permits) {
+        return new Dispatcher<>(permits);
     }
 
     void start() {
@@ -55,8 +59,17 @@ final class Dispatcher<T> {
                     while (true) {
                         Runnable task;
                         if ((task = workingQueue.take()) != POISON_PILL) {
-                            limiter.acquire();
-                            executor.execute(withFinally(task, limiter::release));
+                            executor.execute(() -> {
+                                try {
+                                    limiter.acquire();
+                                    task.run();
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    throw new RuntimeException(e);
+                                } finally {
+                                    limiter.release();
+                                }
+                            });
                         } else {
                             break;
                         }
@@ -117,20 +130,10 @@ final class Dispatcher<T> {
         };
     }
 
-    private static Runnable withFinally(Runnable task, Runnable finisher) {
-        return () -> {
-            try {
-                task.run();
-            } finally {
-                finisher.run();
-            }
-        };
-    }
-
     private static ThreadPoolExecutor newLazySingleThreadExecutor() {
-        return new ThreadPoolExecutor(0, 1,
+        return new ThreadPoolExecutor(1, 1,
           0L, TimeUnit.MILLISECONDS,
-          new LinkedBlockingQueue<>(),
+          new SynchronousQueue<>(), // dispatcher always executes a single task
           Thread.ofPlatform()
             .name("parallel-collectors-dispatcher-", 0)
             .daemon(false)
