@@ -322,7 +322,7 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> DynamicTest shouldShortCircuitOnException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should short circuit on exception", name), () -> {
-            List<Integer> elements = IntStream.range(0, 100).boxed().collect(toList());
+            List<Integer> elements = IntStream.range(0, 100).boxed().toList();
             int size = 4;
 
             runWithExecutor(e -> {
@@ -340,7 +340,7 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> DynamicTest shouldHandleThrowable(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should not swallow exception", name), () -> {
-            List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
+            List<Integer> elements = IntStream.range(0, 10).boxed().toList();
 
             runWithExecutor(e -> {
                 assertThatThrownBy(elements.stream()
@@ -360,7 +360,7 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> DynamicTest shouldHandleRejectedExecutionException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should propagate rejected execution exception", name), () -> {
             Executor executor = command -> { throw new RejectedExecutionException(); };
-            List<Integer> elements = IntStream.range(0, 1000).boxed().collect(toList());
+            List<Integer> elements = IntStream.range(0, 1000).boxed().toList();
 
             assertThatThrownBy(() -> elements.stream()
               .collect(collector.apply(i -> returnWithDelay(i, ofMillis(10000)), executor, PARALLELISM))
