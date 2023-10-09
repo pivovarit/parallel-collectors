@@ -130,13 +130,11 @@ final class Dispatcher<T> {
     private static ThreadPoolExecutor newLazySingleThreadExecutor() {
         return new ThreadPoolExecutor(0, 1,
           0L, TimeUnit.MILLISECONDS,
-          new SynchronousQueue<>(),
-          task -> {
-              Thread thread = Executors.defaultThreadFactory().newThread(task);
-              thread.setName("parallel-collector-" + thread.getName());
-              thread.setDaemon(false);
-              return thread;
-          });
+          new LinkedBlockingQueue<>(),
+          Thread.ofPlatform()
+            .name("parallel-collectors-dispatcher-", 0)
+            .daemon(false)
+            .factory());
     }
 
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
