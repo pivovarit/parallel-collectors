@@ -64,9 +64,7 @@ final class Dispatcher<T> {
                                     limiter.acquire();
                                     task.run();
                                 } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
                                     handle(e);
-                                    throw new RuntimeException(e);
                                 } finally {
                                     limiter.release();
                                 }
