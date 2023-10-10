@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -35,9 +36,7 @@ class CompletionOrderSpliteratorTest {
             sleep(100);
             f2.complete(1);
         });
-        List<Integer> results = StreamSupport.stream(
-            new CompletionOrderSpliterator<>(futures), false)
-          .collect(Collectors.toList());
+        var results = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList();
 
         assertThat(results).containsExactly(3, 2, 1);
     }
@@ -56,9 +55,7 @@ class CompletionOrderSpliteratorTest {
             sleep(100);
             f2.complete(1);
         });
-        assertThatThrownBy(() -> StreamSupport.stream(
-            new CompletionOrderSpliterator<>(futures), false)
-          .collect(Collectors.toList()))
+        assertThatThrownBy(() -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RuntimeException.class);
     }
@@ -96,26 +93,23 @@ class CompletionOrderSpliteratorTest {
     }
 
     @Test
-    void shouldRestoreInterrupt() throws InterruptedException {
+    void shouldRestoreInterrupt() {
         Thread executorThread = new Thread(() -> {
             Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(Arrays.asList(new CompletableFuture<>()));
             try {
                 spliterator.tryAdvance(i -> {});
             } catch (Exception e) {
                 while (true) {
-
+                    Thread.onSpinWait();
                 }
             }
         });
 
         executorThread.start();
 
-        Thread.sleep(100);
-
         executorThread.interrupt();
 
         await()
-          .pollDelay(ofMillis(100))
           .until(executorThread::isInterrupted);
     }
 
