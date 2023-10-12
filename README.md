@@ -148,7 +148,7 @@ For example:
 
     List<String> result = list.parallelStream()
       .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
-      .collect(Collectors.toList());
+      .toList();
 
 In order to avoid such problems, **the solution is to isolate blocking tasks** and run them on a separate thread pool... but there's a catch.
 

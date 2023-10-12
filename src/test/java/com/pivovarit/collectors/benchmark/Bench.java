@@ -42,7 +42,7 @@ public class Bench {
 
     private static final List<Integer> source = IntStream.range(0, 1000)
       .boxed()
-      .collect(toList());
+      .toList();
 
     @Benchmark
     public List<Integer> parallel_collect(BenchmarkState state) {
@@ -62,14 +62,14 @@ public class Bench {
     public List<Integer> parallel_streaming(BenchmarkState state) {
         return source.stream()
           .collect(ParallelCollectors.parallelToStream(i -> i, state.executor, state.parallelism))
-          .collect(toList());
+          .toList();
     }
 
     @Benchmark
     public List<Integer> parallel_batch_streaming_collect(BenchmarkState state) {
         return source.stream()
           .collect(ParallelCollectors.Batching.parallelToStream(i -> i, state.executor, state.parallelism))
-          .collect(toList());
+          .toList();
     }
 
     public static void main(String[] args) throws RunnerException {
