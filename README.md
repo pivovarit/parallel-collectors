@@ -1,7 +1,7 @@
 # Java Stream API Parallel Collectors - overcoming limitations of standard Parallel Streams
 
- <a href="https://github.com/actions/toolkit"><img alt="GitHub Actions status" src="https://github.com/pivovarit/parallel-collectors/workflows/build/badge.svg"></a>
-  <a href="https://pivovarit.github.io/parallel-collectors/"><img alt="GitHub Actions status" src="https://github.com/pivovarit/parallel-collectors/workflows/pitest/badge.svg"></a>
+[![build](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml)
+[![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=master)](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
             
 [![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg)](https://starchart.cc/pivovarit/parallel-collectors)
