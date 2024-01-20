@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public final class TestUtils {
@@ -36,14 +36,12 @@ public final class TestUtils {
         return value;
     }
 
-    public static Integer incrementAndThrow(LongAdder counter) {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            // ignore purposefully
+    public static Integer incrementAndThrow(AtomicInteger counter) {
+        if (counter.incrementAndGet() == 10) {
+            throw new IllegalArgumentException();
         }
-        counter.increment();
-        throw new IllegalArgumentException();
+
+        return counter.intValue();
     }
 
     public static void runWithExecutor(Consumer<Executor> consumer, int size) {

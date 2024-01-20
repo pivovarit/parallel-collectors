@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -83,6 +84,12 @@ final class AsyncParallelCollector<T, R, C>
         return combined;
     }
 
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper) {
+        requireNonNull(mapper, "mapper can't be null");
+
+        return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(), Function.identity());
+    }
+
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
@@ -91,6 +98,13 @@ final class AsyncParallelCollector<T, R, C>
         return parallelism == 1
           ? asyncCollector(mapper, executor, i -> i)
           : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), Function.identity());
+    }
+
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper) {
+        requireNonNull(collector, "collector can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+
+        return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(),s -> s.collect(collector));
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {

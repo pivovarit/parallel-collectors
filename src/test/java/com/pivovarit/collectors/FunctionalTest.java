@@ -7,7 +7,6 @@ import org.junit.jupiter.api.TestFactory;
 
 import java.time.Duration;
 import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -64,6 +63,12 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> collectors() {
         return of(
+          // virtual threads
+          virtualThreadsTests((m, e, p) -> parallel(m, toList()), "ParallelCollectors.parallel(toList()) [virtual]", true),
+          virtualThreadsTests((m, e, p) -> parallel(m, toSet()), "ParallelCollectors.parallel(toSet()) [virtual]", false),
+          virtualThreadsTests((m, e, p) -> parallel(m, toCollection(LinkedList::new)), "ParallelCollectors.parallel(toCollection()) [virtual]", true),
+          virtualThreadsTests((m, e, p) -> adapt(parallel(m)), "ParallelCollectors.parallel() [virtual]", true),
+          // platform threads
           tests((m, e, p) -> parallel(m, toList(), e, p), format("ParallelCollectors.parallel(toList(), p=%d)", PARALLELISM), true),
           tests((m, e, p) -> parallel(m, toSet(), e, p), format("ParallelCollectors.parallel(toSet(), p=%d)", PARALLELISM), false),
           tests((m, e, p) -> parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.parallel(toCollection(), p=%d)", PARALLELISM), true),
@@ -84,6 +89,10 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> streaming_collectors() {
         return of(
+          // virtual threads
+          virtualThreadsStreamingTests((m, e, p) -> adaptAsync(parallelToStream(m)), "ParallelCollectors.parallelToStream() [virtual]", false),
+          virtualThreadsStreamingTests((m, e, p) -> adaptAsync(parallelToOrderedStream(m)), "ParallelCollectors.parallelToOrderedStream() [virtual]", true),
+          // platform threads
           streamingTests((m, e, p) -> adaptAsync(parallelToStream(m, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM), false),
           streamingTests((m, e, p) -> adaptAsync(parallelToOrderedStream(m, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(i -> i);
@@ -92,6 +101,10 @@ class FunctionalTest {
     @TestFactory
     Stream<DynamicTest> streaming_batching_collectors() {
         return of(
+          // virtual threads
+          batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), "ParallelCollectors.Batching.parallelToStream() [virtual]", false),
+          batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), "ParallelCollectors.Batching.parallelToOrderedStream(p=%d) [virtual]", true),
+          // platform threads
           batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToStream(m, e, p)), format("ParallelCollectors.Batching.parallelToStream(p=%d)", PARALLELISM), false),
           batchStreamingTests((m, e, p) -> adaptAsync(Batching.parallelToOrderedStream(m, e, p)), format("ParallelCollectors.Batching.parallelToOrderedStream(p=%d)", PARALLELISM), true)
         ).flatMap(i -> i);
@@ -150,6 +163,26 @@ class FunctionalTest {
         }
     }
 
+    private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
+        var tests = of(
+          shouldCollect(collector, name, 1),
+          shouldCollect(collector, name, PARALLELISM),
+          shouldCollectNElementsWithNParallelism(collector, name, 1),
+          shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
+          shouldCollectToEmpty(collector, name),
+          shouldStartConsumingImmediately(collector, name),
+          shouldNotBlockTheCallingThread(collector, name),
+          shouldHandleThrowable(collector, name),
+          shouldShortCircuitOnException(collector, name),
+          shouldInterruptOnException(collector, name),
+          shouldRemainConsistent(collector, name)
+        );
+
+        return maintainsOrder
+          ? Stream.concat(tests, of(shouldMaintainOrder(collector, name)))
+          : tests;
+    }
+
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
           shouldCollect(collector, name, 1),
@@ -167,6 +200,23 @@ class FunctionalTest {
           shouldRemainConsistent(collector, name),
           shouldRejectInvalidParallelism(collector, name),
           shouldHandleExecutorRejection(collector, name)
+        );
+
+        return maintainsOrder
+          ? Stream.concat(tests, of(shouldMaintainOrder(collector, name)))
+          : tests;
+    }
+
+    private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
+        var tests = of(
+          shouldCollect(collector, name, 1),
+          shouldCollect(collector, name, PARALLELISM),
+          shouldCollectToEmpty(collector, name),
+          shouldStartConsumingImmediately(collector, name),
+          shouldNotBlockTheCallingThread(collector, name),
+          shouldHandleThrowable(collector, name),
+          shouldShortCircuitOnException(collector, name),
+          shouldRemainConsistent(collector, name)
         );
 
         return maintainsOrder
@@ -306,7 +356,7 @@ class FunctionalTest {
             int size = 4;
 
             runWithExecutor(e -> {
-                LongAdder counter = new LongAdder();
+                AtomicInteger counter = new AtomicInteger();
 
                 assertThatThrownBy(elements.stream()
                   .collect(collector.apply(i -> incrementAndThrow(counter), e, PARALLELISM))::join)

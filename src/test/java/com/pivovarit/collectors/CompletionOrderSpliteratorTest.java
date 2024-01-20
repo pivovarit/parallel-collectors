@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -11,10 +10,8 @@ import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
