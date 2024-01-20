@@ -17,9 +17,9 @@ final class Dispatcher<T> {
     private final Executor executor;
     private final Semaphore limiter;
 
-    private Dispatcher(int permits) {
+    private Dispatcher() {
         this.executor = Executors.newVirtualThreadPerTaskExecutor();
-        this.limiter = new Semaphore(permits);
+        this.limiter = null;
     }
 
     private Dispatcher(Executor executor, int permits) {
@@ -31,8 +31,8 @@ final class Dispatcher<T> {
         return new Dispatcher<>(executor, permits);
     }
 
-    static <T> Dispatcher<T> virtual(int permits) {
-        return new Dispatcher<>(permits);
+    static <T> Dispatcher<T> virtual() {
+        return new Dispatcher<>();
     }
 
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
@@ -51,7 +51,11 @@ final class Dispatcher<T> {
         FutureTask<T> task = new FutureTask<>(() -> {
             if (!completionSignaller.isCompletedExceptionally()) {
                 try {
-                    withLimiter(supplier, future);
+                    if (limiter == null) {
+                        future.complete(supplier.get());
+                    } else {
+                        withLimiter(supplier, future);
+                    }
                 } catch (Throwable e) {
                     completionSignaller.completeExceptionally(e);
                 }

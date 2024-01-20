@@ -78,12 +78,24 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return characteristics;
     }
 
+    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper) {
+        requireNonNull(mapper, "mapper can't be null");
+
+        return new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.virtual());
+    }
+
     static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
         return new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.from(executor, parallelism));
+    }
+
+    static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper) {
+        requireNonNull(mapper, "mapper can't be null");
+
+        return new ParallelStreamCollector<>(mapper, ordered(), emptySet(), Dispatcher.virtual());
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor,
