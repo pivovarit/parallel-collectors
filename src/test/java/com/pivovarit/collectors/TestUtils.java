@@ -36,8 +36,8 @@ public final class TestUtils {
         return value;
     }
 
-    public static Integer incrementAndThrow(AtomicInteger counter) {
-        if (counter.incrementAndGet() == 10) {
+    public synchronized static Integer incrementAndThrow(AtomicInteger counter) {
+        if (counter.incrementAndGet() >= 10) {
             throw new IllegalArgumentException();
         }
 
