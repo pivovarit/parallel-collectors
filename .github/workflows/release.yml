@@ -1,6 +1,10 @@
-name: build
+name: release
 on:
   workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Version to release'
+        required: true
 
 jobs:
   build:
@@ -27,4 +31,3 @@ jobs:
 
       - name: Release with Maven
         run: mvn -DskipTests deploy
-
