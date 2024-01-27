@@ -162,7 +162,6 @@ class FunctionalTest {
           shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
-          shouldTerminateAfterConsumingAllElements(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldHandleThrowable(collector, name),
@@ -184,7 +183,6 @@ class FunctionalTest {
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
-          shouldTerminateAfterConsumingAllElements(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldHandleThrowable(collector, name),
@@ -283,30 +281,6 @@ class FunctionalTest {
               .join();
 
             assertThat(result).hasSameElementsAs(elements);
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldTerminateAfterConsumingAllElements(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name) {
-        return dynamicTest(format("%s: should terminate after consuming all elements", name), () -> {
-            List<Integer> elements = IntStream.range(0, 10).boxed().collect(toList());
-            Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, executor, 10);
-            Collection<Integer> result = elements.stream().collect(ctor)
-              .join();
-
-            assertThat(result).hasSameElementsAs(elements);
-
-            if (ctor instanceof AsyncParallelCollector) {
-                Field dispatcherField = AsyncParallelCollector.class.getDeclaredField("dispatcher");
-                dispatcherField.setAccessible(true);
-                Dispatcher<?> dispatcher = (Dispatcher<?>) dispatcherField.get(ctor);
-                Field innerDispatcherField = Dispatcher.class.getDeclaredField("dispatcher");
-                innerDispatcherField.setAccessible(true);
-                ExecutorService executor = (ExecutorService) innerDispatcherField.get(dispatcher);
-
-                await()
-                  .atMost(Duration.ofSeconds(2))
-                  .until(executor::isTerminated);
-            }
         });
     }
 

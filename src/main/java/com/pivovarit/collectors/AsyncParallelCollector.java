@@ -57,21 +57,12 @@ final class AsyncParallelCollector<T, R, C>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
-            if (!dispatcher.isRunning()) {
-                dispatcher.start();
-            }
-            acc.add(dispatcher.enqueue(() -> mapper.apply(e)));
-        };
+        return (acc, e) -> acc.add(dispatcher.enqueue(() -> mapper.apply(e)));
     }
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        return futures -> {
-            dispatcher.stop();
-
-            return combine(futures).thenApply(processor);
-        };
+        return futures -> combine(futures).thenApply(processor);
     }
 
     @Override
@@ -105,7 +96,7 @@ final class AsyncParallelCollector<T, R, C>
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, i -> i)
-          : new AsyncParallelCollector<>(mapper, Dispatcher.of(executor, parallelism), t -> t);
+          : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), t -> t);
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
@@ -120,7 +111,7 @@ final class AsyncParallelCollector<T, R, C>
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, s -> s.collect(collector))
-          : new AsyncParallelCollector<>(mapper, Dispatcher.of(executor, parallelism), s -> s.collect(collector));
+          : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), s -> s.collect(collector));
     }
 
     static void requireValidParallelism(int parallelism) {
@@ -176,13 +167,13 @@ final class AsyncParallelCollector<T, R, C>
                       return list.stream()
                         .collect(new AsyncParallelCollector<>(
                           mapper,
-                          Dispatcher.of(executor, parallelism),
+                          Dispatcher.from(executor, parallelism),
                           finisher));
                   } else {
                       return partitioned(list, parallelism)
                         .collect(new AsyncParallelCollector<>(
                           batching(mapper),
-                          Dispatcher.of(executor, parallelism),
+                          Dispatcher.from(executor, parallelism),
                           listStream -> finisher.apply(listStream.flatMap(Collection::stream))));
                   }
               });

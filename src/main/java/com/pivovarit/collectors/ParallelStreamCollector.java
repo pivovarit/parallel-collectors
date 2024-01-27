@@ -58,10 +58,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
-            dispatcher.start();
-            acc.add(dispatcher.enqueue(() -> function.apply(e)));
-        };
+        return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
     }
 
     @Override
@@ -74,10 +71,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     @Override
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
-        return acc -> {
-            dispatcher.stop();
-            return completionStrategy.apply(acc);
-        };
+        return completionStrategy;
     }
 
     @Override
@@ -94,7 +88,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.of(executor, parallelism));
+        return new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.from(executor, parallelism));
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor) {
@@ -107,7 +101,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return new ParallelStreamCollector<>(mapper, ordered(), emptySet(), Dispatcher.of(executor, parallelism));
+        return new ParallelStreamCollector<>(mapper, ordered(), emptySet(), Dispatcher.from(executor, parallelism));
     }
 
     static final class BatchingCollectors {
@@ -149,7 +143,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
                                 mapper,
                                 ordered(),
                                 emptySet(),
-                                Dispatcher.of(executor, parallelism)));
+                                Dispatcher.from(executor, parallelism)));
                     }
                     else {
                         return partitioned(list, parallelism)
@@ -157,7 +151,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
                                     batching(mapper),
                                     ordered(),
                                     emptySet(),
-                                    Dispatcher.of(executor, parallelism)),
+                                    Dispatcher.from(executor, parallelism)),
                                 s -> s.flatMap(Collection::stream)));
                     }
                 });
