@@ -37,4 +37,4 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Release with Maven
-        run: mvn -DskipTests deploy
+        run: mvn --batch-mode --no-transfer-progress -DskipTests deploy
