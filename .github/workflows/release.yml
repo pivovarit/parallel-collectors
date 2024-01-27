@@ -13,6 +13,7 @@ jobs:
       matrix:
         java: [ '21' ]
         architecture: [ 'x64' ]
+        
     name: Build with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
     steps:
       - uses: actions/checkout@v4
