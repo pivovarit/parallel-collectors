@@ -117,7 +117,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.1.0</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -156,7 +155,7 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <serverId>ossrh</serverId>
+                            <serverId>oss.sonatype.org</serverId>
                             <nexusUrl>https://oss.sonatype.org</nexusUrl>
                         </configuration>
                     </plugin>
