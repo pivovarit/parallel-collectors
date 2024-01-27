@@ -1,5 +1,9 @@
 # Version History
 
+### [2.6.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.6.0) (27-01-2023)
+- `Dispatcher` no longer relies on its own thread to dispatch tasks, but uses caller thread
+- default parallelism can't be smaller than 4
+
 ### [2.5.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.5.0) (11-02-2021)
 - fixed a bug causing lack of eager consumption of items when processed using streaming collectors
 - optimized batching logic when collection size is equal to parallelism
