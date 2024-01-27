@@ -26,7 +26,7 @@ jobs:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
           cache: 'maven'
-          server-id: ossrh
+          server-id: oss.sonatype.org
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
@@ -34,7 +34,7 @@ jobs:
 
 
       - name: Release with Maven
-        run: mvn --batch-mode --no-transfer-progress -DskipTests deploy
+        run: mvn -B deploy --no-transfer-progress -P central-deploy -DskipTests=true
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
