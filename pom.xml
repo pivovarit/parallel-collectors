@@ -93,6 +93,25 @@
                 <extensions>true</extensions>
             </plugin>
 
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>deploy-to-sonatype</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                            <goal>release</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org</nexusUrl>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -110,59 +129,6 @@
     </developers>
 
     <profiles>
-        <profile>
-            <id>central-deploy</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.1.0</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                                <configuration>
-                                    <gpgArguments>
-                                        <arg>--pinentry-mode</arg>
-                                        <arg>loopback</arg>
-                                    </gpgArguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>deploy-to-sonatype</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>deploy</goal>
-                                    <goal>release</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org</nexusUrl>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <profile>
             <id>pitest</id>
             <build>
