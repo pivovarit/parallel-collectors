@@ -34,7 +34,7 @@ jobs:
 
 
       - name: Release with Maven
-        run: mvn -B deploy --no-transfer-progress -P central-deploy -DskipTests=true
+        run: mvn -B deploy --no-transfer-progress -P sonatype-oss-release -DskipTests=true
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
