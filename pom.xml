@@ -156,7 +156,7 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <serverId>oss.sonatype.org</serverId>
+                            <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org</nexusUrl>
                         </configuration>
                     </plugin>

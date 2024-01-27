@@ -30,4 +30,4 @@ jobs:
           gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Release with Maven
-        run: mvn --batch-mode --no-transfer-progress -DskipTests deploy
+        run: mvn --batch-mode --no-transfer-progress -DskipTests deploy -Pcentral-deploy
