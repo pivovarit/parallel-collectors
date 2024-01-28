@@ -13,14 +13,12 @@ import static java.util.stream.Collectors.toList;
 final class FutureCollectors {
     static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
         return Collectors.collectingAndThen(toList(), list -> {
-            CompletableFuture<R> future = CompletableFuture
-              .allOf(list.toArray(new CompletableFuture[0]))
+            var future = CompletableFuture.allOf(list.toArray(CompletableFuture[]::new))
               .thenApply(__ -> list.stream()
                 .map(CompletableFuture::join)
                 .collect(collector));
 
-            // CompletableFuture#allOf doesn't shortcircuit on exception so that requires manual handling
-            for (CompletableFuture<T> f : list) {
+            for (var f : list) {
                 f.whenComplete((t, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);
