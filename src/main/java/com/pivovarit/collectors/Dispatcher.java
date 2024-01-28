@@ -54,7 +54,12 @@ final class Dispatcher<T> {
                     if (limiter == null) {
                         future.complete(supplier.get());
                     } else {
-                        withLimiter(supplier, future);
+                        try {
+                            limiter.acquire();
+                            future.complete(supplier.get());
+                        } finally {
+                            limiter.release();
+                        }
                     }
                 } catch (Throwable e) {
                     completionSignaller.completeExceptionally(e);
@@ -63,15 +68,6 @@ final class Dispatcher<T> {
         }, null);
         future.completedBy(task);
         return task;
-    }
-
-    private void withLimiter(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) throws InterruptedException {
-        try {
-            limiter.acquire();
-            future.complete(supplier.get());
-        } finally {
-            limiter.release();
-        }
     }
 
     private static <T> BiConsumer<T, Throwable> shortcircuit(InterruptibleCompletableFuture<?> future) {
