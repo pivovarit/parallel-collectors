@@ -1,4 +1,4 @@
-# Java Stream API Parallel Collectors - overcoming limitations of standard Parallel Streams
+# Java Stream API Virtual-Threads-enabled Parallel Collectors - overcoming limitations of standard Parallel Streams
 
 [![build](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml)
 [![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=master)](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml)
@@ -9,40 +9,57 @@
 Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by standard Parallel Streams.
 
     list.stream()
-      .collect(parallel(i -> foo(i), toList(), executor, parallelism))
+      .collect(parallel(i -> blockingOp(i), toList()))
         .orTimeout(1000, MILLISECONDS)
-        .thenAcceptAsync(System.out::println, otherExecutor)
+        .thenAcceptAsync(System.out::println, executor)
         .thenRun(() -> System.out.println("Finished!"));
       
 They are:
-- lightweight (yes, you could achieve the same with Project Reactor, but that's often a hammer way too big for the job)
-- powerful (combined power of `Stream` API and `CompletableFuture`s allows to specify timeouts, compose with other `CompletableFuture`s, or just perform the whole processing asynchronously)
-- configurable (it's possible to provide your own `Executor`, `parallelism`)
-- non-blocking (no need to block the calling thread while waiting for the result to arrive)
+- lightweight, defaulting to Virtual Threads (an alternative to Project Reactor for scenarios where a lighter solution is preferred)
+- powerful (the combined power of Stream API and `CompletableFuture`s, allowing for timeout specification, composition with other `CompletableFuture`s, and asynchronous processing)
+- configurable (flexibility with customizable `Executor`s and _parallelism_ levels)
+- non-blocking (eliminates the need to block the calling thread while awaiting results)
 - short-circuiting (if one of the operations raises an exception, remaining tasks will get interrupted)  
-- non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies)
-- versatile (missing an API for your use case? process the resulting Stream with the whole generosity of Stream API by reusing already available `Collectors`)
+- non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies, no Stream API internals hacking)
+- versatile (enables easy integration with existing Stream API `Collectors`)
 
 ### Maven Dependencies
+
+#### JDK 21+:
 
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>2.5.0</version>
+        <version>3.0.0</version>
+    </dependency>
+
+#### JDK 8+:
+
+    <dependency>
+        <groupId>com.pivovarit</groupId>
+        <artifactId>parallel-collectors</artifactId>
+        <version>2.6.0</version>
     </dependency>
 
 ##### Gradle
 
-    compile 'com.pivovarit:parallel-collectors:2.5.0'
+#### JDK 21+:
+
+    compile 'com.pivovarit:parallel-collectors:3.0.0'`
+
+#### JDK 8+:
+
+    compile 'com.pivovarit:parallel-collectors:2.6.0'`
 
 ## Philosophy
 
-Parallel Collectors are unopinionated by design, so it's up to their users to use them responsibly, which involves things like:
-- proper configuration of a provided `Executor` and its lifecycle management
-- choosing the appropriate parallelism level
-- making sure that the tool is applied in the right context
+Parallel Collectors are intentionally unopinionated, leaving responsibility to users for:
 
-Make sure to read API documentation before using these in production.
+- Proper configuration of provided `Executor`s and their lifecycle management
+- Choosing appropriate parallelism levels
+- Ensuring the tool is applied in the right context
+
+Review the API documentation before deploying in production.
 
 ## Basic API
 
@@ -54,9 +71,14 @@ All parallel collectors are one-off and must not be reused.
 
 ### Available Collectors:
 
--  `CompletableFuture<Collection<T>> parallel(Function, Collector, Executor, parallelism)`
--  `CompletableFuture<Stream<T>> parallel(Function, Executor, parallelism)`
 
+-  `CompletableFuture<Stream<T>> parallel(Function)` (uses Virtual Threads)
+-  `CompletableFuture<Collection<T>> parallel(Function, Collector)` (uses Virtual Threads)
+-  `CompletableFuture<Stream<T>> parallel(Function, Executor, parallelism)`
+-  `CompletableFuture<Collection<T>> parallel(Function, Collector, Executor, parallelism)`
+
+-  `Stream<T> parallelToStream(Function)` (uses Virtual Threads)
+-  `Stream<T> parallelToOrderedStream(Function)` (uses Virtual Threads)
 -  `Stream<T> parallelToStream(Function, Executor, parallelism)`
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
@@ -154,7 +176,7 @@ In order to avoid such problems, **the solution is to isolate blocking tasks** a
 
 **Sadly, Streams can only run parallel computations on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
 
-However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's not considered reliable:
+However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's not considered reliable (and can still induce oversubscription issues while competing with the common pool for resources)
 
 > Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
 
@@ -168,10 +190,10 @@ None - the library is implemented using core Java libraries.
 
 ### Limitations
 
-Upstream `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
-This means that none of these should be used for working with infinite streams.
+- Upstream `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
+This means that none of these should be used for working with infinite streams. This limitation is imposed by the design of the `Collector` API.
 
-This limitation is imposed by the design of the `Collector` API.
+- Never use Parallel Collectors with `Executor`s with `RejectedExecutionHandler` that discards tasks - this might result in a deadlock.
 
 ### Good Practices
 
@@ -184,13 +206,9 @@ This limitation is imposed by the design of the `Collector` API.
 
 ## Words of Caution
 
-Even if this tool makes it easy to parallelize things, it doesn't always mean that you should. **Parallelism comes with a price that can be often higher than not using it at all.** Threads are expensive to create, maintain and switch between, and you can only create a limited number of them.
+While Parallel Collectors and Virtual Threads make parallelization easy, it doesn't always mean it's the best choice. Platform threads are resource-intensive, and parallelism comes with a cost. 
 
-It's essential to follow up on the root cause and double-check if parallelism is the way to go.
-
-**It often turns out that the root cause can be addressed by using a simple JOIN statement, batching, reorganizing your data... or even just by choosing a different API method.**
+Before opting for parallel processing, consider addressing the root cause through alternatives like DB-level JOIN statements, batching, data reorganization, or... simply selecting a more suitable API method.
 
 ----
 See [CHANGELOG.MD](https://github.com/pivovarit/parallel-collectors/blob/master/CHANGELOG.MD) for a complete version history.
-      
-
