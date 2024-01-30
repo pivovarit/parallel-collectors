@@ -179,7 +179,7 @@ public final class ParallelCollectors {
     }
 
     /**
-     * A convenience {@link Collector} used for executing parallel computations on a custom {@link Executor}
+     * A convenience {@link Collector} used for executing parallel computations using Virtual Threads
      * and returning a {@link Stream} instance returning results as they arrive while maintaining the initial order.
      * <p>
      * For the parallelism of 1, the stream is executed by the calling thread.
