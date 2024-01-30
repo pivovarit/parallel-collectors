@@ -14,7 +14,7 @@ jobs:
         java: [ '21' ]
         architecture: [ 'x64' ]
         
-    name: Build with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
+    name: Release ${{ github.event.inputs.release-tag }}
     steps:
       - uses: actions/checkout@v4
         with:
