@@ -4,7 +4,8 @@
 [![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=master)](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.pivovarit/parallel-collectors)
             
-[![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg)](https://starchart.cc/pivovarit/parallel-collectors)
+[![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg?variant=adaptive)](https://starchart.cc/pivovarit/parallel-collectors)
+
 
 Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by standard Parallel Streams.
 
