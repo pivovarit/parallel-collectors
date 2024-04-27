@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -39,15 +40,31 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     private final Dispatcher<R> dispatcher;
 
+    private final Semaphore limiter;
+
     private ParallelStreamCollector(
-        Function<T, R> function,
-        CompletionStrategy<R> completionStrategy,
-        Set<Characteristics> characteristics,
-        Dispatcher<R> dispatcher) {
+      Function<T, R> function,
+      CompletionStrategy<R> completionStrategy,
+      Set<Characteristics> characteristics,
+      Dispatcher<R> dispatcher) {
         this.completionStrategy = completionStrategy;
         this.characteristics = characteristics;
         this.dispatcher = dispatcher;
         this.function = function;
+        this.limiter = null;
+    }
+
+    private ParallelStreamCollector(
+      Function<T, R> function,
+      CompletionStrategy<R> completionStrategy,
+      Set<Characteristics> characteristics,
+      Dispatcher<R> dispatcher,
+      int maxParallelism) {
+        this.completionStrategy = completionStrategy;
+        this.characteristics = characteristics;
+        this.dispatcher = dispatcher;
+        this.function = function;
+        this.limiter = new Semaphore(maxParallelism);
     }
 
     @Override
@@ -57,14 +74,30 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
+        return limiter == null
+          ? (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)))
+          : (acc, e) -> {
+            try {
+                limiter.acquire();
+                acc.add(dispatcher.enqueue(() -> {
+                    try {
+                        return function.apply(e);
+                    } finally {
+                        limiter.release();
+                    }
+                }));
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(ex);
+            }
+        };
     }
 
     @Override
     public BinaryOperator<List<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
             throw new UnsupportedOperationException(
-                "Using parallel stream with parallel collectors is a bad idea");
+              "Using parallel stream with parallel collectors is a bad idea");
         };
     }
 
@@ -89,7 +122,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.from(executor, parallelism));
+        return new ParallelStreamCollector<>(mapper, unordered(), UNORDERED, Dispatcher.from(executor), parallelism);
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper) {
@@ -99,12 +132,12 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     }
 
     static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor,
-        int parallelism) {
+                                                              int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
 
-        return new ParallelStreamCollector<>(mapper, ordered(), emptySet(), Dispatcher.from(executor, parallelism));
+        return new ParallelStreamCollector<>(mapper, ordered(), emptySet(), Dispatcher.from(executor), parallelism);
     }
 
     static final class BatchingCollectors {
@@ -113,60 +146,57 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, Executor executor,
-            int parallelism) {
+                                                           int parallelism) {
             requireNonNull(executor, "executor can't be null");
             requireNonNull(mapper, "mapper can't be null");
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-                ? syncCollector(mapper)
-                : batchingCollector(mapper, executor, parallelism);
+              ? syncCollector(mapper)
+              : batchingCollector(mapper, executor, parallelism);
         }
 
         static <T, R> Collector<T, ?, Stream<R>> streamingOrdered(Function<T, R> mapper, Executor executor,
-            int parallelism) {
+                                                                  int parallelism) {
             requireNonNull(executor, "executor can't be null");
             requireNonNull(mapper, "mapper can't be null");
             requireValidParallelism(parallelism);
 
             return parallelism == 1
-                ? syncCollector(mapper)
-                : batchingCollector(mapper, executor, parallelism);
+              ? syncCollector(mapper)
+              : batchingCollector(mapper, executor, parallelism);
         }
 
         private static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper,
-            Executor executor, int parallelism) {
+                                                                           Executor executor, int parallelism) {
             return collectingAndThen(
-                toList(),
-                list -> {
-                    // no sense to repack into batches of size 1
-                    if (list.size() == parallelism) {
-                        return list.stream()
-                            .collect(new ParallelStreamCollector<>(
-                                mapper,
-                                ordered(),
-                                emptySet(),
-                                Dispatcher.from(executor, parallelism)));
-                    }
-                    else {
-                        return partitioned(list, parallelism)
-                            .collect(collectingAndThen(new ParallelStreamCollector<>(
-                                    batching(mapper),
-                                    ordered(),
-                                    emptySet(),
-                                    Dispatcher.from(executor, parallelism)),
-                                s -> s.flatMap(Collection::stream)));
-                    }
-                });
+              toList(),
+              list -> {
+                  // no sense to repack into batches of size 1
+                  if (list.size() == parallelism) {
+                      return list.stream()
+                        .collect(new ParallelStreamCollector<>(
+                          mapper,
+                          ordered(),
+                          emptySet(),
+                          Dispatcher.from(executor), parallelism));
+                  } else {
+                      return partitioned(list, parallelism)
+                        .collect(collectingAndThen(new ParallelStreamCollector<>(
+                            batching(mapper),
+                            ordered(),
+                            emptySet(),
+                            Dispatcher.from(executor), parallelism),
+                          s -> s.flatMap(Collection::stream)));
+                  }
+              });
         }
 
         private static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
             return Collector.of(Stream::builder, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
                 throw new UnsupportedOperationException(
-                    "Using parallel stream with parallel collectors is a bad idea");
+                  "Using parallel stream with parallel collectors is a bad idea");
             }, Stream.Builder::build);
         }
-
     }
-
 }

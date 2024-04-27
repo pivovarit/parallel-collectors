@@ -25,7 +25,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
@@ -127,7 +126,7 @@ class FunctionalTest {
     void shouldCollectEagerlyInCompletionOrder() {
         // given
         var executor = threadPoolExecutor(4);
-        AtomicBoolean result = new AtomicBoolean(false);
+        var result = new AtomicBoolean(false);
         CompletableFuture.runAsync(() -> {
             of(1, 10000, 1, 0)
               .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), executor, 2))
@@ -229,6 +228,7 @@ class FunctionalTest {
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
+          shouldNotPolluteExecutor(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
@@ -265,6 +265,23 @@ class FunctionalTest {
                   Stream.<Integer>empty().collect(c
                     .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), e, 1)), "returned blocking future");
             });
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldNotPolluteExecutor(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> c, String name) {
+        return dynamicTest(format("%s: should not pollute executor", name), () -> {
+            int tasks = 2;
+            var e = new ThreadPoolExecutor(tasks, tasks, 0L, MILLISECONDS, new LinkedBlockingQueue<>(tasks));
+
+            for (int i = 0; i < tasks; i++) {
+                CompletableFuture.runAsync(() -> {}, e).join();
+            }
+
+            var r1 = Stream.of(210, 200, 160, 180)
+              .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), e, tasks))
+              .toList();
+
+            assertThat(r1).containsExactlyInAnyOrder(160, 180, 200, 210);
         });
     }
 
