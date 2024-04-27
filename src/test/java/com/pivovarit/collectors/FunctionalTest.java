@@ -25,7 +25,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
@@ -190,6 +189,7 @@ class FunctionalTest {
           shouldCollectNElementsWithNParallelism(collector, name, 1),
           shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
+          shouldNotPolluteExecutor(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
@@ -212,6 +212,7 @@ class FunctionalTest {
           shouldCollect(collector, name, 1),
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
+          shouldNotPolluteExecutor(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
@@ -230,6 +231,7 @@ class FunctionalTest {
           shouldCollect(collector, name, PARALLELISM),
           shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
+          shouldNotPolluteExecutor(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldHandleThrowable(collector, name),
@@ -272,6 +274,20 @@ class FunctionalTest {
             withExecutor(e -> {
                 assertThat(Stream.<Integer>empty().collect(collector.apply(i -> i, e, PARALLELISM)).join()).isEmpty();
             });
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldNotPolluteExecutor(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should not pollute executor", name), () -> {
+            var e = new ThreadPoolExecutor(2, 2, 0L, MILLISECONDS, new LinkedBlockingQueue<>(2));
+
+            var ignored = of(210, 200, 160, 180)
+              .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), e, 2))
+              .collect(toList());
+
+            var ignored2 = of(210, 200, 160, 180)
+              .collect(parallelToStream(i -> returnWithDelay(i, ofMillis(i)), e, 2))
+              .collect(toList());
         });
     }
 
