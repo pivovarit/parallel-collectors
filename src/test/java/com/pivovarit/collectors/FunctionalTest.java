@@ -232,6 +232,7 @@ class FunctionalTest {
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
+          shouldPushElementsToStreamAsSoonAsPossible(collector, name),
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldHandleRejectedExecutionException(collector, name),
@@ -283,6 +284,25 @@ class FunctionalTest {
                 LocalTime before = LocalTime.now();
                 Stream.generate(() -> 42)
                   .limit(4)
+                  .collect(collector.apply(i -> returnWithDelay(i, ofMillis(delayMillis)), e, parallelism))
+                  .join();
+
+                LocalTime after = LocalTime.now();
+                assertThat(Duration.between(before, after))
+                  .isGreaterThanOrEqualTo(ofMillis(delayMillis * parallelism));
+            });
+        });
+    }
+
+    private static <R extends Collection<Integer>> DynamicTest shouldPushElementsToStreamAsSoonAsPossible(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
+        return dynamicTest(format("%s: should push elements as soon as possible ", name), () -> {
+            int parallelism = 2;
+            int delayMillis = 50;
+            var counter = new AtomicInteger();
+            withExecutor(e -> {
+                LocalTime before = LocalTime.now();
+                Stream.generate(() -> 42)
+                  .limit(100)
                   .collect(collector.apply(i -> returnWithDelay(i, ofMillis(delayMillis)), e, parallelism))
                   .join();
 
