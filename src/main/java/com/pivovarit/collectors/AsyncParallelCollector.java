@@ -57,12 +57,21 @@ final class AsyncParallelCollector<T, R, C>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.enqueue(() -> mapper.apply(e)));
+        return (acc, e) -> {
+            if (!dispatcher.isRunning()) {
+                dispatcher.start();
+            }
+            acc.add(dispatcher.enqueue(() -> mapper.apply(e)));
+        };
     }
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        return futures -> combine(futures).thenApply(processor);
+        return futures -> {
+            dispatcher.stop();
+
+            return combine(futures).thenApply(processor);
+        };
     }
 
     @Override
