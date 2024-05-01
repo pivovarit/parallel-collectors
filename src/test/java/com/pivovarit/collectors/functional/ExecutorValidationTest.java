@@ -1,5 +1,6 @@
-package com.pivovarit.collectors;
+package com.pivovarit.collectors.functional;
 
+import com.pivovarit.collectors.ParallelCollectors;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
