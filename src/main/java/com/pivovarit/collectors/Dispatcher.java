@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,14 +64,16 @@ final class Dispatcher<T> {
                         }
                         Runnable task;
                         if ((task = workingQueue.take()) != POISON_PILL) {
-                            executor.execute(() -> {
-                                try {
-                                    task.run();
-                                } finally {
-                                    if (limiter != null) {
-                                        limiter.release();
+                            retry(() -> {
+                                executor.execute(() -> {
+                                    try {
+                                        task.run();
+                                    } finally {
+                                        if (limiter != null) {
+                                            limiter.release();
+                                        }
                                     }
-                                }
+                                });
                             });
                         } else {
                             break;
@@ -161,6 +164,15 @@ final class Dispatcher<T> {
                     // no-op
                 }
             }
+        }
+    }
+
+    private static void retry(Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (RejectedExecutionException e) {
+            Thread.onSpinWait();
+            runnable.run();
         }
     }
 }
