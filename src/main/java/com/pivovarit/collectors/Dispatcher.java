@@ -8,6 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,12 +37,8 @@ final class Dispatcher<T> {
         this.limiter = null;
     }
 
-    private Dispatcher(int permits) {
-        this.executor = defaultExecutorService();
-        this.limiter = new Semaphore(permits);
-    }
-
     private Dispatcher(Executor executor, int permits) {
+        requireValidExecutor(executor);
         this.executor = executor;
         this.limiter = new Semaphore(permits);
     }
@@ -156,5 +153,19 @@ final class Dispatcher<T> {
 
     private static ExecutorService defaultExecutorService() {
         return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    private static void requireValidExecutor(Executor executor) {
+        if (executor instanceof ThreadPoolExecutor tpe) {
+            switch (tpe.getRejectedExecutionHandler()) {
+                case ThreadPoolExecutor.DiscardPolicy __ ->
+                  throw new IllegalArgumentException("Executor's RejectedExecutionHandler can't discard tasks");
+                case ThreadPoolExecutor.DiscardOldestPolicy __ ->
+                  throw new IllegalArgumentException("Executor's RejectedExecutionHandler can't discard tasks");
+                default -> {
+                    // no-op
+                }
+            }
+        }
     }
 }
