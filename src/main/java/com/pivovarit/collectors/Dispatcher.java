@@ -1,10 +1,15 @@
 package com.pivovarit.collectors;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.function.BiConsumer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.lang.Runtime.getRuntime;
@@ -14,9 +19,17 @@ import static java.lang.Runtime.getRuntime;
  */
 final class Dispatcher<T> {
 
+    private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
+
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
+    private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
+    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor();
     private final Executor executor;
     private final Semaphore limiter;
+
+    private final AtomicBoolean started = new AtomicBoolean(false);
+
+    private volatile boolean shortCircuited = false;
 
     private Dispatcher(Executor executor, int permits) {
         this.executor = executor;
@@ -27,32 +40,79 @@ final class Dispatcher<T> {
         return new Dispatcher<>(executor, permits);
     }
 
+    void start() {
+        if (!started.getAndSet(true)) {
+            dispatcher.execute(() -> {
+                try {
+                    while (true) {
+                        try {
+                            if (limiter != null) {
+                                limiter.acquire();
+                            }
+                        } catch (InterruptedException e) {
+                            handle(e);
+                        }
+                        Runnable task;
+                        if ((task = workingQueue.take()) != POISON_PILL) {
+                            executor.execute(() -> {
+                                try {
+                                    task.run();
+                                } finally {
+                                    if (limiter != null) {
+                                        limiter.release();
+                                    }
+                                }
+                            });
+                        } else {
+                            break;
+                        }
+                    }
+                } catch (Throwable e) {
+                    handle(e);
+                }
+            });
+        }
+    }
+
+    void stop() {
+        try {
+            workingQueue.put(POISON_PILL);
+        } catch (InterruptedException e) {
+            completionSignaller.completeExceptionally(e);
+        } finally {
+            dispatcher.shutdown();
+        }
+    }
+
+    boolean isRunning() {
+        return started.get();
+    }
+
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         InterruptibleCompletableFuture<T> future = new InterruptibleCompletableFuture<>();
-        completionSignaller.whenComplete(shortcircuit(future));
-        try {
-            executor.execute(completionTask(supplier, future));
-        } catch (Throwable e) {
-            completionSignaller.completeExceptionally(e);
-            CompletableFuture<T> result = new CompletableFuture<>();
-            result.completeExceptionally(e);
-            return result;
-        }
+        workingQueue.add(completionTask(supplier, future));
+        completionSignaller.exceptionally(shortcircuit(future));
         return future;
     }
 
-    private FutureTask<T> completionTask(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) {
-        FutureTask<T> task = new FutureTask<>(() -> {
-            if (!completionSignaller.isCompletedExceptionally()) {
-                try {
-                    withLimiter(supplier, future);
-                } catch (Throwable e) {
-                    completionSignaller.completeExceptionally(e);
+    private FutureTask<Void> completionTask(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) {
+        FutureTask<Void> task = new FutureTask<>(() -> {
+            try {
+                if (!shortCircuited) {
+                    future.complete(supplier.get());
                 }
+            } catch (Throwable e) {
+                handle(e);
             }
         }, null);
         future.completedBy(task);
         return task;
+    }
+
+    private void handle(Throwable e) {
+        shortCircuited = true;
+        completionSignaller.completeExceptionally(e);
+        dispatcher.shutdownNow();
     }
 
     private void withLimiter(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) throws InterruptedException {
@@ -64,12 +124,11 @@ final class Dispatcher<T> {
         }
     }
 
-    private static <T> BiConsumer<T, Throwable> shortcircuit(InterruptibleCompletableFuture<?> future) {
-        return (__, throwable) -> {
-            if (throwable != null) {
-                future.completeExceptionally(throwable);
-                future.cancel(true);
-            }
+    private static Function<Throwable, Void> shortcircuit(InterruptibleCompletableFuture<?> future) {
+        return throwable -> {
+            future.completeExceptionally(throwable);
+            future.cancel(true);
+            return null;
         };
     }
 
@@ -79,15 +138,15 @@ final class Dispatcher<T> {
 
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
 
-        private volatile FutureTask<T> backingTask;
+        private volatile FutureTask<?> backingTask;
 
-        private void completedBy(FutureTask<T> task) {
+        private void completedBy(FutureTask<?> task) {
             backingTask = task;
         }
 
         @Override
         public boolean cancel(boolean mayInterruptIfRunning) {
-            FutureTask<T> task = backingTask;
+            FutureTask<?> task = backingTask;
             if (task != null) {
                 task.cancel(mayInterruptIfRunning);
             }

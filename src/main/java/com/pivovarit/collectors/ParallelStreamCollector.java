@@ -58,7 +58,10 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.enqueue(() -> function.apply(e)));
+        return (acc, e) -> {
+            dispatcher.start();
+            acc.add(dispatcher.enqueue(() -> function.apply(e)));
+        };
     }
 
     @Override
@@ -71,7 +74,10 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     @Override
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
-        return completionStrategy;
+        return acc -> {
+            dispatcher.stop();
+            return completionStrategy.apply(acc);
+        };
     }
 
     @Override
