@@ -31,7 +31,7 @@ They are:
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>3.0.0</version>
+        <version>3.1.0</version>
     </dependency>
 
 #### JDK 8+:
@@ -39,18 +39,18 @@ They are:
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>2.6.0</version>
+        <version>2.6.1</version>
     </dependency>
 
 ##### Gradle
 
 #### JDK 21+:
 
-    compile 'com.pivovarit:parallel-collectors:3.0.0'`
+    compile 'com.pivovarit:parallel-collectors:3.1.0'`
 
 #### JDK 8+:
 
-    compile 'com.pivovarit:parallel-collectors:2.6.0'`
+    compile 'com.pivovarit:parallel-collectors:2.6.1'`
 
 ## Philosophy
 
@@ -64,7 +64,7 @@ Review the API documentation before deploying in production.
 
 ## Basic API
 
-The main entrypoint is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
+The main entry point is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
 
 By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.
 
@@ -100,7 +100,7 @@ Parallel Collectors™ expose results wrapped in `CompletableFuture` instances w
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
 
-This makes it possible to conveniently apply callbacks, and compose with other `CompletableFuture`s:
+This makes it possible to conveniently apply callbacks and compose with other `CompletableFuture`s:
 
     list.stream()
       .collect(parallel(i -> foo(i), toSet(), executor))
@@ -179,11 +179,11 @@ In order to avoid such problems, **the solution is to isolate blocking tasks** a
 
 However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's not considered reliable (and can still induce oversubscription issues while competing with the common pool for resources)
 
-> Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
+> Note, however, that this technique of submitting a task to a fork-join pool to run the parallel stream in that pool is an implementation "trick" and is not guaranteed to work. Indeed, the threads or thread pool that is used for the execution of parallel streams is unspecified. By default, the common fork-join pool is used, but in different environments, different thread pools might end up being used. 
 
 Says [Stuart Marks on StackOverflow](https://stackoverflow.com/questions/28985704/parallel-stream-from-a-hashset-doesnt-run-in-parallel/29272776#29272776). 
 
-Not even mentioning that this approach was seriously flawed before JDK-10 - if a `Stream` was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool, and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
+Not even mentioning that this approach was seriously flawed before JDK-10 - if a `Stream` was targeted towards another pool, splitting would still need to adhere to the parallelism of the common pool and not the one of the targeted pool [[JDK8190974]](https://bugs.openjdk.java.net/browse/JDK-8190974).
    
 ### Dependencies
 
@@ -192,7 +192,7 @@ None - the library is implemented using core Java libraries.
 ### Limitations
 
 - Upstream `Stream` is always evaluated as a whole, even if the following operation is short-circuiting.
-This means that none of these should be used for working with infinite streams. This limitation is imposed by the design of the `Collector` API.
+This means that none of these should be used to work with infinite streams. The design of the `Collector` API imposes this limitation.
 
 - Never use Parallel Collectors with `Executor`s with `RejectedExecutionHandler` that discards tasks - this might result in a deadlock.
 
