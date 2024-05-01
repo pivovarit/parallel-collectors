@@ -55,12 +55,21 @@ final class AsyncParallelCollector<T, R, C>
 
     @Override
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> acc.add(dispatcher.enqueue(() -> task.apply(e)));
+        return (acc, e) -> {
+            if (!dispatcher.isRunning()) {
+                dispatcher.start();
+            }
+            acc.add(dispatcher.enqueue(() -> task.apply(e)));
+        };
     }
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        return futures -> combine(futures).thenApply(finalizer);
+        return futures -> {
+            dispatcher.stop();
+
+            return combine(futures).thenApply(finalizer);
+        };
     }
 
     @Override
@@ -103,7 +112,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(collector, "collector can't be null");
         requireNonNull(mapper, "mapper can't be null");
 
-        return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(),s -> s.collect(collector));
+        return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(), s -> s.collect(collector));
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
