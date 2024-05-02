@@ -21,10 +21,8 @@ final class Dispatcher<T> {
     private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
-
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
 
-    private final ExecutorService dispatcher = Executors.newVirtualThreadPerTaskExecutor();
     private final Executor executor;
     private final Semaphore limiter;
 
@@ -53,7 +51,7 @@ final class Dispatcher<T> {
 
     void start() {
         if (!started.getAndSet(true)) {
-            dispatcher.execute(() -> {
+            Thread.ofVirtual().start(() -> {
                 try {
                     while (true) {
                         try {
@@ -90,8 +88,6 @@ final class Dispatcher<T> {
             workingQueue.put(POISON_PILL);
         } catch (InterruptedException e) {
             completionSignaller.completeExceptionally(e);
-        } finally {
-            dispatcher.shutdown();
         }
     }
 
@@ -123,7 +119,6 @@ final class Dispatcher<T> {
     private void handle(Throwable e) {
         shortCircuited = true;
         completionSignaller.completeExceptionally(e);
-        dispatcher.shutdownNow();
     }
 
     private static Function<Throwable, Void> shortcircuit(InterruptibleCompletableFuture<?> future) {

@@ -19,7 +19,7 @@ final class FutureCollectors {
                 .collect(collector));
 
             for (var f : list) {
-                f.whenComplete((t, throwable) -> {
+                f.whenComplete((__, throwable) -> {
                     if (throwable != null) {
                         future.completeExceptionally(throwable);
                     }
