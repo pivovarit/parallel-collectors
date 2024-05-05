@@ -22,9 +22,9 @@ class ImmediateStreamProcessingTest {
     Stream<DynamicTest> shouldStartProcessingElementsTests() {
         return of(
           shouldStartProcessingElements(f -> ParallelCollectors.parallelToStream(f, Executors.newCachedThreadPool(), 2), "parallelToStream, parallelism: 2, os threads"),
-          shouldStartProcessingElements(f -> ParallelCollectors.parallelToOrderedStream(f, Executors.newVirtualThreadPerTaskExecutor(), 2), "parallelToStream, parallelism: 2, vthreads"),
+          shouldStartProcessingElements(f -> ParallelCollectors.parallelToOrderedStream(f, 2), "parallelToStream, parallelism: 2, vthreads"),
           shouldStartProcessingElements(f -> ParallelCollectors.parallelToOrderedStream(f, Executors.newCachedThreadPool(), 2), "parallelToOrderedStream, parallelism: 2, os threads"),
-          shouldStartProcessingElements(f -> ParallelCollectors.parallelToOrderedStream(f, Executors.newVirtualThreadPerTaskExecutor(), 2), "parallelToOrderedStream, parallelism: 2, vthreads")
+          shouldStartProcessingElements(f -> ParallelCollectors.parallelToOrderedStream(f, 2), "parallelToOrderedStream, parallelism: 2, vthreads")
         );
     }
 
