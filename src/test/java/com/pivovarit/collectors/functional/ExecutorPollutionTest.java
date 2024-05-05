@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.ParallelCollectors.Batching.parallel;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
 
@@ -21,14 +22,18 @@ class ExecutorPollutionTest {
     @TestFactory
     Stream<DynamicTest> shouldStartProcessingElementsTests() {
         return of(
-          shouldNotSubmitMoreTasksThanParallelism(ParallelCollectors::parallel, "parallel#1"),
-          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.parallel(f, toList(), e, p), "parallel#2"),
-          shouldNotSubmitMoreTasksThanParallelism(ParallelCollectors::parallelToStream, "parallelToStream"),
-          shouldNotSubmitMoreTasksThanParallelism(ParallelCollectors::parallelToOrderedStream, "parallelToOrderedStream"),
-          shouldNotSubmitMoreTasksThanParallelism(ParallelCollectors.Batching::parallel, "parallel#1 (batching)"),
-          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.Batching.parallel(f, toList(), e, p), "parallel#2 (batching)"),
-          shouldNotSubmitMoreTasksThanParallelism(ParallelCollectors.Batching::parallelToStream, "parallelToStream (batching)"),
-          shouldNotSubmitMoreTasksThanParallelism(ParallelCollectors.Batching::parallelToOrderedStream, "parallelToOrderedStream (batching)")
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.parallel(f, e, p), "parallel#1"),
+          shouldNotSubmitMoreTasksThanParallelism((f, __, p) -> ParallelCollectors.parallel(f, p), "parallel#2"),
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.parallel(f, toList(), e, p), "parallel#3"),
+          shouldNotSubmitMoreTasksThanParallelism((f, __, p) -> ParallelCollectors.parallel(f, toList(), p), "parallel#4"),
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.parallelToStream(f, e, p), "parallelToStream#1"),
+          shouldNotSubmitMoreTasksThanParallelism((f, __, p) -> ParallelCollectors.parallelToStream(f, p), "parallelToStream#2"),
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.parallelToOrderedStream(f, e, p), "parallelToOrderedStream#1"),
+          shouldNotSubmitMoreTasksThanParallelism((f, __, p) -> ParallelCollectors.parallelToOrderedStream(f, p), "parallelToOrderedStream#2"),
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> parallel(f, e, p), "parallel#1 (batching)"),
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> parallel(f, toList(), e, p), "parallel#2 (batching)"),
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.Batching.parallelToStream(f, e, p), "parallelToStream (batching)"),
+          shouldNotSubmitMoreTasksThanParallelism((f, e, p) -> ParallelCollectors.Batching.parallelToOrderedStream(f, e, p), "parallelToOrderedStream (batching)")
         );
     }
 

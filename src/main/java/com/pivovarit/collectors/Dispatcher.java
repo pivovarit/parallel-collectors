@@ -42,12 +42,21 @@ final class Dispatcher<T> {
         this.limiter = new Semaphore(permits);
     }
 
+    private Dispatcher(int permits) {
+        this.executor = defaultExecutorService();
+        this.limiter = new Semaphore(permits);
+    }
+
     static <T> Dispatcher<T> from(Executor executor, int permits) {
         return new Dispatcher<>(executor, permits);
     }
 
     static <T> Dispatcher<T> virtual() {
         return new Dispatcher<>();
+    }
+
+    static <T> Dispatcher<T> virtual(int permits) {
+        return new Dispatcher<>(permits);
     }
 
     void start() {
