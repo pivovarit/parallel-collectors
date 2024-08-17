@@ -1,5 +1,20 @@
 # Version History
 
+### [3.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/3.2.0) (17-08-2024)
+- add new API methods defaulting to Virtual Threads but allowing setting max parallelism
+
+### [3.1.0](https://github.com/pivovarit/parallel-collectors/releases/tag/3.1.0) (01-05-2024)
+- use a dedicated dispatcher Virtual Thread to control parallelism
+- reject illegal `RejectedExecutionHandlers` at best-effort basis
+
+### [3.0.0](https://github.com/pivovarit/parallel-collectors/releases/tag/3.0.0) (30-01-2024)
+- full Virtual Thread support with new API methods
+- deprecated methods removed
+- `module-info`
+
+### [2.6.1](https://github.com/pivovarit/parallel-collectors/releases/tag/2.6.1) (01-05-2024)
+- Fixes a regression which caused undesired pollution of the provided executor
+
 ### [2.6.0](https://github.com/pivovarit/parallel-collectors/releases/tag/2.6.0) (27-01-2023)
 - `Dispatcher` no longer relies on its own thread to dispatch tasks, but uses caller thread
 - default parallelism can't be smaller than 4
