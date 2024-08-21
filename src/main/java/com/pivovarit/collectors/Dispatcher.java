@@ -61,7 +61,7 @@ final class Dispatcher<T> {
 
     void start() {
         if (!started.getAndSet(true)) {
-            Thread.ofVirtual().start(() -> {
+            Thread.startVirtualThread(() -> {
                 try {
                     while (true) {
                         try {
