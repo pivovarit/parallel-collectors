@@ -60,7 +60,7 @@ class BatchingSpliteratorTest {
 
     @Test
     void shouldReturnEmptyIfZeroParts() {
-        assertThatThrownBy(() -> partitioned(Arrays.asList(1, 2, 3), 0).collect(Collectors.toList()));
+        assertThatThrownBy(() -> partitioned(Arrays.asList(1, 2, 3), 0).toList());
     }
 
     @Test
