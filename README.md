@@ -77,7 +77,6 @@ All parallel collectors are one-off and must not be reused.
 -  `CompletableFuture<Collection<T>> parallel(Function, Collector)` (uses Virtual Threads)
 -  `CompletableFuture<Stream<T>> parallel(Function, parallelism)` (uses Virtual Threads)
 -  `CompletableFuture<Collection<T>> parallel(Function, Collector, parallelism)` (uses Virtual Threads)
--  
 -  `CompletableFuture<Stream<T>> parallel(Function, Executor, parallelism)`
 -  `CompletableFuture<Collection<T>> parallel(Function, Collector, Executor, parallelism)`
 
