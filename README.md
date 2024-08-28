@@ -7,7 +7,7 @@
 [![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg?variant=adaptive)](https://starchart.cc/pivovarit/parallel-collectors)
 
 
-Parallel Collectors is a toolkit easing parallel collection processing in Java using Stream API... but without limitations imposed by standard Parallel Streams.
+Parallel Collectors is a toolkit that eases parallel collection processing in Java using Stream API without the limitations imposed by standard Parallel Streams.
 
     list.stream()
       .collect(parallel(i -> blockingOp(i), toList()))
@@ -88,7 +88,7 @@ All parallel collectors are one-off and must not be reused.
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
 #### Batching Collectors
-By default, all `ExecutorService` threads _compete_ for each task separately - which results in a basic form of _work-stealing_, which, unfortunately, is not free, but can decrease processing time for subtasks with varying processing time.
+By default, all `ExecutorService` threads _compete_ for each task separately - which results in a basic form of _work-stealing_, which, unfortunately, is not free, but can decrease processing time for subtasks with varying processing times.
 
 However, if the processing time for all subtasks is similar, it might be better to distribute tasks in batches to avoid excessive contention:
 
@@ -99,7 +99,7 @@ Batching alternatives are available under the `ParallelCollectors.Batching` name
 
 ### Leveraging CompletableFuture
 
-Parallel Collectors™ expose results wrapped in `CompletableFuture` instances which provides great flexibility and possibility of working with them in a non-blocking fashion:
+Parallel Collectors™ expose results wrapped in `CompletableFuture` instances which provides great flexibility and the possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
@@ -150,7 +150,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
       .collect(parallelToStream(i -> foo(i), executor))
       .forEach(i -> ...);
       
-##### 5. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in original order
+##### 5. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in the original order
 
     Executor executor = ...
 
@@ -160,7 +160,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 
 ## Rationale
 
-Stream API is a great tool for collection processing, especially if you need to parallelize execution of CPU-intensive tasks, for example:
+Stream API is a great tool for collection processing, especially if you need to parallelize the execution of CPU-intensive tasks, for example:
 
     public static void parallelSetAll(int[] array, IntUnaryOperator generator) {
         Objects.requireNonNull(generator);
@@ -177,9 +177,9 @@ For example:
       .map(i -> foo(i)) // runs implicitly on ForkJoinPool.commonPool()
       .toList();
 
-In order to avoid such problems, **the solution is to isolate blocking tasks** and run them on a separate thread pool... but there's a catch.
+To avoid such problems, **the solution is to isolate blocking tasks** and run them on a separate thread pool... but there's a catch.
 
-**Sadly, Streams can only run parallel computations on the common `ForkJoinPool`** which effectively restricts the applicability of them to CPU-bound jobs.
+**Sadly, Streams can only run parallel computations on the common `ForkJoinPool`**, which effectively restricts their applicability to CPU-bound jobs.
 
 However, there's a trick that allows running parallel Streams in a custom FJP instance... but it's not considered reliable (and can still induce oversubscription issues while competing with the common pool for resources)
 
