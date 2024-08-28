@@ -4,7 +4,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -23,10 +22,11 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
-    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor();
-    private final Executor executor;
-    private final Semaphore limiter;
+    private final ExecutorService dispatcher = InternalDispatcherResolver.resolve();
 
+    private final Executor executor;
+
+    private final Semaphore limiter;
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     private volatile boolean shortCircuited = false;
