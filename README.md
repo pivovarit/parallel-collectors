@@ -90,9 +90,11 @@ All parallel collectors are one-off and must not be reused.
 #### Batching Collectors
 By default, all `ExecutorService` threads _compete_ for each task separately - which results in a basic form of _work-stealing_, which, unfortunately, is not free, but can decrease processing time for subtasks with varying processing times.
 
-However, if the processing time for all subtasks is similar, it might be better to distribute tasks in batches to avoid excessive contention:
+However, if the processing time for all subtasks is similar, it might be better to distribute tasks in batches to avoid excessive contention.
 
-![](docs/batching.png)
+![](docs/default.svg)
+
+![](docs/batched.svg)
 
 Batching alternatives are available under the `ParallelCollectors.Batching` namespace.
 
