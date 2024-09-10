@@ -106,6 +106,13 @@ final class AsyncParallelCollector<T, R, C>
         return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(parallelism), Function.identity());
     }
 
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+
+        return new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), Function.identity());
+    }
+
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor, int parallelism) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
@@ -131,6 +138,14 @@ final class AsyncParallelCollector<T, R, C>
         return parallelism == 1
           ? asyncCollector(mapper, Executors.newVirtualThreadPerTaskExecutor(), s -> s.collect(collector))
           : new AsyncParallelCollector<>(mapper, Dispatcher.virtual(parallelism), s -> s.collect(collector));
+    }
+
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor) {
+        requireNonNull(collector, "collector can't be null");
+        requireNonNull(executor, "executor can't be null");
+        requireNonNull(mapper, "mapper can't be null");
+
+        return new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), s -> s.collect(collector));
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {

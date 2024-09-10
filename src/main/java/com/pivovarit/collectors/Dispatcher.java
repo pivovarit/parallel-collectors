@@ -47,6 +47,15 @@ final class Dispatcher<T> {
         this.limiter = new Semaphore(permits);
     }
 
+    private Dispatcher(Executor executor) {
+        this.executor = executor;
+        this.limiter = null;
+    }
+
+    static <T> Dispatcher<T> from(Executor executor) {
+        return new Dispatcher<>(executor);
+    }
+
     static <T> Dispatcher<T> from(Executor executor, int permits) {
         return new Dispatcher<>(executor, permits);
     }
