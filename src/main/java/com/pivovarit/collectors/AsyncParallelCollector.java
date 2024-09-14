@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
+import static com.pivovarit.collectors.Dispatcher.Configuration.*;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -110,7 +111,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
 
-        return new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), Function.identity());
+        return new AsyncParallelCollector<>(mapper, Dispatcher.from(initial().withExecutor(executor)), Function.identity());
     }
 
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor, int parallelism) {
@@ -120,7 +121,7 @@ final class AsyncParallelCollector<T, R, C>
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, i -> i)
-          : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), Function.identity());
+          : new AsyncParallelCollector<>(mapper, Dispatcher.from(initial().withExecutor(executor).withMaxParallelism(parallelism)), Function.identity());
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper) {
@@ -145,7 +146,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
 
-        return new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), s -> s.collect(collector));
+        return new AsyncParallelCollector<>(mapper, Dispatcher.from(initial().withExecutor(executor)), s -> s.collect(collector));
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> collectingWithCollector(Collector<R, ?, RR> collector, Function<T, R> mapper, Executor executor, int parallelism) {
@@ -156,7 +157,7 @@ final class AsyncParallelCollector<T, R, C>
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, s -> s.collect(collector))
-          : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), s -> s.collect(collector));
+          : new AsyncParallelCollector<>(mapper, Dispatcher.from(initial().withExecutor(executor).withMaxParallelism(parallelism)), s -> s.collect(collector));
     }
 
     static void requireValidParallelism(int parallelism) {
@@ -212,13 +213,13 @@ final class AsyncParallelCollector<T, R, C>
                       return list.stream()
                         .collect(new AsyncParallelCollector<>(
                           mapper,
-                          Dispatcher.from(executor, parallelism),
+                          Dispatcher.from(initial().withExecutor(executor).withMaxParallelism(parallelism)),
                           finisher));
                   } else {
                       return partitioned(list, parallelism)
                         .collect(new AsyncParallelCollector<>(
                           batching(mapper),
-                          Dispatcher.from(executor, parallelism),
+                          Dispatcher.from(initial().withExecutor(executor).withMaxParallelism(parallelism)),
                           listStream -> finisher.apply(listStream.flatMap(Collection::stream))));
                   }
               });
