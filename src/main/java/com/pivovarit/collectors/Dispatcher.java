@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -9,6 +10,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -31,41 +33,27 @@ final class Dispatcher<T> {
 
     private volatile boolean shortCircuited = false;
 
-    private Dispatcher() {
-        this.executor = defaultExecutorService();
-        this.limiter = null;
-    }
+    private Dispatcher(Configuration configuration) {
+        if (configuration.maxParallelism == null) {
+            this.limiter = null;
+        } else {
+            requireValidMaxParallelism(configuration.maxParallelism);
+            this.limiter = new Semaphore(configuration.maxParallelism);
+        }
 
-    private Dispatcher(Executor executor, int permits) {
-        requireValidExecutor(executor);
-        this.executor = executor;
-        this.limiter = new Semaphore(permits);
-    }
-
-    private Dispatcher(int permits) {
-        this.executor = defaultExecutorService();
-        this.limiter = new Semaphore(permits);
-    }
-
-    private Dispatcher(Executor executor) {
-        this.executor = executor;
-        this.limiter = null;
-    }
-
-    static <T> Dispatcher<T> from(Executor executor) {
-        return new Dispatcher<>(executor);
-    }
-
-    static <T> Dispatcher<T> from(Executor executor, int permits) {
-        return new Dispatcher<>(executor, permits);
+        this.executor = Objects.requireNonNullElseGet(requireValidExecutor(configuration.executor), Dispatcher::defaultExecutorService);
     }
 
     static <T> Dispatcher<T> virtual() {
-        return new Dispatcher<>();
+        return new Dispatcher<>(Configuration.initial());
     }
 
-    static <T> Dispatcher<T> virtual(int permits) {
-        return new Dispatcher<>(permits);
+    static <T> Dispatcher<T> virtual(int maxParallelism) {
+        return new Dispatcher<>(Configuration.initial().withMaxParallelism(maxParallelism));
+    }
+
+    static <T> Dispatcher<T> from(Configuration configuration) {
+        return new Dispatcher<>(configuration);
     }
 
     void start() {
@@ -82,17 +70,15 @@ final class Dispatcher<T> {
                         }
                         Runnable task;
                         if ((task = workingQueue.take()) != POISON_PILL) {
-                            retry(() -> {
-                                executor.execute(() -> {
-                                    try {
-                                        task.run();
-                                    } finally {
-                                        if (limiter != null) {
-                                            limiter.release();
-                                        }
+                            retry(() -> executor.execute(() -> {
+                                try {
+                                    task.run();
+                                } finally {
+                                    if (limiter != null) {
+                                        limiter.release();
                                     }
-                                });
-                            });
+                                }
+                            }));
                         } else {
                             break;
                         }
@@ -150,6 +136,19 @@ final class Dispatcher<T> {
         };
     }
 
+    record Configuration(Executor executor, Integer maxParallelism, ThreadFactory dispatcherFactory) {
+
+        public static Configuration initial() {
+            return new Configuration(null, null, null);
+        }
+        public Configuration withExecutor(Executor executor) {
+            return new Configuration(executor, this.maxParallelism, this.dispatcherFactory);
+        }
+
+        public Configuration withMaxParallelism(int permits) {
+            return new Configuration(this.executor, permits, this.dispatcherFactory);
+        }
+    }
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
 
         private volatile FutureTask<?> backingTask;
@@ -165,13 +164,19 @@ final class Dispatcher<T> {
             }
             return super.cancel(mayInterruptIfRunning);
         }
-    }
 
+    }
     private static ExecutorService defaultExecutorService() {
         return Executors.newVirtualThreadPerTaskExecutor();
     }
 
-    private static void requireValidExecutor(Executor executor) {
+    static void requireValidMaxParallelism(int maxParallelism) {
+        if (maxParallelism < 1) {
+            throw new IllegalArgumentException("Max parallelism can't be lower than 1");
+        }
+    }
+
+    private static Executor requireValidExecutor(Executor executor) {
         if (executor instanceof ThreadPoolExecutor tpe) {
             switch (tpe.getRejectedExecutionHandler()) {
                 case ThreadPoolExecutor.DiscardPolicy __ ->
@@ -183,6 +188,7 @@ final class Dispatcher<T> {
                 }
             }
         }
+        return executor;
     }
 
     private static void retry(Runnable runnable) {
