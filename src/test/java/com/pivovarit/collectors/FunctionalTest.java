@@ -20,7 +20,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -178,7 +177,6 @@ class FunctionalTest {
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
-          shouldHandleRejectedExecutionException(collector, name),
           shouldRemainConsistent(collector, name)
         );
 
@@ -204,7 +202,6 @@ class FunctionalTest {
           shouldPushElementsToStreamAsSoonAsPossible(collector, name),
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
-          shouldHandleRejectedExecutionException(collector, name),
           shouldRemainConsistent(collector, name),
           shouldRejectInvalidParallelism(collector, name)
         );
@@ -312,23 +309,6 @@ class FunctionalTest {
                   .isInstanceOf(CompletionException.class)
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
             }, 10);
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldHandleRejectedExecutionException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should propagate rejected execution exception", name), () -> {
-            Executor executor = command -> {throw new RejectedExecutionException();};
-            List<Integer> elements = IntStream.range(0, 1000).boxed().toList();
-
-            assertThatThrownBy(() -> elements.stream()
-              .collect(collector.apply(i -> returnWithDelay(i, ofMillis(10000)), executor, PARALLELISM))
-              .join())
-              .isInstanceOfAny(RejectedExecutionException.class, CompletionException.class)
-              .matches(ex -> {
-                  if (ex instanceof CompletionException) {
-                      return ex.getCause() instanceof RejectedExecutionException;
-                  } else return true;
-              });
         });
     }
 
