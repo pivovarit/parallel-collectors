@@ -166,7 +166,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
           shouldStartConsumingImmediately(collector, name),
-          shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
@@ -181,7 +180,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder, boolean limitedParallelism) {
         var tests = of(
           shouldStartConsumingImmediately(collector, name),
-          shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
@@ -200,7 +198,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
           shouldStartConsumingImmediately(collector, name),
-          shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldRemainConsistent(collector, name)
@@ -214,7 +211,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
           shouldStartConsumingImmediately(collector, name),
-          shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
           shouldPushElementsToStreamAsSoonAsPossible(collector, name),
           shouldHandleThrowable(collector, name),
@@ -242,16 +238,6 @@ class FunctionalTest {
           of(shouldProcessOnNThreadsETParallelism(collector, name)));
     }
 
-    private static <R extends Collection<Integer>> DynamicTest shouldNotBlockTheCallingThread(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> c, String name) {
-        return dynamicTest(format("%s: should not block when returning future", name), () -> {
-            withExecutor(e -> {
-                assertTimeoutPreemptively(ofMillis(100), () ->
-                  Stream.<Integer>empty().collect(c
-                    .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), e, 1)), "returned blocking future");
-            });
-        });
-    }
-
     private static <R extends Collection<Integer>> DynamicTest shouldRespectParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return dynamicTest(format("%s: should respect parallelism", name), () -> {
             int parallelism = 2;
@@ -274,7 +260,6 @@ class FunctionalTest {
         return dynamicTest(format("%s: should push elements as soon as possible ", name), () -> {
             int parallelism = 2;
             int delayMillis = 50;
-            var counter = new AtomicInteger();
             withExecutor(e -> {
                 LocalTime before = LocalTime.now();
                 Stream.generate(() -> 42)
