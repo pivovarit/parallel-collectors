@@ -8,6 +8,12 @@ final class Preconditions {
     private Preconditions() {
     }
 
+    static void requireValidParallelism(int parallelism) {
+        if (parallelism < 1) {
+            throw new IllegalArgumentException("Parallelism can't be lower than 1");
+        }
+    }
+
     static void requireValidExecutor(Executor executor) {
         if (executor instanceof ThreadPoolExecutor tpe) {
             switch (tpe.getRejectedExecutionHandler()) {

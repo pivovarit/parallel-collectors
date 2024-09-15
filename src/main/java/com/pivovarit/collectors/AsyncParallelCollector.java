@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
+import static com.pivovarit.collectors.Preconditions.requireValidParallelism;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -162,12 +163,6 @@ final class AsyncParallelCollector<T, R, C>
         return parallelism == 1
           ? asyncCollector(mapper, executor, s -> s.collect(collector))
           : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), s -> s.collect(collector));
-    }
-
-    static void requireValidParallelism(int parallelism) {
-        if (parallelism < 1) {
-            throw new IllegalArgumentException("Parallelism can't be lower than 1");
-        }
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
