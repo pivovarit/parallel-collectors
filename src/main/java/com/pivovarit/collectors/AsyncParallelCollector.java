@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
+import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -109,6 +110,7 @@ final class AsyncParallelCollector<T, R, C>
     static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collectingToStream(Function<T, R> mapper, Executor executor) {
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
+        requireValidExecutor(executor);
 
         return new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), Function.identity());
     }
@@ -117,6 +119,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
+        requireValidExecutor(executor);
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, i -> i)
@@ -144,6 +147,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(collector, "collector can't be null");
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
+        requireValidExecutor(executor);
 
         return new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), s -> s.collect(collector));
     }
@@ -153,6 +157,7 @@ final class AsyncParallelCollector<T, R, C>
         requireNonNull(executor, "executor can't be null");
         requireNonNull(mapper, "mapper can't be null");
         requireValidParallelism(parallelism);
+        requireValidExecutor(executor);
 
         return parallelism == 1
           ? asyncCollector(mapper, executor, s -> s.collect(collector))
@@ -185,6 +190,7 @@ final class AsyncParallelCollector<T, R, C>
             requireNonNull(executor, "executor can't be null");
             requireNonNull(mapper, "mapper can't be null");
             requireValidParallelism(parallelism);
+            requireValidExecutor(executor);
 
             return parallelism == 1
               ? asyncCollector(mapper, executor, s -> s.collect(collector))
@@ -197,6 +203,7 @@ final class AsyncParallelCollector<T, R, C>
             requireNonNull(executor, "executor can't be null");
             requireNonNull(mapper, "mapper can't be null");
             requireValidParallelism(parallelism);
+            requireValidExecutor(executor);
 
             return parallelism == 1
               ? asyncCollector(mapper, executor, i -> i)

@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
+
 /**
  * @author Grzegorz Piwowarek
  */
@@ -48,6 +50,7 @@ final class Dispatcher<T> {
     }
 
     private Dispatcher(Executor executor) {
+        requireValidExecutor(executor);
         this.executor = executor;
         this.limiter = null;
     }
@@ -169,20 +172,6 @@ final class Dispatcher<T> {
 
     private static ExecutorService defaultExecutorService() {
         return Executors.newVirtualThreadPerTaskExecutor();
-    }
-
-    private static void requireValidExecutor(Executor executor) {
-        if (executor instanceof ThreadPoolExecutor tpe) {
-            switch (tpe.getRejectedExecutionHandler()) {
-                case ThreadPoolExecutor.DiscardPolicy __ ->
-                  throw new IllegalArgumentException("Executor's RejectedExecutionHandler can't discard tasks");
-                case ThreadPoolExecutor.DiscardOldestPolicy __ ->
-                  throw new IllegalArgumentException("Executor's RejectedExecutionHandler can't discard tasks");
-                default -> {
-                    // no-op
-                }
-            }
-        }
     }
 
     private static void retry(Runnable runnable) {
