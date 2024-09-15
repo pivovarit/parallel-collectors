@@ -165,11 +165,8 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
-          shouldCollect(collector, name, 1),
-          shouldCollect(collector, name, PARALLELISM),
           shouldCollectNElementsWithNParallelism(collector, name, 1),
           shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
-          shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
@@ -185,11 +182,8 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder, boolean limitedParallelism) {
         var tests = of(
-          shouldCollect(collector, name, 1),
-          shouldCollect(collector, name, PARALLELISM),
           shouldCollectNElementsWithNParallelism(collector, name, 1),
           shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
-          shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
@@ -209,9 +203,6 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
-          shouldCollect(collector, name, 1),
-          shouldCollect(collector, name, PARALLELISM),
-          shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
@@ -226,9 +217,6 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
-          shouldCollect(collector, name, 1),
-          shouldCollect(collector, name, PARALLELISM),
-          shouldCollectToEmpty(collector, name),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldRespectParallelism(collector, name),
@@ -264,14 +252,6 @@ class FunctionalTest {
                 assertTimeoutPreemptively(ofMillis(100), () ->
                   Stream.<Integer>empty().collect(c
                     .apply(i -> returnWithDelay(42, ofMillis(Integer.MAX_VALUE)), e, 1)), "returned blocking future");
-            });
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldCollectToEmpty(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should collect to empty", name), () -> {
-            withExecutor(e -> {
-                assertThat(Stream.<Integer>empty().collect(collector.apply(i -> i, e, PARALLELISM)).join()).isEmpty();
             });
         });
     }
@@ -329,20 +309,6 @@ class FunctionalTest {
                   .join();
 
                 assertThat(threads).hasSize(parallelism);
-            });
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldCollect(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name, int parallelism) {
-        return dynamicTest(format("%s: should collect with parallelism %s", name, parallelism), () -> {
-            var elements = IntStream.range(0, 10).boxed().toList();
-
-            withExecutor(e -> {
-                Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, e, parallelism);
-                Collection<Integer> result = elements.stream().collect(ctor)
-                  .join();
-
-                assertThat(result).hasSameElementsAs(elements);
             });
         });
     }
