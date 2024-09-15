@@ -49,7 +49,6 @@ import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 /**
@@ -180,8 +179,7 @@ class FunctionalTest {
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
           shouldHandleRejectedExecutionException(collector, name),
-          shouldRemainConsistent(collector, name),
-          shouldHandleExecutorRejection(collector, name)
+          shouldRemainConsistent(collector, name)
         );
 
         tests = limitedParallelism ? of(shouldRespectParallelism(collector, name)) : tests;
@@ -208,8 +206,7 @@ class FunctionalTest {
           shouldShortCircuitOnException(collector, name),
           shouldHandleRejectedExecutionException(collector, name),
           shouldRemainConsistent(collector, name),
-          shouldRejectInvalidParallelism(collector, name),
-          shouldHandleExecutorRejection(collector, name)
+          shouldRejectInvalidParallelism(collector, name)
         );
     }
 
@@ -373,19 +370,6 @@ class FunctionalTest {
                 assertThatThrownBy(() -> collector.apply(i -> i, e, -1))
                   .isExactlyInstanceOf(IllegalArgumentException.class);
             });
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldHandleExecutorRejection(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should handle rejected execution", name), () -> {
-            assertThatThrownBy(() -> {
-                try (var e = new ThreadPoolExecutor(2, 2, 0L, MILLISECONDS,
-                  new LinkedBlockingQueue<>(1), new ThreadPoolExecutor.AbortPolicy())) {
-                    assertTimeoutPreemptively(ofMillis(100), () -> of(1, 2, 3, 4)
-                      .collect(collector.apply(i -> TestUtils.sleepAndReturn(1_000, i), e, Integer.MAX_VALUE))
-                      .join());
-                }
-            }).isExactlyInstanceOf(CompletionException.class);
         });
     }
 
