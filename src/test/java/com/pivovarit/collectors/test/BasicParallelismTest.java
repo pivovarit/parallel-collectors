@@ -59,7 +59,7 @@ class BasicParallelismTest {
     }
 
     @FunctionalInterface
-    interface CollectorFactory<T, R> {
+    private interface CollectorFactory<T, R> {
         Collector<T, ?, List<R>> collector(Function<T, R> f, Integer p);
     }
 
