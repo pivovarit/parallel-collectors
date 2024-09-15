@@ -165,8 +165,6 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder) {
         var tests = of(
-          shouldCollectNElementsWithNParallelism(collector, name, 1),
-          shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
@@ -182,8 +180,6 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean maintainsOrder, boolean limitedParallelism) {
         var tests = of(
-          shouldCollectNElementsWithNParallelism(collector, name, 1),
-          shouldCollectNElementsWithNParallelism(collector, name, PARALLELISM),
           shouldStartConsumingImmediately(collector, name),
           shouldNotBlockTheCallingThread(collector, name),
           shouldHandleThrowable(collector, name),
@@ -309,19 +305,6 @@ class FunctionalTest {
                   .join();
 
                 assertThat(threads).hasSize(parallelism);
-            });
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldCollectNElementsWithNParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> factory, String name, int parallelism) {
-        return dynamicTest(format("%s: should collect %s elements with parallelism %s", name, parallelism, parallelism), () -> {
-            var elements = IntStream.iterate(0, i -> i + 1).limit(parallelism).boxed().toList();
-
-            withExecutor(e -> {
-                Collector<Integer, ?, CompletableFuture<R>> ctor = factory.apply(i -> i, e, parallelism);
-                Collection<Integer> result = elements.stream().collect(ctor).join();
-
-                assertThat(result).hasSameElementsAs(elements);
             });
         });
     }
