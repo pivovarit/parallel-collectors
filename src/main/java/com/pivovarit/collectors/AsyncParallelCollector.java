@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
@@ -166,13 +167,19 @@ final class AsyncParallelCollector<T, R, C>
     }
 
     static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
-        return collectingAndThen(toList(), list -> supplyAsync(() -> {
-            Stream.Builder<R> acc = Stream.builder();
-            for (T t : list) {
-                acc.add(mapper.apply(t));
+        return collectingAndThen(toList(), list -> {
+            try {
+                return supplyAsync(() -> {
+                    Stream.Builder<R> acc = Stream.builder();
+                    for (T t : list) {
+                        acc.add(mapper.apply(t));
+                    }
+                    return finisher.apply(acc.build());
+                }, executor);
+            } catch (Exception e) {
+                throw new CompletionException(e);
             }
-            return finisher.apply(acc.build());
-        }, executor));
+        });
     }
 
     static final class BatchingCollectors {
