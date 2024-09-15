@@ -48,6 +48,7 @@ final class Dispatcher<T> {
     }
 
     private Dispatcher(Executor executor) {
+        requireValidExecutor(executor);
         this.executor = executor;
         this.limiter = null;
     }
