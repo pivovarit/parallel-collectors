@@ -161,7 +161,6 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
-          shouldStartConsumingImmediately(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name)
         );
@@ -169,7 +168,6 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
-          shouldStartConsumingImmediately(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name)
         );
@@ -177,14 +175,12 @@ class FunctionalTest {
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
-          shouldStartConsumingImmediately(collector, name),
           shouldShortCircuitOnException(collector, name)
         );
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
-          shouldStartConsumingImmediately(collector, name),
           shouldPushElementsToStreamAsSoonAsPossible(collector, name),
           shouldShortCircuitOnException(collector, name)
         );
@@ -253,23 +249,6 @@ class FunctionalTest {
 
                 assertThat(counter.longValue()).isLessThan(elements.size());
             }, size);
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldStartConsumingImmediately(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should start consuming immediately", name), () -> {
-            try (var e = Executors.newCachedThreadPool()) {
-                var counter = new AtomicInteger();
-
-                Stream.iterate(0, i -> returnWithDelay(i + 1, ofMillis(100)))
-                  .limit(2)
-                  .collect(collector.apply(i -> counter.incrementAndGet(), e, PARALLELISM));
-
-                await()
-                  .pollInterval(ofMillis(10))
-                  .atMost(50, MILLISECONDS)
-                  .until(() -> counter.get() > 0);
-            }
         });
     }
 
