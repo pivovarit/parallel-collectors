@@ -14,14 +14,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
@@ -160,23 +158,15 @@ class FunctionalTest {
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return of(
-          shouldShortCircuitOnException(collector, name),
-          shouldInterruptOnException(collector, name)
-        );
+        return of(shouldShortCircuitOnException(collector, name));
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return of(
-          shouldShortCircuitOnException(collector, name),
-          shouldInterruptOnException(collector, name)
-        );
+        return of(shouldShortCircuitOnException(collector, name));
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return of(
-          shouldShortCircuitOnException(collector, name)
-        );
+        return of(shouldShortCircuitOnException(collector, name));
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
@@ -248,32 +238,6 @@ class FunctionalTest {
                   .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
                 assertThat(counter.longValue()).isLessThan(elements.size());
-            }, size);
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldInterruptOnException(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should interrupt on exception", name), () -> {
-            AtomicLong counter = new AtomicLong();
-            int size = 10;
-            CountDownLatch countDownLatch = new CountDownLatch(size);
-
-            runWithExecutor(e -> {
-                assertThatThrownBy(IntStream.range(0, size).boxed()
-                  .collect(collector.apply(i -> {
-                      try {
-                          countDownLatch.countDown();
-                          countDownLatch.await();
-                          if (i == size - 1) throw new NullPointerException();
-                          Thread.sleep(Integer.MAX_VALUE);
-                      } catch (InterruptedException ex) {
-                          counter.incrementAndGet();
-                      }
-                      return i;
-                  }, e, PARALLELISM))::join)
-                  .hasCauseExactlyInstanceOf(NullPointerException.class);
-
-                await().atMost(1, SECONDS).until(() -> counter.get() == size - 1);
             }, size);
         });
     }

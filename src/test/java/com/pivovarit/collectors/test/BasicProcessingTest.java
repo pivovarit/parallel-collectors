@@ -6,9 +6,11 @@ import org.junit.jupiter.api.TestFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
@@ -18,8 +20,10 @@ import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.BasicProcessingTest.CollectorDefinition.collector;
 import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -49,7 +53,8 @@ class BasicProcessingTest {
         return Stream.of(
           collector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.join().toList())),
           collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, e()), c -> c.join().toList())),
-          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, e(), p()), c -> c.join().toList())),
+          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, e(), p()), c -> c.join()
+            .toList())),
           collector("parallel(toList())", f -> collectingAndThen(ParallelCollectors.parallel(f, toList()), CompletableFuture::join)),
           collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e()), CompletableFuture::join)),
           collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e(), p()), CompletableFuture::join)),
@@ -105,6 +110,34 @@ class BasicProcessingTest {
                 .pollInterval(1, MILLISECONDS)
                 .atMost(500, MILLISECONDS)
                 .until(() -> counter.get() > 0);
+          }));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldInterruptOnException() {
+        return all()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
+              var counter = new AtomicLong();
+              int size = 4;
+              var latch = new CountDownLatch(size);
+
+              assertThatThrownBy(() -> IntStream.range(0, size).boxed()
+                .collect(c.collector().apply(i -> {
+                    try {
+                        latch.countDown();
+                        latch.await();
+                        if (i == 0) {
+                            throw new NullPointerException();
+                        }
+                        Thread.sleep(Integer.MAX_VALUE);
+                    } catch (InterruptedException ex) {
+                        counter.incrementAndGet();
+                    }
+                    return i;
+                })))
+                .hasCauseExactlyInstanceOf(NullPointerException.class);
+
+              await().atMost(1, SECONDS).until(() -> counter.get() == size - 1);
           }));
     }
 
