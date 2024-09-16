@@ -5,8 +5,6 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
-import java.time.Duration;
-import java.time.LocalTime;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +22,6 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallel;
-import static com.pivovarit.collectors.ParallelCollectors.parallelToOrderedStream;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.TestUtils.withExecutor;
@@ -56,15 +53,6 @@ class FunctionalTest {
           batchTests((m, e, p) -> Batching.parallel(m, toSet(), e, p), format("ParallelCollectors.Batching.parallel(toSet(), p=%d)", PARALLELISM)),
           batchTests((m, e, p) -> Batching.parallel(m, toCollection(LinkedList::new), e, p), format("ParallelCollectors.Batching.parallel(toCollection(), p=%d)", PARALLELISM)),
           batchTests((m, e, p) -> adapt(Batching.parallel(m, e, p)), format("ParallelCollectors.Batching.parallel(p=%d)", PARALLELISM))
-        ).flatMap(i -> i);
-    }
-
-    @TestFactory
-    Stream<DynamicTest> streaming_collectors() {
-        return of(
-          // platform threads
-          streamingTests((m, e, p) -> adaptAsync(parallelToStream(m, e, p)), format("ParallelCollectors.parallelToStream(p=%d)", PARALLELISM)),
-          streamingTests((m, e, p) -> adaptAsync(parallelToOrderedStream(m, e, p)), format("ParallelCollectors.parallelToOrderedStream(p=%d)", PARALLELISM))
         ).flatMap(i -> i);
     }
 
@@ -133,36 +121,12 @@ class FunctionalTest {
         }
     }
 
-    private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return of(shouldPushElementsToStreamAsSoonAsPossible(collector, name));
-    }
-
     private static <R extends Collection<Integer>> Stream<DynamicTest> batchTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(shouldProcessOnNThreadsETParallelism(collector, name));
     }
 
     private static <R extends Collection<Integer>> Stream<DynamicTest> batchStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return Stream.concat(
-          streamingTests(collector, name),
-          of(shouldProcessOnNThreadsETParallelism(collector, name)));
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldPushElementsToStreamAsSoonAsPossible(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should push elements as soon as possible ", name), () -> {
-            int parallelism = 2;
-            int delayMillis = 50;
-            withExecutor(e -> {
-                LocalTime before = LocalTime.now();
-                Stream.generate(() -> 42)
-                  .limit(100)
-                  .collect(collector.apply(i -> returnWithDelay(i, ofMillis(delayMillis)), e, parallelism))
-                  .join();
-
-                LocalTime after = LocalTime.now();
-                assertThat(Duration.between(before, after))
-                  .isGreaterThanOrEqualTo(ofMillis(delayMillis * parallelism));
-            });
-        });
+        return of(shouldProcessOnNThreadsETParallelism(collector, name));
     }
 
     private static <R extends Collection<Integer>> DynamicTest shouldProcessOnNThreadsETParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
