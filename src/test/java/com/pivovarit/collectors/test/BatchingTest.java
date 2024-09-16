@@ -31,7 +31,7 @@ class BatchingTest {
               var threads = new ConcurrentSkipListSet<>();
               var parallelism = 4;
 
-              Stream.generate(() -> 42)
+              var ignored = Stream.generate(() -> 42)
                 .limit(100)
                 .collect(c.factory().collector(i -> {
                     threads.add(Thread.currentThread().getName());

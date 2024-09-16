@@ -9,7 +9,6 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -85,17 +84,15 @@ final class Dispatcher<T> {
                         }
                         Runnable task;
                         if ((task = workingQueue.take()) != POISON_PILL) {
-                            retry(() -> {
-                                executor.execute(() -> {
-                                    try {
-                                        task.run();
-                                    } finally {
-                                        if (limiter != null) {
-                                            limiter.release();
-                                        }
+                            retry(() -> executor.execute(() -> {
+                                try {
+                                    task.run();
+                                } finally {
+                                    if (limiter != null) {
+                                        limiter.release();
                                     }
-                                });
-                            });
+                                }
+                            }));
                         } else {
                             break;
                         }

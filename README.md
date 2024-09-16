@@ -171,7 +171,7 @@ Stream API is a great tool for collection processing, especially if you need to 
     
 **However, Parallel Streams execute tasks on a shared `ForkJoinPool` instance**.
  
-Unfortunately, it's not the best choice for running blocking operations even when using `ManagedBlocker` - [as explained here by Tagir Valeev](https://stackoverflow.com/a/37518272/2229438)) - this could easily lead to the saturation of the common pool, and to a performance degradation of everything that uses it.
+Unfortunately, it's not the best choice for running blocking operations even when using `ManagedBlocker` - [as explained here by Tagir Valeev](https://stackoverflow.com/a/37518272/2229438) - this could easily lead to the saturation of the common pool, and to a performance degradation of everything that uses it.
 
 For example:
 
