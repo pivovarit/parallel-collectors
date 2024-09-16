@@ -8,15 +8,20 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.BasicProcessingTest.CollectorDefinition.collector;
+import static java.time.Duration.ofSeconds;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.awaitility.Awaitility.await;
 
 class BasicProcessingTest {
 
@@ -81,6 +86,25 @@ class BasicProcessingTest {
               var list = IntStream.range(0, 100).boxed().toList();
               List<Integer> result = list.stream().collect(c.collector().apply(i -> i));
               assertThat(result).containsAnyElementsOf(list);
+          }));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldStartProcessingImmediately() {
+        return all()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
+              var counter = new AtomicInteger();
+
+              Thread.startVirtualThread(() -> {
+                  Stream.iterate(0, i -> i + 1)
+                    .limit(100)
+                    .collect(c.collector().apply(i -> returnWithDelay(counter.incrementAndGet(), ofSeconds(1))));
+              });
+
+              await()
+                .pollInterval(1, MILLISECONDS)
+                .atMost(500, MILLISECONDS)
+                .until(() -> counter.get() > 0);
           }));
     }
 
