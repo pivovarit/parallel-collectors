@@ -1,14 +1,18 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
+import com.pivovarit.collectors.TestUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -22,7 +26,8 @@ class BasicParallelismTest {
 
     private static Stream<CollectorDefinition<Integer, Integer>> allBounded() {
         return Stream.of(
-          collector("parallel(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, e(), p), c -> c.join().toList())),
+          collector("parallel(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, e(), p), c -> c.join()
+            .toList())),
           collector("parallel(toList(), e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e(), p), CompletableFuture::join)),
           collector("parallel(toList(), e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e(), p), CompletableFuture::join)),
           collector("parallelToStream(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e(), p), Stream::toList)),
@@ -52,6 +57,15 @@ class BasicParallelismTest {
             })));
     }
 
+    @TestFactory
+    Stream<DynamicTest> shouldRespectMaxParallelism() {
+        return allBounded()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
+              var duration = timed(() -> IntStream.range(0, 10).boxed().collect(c.factory().collector(i -> TestUtils.returnWithDelay(i, Duration.ofMillis(100)), 2)));
+              assertThat(duration).isCloseTo(Duration.ofMillis(500), Duration.ofMillis(100));
+          }));
+    }
+
     protected record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> factory) {
         static <T, R> CollectorDefinition<T, R> collector(String name, CollectorFactory<T, R> collector) {
             return new CollectorDefinition<>(name, collector);
@@ -65,5 +79,11 @@ class BasicParallelismTest {
 
     private static Executor e() {
         return Executors.newCachedThreadPool();
+    }
+
+    private static Duration timed(Supplier<?> action) {
+        long start = System.currentTimeMillis();
+        var result = action.get();
+        return Duration.ofMillis(System.currentTimeMillis() - start);
     }
 }
