@@ -94,15 +94,10 @@ class StreamingTest {
           }));
     }
 
-    protected record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> factory) {
-        static <T, R> CollectorDefinition<T, R> collector(String name, CollectorFactory<T, R> collector) {
+    protected record CollectorDefinition<T, R>(String name, Factory.StreamingCollectorFactory<T, R> factory) {
+        static <T, R> CollectorDefinition<T, R> collector(String name, Factory.StreamingCollectorFactory<T, R> collector) {
             return new CollectorDefinition<>(name, collector);
         }
-    }
-
-    @FunctionalInterface
-    private interface CollectorFactory<T, R> {
-        Collector<T, ?, Stream<R>> collector(Function<T, R> f);
     }
 
     private static Executor e() {

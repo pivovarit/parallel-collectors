@@ -44,15 +44,10 @@ class NonBlockingTest {
           }));
     }
 
-    protected record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> factory) {
-        static <T, R> CollectorDefinition<T, R> collector(String name, CollectorFactory<T, R> collector) {
+    protected record CollectorDefinition<T, R>(String name, Factory.AsyncCollectorFactory<T, R> factory) {
+        static <T, R> CollectorDefinition<T, R> collector(String name, Factory.AsyncCollectorFactory<T, R> collector) {
             return new CollectorDefinition<>(name, collector);
         }
-    }
-
-    @FunctionalInterface
-    private interface CollectorFactory<T, R> {
-        Collector<T, ?, CompletableFuture<List<R>>> collector(Function<T, R> f);
     }
 
     private static Executor e() {

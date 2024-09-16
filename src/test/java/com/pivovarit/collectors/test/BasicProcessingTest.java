@@ -69,7 +69,7 @@ class BasicProcessingTest {
     Stream<DynamicTest> shouldProcessEmpty() {
         return all()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              assertThat(Stream.<Integer>empty().collect(c.collector().apply(i -> i))).isEmpty();
+              assertThat(Stream.<Integer>empty().collect(c.collector().collector(i -> i))).isEmpty();
           }));
     }
 
@@ -78,7 +78,7 @@ class BasicProcessingTest {
         return all()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               var list = IntStream.range(0, 100).boxed().toList();
-              List<Integer> result = list.stream().collect(c.collector().apply(i -> i));
+              List<Integer> result = list.stream().collect(c.collector().collector(i -> i));
               assertThat(result).containsExactlyInAnyOrderElementsOf(list);
           }));
     }
@@ -88,7 +88,7 @@ class BasicProcessingTest {
         return allOrdered()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               var list = IntStream.range(0, 100).boxed().toList();
-              List<Integer> result = list.stream().collect(c.collector().apply(i -> i));
+              List<Integer> result = list.stream().collect(c.collector().collector(i -> i));
               assertThat(result).containsAnyElementsOf(list);
           }));
     }
@@ -102,7 +102,7 @@ class BasicProcessingTest {
               Thread.startVirtualThread(() -> {
                   Stream.iterate(0, i -> i + 1)
                     .limit(100)
-                    .collect(c.collector().apply(i -> returnWithDelay(counter.incrementAndGet(), ofSeconds(1))));
+                    .collect(c.collector().collector(i -> returnWithDelay(counter.incrementAndGet(), ofSeconds(1))));
               });
 
               await()
@@ -121,7 +121,7 @@ class BasicProcessingTest {
               var latch = new CountDownLatch(size);
 
               assertThatThrownBy(() -> IntStream.range(0, size).boxed()
-                .collect(c.collector().apply(i -> {
+                .collect(c.collector().collector(i -> {
                     try {
                         latch.countDown();
                         latch.await();
@@ -140,8 +140,8 @@ class BasicProcessingTest {
           }));
     }
 
-    record CollectorDefinition<T, R>(String name, Function<Function<T, R>, Collector<T, ?, List<R>>> collector) {
-        static <T, R> CollectorDefinition<T, R> collector(String name, Function<Function<T, R>, Collector<T, ?, List<R>>> collector) {
+    record CollectorDefinition<T, R>(String name, Factory.CollectorFactory<T, R> collector) {
+        static <T, R> CollectorDefinition<T, R> collector(String name, Factory.CollectorFactory<T, R> collector) {
             return new CollectorDefinition<>(name, collector);
         }
     }
