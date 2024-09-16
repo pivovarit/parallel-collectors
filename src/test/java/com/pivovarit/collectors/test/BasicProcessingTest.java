@@ -57,7 +57,7 @@ class BasicProcessingTest {
               var counter = new AtomicInteger();
 
               Thread.startVirtualThread(() -> {
-                  Stream.iterate(0, i -> i + 1)
+                  var ignored = Stream.iterate(0, i -> i + 1)
                     .limit(100)
                     .collect(c.factory().collector(i -> returnWithDelay(counter.incrementAndGet(), ofSeconds(1))));
               });

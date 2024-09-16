@@ -92,7 +92,7 @@ class CompletionOrderSpliteratorTest {
     @Test
     void shouldRestoreInterrupt() {
         Thread executorThread = new Thread(() -> {
-            Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(Arrays.asList(new CompletableFuture<>()));
+            Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(List.of(new CompletableFuture<>()));
             try {
                 spliterator.tryAdvance(i -> {});
             } catch (Exception e) {
