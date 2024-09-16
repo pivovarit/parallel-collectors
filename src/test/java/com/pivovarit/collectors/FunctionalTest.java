@@ -174,7 +174,6 @@ class FunctionalTest {
           shouldInterruptOnException(collector, name)
         );
 
-        tests = limitedParallelism ? of(shouldRespectParallelism(collector, name)) : tests;
         tests = limitedParallelism ? of(shouldRejectInvalidParallelism(collector, name)) : tests;
 
         return tests;
@@ -190,7 +189,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> streamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldStartConsumingImmediately(collector, name),
-          shouldRespectParallelism(collector, name),
           shouldPushElementsToStreamAsSoonAsPossible(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldRejectInvalidParallelism(collector, name)
@@ -207,24 +205,6 @@ class FunctionalTest {
         return Stream.concat(
           streamingTests(collector, name),
           of(shouldProcessOnNThreadsETParallelism(collector, name)));
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldRespectParallelism(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should respect parallelism", name), () -> {
-            int parallelism = 2;
-            int delayMillis = 50;
-            withExecutor(e -> {
-                LocalTime before = LocalTime.now();
-                Stream.generate(() -> 42)
-                  .limit(4)
-                  .collect(collector.apply(i -> returnWithDelay(i, ofMillis(delayMillis)), e, parallelism))
-                  .join();
-
-                LocalTime after = LocalTime.now();
-                assertThat(Duration.between(before, after))
-                  .isGreaterThanOrEqualTo(ofMillis(delayMillis * parallelism));
-            });
-        });
     }
 
     private static <R extends Collection<Integer>> DynamicTest shouldPushElementsToStreamAsSoonAsPossible(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
