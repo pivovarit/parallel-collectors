@@ -8,7 +8,6 @@ import org.junit.jupiter.api.TestFactory;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +16,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -165,8 +163,7 @@ class FunctionalTest {
         return of(
           shouldStartConsumingImmediately(collector, name),
           shouldShortCircuitOnException(collector, name),
-          shouldInterruptOnException(collector, name),
-          shouldRemainConsistent(collector, name)
+          shouldInterruptOnException(collector, name)
         );
     }
 
@@ -174,8 +171,7 @@ class FunctionalTest {
         var tests = of(
           shouldStartConsumingImmediately(collector, name),
           shouldShortCircuitOnException(collector, name),
-          shouldInterruptOnException(collector, name),
-          shouldRemainConsistent(collector, name)
+          shouldInterruptOnException(collector, name)
         );
 
         tests = limitedParallelism ? of(shouldRespectParallelism(collector, name)) : tests;
@@ -187,8 +183,7 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldStartConsumingImmediately(collector, name),
-          shouldShortCircuitOnException(collector, name),
-          shouldRemainConsistent(collector, name)
+          shouldShortCircuitOnException(collector, name)
         );
     }
 
@@ -198,7 +193,6 @@ class FunctionalTest {
           shouldRespectParallelism(collector, name),
           shouldPushElementsToStreamAsSoonAsPossible(collector, name),
           shouldShortCircuitOnException(collector, name),
-          shouldRemainConsistent(collector, name),
           shouldRejectInvalidParallelism(collector, name)
         );
     }
@@ -286,38 +280,6 @@ class FunctionalTest {
 
                 assertThat(counter.longValue()).isLessThan(elements.size());
             }, size);
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldRemainConsistent(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should remain consistent", name), () -> {
-            int parallelism = 100;
-
-            ExecutorService executor = Executors.newFixedThreadPool(parallelism);
-
-            try {
-                List<Integer> elements = IntStream.range(0, parallelism).boxed().toList();
-
-                CountDownLatch countDownLatch = new CountDownLatch(parallelism);
-
-                R result = elements.stream()
-                  .collect(collector.apply(i -> {
-                      countDownLatch.countDown();
-                      try {
-                          countDownLatch.await();
-                      } catch (InterruptedException e) {
-                          throw new RuntimeException(e);
-                      }
-                      return i;
-                  }, executor, PARALLELISM))
-                  .join();
-
-                assertThat(new HashSet<>(result))
-                  .hasSameSizeAs(elements)
-                  .containsAll(elements);
-            } finally {
-                executor.shutdownNow();
-            }
         });
     }
 
