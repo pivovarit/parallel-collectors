@@ -2,7 +2,6 @@ package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
 import com.pivovarit.collectors.TestUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -20,6 +19,7 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.test.BasicParallelismTest.CollectorDefinition.collector;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 class BasicParallelismTest {
@@ -61,9 +61,20 @@ class BasicParallelismTest {
     Stream<DynamicTest> shouldRespectMaxParallelism() {
         return allBounded()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              var duration = timed(() -> IntStream.range(0, 10).boxed().collect(c.factory().collector(i -> TestUtils.returnWithDelay(i, Duration.ofMillis(100)), 2)));
+              var duration = timed(() -> IntStream.range(0, 10).boxed()
+                .collect(c.factory().collector(i -> TestUtils.returnWithDelay(i, Duration.ofMillis(100)), 2)));
               assertThat(duration).isCloseTo(Duration.ofMillis(500), Duration.ofMillis(100));
           }));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldRejectInvalidParallelism() {
+        return allBounded()
+          .flatMap(c -> Stream.of(-1, 0)
+            .map(p -> DynamicTest.dynamicTest("%s [p=%d]".formatted(c.name(), p), () -> {
+                assertThatThrownBy(() -> Stream.of(1).collect(c.factory().collector(i -> i, p)))
+                  .isExactlyInstanceOf(IllegalArgumentException.class);
+            })));
     }
 
     protected record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> factory) {
