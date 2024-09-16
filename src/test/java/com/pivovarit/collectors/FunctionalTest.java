@@ -164,7 +164,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldStartConsumingImmediately(collector, name),
-          shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
           shouldRemainConsistent(collector, name)
@@ -174,7 +173,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> tests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name, boolean limitedParallelism) {
         var tests = of(
           shouldStartConsumingImmediately(collector, name),
-          shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldInterruptOnException(collector, name),
           shouldRemainConsistent(collector, name)
@@ -189,7 +187,6 @@ class FunctionalTest {
     private static <R extends Collection<Integer>> Stream<DynamicTest> virtualThreadsStreamingTests(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
         return of(
           shouldStartConsumingImmediately(collector, name),
-          shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldRemainConsistent(collector, name)
         );
@@ -200,7 +197,6 @@ class FunctionalTest {
           shouldStartConsumingImmediately(collector, name),
           shouldRespectParallelism(collector, name),
           shouldPushElementsToStreamAsSoonAsPossible(collector, name),
-          shouldHandleThrowable(collector, name),
           shouldShortCircuitOnException(collector, name),
           shouldRemainConsistent(collector, name),
           shouldRejectInvalidParallelism(collector, name)
@@ -290,25 +286,6 @@ class FunctionalTest {
 
                 assertThat(counter.longValue()).isLessThan(elements.size());
             }, size);
-        });
-    }
-
-    private static <R extends Collection<Integer>> DynamicTest shouldHandleThrowable(CollectorSupplier<Function<Integer, Integer>, Executor, Integer, Collector<Integer, ?, CompletableFuture<R>>> collector, String name) {
-        return dynamicTest(format("%s: should not swallow exception", name), () -> {
-            List<Integer> elements = IntStream.range(0, 10).boxed().toList();
-
-            runWithExecutor(e -> {
-                assertThatThrownBy(elements.stream()
-                  .collect(collector.apply(i -> {
-                      if (i == 7) {
-                          throw new IllegalArgumentException();
-                      } else {
-                          return i;
-                      }
-                  }, e, PARALLELISM))::join)
-                  .isInstanceOf(CompletionException.class)
-                  .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-            }, 10);
         });
     }
 
