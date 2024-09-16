@@ -27,12 +27,9 @@ class RejectedExecutionHandlingTest {
 
     private static Stream<CollectorDefinition<Integer, Integer>> allWithCustomExecutors() {
         return Stream.of(
-          collector("parallel(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e), c -> c.thenApply(Stream::toList)
-            .join())),
-          collector("parallel(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e, 4), c -> c.thenApply(Stream::toList)
-            .join())),
-          collector("parallel(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e, 4), c -> c.thenApply(Stream::toList)
-            .join())),
+          collector("parallel(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e), c -> c.thenApply(Stream::toList).join())),
+          collector("parallel(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e, 4), c -> c.thenApply(Stream::toList).join())),
+          collector("parallel(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e, 4), c -> c.thenApply(Stream::toList).join())),
           collector("parallelToStream(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e), Stream::toList)),
           collector("parallelToStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e, 4), Stream::toList)),
           collector("parallelToStream(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e, 4), Stream::toList)),
@@ -78,14 +75,9 @@ class RejectedExecutionHandlingTest {
           }));
     }
 
-    protected record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> factory) {
-        static <T, R> CollectorDefinition<T, R> collector(String name, CollectorFactory<T, R> factory) {
+    protected record CollectorDefinition<T, R>(String name, Factory.CollectorFactoryWithExecutor<T, R> factory) {
+        static <T, R> CollectorDefinition<T, R> collector(String name, Factory.CollectorFactoryWithExecutor<T, R> factory) {
             return new CollectorDefinition<>(name, factory);
         }
-    }
-
-    @FunctionalInterface
-    private interface CollectorFactory<T, R> {
-        Collector<T, ?, List<R>> collector(Function<T, R> f, Executor executor);
     }
 }

@@ -76,15 +76,10 @@ class BasicParallelismTest {
             })));
     }
 
-    protected record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> factory) {
-        static <T, R> CollectorDefinition<T, R> collector(String name, CollectorFactory<T, R> collector) {
+    protected record CollectorDefinition<T, R>(String name, Factory.CollectorFactoryWithParallelism<T, R> factory) {
+        static <T, R> CollectorDefinition<T, R> collector(String name, Factory.CollectorFactoryWithParallelism<T, R> collector) {
             return new CollectorDefinition<>(name, collector);
         }
-    }
-
-    @FunctionalInterface
-    private interface CollectorFactory<T, R> {
-        Collector<T, ?, List<R>> collector(Function<T, R> f, Integer p);
     }
 
     private static Executor e() {

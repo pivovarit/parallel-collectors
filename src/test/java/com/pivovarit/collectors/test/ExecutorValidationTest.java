@@ -4,13 +4,9 @@ import com.pivovarit.collectors.ParallelCollectors;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.test.ExecutorValidationTest.CollectorDefinition.collector;
@@ -49,14 +45,11 @@ class ExecutorValidationTest {
             })));
     }
 
-    protected record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> factory) {
-        static <T, R> CollectorDefinition<T, R> collector(String name, CollectorFactory<T, R> factory) {
+    protected record CollectorDefinition<T, R>(String name, Factory.CollectorFactoryWithExecutor<T, R> factory) {
+        static <T, R> CollectorDefinition<T, R> collector(String name, Factory.CollectorFactoryWithExecutor<T, R> factory) {
             return new CollectorDefinition<>(name, factory);
         }
     }
 
-    @FunctionalInterface
-    private interface CollectorFactory<T, R> {
-        Collector<T, ?, List<R>> collector(Function<T, R> f, Executor executor);
-    }
+
 }

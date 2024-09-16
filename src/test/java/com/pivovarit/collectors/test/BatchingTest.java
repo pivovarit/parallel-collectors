@@ -46,13 +46,8 @@ class BatchingTest {
           }));
     }
 
-    @FunctionalInterface
-    private interface CollectorFactory<T, R> {
-        Collector<T, ?, List<R>> collector(Function<T, R> f, Integer p);
-    }
-
-    record CollectorDefinition<T, R>(String name, CollectorFactory<T, R> collector) {
-        static <T, R> CollectorDefinition<T, R> collector(String name, CollectorFactory<T, R> collector) {
+    record CollectorDefinition<T, R>(String name, Factory.CollectorFactoryWithParallelism<T, R> collector) {
+        static <T, R> CollectorDefinition<T, R> collector(String name, Factory.CollectorFactoryWithParallelism<T, R> collector) {
             return new CollectorDefinition<>(name, collector);
         }
     }
