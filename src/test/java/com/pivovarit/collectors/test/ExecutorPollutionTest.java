@@ -15,13 +15,13 @@ class ExecutorPollutionTest {
 
     @TestFactory
     Stream<DynamicTest> shouldNotPolluteExecutorFactory() {
-        return boundedCollectors().map(e -> DynamicTest.dynamicTest(e.getKey(),
+        return boundedCollectors().map(e -> DynamicTest.dynamicTest(e.name(),
           () -> {
               try (var e1 = warmedUp(new ThreadPoolExecutor(1, 2, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(2)))) {
 
                   var result = Stream.generate(() -> 42)
                     .limit(1000)
-                    .collect(e.getValue().apply(i -> i, e1, 1));
+                    .collect(e.factory().apply(i -> i, e1, 1));
 
                   switch (result) {
                       case CompletableFuture<?> cf -> cf.join();
@@ -34,12 +34,12 @@ class ExecutorPollutionTest {
 
     @TestFactory
     Stream<DynamicTest> shouldNotPolluteExecutorFactoryLimitedParallelism() {
-        return boundedCollectors().map(e -> DynamicTest.dynamicTest(e.getKey(), () -> {
+        return boundedCollectors().map(e -> DynamicTest.dynamicTest(e.name(), () -> {
             try (var e1 = warmedUp(new ThreadPoolExecutor(1, 2, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(2)))) {
 
                 var result = Stream.generate(() -> 42)
                   .limit(1000)
-                  .collect(e.getValue().apply(i -> i, e1, 2));
+                  .collect(e.factory().apply(i -> i, e1, 2));
 
                 switch (result) {
                     case CompletableFuture<?> cf -> cf.join();
