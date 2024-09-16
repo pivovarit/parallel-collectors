@@ -9,17 +9,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.test.ExceptionPropagationTest.CollectorDefinition.collector;
+import static com.pivovarit.collectors.TestUtils.incrementAndThrow;
+import static com.pivovarit.collectors.test.ExceptionHandlingTest.CollectorDefinition.collector;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class ExceptionPropagationTest {
+class ExceptionHandlingTest {
 
     private static Stream<CollectorDefinition<Integer, Integer>> all() {
         return Stream.of(
@@ -56,6 +59,22 @@ class ExceptionPropagationTest {
                 })))
                 .isInstanceOf(CompletionException.class)
                 .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+          }));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldShortcircuitOnException() {
+        return all()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
+              List<Integer> elements = IntStream.range(0, 100).boxed().toList();
+              AtomicInteger counter = new AtomicInteger();
+
+              assertThatThrownBy(() -> elements.stream()
+                .collect(c.collector().apply(i -> incrementAndThrow(counter))))
+                .isInstanceOf(CompletionException.class)
+                .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+
+              assertThat(counter.longValue()).isLessThan(elements.size());
           }));
     }
 
