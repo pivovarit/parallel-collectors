@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.executorCollector;
 import static java.util.stream.Collectors.collectingAndThen;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static java.util.stream.Collectors.toList;
+
 
 class ExecutorValidationTest {
 
@@ -22,6 +24,11 @@ class ExecutorValidationTest {
           executorCollector("parallel(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e, 4), c -> c.thenApply(Stream::toList).join())),
           executorCollector("parallel(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e, 1), c -> c.thenApply(Stream::toList).join())),
           executorCollector("parallel(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e, 4), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallel(toList(), e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e, 1), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e, 4), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e, 1), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e, 4), c -> c.join())),
           executorCollector("parallelToStream(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e), Stream::toList)),
           executorCollector("parallelToStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e, 1), Stream::toList)),
           executorCollector("parallelToStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e, 4), Stream::toList)),
