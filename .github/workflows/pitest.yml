@@ -38,6 +38,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/pit-reports/*/
+          publish_dir: ./target/pit-reports/*
 
 
