@@ -9,6 +9,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -24,6 +25,8 @@ final class Dispatcher<T> {
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
     private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
+
+    private final ThreadFactory dispatcherThreadFactory = Thread::startVirtualThread;
 
     private final Executor executor;
     private final Semaphore limiter;
@@ -72,7 +75,7 @@ final class Dispatcher<T> {
 
     void start() {
         if (!started.getAndSet(true)) {
-            Thread.startVirtualThread(() -> {
+            dispatcherThreadFactory.newThread(() -> {
                 try {
                     while (true) {
                         try {
