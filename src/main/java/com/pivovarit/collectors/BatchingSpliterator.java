@@ -6,6 +6,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
@@ -16,8 +17,8 @@ import static java.util.stream.StreamSupport.stream;
  */
 final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
-    private final List<T> source;
-    private final int maxChunks;
+    private List<T> source;
+    private int maxChunks;
 
     private int chunks;
     private int chunkSize;
@@ -80,6 +81,17 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     @Override
     public Spliterator<List<T>> trySplit() {
+        if (actualBatchCount(source, chunks) > 1 || consumed == 0 ) {
+            var first = source.subList(0, source.size() / 2);
+            var second = source.subList(source.size() / 2, source.size());
+            var originalChunks = chunks;
+
+            source = first;
+            chunks = originalChunks % 2 == 0 ? originalChunks / 2 : originalChunks / 2 + 1;
+            maxChunks = Math.min(source.size(), chunks);
+            chunkSize = (int) Math.ceil(((double) source.size()) / chunks);
+            return new BatchingSpliterator<>(second, originalChunks / 2);
+        }
         return null;
     }
 
@@ -91,5 +103,26 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
     @Override
     public int characteristics() {
         return ORDERED | SIZED;
+    }
+
+    private static <T> int actualBatchCount(List<T> list, int numberOfBatches) {
+        int batchSize = list.size() / numberOfBatches;
+        int remainder = list.size() % numberOfBatches;
+
+        int batches = 0;
+        int currentIndex = 0;
+
+        for (int i = 0; i < numberOfBatches; i++) {
+            int currentBatchSize = batchSize + (remainder > 0 ? 1 : 0);
+            remainder--;
+
+            int nextIndex = Math.min(currentIndex + currentBatchSize, list.size());
+            if (currentIndex < nextIndex) {
+                batches++;
+            }
+            currentIndex = nextIndex;
+        }
+
+        return batches;
     }
 }
