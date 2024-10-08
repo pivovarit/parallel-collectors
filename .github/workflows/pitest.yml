@@ -26,12 +26,6 @@ jobs:
           architecture: ${{ matrix.architecture }}
           distribution: 'oracle'
           
-      - uses: actions/cache@v4.1.0
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-
       - name: Run Mutation Testing
         run: mvn package -Ppitest org.pitest:pitest-maven:mutationCoverage
 
