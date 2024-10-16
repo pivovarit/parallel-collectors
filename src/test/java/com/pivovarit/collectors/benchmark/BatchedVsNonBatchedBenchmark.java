@@ -8,10 +8,7 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.results.format.ResultFormatType;
-import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -20,7 +17,7 @@ import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 
-public class Bench {
+public class BatchedVsNonBatchedBenchmark {
 
     @State(Scope.Benchmark)
     public static class BenchmarkState {
@@ -74,14 +71,6 @@ public class Bench {
     }
 
     public static void main(String[] args) throws RunnerException {
-        new Runner(
-          new OptionsBuilder()
-            .include(Bench.class.getSimpleName())
-            .warmupIterations(5)
-            .measurementIterations(5)
-            .resultFormat(ResultFormatType.JSON)
-            .result("result.json")
-            .forks(1)
-            .build()).run();
+        Benchmarks.run(BatchedVsNonBatchedBenchmark.class);
     }
 }
