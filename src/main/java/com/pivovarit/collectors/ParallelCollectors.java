@@ -28,11 +28,11 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(i), toList()));
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param collector   the {@code Collector} describing the reduction
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
-     * @param <RR>        the reduction result {@code collector}
+     * @param mapper    a transformation to be performed in parallel
+     * @param collector the {@code Collector} describing the reduction
+     * @param <T>       the type of the collected elements
+     * @param <R>       the result returned by {@code mapper}
+     * @param <RR>      the reduction result {@code collector}
      *
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
@@ -106,12 +106,12 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(i), toList(), executor));
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param collector   the {@code Collector} describing the reduction
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
-     * @param <RR>        the reduction result {@code collector}
+     * @param mapper    a transformation to be performed in parallel
+     * @param collector the {@code Collector} describing the reduction
+     * @param executor  the {@code Executor} to use for asynchronous execution
+     * @param <T>       the type of the collected elements
+     * @param <R>       the result returned by {@code mapper}
+     * @param <RR>      the reduction result {@code collector}
      *
      * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
      *
@@ -135,9 +135,9 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo()));
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper a transformation to be performed in parallel
+     * @param <T>    the type of the collected elements
+     * @param <R>    the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
@@ -162,6 +162,7 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param mapper      a transformation to be performed in parallel
+     * @param parallelism the max parallelism level
      * @param <T>         the type of the collected elements
      * @param <R>         the result returned by {@code mapper}
      *
@@ -215,10 +216,10 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(), executor));
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
@@ -242,9 +243,9 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper a transformation to be performed in parallel
+     * @param <T>    the type of the collected elements
+     * @param <R>    the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
@@ -295,10 +296,10 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
@@ -350,9 +351,9 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper a transformation to be performed in parallel
+     * @param <T>    the type of the collected elements
+     * @param <R>    the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
@@ -403,10 +404,10 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      a transformation to be performed in parallel
-     * @param executor    the {@code Executor} to use for asynchronous execution
-     * @param <T>         the type of the collected elements
-     * @param <R>         the result returned by {@code mapper}
+     * @param mapper   a transformation to be performed in parallel
+     * @param executor the {@code Executor} to use for asynchronous execution
+     * @param <T>      the type of the collected elements
+     * @param <R>      the result returned by {@code mapper}
      *
      * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
      *
