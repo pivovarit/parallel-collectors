@@ -33,7 +33,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.plugin.version>3.11.2</maven.javadoc.plugin.version>
         <junit.version>5.11.4</junit.version>
-        <assertj.version>3.27.0</assertj.version>
+        <assertj.version>3.27.1</assertj.version>
         <awaitility.version>4.2.2</awaitility.version>
         <jmh.version>1.37</jmh.version>
         <jmh.generator>default</jmh.generator>
