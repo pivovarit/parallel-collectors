@@ -7,9 +7,17 @@ import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.core.domain.JavaModifier.FINAL;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 @AnalyzeClasses(packages = "com.pivovarit", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
+
+    @ArchTest
+    static final ArchRule shouldBeFreeOfCycles = slices()
+      .matching("com.pivovarit.(*)..")
+      .should().beFreeOfCycles()
+      .as("the library should be free of cycles")
+      .because("cycles are bad");
 
     @ArchTest
     static final ArchRule shouldHaveSingleFacade = classes()
