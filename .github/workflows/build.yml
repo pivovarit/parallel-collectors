@@ -45,5 +45,5 @@ jobs:
           cache: 'maven'
 
       - name: Validate JavaDocs
-        run: mvn -Pdoclint package -DskipTests=true
+        run: mvn -Pdoclint package -DskipTests=true -DforkCount=1 -T1C
 
