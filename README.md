@@ -46,11 +46,11 @@ They are:
 
 #### JDK 21+:
 
-    compile 'com.pivovarit:parallel-collectors:3.2.0'`
+    implementation 'com.pivovarit:parallel-collectors:3.2.0'`
 
 #### JDK 8+:
 
-    compile 'com.pivovarit:parallel-collectors:2.6.1'`
+    implementation 'com.pivovarit:parallel-collectors:2.6.1'`
 
 ## Philosophy
 
