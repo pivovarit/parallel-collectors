@@ -1,18 +1,17 @@
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.TestUtils;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
+import static com.pivovarit.collectors.test.Factory.allBounded;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
+import com.pivovarit.collectors.TestUtils;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import static com.pivovarit.collectors.test.Factory.allBounded;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 class BasicParallelismTest {
 

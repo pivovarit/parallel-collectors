@@ -1,7 +1,13 @@
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.ParallelCollectors;
+import static com.pivovarit.collectors.ParallelCollectors.Batching.parallel;
+import static com.pivovarit.collectors.test.Factory.GenericCollector.advancedCollector;
+import static com.pivovarit.collectors.test.Factory.GenericCollector.collector;
+import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
+import com.pivovarit.collectors.ParallelCollectors;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -9,13 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-
-import static com.pivovarit.collectors.ParallelCollectors.Batching.parallel;
-import static com.pivovarit.collectors.test.Factory.GenericCollector.advancedCollector;
-import static com.pivovarit.collectors.test.Factory.GenericCollector.collector;
-import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
 
 final class Factory {
 

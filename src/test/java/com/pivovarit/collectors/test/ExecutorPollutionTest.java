@@ -1,15 +1,14 @@
 package com.pivovarit.collectors.test;
 
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
+import static com.pivovarit.collectors.test.Factory.boundedCollectors;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
-import static com.pivovarit.collectors.test.Factory.boundedCollectors;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 class ExecutorPollutionTest {
 

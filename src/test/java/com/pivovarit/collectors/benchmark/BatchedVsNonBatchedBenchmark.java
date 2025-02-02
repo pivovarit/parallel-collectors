@@ -1,6 +1,12 @@
 package com.pivovarit.collectors.benchmark;
 
+import static java.util.stream.Collectors.toList;
+
 import com.pivovarit.collectors.ParallelCollectors;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Param;
@@ -9,13 +15,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.runner.RunnerException;
-
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.IntStream;
-
-import static java.util.stream.Collectors.toList;
 
 public class BatchedVsNonBatchedBenchmark {
 

@@ -1,5 +1,7 @@
 package com.pivovarit.collectors;
 
+import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -13,8 +15,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
 
 /**
  * @author Grzegorz Piwowarek
