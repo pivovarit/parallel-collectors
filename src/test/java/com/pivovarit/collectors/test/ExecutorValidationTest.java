@@ -1,18 +1,17 @@
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.ParallelCollectors;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
+import static com.pivovarit.collectors.test.Factory.GenericCollector.executorCollector;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.pivovarit.collectors.ParallelCollectors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
-import static com.pivovarit.collectors.test.Factory.GenericCollector.executorCollector;
-import static java.util.stream.Collectors.collectingAndThen;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static java.util.stream.Collectors.toList;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 
 class ExecutorValidationTest {

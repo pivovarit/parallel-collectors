@@ -55,5 +55,3 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
         return SIZED | IMMUTABLE | NONNULL;
     }
 }
-
-

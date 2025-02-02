@@ -1,12 +1,11 @@
 package com.pivovarit.collectors.test;
 
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
-
-import java.util.stream.Stream;
-
 import static com.pivovarit.collectors.test.Factory.allBounded;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 class ParallelismValidationTest {
 

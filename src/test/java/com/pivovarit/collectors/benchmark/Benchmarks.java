@@ -1,11 +1,10 @@
 package com.pivovarit.collectors.benchmark;
 
+import java.nio.file.Path;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-
-import java.nio.file.Path;
 
 final class Benchmarks {
 
