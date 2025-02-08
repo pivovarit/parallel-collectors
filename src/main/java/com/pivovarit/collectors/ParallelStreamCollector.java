@@ -1,16 +1,5 @@
 package com.pivovarit.collectors;
 
-import static com.pivovarit.collectors.BatchingSpliterator.batching;
-import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
-import static com.pivovarit.collectors.CompletionStrategy.ordered;
-import static com.pivovarit.collectors.CompletionStrategy.unordered;
-import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
-import static com.pivovarit.collectors.Preconditions.requireValidParallelism;
-import static java.util.Collections.emptySet;
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -24,6 +13,17 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+
+import static com.pivovarit.collectors.BatchingSpliterator.batching;
+import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
+import static com.pivovarit.collectors.CompletionStrategy.ordered;
+import static com.pivovarit.collectors.CompletionStrategy.unordered;
+import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
+import static com.pivovarit.collectors.Preconditions.requireValidParallelism;
+import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author Grzegorz Piwowarek

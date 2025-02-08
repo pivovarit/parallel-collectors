@@ -1,14 +1,5 @@
 package com.pivovarit.collectors.test;
 
-import static com.pivovarit.collectors.test.Factory.GenericCollector.executorCollector;
-import static java.time.Duration.ofMillis;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Stream.of;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
-
 import com.pivovarit.collectors.ParallelCollectors;
 import com.pivovarit.collectors.TestUtils;
 import java.util.concurrent.CompletionException;
@@ -17,6 +8,15 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+
+import static com.pivovarit.collectors.test.Factory.GenericCollector.executorCollector;
+import static java.time.Duration.ofMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Stream.of;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class RejectedExecutionHandlingTest {
 

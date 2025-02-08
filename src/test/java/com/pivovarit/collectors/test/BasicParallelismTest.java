@@ -1,9 +1,5 @@
 package com.pivovarit.collectors.test;
 
-import static com.pivovarit.collectors.test.Factory.allBounded;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-
 import com.pivovarit.collectors.TestUtils;
 import java.time.Duration;
 import java.util.List;
@@ -12,6 +8,10 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+
+import static com.pivovarit.collectors.test.Factory.allBounded;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 class BasicParallelismTest {
 

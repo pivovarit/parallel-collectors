@@ -1,15 +1,15 @@
 package com.pivovarit.collectors;
 
-import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
-import static java.util.stream.StreamSupport.stream;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+
+import static java.util.stream.Stream.empty;
+import static java.util.stream.Stream.of;
+import static java.util.stream.StreamSupport.stream;
 
 /**
  * @author Grzegorz Piwowarek

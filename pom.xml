@@ -97,7 +97,9 @@
                 <configuration>
                     <java>
                         <removeUnusedImports/>
-                        <importOrder/>
+                        <importOrder>
+                            <order>,\#</order>
+                        </importOrder>
                         <endWithNewline/>
                     </java>
                 </configuration>
@@ -288,6 +290,29 @@
                             <failOnWarnings>true</failOnWarnings>
                             <failOnError>true</failOnError>
                         </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>java11-plus</id>
+            <activation>
+                <jdk>[11,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>your.plugin.group</groupId>
+                        <artifactId>your-plugin-artifact</artifactId>
+                        <version>your-plugin-version</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>your-goal</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

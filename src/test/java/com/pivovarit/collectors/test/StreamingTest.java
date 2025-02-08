@@ -1,5 +1,14 @@
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.ParallelCollectors;
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.streamingCollector;
 import static com.pivovarit.collectors.test.Factory.e;
@@ -9,15 +18,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-
-import com.pivovarit.collectors.ParallelCollectors;
-import java.time.Duration;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
 
 class StreamingTest {
 

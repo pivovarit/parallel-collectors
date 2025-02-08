@@ -1,15 +1,5 @@
 package com.pivovarit.collectors;
 
-import static com.pivovarit.collectors.BatchingSpliterator.batching;
-import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
-import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
-import static com.pivovarit.collectors.Preconditions.requireValidParallelism;
-import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.CompletableFuture.allOf;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,6 +15,16 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+
+import static com.pivovarit.collectors.BatchingSpliterator.batching;
+import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
+import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
+import static com.pivovarit.collectors.Preconditions.requireValidParallelism;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.CompletableFuture.allOf;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author Grzegorz Piwowarek
