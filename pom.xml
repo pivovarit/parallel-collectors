@@ -97,7 +97,9 @@
                 <configuration>
                     <java>
                         <removeUnusedImports/>
-                        <importOrder/>
+                        <importOrder>
+                            <order>,\#</order>
+                        </importOrder>
                         <endWithNewline/>
                     </java>
                 </configuration>

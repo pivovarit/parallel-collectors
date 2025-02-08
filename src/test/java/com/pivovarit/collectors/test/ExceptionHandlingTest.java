@@ -1,10 +1,5 @@
 package com.pivovarit.collectors.test;
 
-import static com.pivovarit.collectors.TestUtils.incrementAndThrow;
-import static com.pivovarit.collectors.test.Factory.all;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,6 +7,11 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+
+import static com.pivovarit.collectors.TestUtils.incrementAndThrow;
+import static com.pivovarit.collectors.test.Factory.all;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ExceptionHandlingTest {
 

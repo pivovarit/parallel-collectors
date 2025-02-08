@@ -1,5 +1,11 @@
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.ParallelCollectors;
+import java.time.Duration;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.asyncCollector;
 import static com.pivovarit.collectors.test.Factory.e;
@@ -7,12 +13,6 @@ import static java.time.Duration.ofDays;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
-
-import com.pivovarit.collectors.ParallelCollectors;
-import java.time.Duration;
-import java.util.stream.Stream;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
 
 class NonBlockingTest {
 
