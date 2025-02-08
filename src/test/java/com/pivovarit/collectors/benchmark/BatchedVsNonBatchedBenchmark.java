@@ -1,7 +1,5 @@
 package com.pivovarit.collectors.benchmark;
 
-import static java.util.stream.Collectors.toList;
-
 import com.pivovarit.collectors.ParallelCollectors;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -15,6 +13,8 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.runner.RunnerException;
+
+import static java.util.stream.Collectors.toList;
 
 public class BatchedVsNonBatchedBenchmark {
 

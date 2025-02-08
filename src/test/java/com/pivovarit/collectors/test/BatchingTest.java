@@ -1,17 +1,17 @@
 package com.pivovarit.collectors.test;
 
-import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
-import static com.pivovarit.collectors.test.Factory.e;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.pivovarit.collectors.ParallelCollectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+
+import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
+import static com.pivovarit.collectors.test.Factory.e;
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class BatchingTest {
     private static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithParallelism<Integer, Integer>>> allBatching() {
