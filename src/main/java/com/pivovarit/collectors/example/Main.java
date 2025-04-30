@@ -1,5 +1,6 @@
 package com.pivovarit.collectors.example;
 
+import com.pivovarit.collectors.Modification;
 import com.pivovarit.collectors.ParallelCollectors;
 
 import java.time.Duration;
@@ -49,6 +50,28 @@ class Main {
                 executor(e),
                 batched(),
                 parallelism(4)
+              )).join());
+
+            System.out.println(result);
+        }
+    }
+
+    record Example3() {
+        public static void main(String[] args) {
+            List<Integer> ints = List.of(1, 2, 3, 4);
+
+            ExecutorService e = Executors.newCachedThreadPool();
+
+            Modification[] modifications = new Modification[]{
+              executor(e),
+              batched(),
+              parallelism(4)};
+
+            var result = timed(() -> ints.stream()
+              .collect(ParallelCollectors.parallel2(
+                i -> process(i),
+                Collectors.toList(),
+                modifications
               )).join());
 
             System.out.println(result);
