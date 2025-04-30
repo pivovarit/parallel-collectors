@@ -26,7 +26,7 @@ public final class ParallelCollectors {
         throw new UnsupportedOperationException("not implemented yet");
     }
 
-    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel2(Function<T, R> mapper, Collector<R, ?, RR> collector, Modification... configs) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel2(Function<T, R> mapper, Collector<R, ?, RR> collector, Customization... configs) {
         return todo();
     }
 

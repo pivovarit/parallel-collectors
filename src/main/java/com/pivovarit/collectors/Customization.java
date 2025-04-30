@@ -3,19 +3,19 @@ package com.pivovarit.collectors;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-public sealed interface Modification
+public sealed interface Customization
   permits Batching, ThreadPool, Parallelism {
 
-    static Modification executor(Executor executor) {
+    static Customization executor(Executor executor) {
         Objects.requireNonNull(executor);
         return new ThreadPool(executor);
     }
 
-    static Modification batched() {
+    static Customization batched() {
         return new Batching(true);
     }
 
-    static Modification parallelism(int parallelism) {
+    static Customization parallelism(int parallelism) {
         return new Parallelism(parallelism);
     }
 }
