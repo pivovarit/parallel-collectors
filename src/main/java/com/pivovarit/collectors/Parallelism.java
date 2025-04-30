@@ -1,4 +1,4 @@
 package com.pivovarit.collectors;
 
-record Parallelism(int parallelism) implements Customization {
+record Parallelism(int parallelism) implements Option {
 }

@@ -1,9 +1,5 @@
 package com.pivovarit.collectors;
 
-import com.pivovarit.collectors.config.Batching;
-import com.pivovarit.collectors.config.Parallelism;
-import com.pivovarit.collectors.config.ThreadPool;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +22,7 @@ public final class ParallelCollectors {
         throw new UnsupportedOperationException("not implemented yet");
     }
 
-    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel2(Function<T, R> mapper, Collector<R, ?, RR> collector, Customization... configs) {
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel2(Function<T, R> mapper, Collector<R, ?, RR> collector, Option... configs) {
         return todo();
     }
 

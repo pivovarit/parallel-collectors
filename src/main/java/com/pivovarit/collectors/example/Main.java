@@ -1,6 +1,6 @@
 package com.pivovarit.collectors.example;
 
-import com.pivovarit.collectors.Customization;
+import com.pivovarit.collectors.Option;
 import com.pivovarit.collectors.ParallelCollectors;
 
 import java.time.Duration;
@@ -11,9 +11,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.pivovarit.collectors.Config.with;
-import static com.pivovarit.collectors.Customization.batched;
-import static com.pivovarit.collectors.Customization.executor;
-import static com.pivovarit.collectors.Customization.parallelism;
+import static com.pivovarit.collectors.Option.batched;
+import static com.pivovarit.collectors.Option.executor;
+import static com.pivovarit.collectors.Option.parallelism;
 
 class Main {
 
@@ -47,7 +47,6 @@ class Main {
               .collect(ParallelCollectors.parallel2(
                 i -> process(i),
                 Collectors.toList(),
-
                 executor(e),
                 batched(),
                 parallelism(4)
@@ -63,7 +62,7 @@ class Main {
 
             ExecutorService e = Executors.newCachedThreadPool();
 
-            Customization[] modifications = new Customization[]{
+            Option[] modifications = new Option[]{
               executor(e),
               batched(),
               parallelism(4)};
