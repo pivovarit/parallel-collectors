@@ -17,6 +17,26 @@ public final class ParallelCollectors {
     private ParallelCollectors() {
     }
 
+    private static <T> T todo() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Option... options) {
+        return todo();
+    }
+
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Option... options) {
+        return todo();
+    }
+
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Option... options) {
+        return todo();
+    }
+
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Option... options) {
+        return todo();
+    }
+
     /**
      * A convenience {@link Collector} used for executing parallel computations using Virtual Threads
      * and returning them as a {@link CompletableFuture} containing a result of the application of the user-provided {@link Collector}.
