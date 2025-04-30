@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ParallelismValidationTest {
 
     @TestFactory
-    Stream<DynamicTest> shouldRejectInvalidRejectedExecutionHandlerFactory() {
+    Stream<DynamicTest> shouldRejectInvalidParallelism() {
         return allBounded()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               assertThatThrownBy(() -> c.factory()

@@ -1,5 +1,6 @@
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.Config;
 import com.pivovarit.collectors.ParallelCollectors;
 import java.time.Duration;
 import java.util.stream.Stream;
@@ -24,7 +25,13 @@ class NonBlockingTest {
           asyncCollector("parallel(toList(), e, p=1)", f -> ParallelCollectors.parallel(f, toList(), e(), 1)),
           asyncCollector("parallel(toList(), e, p=2)", f -> ParallelCollectors.parallel(f, toList(), e(), 2)),
           asyncCollector("parallel(toList(), e, p=1) [batching]", f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 1)),
-          asyncCollector("parallel(toList(), e, p=2) [batching]", f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 2))
+          asyncCollector("parallel(toList(), e, p=2) [batching]", f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 2)),
+          //
+          asyncCollector("parallel(toList(), e)", f -> ParallelCollectors.parallel(f, toList(), Config.with().executor(e()).build())),
+          asyncCollector("parallel(toList(), e, p=1)", f -> ParallelCollectors.parallel(f, toList(), Config.with().parallelism(1).executor(e()).build())),
+          asyncCollector("parallel(toList(), e, p=2)", f -> ParallelCollectors.parallel(f, toList(), Config.with().parallelism(2).executor(e()).build())),
+          asyncCollector("parallel(toList(), e, p=1) [batching]", f -> ParallelCollectors.parallel(f, toList(), Config.with().batching(true).parallelism(1).executor(e()).build())),
+          asyncCollector("parallel(toList(), e, p=2) [batching]", f -> ParallelCollectors.parallel(f, toList(), Config.with().batching(true).parallelism(2).executor(e()).build()))
         );
     }
 

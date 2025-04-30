@@ -1,6 +1,8 @@
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.Config;
 import com.pivovarit.collectors.ParallelCollectors;
+
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -9,7 +11,6 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.Batching.parallel;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.advancedCollector;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.collector;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
@@ -24,20 +25,39 @@ final class Factory {
 
     static Stream<Factory.GenericCollector<Factory.CollectorFactory<Integer, Integer>>> all() {
         return Stream.of(
+          collector("parallel(p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().parallelism(p()).build()), c -> c.join().toList())),
+          collector("parallel(e) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().executor(e()).build()), c -> c.join().toList())),
+          collector("parallel(e, p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().executor(e()).parallelism(p()).build()), c -> c.join().toList())),
+          collector("parallel(toList(), e, p) [batching] via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().batching(true).executor(e()).parallelism(p()).build()), CompletableFuture::join)),
+          collector("parallel(toList(), p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().parallelism(p()).build()), CompletableFuture::join)),
+          collector("parallel(toList(), e) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().executor(e()).build()), CompletableFuture::join)),
+          collector("parallel(toList(), e, p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().executor(e()).parallelism(p()).build()), CompletableFuture::join)),
+          collector("parallelToStream(p) via config", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().parallelism(p()).build()), Stream::toList)),
+          collector("parallelToStream(e) via config", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().executor(e()).build()), Stream::toList)),
+          collector("parallelToStream(e, p) via config", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().executor(e()).parallelism(p()).build()), Stream::toList)),
+          collector("parallelToStream(e, p) [batching] via config", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().batching(true).executor(e()).parallelism(p()).build()), Stream::toList)),
+          collector("parallelToOrderedStream(p) via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().parallelism(p()).build()), Stream::toList)),
+          collector("parallelToOrderedStream(e) via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).build()), Stream::toList)),
+          collector("parallelToOrderedStream(e, p) via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).parallelism(p()).build()), Stream::toList)),
+          collector("parallelToOrderedStream(e, p) [batching] via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().batching(true).executor(e()).parallelism(p()).build()), Stream::toList)),
+          //
           collector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.join().toList())),
           collector("parallel(p)", f -> collectingAndThen(ParallelCollectors.parallel(f, p()), c -> c.join().toList())),
           collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, e()), c -> c.join().toList())),
           collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, e(), p()), c -> c.join().toList())),
+          //
           collector("parallel(toList())", f -> collectingAndThen(ParallelCollectors.parallel(f, toList()), CompletableFuture::join)),
           collector("parallel(toList(), p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), p()), CompletableFuture::join)),
           collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e()), CompletableFuture::join)),
           collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e(), p()), CompletableFuture::join)),
           collector("parallel(toList(), e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e(), p()), CompletableFuture::join)),
+          //
           collector("parallelToStream()", f -> collectingAndThen(ParallelCollectors.parallelToStream(f), Stream::toList)),
-          collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, p()), Stream::toList)),
+          collector("parallelToStream(p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, p()), Stream::toList)),
           collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, e()), Stream::toList)),
           collector("parallelToStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, e(), p()), Stream::toList)),
           collector("parallelToStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e(), p()), Stream::toList)),
+          //
           collector("parallelToOrderedStream()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f), Stream::toList)),
           collector("parallelToOrderedStream(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, p()), Stream::toList)),
           collector("parallelToOrderedStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e()), Stream::toList)),
@@ -48,6 +68,18 @@ final class Factory {
 
     static Stream<Factory.GenericCollector<Factory.CollectorFactory<Integer, Integer>>> allOrdered() {
         return Stream.of(
+          collector("parallel(p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().parallelism(p()).build()), c -> c.join().toList())),
+          collector("parallel(e) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().executor(e()).build()), c -> c.join().toList())),
+          collector("parallel(e, p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().executor(e()).parallelism(p()).build()), c -> c.join().toList())),
+          collector("parallel(toList(), e, p) [batching] via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().batching(true).executor(e()).parallelism(p()).build()), CompletableFuture::join)),
+          collector("parallel(toList(), p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().parallelism(p()).build()), CompletableFuture::join)),
+          collector("parallel(toList(), e) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().executor(e()).build()), CompletableFuture::join)),
+          collector("parallel(toList(), e, p) via config", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().executor(e()).parallelism(p()).build()), CompletableFuture::join)),
+          collector("parallelToOrderedStream(p) via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().parallelism(p()).build()), Stream::toList)),
+          collector("parallelToOrderedStream(e) via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).build()), Stream::toList)),
+          collector("parallelToOrderedStream(e, p) via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).parallelism(p()).build()), Stream::toList)),
+          collector("parallelToOrderedStream(e, p) [batching] via config", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().batching(true).executor(e()).parallelism(p()).build()), Stream::toList)),
+          //
           collector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.join().toList())),
           collector("parallel(p)", f -> collectingAndThen(ParallelCollectors.parallel(f, p()), c -> c.join().toList())),
           collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, e()), c -> c.join().toList())),
@@ -67,6 +99,18 @@ final class Factory {
 
     static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithParallelism<Integer, Integer>>> allBounded() {
         return Stream.of(
+          limitedCollector("parallel(p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().parallelism(p).build()), c -> c.join().toList())),
+          limitedCollector("parallel(e, p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().executor(e()).parallelism(p).build()), c -> c.join().toList())),
+          limitedCollector("parallel(toList(), e, p) [batching] via config", (f,p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().batching(true).executor(e()).parallelism(p).build()), CompletableFuture::join)),
+          limitedCollector("parallel(toList(), p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().parallelism(p).build()), CompletableFuture::join)),
+          limitedCollector("parallel(toList(), e, p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().executor(e()).parallelism(p).build()), CompletableFuture::join)),
+          limitedCollector("parallelToStream(p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().parallelism(p).build()), Stream::toList)),
+          limitedCollector("parallelToStream(e, p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().executor(e()).parallelism(p).build()), Stream::toList)),
+          limitedCollector("parallelToStream(e, p) [batching] via config", (f,p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().batching(true).executor(e()).parallelism(p).build()), Stream::toList)),
+          limitedCollector("parallelToOrderedStream(p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().parallelism(p).build()), Stream::toList)),
+          limitedCollector("parallelToOrderedStream(e, p) via config", (f,p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).parallelism(p).build()), Stream::toList)),
+          limitedCollector("parallelToOrderedStream(e, p) [batching] via config", (f,p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().batching(true).executor(e()).parallelism(p).build()), Stream::toList)),
+          //
           limitedCollector("parallel(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, p), c -> c.join().toList())),
           limitedCollector("parallel(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, e(), p), c -> c.join().toList())),
           limitedCollector("parallel(toList(), p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), p), CompletableFuture::join)),
@@ -83,12 +127,21 @@ final class Factory {
 
     public static Stream<GenericCollector<CollectorFactoryWithParallelismAndExecutor<Integer, Integer>>> boundedCollectors() {
         return Stream.of(
+          advancedCollector("parallel() via config", (f, e, p) -> ParallelCollectors.parallel(f, Config.with().executor(e).parallelism(p).build())),
+          advancedCollector("parallel(toList()) via config", (f, e, p) -> ParallelCollectors.parallel(f, toList(), Config.with().executor(e).parallelism(p).build())),
+          advancedCollector("parallelToStream() via config", (f, e, p) -> ParallelCollectors.parallelToStream(f, Config.with().executor(e).parallelism(p).build())),
+          advancedCollector("parallelToOrderedStream() via config", (f, e, p) -> ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e).parallelism(p).build())),
+          advancedCollector("parallel() (batching) via config", (f, e, p) -> ParallelCollectors.parallel(f, Config.with().executor(e).batching(true).parallelism(p).build())),
+          advancedCollector("parallel(toList()) (batching) via config", (f, e, p) -> ParallelCollectors.parallel(f, toList(), Config.with().executor(e).batching(true).parallelism(p).build())),
+          advancedCollector("parallelToStream() (batching) via config", (f, e, p) -> ParallelCollectors.parallelToStream(f, Config.with().executor(e).batching(true).parallelism(p).build())),
+          advancedCollector("parallelToOrderedStream() (batching) via config", (f, e, p) -> ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e).batching(true).parallelism(p).build())),
+          //
           advancedCollector("parallel()", (f, e, p) -> ParallelCollectors.parallel(f, e, p)),
           advancedCollector("parallel(toList())", (f, e, p) -> ParallelCollectors.parallel(f, toList(), e, p)),
           advancedCollector("parallelToStream()", (f, e, p) -> ParallelCollectors.parallelToStream(f, e, p)),
           advancedCollector("parallelToOrderedStream()", (f, e, p) -> ParallelCollectors.parallelToOrderedStream(f, e, p)),
-          advancedCollector("parallel() (batching)", (f, e, p) -> parallel(f, e, p)),
-          advancedCollector("parallel(toList()) (batching)", (f, e, p) -> parallel(f, toList(), e, p)),
+          advancedCollector("parallel() (batching)", (f, e, p) -> ParallelCollectors.Batching.parallel(f, e, p)),
+          advancedCollector("parallel(toList()) (batching)", (f, e, p) -> ParallelCollectors.Batching.parallel(f, toList(), e, p)),
           advancedCollector("parallelToStream() (batching)", (f, e, p) -> ParallelCollectors.Batching.parallelToStream(f, e, p)),
           advancedCollector("parallelToOrderedStream() (batching)", (f, e, p) -> ParallelCollectors.Batching.parallelToOrderedStream(f, e, p)));
     }

@@ -45,7 +45,7 @@ class BasicProcessingTest {
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               var list = IntStream.range(0, 100).boxed().toList();
               List<Integer> result = list.stream().collect(c.factory().collector(i -> i));
-              assertThat(result).containsAnyElementsOf(list);
+              assertThat(result).containsExactlyElementsOf(list);
           }));
     }
 

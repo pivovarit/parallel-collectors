@@ -1,5 +1,6 @@
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.Config;
 import com.pivovarit.collectors.ParallelCollectors;
 import com.pivovarit.collectors.TestUtils;
 import java.util.concurrent.CompletionException;
@@ -52,7 +53,12 @@ class RejectedExecutionHandlingTest {
           executorCollector("parallel(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e, 1), c -> c.thenApply(Stream::toList).join())),
           executorCollector("parallel(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e, 1), c -> c.thenApply(Stream::toList).join())),
           executorCollector("parallelToStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e, 1), Stream::toList)),
-          executorCollector("parallelToOrderedStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e, 1), Stream::toList))
+          executorCollector("parallelToOrderedStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e, 1), Stream::toList)),
+          //
+          executorCollector("parallel(e, p=1) via config", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().executor(e).parallelism(1).build()), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallel(e, p=1) [batching] via config", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().batching(true).executor(e).parallelism(1).build()), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallelToStream(e, p=1) via config", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().executor(e).parallelism(1).build()), Stream::toList)),
+          executorCollector("parallelToOrderedStream(e, p=1) via config", (f, e) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e).parallelism(1).build()), Stream::toList))
         );
     }
 

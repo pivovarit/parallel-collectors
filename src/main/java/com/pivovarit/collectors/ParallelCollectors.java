@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -15,6 +16,30 @@ import java.util.stream.Stream;
 public final class ParallelCollectors {
 
     private ParallelCollectors() {
+    }
+
+    public static <T> T todo() {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Config configuration) {
+        Objects.requireNonNull(configuration);
+        return todo();
+    }
+
+    public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Config configuration) {
+        Objects.requireNonNull(configuration);
+        return todo();
+    }
+
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Config configuration) {
+        Objects.requireNonNull(configuration);
+        return todo();
+    }
+
+    public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Config configuration) {
+        Objects.requireNonNull(configuration);
+        return todo();
     }
 
     /**
@@ -478,7 +503,9 @@ public final class ParallelCollectors {
 
     /**
      * A subset of collectors which perform operations in batches and not separately (one object in a thread pool's worker queue represents a batch of operations to be performed by a single thread)
+     * @deprecated use ParallelCollectors.* methods that accept custom Config object
      */
+    @Deprecated(forRemoval = true)
     public static final class Batching {
 
         private Batching() {
@@ -506,7 +533,9 @@ public final class ParallelCollectors {
          * @return a {@code Collector} which collects all processed elements into a user-provided mutable {@code Collection} in parallel
          *
          * @since 2.1.0
+         * @deprecated use ParallelCollectors.* methods that accept custom Config object
          */
+        @Deprecated(forRemoval = true)
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
             return AsyncParallelCollector.BatchingCollectors
               .collectingWithCollector(collector, mapper, executor, parallelism);
@@ -535,7 +564,9 @@ public final class ParallelCollectors {
          * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
          *
          * @since 2.1.0
+         * @deprecated use ParallelCollectors.* methods that accept custom Config object
          */
+        @Deprecated(forRemoval = true)
         public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
             return AsyncParallelCollector.BatchingCollectors.collectingToStream(mapper, executor, parallelism);
         }
@@ -563,7 +594,9 @@ public final class ParallelCollectors {
          * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
          *
          * @since 2.1.0
+         * @deprecated use ParallelCollectors.* methods that accept custom Config object
          */
+        @Deprecated(forRemoval = true)
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
             return ParallelStreamCollector.BatchingCollectors.streaming(mapper, executor, parallelism);
         }
@@ -591,7 +624,9 @@ public final class ParallelCollectors {
          * @return a {@code Collector} which collects all processed elements into a {@code Stream} in parallel
          *
          * @since 2.1.0
+         * @deprecated use ParallelCollectors.* methods that accept custom Config object
          */
+        @Deprecated(forRemoval = true)
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
             return ParallelStreamCollector.BatchingCollectors.streamingOrdered(mapper, executor, parallelism);
         }

@@ -1,5 +1,6 @@
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.Config;
 import com.pivovarit.collectors.ParallelCollectors;
 import java.time.Duration;
 import java.util.List;
@@ -28,7 +29,12 @@ class StreamingTest {
           streamingCollector("parallelToStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, e(), p())),
           streamingCollector("parallelToOrderedStream()", (f) -> ParallelCollectors.parallelToOrderedStream(f)),
           streamingCollector("parallelToOrderedStream(e)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e())),
-          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e(), p()))
+          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e(), p())),
+          //
+          streamingCollector("parallelToStream(e) via config", (f) -> ParallelCollectors.parallelToStream(f, Config.with().executor(e()).build())),
+          streamingCollector("parallelToStream(e, p) via config", (f) -> ParallelCollectors.parallelToStream(f, Config.with().executor(e()).parallelism(p()).build())),
+          streamingCollector("parallelToOrderedStream(e) via config", (f) -> ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).build())),
+          streamingCollector("parallelToOrderedStream(e, p) via config", (f) -> ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).parallelism(p()).build()))
         );
     }
 
@@ -36,7 +42,10 @@ class StreamingTest {
         return Stream.of(
           streamingCollector("parallelToStream()", (f) -> ParallelCollectors.parallelToStream(f)),
           streamingCollector("parallelToStream(e)", (f) -> ParallelCollectors.parallelToStream(f, e())),
-          streamingCollector("parallelToStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, e(), p()))
+          streamingCollector("parallelToStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, e(), p())),
+          //
+          streamingCollector("parallelToStream(e) via config", (f) -> ParallelCollectors.parallelToStream(f, Config.with().executor(e()).build())),
+          streamingCollector("parallelToStream(e, p) via config", (f) -> ParallelCollectors.parallelToStream(f, Config.with().executor(e()).parallelism(p()).build()))
         );
     }
 
@@ -44,7 +53,10 @@ class StreamingTest {
         return Stream.of(
           streamingCollector("parallelToOrderedStream()", (f) -> ParallelCollectors.parallelToOrderedStream(f)),
           streamingCollector("parallelToOrderedStream(e)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e())),
-          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e(), p()))
+          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e(), p())),
+          //
+          streamingCollector("parallelToOrderedStream(e) via config", (f) -> ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).build())),
+          streamingCollector("parallelToOrderedStream(e, p) via config", (f) -> ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).parallelism(p()).build()))
         );
     }
 

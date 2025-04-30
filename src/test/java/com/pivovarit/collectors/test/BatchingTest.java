@@ -1,5 +1,6 @@
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.Config;
 import com.pivovarit.collectors.ParallelCollectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
 import static com.pivovarit.collectors.test.Factory.e;
+import static com.pivovarit.collectors.test.Factory.p;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +21,12 @@ class BatchingTest {
           limitedCollector("parallel(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e(), p), c -> c.thenApply(Stream::toList).join())),
           limitedCollector("parallel(toList(), e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e(), p), CompletableFuture::join)),
           limitedCollector("parallelToStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e(), p), Stream::toList)),
-          limitedCollector("parallelToOrderedStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e(), p), Stream::toList))
+          limitedCollector("parallelToOrderedStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e(), p), Stream::toList)),
+          //
+          limitedCollector("parallel(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, Config.with().executor(e()).parallelism(p).build()), c -> c.thenApply(Stream::toList).join())),
+          limitedCollector("parallel(toList(), e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), Config.with().executor(e()).parallelism(p).build()), CompletableFuture::join)),
+          limitedCollector("parallelToStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, Config.with().executor(e()).parallelism(p).build()), Stream::toList)),
+          limitedCollector("parallelToOrderedStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, Config.with().executor(e()).parallelism(p).build()), Stream::toList))
         );
     }
 
