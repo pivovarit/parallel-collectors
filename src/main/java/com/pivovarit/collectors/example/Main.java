@@ -47,6 +47,7 @@ class Main {
               .collect(ParallelCollectors.parallel2(
                 i -> process(i),
                 Collectors.toList(),
+
                 executor(e),
                 batched(),
                 parallelism(4)
