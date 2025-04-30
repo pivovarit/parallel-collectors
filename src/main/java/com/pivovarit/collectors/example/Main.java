@@ -1,6 +1,5 @@
 package com.pivovarit.collectors.example;
 
-import com.pivovarit.collectors.Config;
 import com.pivovarit.collectors.ParallelCollectors;
 
 import java.time.Duration;
@@ -11,25 +10,49 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.pivovarit.collectors.Config.with;
+import static com.pivovarit.collectors.Modification.batched;
+import static com.pivovarit.collectors.Modification.executor;
+import static com.pivovarit.collectors.Modification.parallelism;
 
 class Main {
 
-    public static void main(String[] args) {
-        List<Integer> ints = List.of(1, 2, 3, 4);
+    record Example1() {
+        public static void main(String[] args) {
+            List<Integer> ints = List.of(1, 2, 3, 4);
 
-        ExecutorService e = Executors.newCachedThreadPool();
+            ExecutorService e = Executors.newCachedThreadPool();
 
-        var result = timed(() -> ints.stream()
-          .collect(ParallelCollectors.parallel(
-            i -> process(i),
-            Collectors.toList(),
-            with()
-              .executor(e)
-              .parallelism(4)
-              .batching(false)
-              .build())).join());
+            var result = timed(() -> ints.stream()
+              .collect(ParallelCollectors.parallel(
+                i -> process(i),
+                Collectors.toList(),
+                with()
+                  .executor(e)
+                  .parallelism(4)
+                  .batching(false)
+                  .build())).join());
 
-        System.out.println(result);
+            System.out.println(result);
+        }
+    }
+
+    record Example2() {
+        public static void main(String[] args) {
+            List<Integer> ints = List.of(1, 2, 3, 4);
+
+            ExecutorService e = Executors.newCachedThreadPool();
+
+            var result = timed(() -> ints.stream()
+              .collect(ParallelCollectors.parallel2(
+                i -> process(i),
+                Collectors.toList(),
+                executor(e),
+                batched(),
+                parallelism(4)
+              )).join());
+
+            System.out.println(result);
+        }
     }
 
     public static <T> T process(T input) {
