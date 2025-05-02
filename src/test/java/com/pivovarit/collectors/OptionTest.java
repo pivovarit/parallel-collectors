@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -80,7 +79,7 @@ class OptionTest {
         private static Stream<TestData> testData() {
             var batchings = Stream.of(null, Optional.<Boolean>empty(), Optional.of(true)).toList();
             var parallelisms = Stream.of(null, OptionalInt.empty(), OptionalInt.of(42)).toList();
-            var executors = Stream.of(null, Optional.<Executor>empty(), Optional.<Executor>of(Executors.newVirtualThreadPerTaskExecutor())).toList();
+            var executors = Stream.of(null, Optional.<Executor>empty(), Optional.<Executor>of(r -> {})).toList();
 
             return batchings.stream()
               .flatMap(b -> parallelisms.stream()

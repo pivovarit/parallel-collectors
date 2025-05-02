@@ -1,9 +1,9 @@
 package com.pivovarit.collectors;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import static java.util.Objects.requireNonNull;
@@ -21,21 +21,20 @@ sealed interface Option {
     static Configuration process(Option... options) {
         requireNonNull(options, "options can't be null");
 
-        Map<Class<? extends Option>, Integer> counts = new HashMap<>();
+        Set<Class<? extends Option>> seen = new HashSet<>();
 
         Optional<Boolean> batching = Optional.empty();
         OptionalInt parallelism = OptionalInt.empty();
         Optional<Executor> executor = Optional.empty();
 
-        for (Option option : options) {
-            if (counts.get(option.getClass()) != null) {
+        for (var option : options) {
+            if (!seen.add(option.getClass())) {
                 throw new IllegalArgumentException("each option can be used at most once, and you configured '%s' multiple times".formatted(switch (option) {
                     case Option.Batching __ -> "batching";
                     case Option.Parallelism __ -> "parallelism";
                     case Option.ThreadPool __ -> "executor";
                 }));
             }
-            counts.merge(option.getClass(), 1, Integer::sum);
 
             switch (option) {
                 case Batching batchingOption -> batching = Optional.of(batchingOption.batched());
