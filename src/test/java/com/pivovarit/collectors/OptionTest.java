@@ -44,6 +44,24 @@ class OptionTest {
         }
     }
 
+    @TestFactory
+    Stream<DynamicTest> shouldThrowWhenSameOptionsAreUsedMultipleTimes() {
+        return Stream.of(Option.batched(), Option.executor(r -> {}), Option.parallelism(1))
+            .map(o -> DynamicTest.dynamicTest("should handle duplicated: " + nameOf(o), () -> {
+                assertThatThrownBy(() -> Option.process(o, o))
+                  .isInstanceOf(IllegalArgumentException.class)
+                  .hasMessageContaining("each option can be used at most once, and you configured '%s' multiple times".formatted(nameOf(o)));
+            }));
+    }
+
+    private String nameOf(Option option) {
+        return switch (option) {
+            case Option.Batching __ -> "batching";
+            case Option.Parallelism __ -> "parallelism";
+            case Option.ThreadPool __ -> "executor";
+        };
+    }
+
     @Nested
     class ConfigurationTests {
 
