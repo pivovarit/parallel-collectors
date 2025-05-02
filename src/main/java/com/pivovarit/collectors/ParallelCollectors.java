@@ -7,6 +7,10 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.Option.batched;
+import static com.pivovarit.collectors.Option.executor;
+import static com.pivovarit.collectors.Option.parallelism;
+
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
  *
@@ -39,7 +43,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector) {
-        return AsyncParallelCollector.collectingWithCollector(collector, mapper);
+        return AsyncParallelCollector.collecting(s -> s.collect(collector), mapper);
     }
 
     /**
@@ -65,7 +69,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, int parallelism) {
-        return AsyncParallelCollector.collectingWithCollector(collector, mapper, parallelism);
+        return AsyncParallelCollector.collecting(s -> s.collect(collector), mapper, parallelism(parallelism));
     }
 
     /**
@@ -92,7 +96,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-        return AsyncParallelCollector.collectingWithCollector(collector, mapper, executor, parallelism);
+        return AsyncParallelCollector.collecting(s -> s.collect(collector), mapper, executor(executor), parallelism(parallelism));
     }
 
     /**
@@ -118,7 +122,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor) {
-        return AsyncParallelCollector.collectingWithCollector(collector, mapper, executor);
+        return AsyncParallelCollector.collecting(s -> s.collect(collector), mapper, executor(executor));
     }
 
     /**
@@ -144,7 +148,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper) {
-        return AsyncParallelCollector.collectingToStream(mapper);
+        return AsyncParallelCollector.collecting(i -> i, mapper);
     }
 
     /**
@@ -171,7 +175,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, int parallelism) {
-        return AsyncParallelCollector.collectingToStream(mapper, parallelism);
+        return AsyncParallelCollector.collecting(i -> i, mapper, parallelism(parallelism));
     }
 
     /**
@@ -199,7 +203,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
-        return AsyncParallelCollector.collectingToStream(mapper, executor, parallelism);
+        return AsyncParallelCollector.collecting(i -> i, mapper, executor(executor), parallelism(parallelism));
     }
 
     /**
@@ -226,7 +230,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor) {
-        return AsyncParallelCollector.collectingToStream(mapper, executor);
+        return AsyncParallelCollector.collecting(i -> i, mapper, executor(executor));
     }
 
     /**
@@ -252,7 +256,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper) {
-        return ParallelStreamCollector.streaming(mapper);
+        return ParallelStreamCollector.streaming(mapper, false);
     }
 
     /**
@@ -279,7 +283,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, int parallelism) {
-        return ParallelStreamCollector.streaming(mapper, parallelism);
+        return ParallelStreamCollector.streaming(mapper, false, parallelism(parallelism));
     }
 
     /**
@@ -306,7 +310,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor) {
-        return ParallelStreamCollector.streaming(mapper, executor);
+        return ParallelStreamCollector.streaming(mapper, false, executor(executor));
     }
 
     /**
@@ -334,7 +338,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-        return ParallelStreamCollector.streaming(mapper, executor, parallelism);
+        return ParallelStreamCollector.streaming(mapper, false, executor(executor), parallelism(parallelism));
     }
 
     /**
@@ -360,7 +364,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper) {
-        return ParallelStreamCollector.streamingOrdered(mapper);
+        return ParallelStreamCollector.streaming(mapper, true);
     }
 
     /**
@@ -387,7 +391,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, int parallelism) {
-        return ParallelStreamCollector.streamingOrdered(mapper, parallelism);
+        return ParallelStreamCollector.streaming(mapper, true, parallelism(parallelism));
     }
 
     /**
@@ -414,7 +418,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor) {
-        return ParallelStreamCollector.streamingOrdered(mapper, executor);
+        return ParallelStreamCollector.streaming(mapper, true, executor(executor));
     }
 
     /**
@@ -442,7 +446,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
-        return ParallelStreamCollector.streamingOrdered(mapper, executor, parallelism);
+        return ParallelStreamCollector.streaming(mapper, true, executor(executor), parallelism(parallelism));
     }
 
     /**
@@ -508,8 +512,10 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<T, R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-            return AsyncParallelCollector.BatchingCollectors
-              .collectingWithCollector(collector, mapper, executor, parallelism);
+            return AsyncParallelCollector.collecting(s -> s.collect(collector), mapper,
+              batched(),
+              executor(executor),
+              parallelism(parallelism));
         }
 
         /**
@@ -537,7 +543,10 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<T, R> mapper, Executor executor, int parallelism) {
-            return AsyncParallelCollector.BatchingCollectors.collectingToStream(mapper, executor, parallelism);
+            return AsyncParallelCollector.collecting(s -> s, mapper,
+              batched(),
+              executor(executor),
+              parallelism(parallelism));
         }
 
         /**
@@ -565,7 +574,10 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.BatchingCollectors.streaming(mapper, executor, parallelism);
+            return ParallelStreamCollector.streaming(mapper, false,
+              batched(),
+              executor(executor),
+              parallelism(parallelism));
         }
 
         /**
@@ -593,7 +605,10 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<T, R> mapper, Executor executor, int parallelism) {
-            return ParallelStreamCollector.BatchingCollectors.streamingOrdered(mapper, executor, parallelism);
+            return ParallelStreamCollector.streaming(mapper, true,
+              batched(),
+              executor(executor),
+              parallelism(parallelism));
         }
     }
 }

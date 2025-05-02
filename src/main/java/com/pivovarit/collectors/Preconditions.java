@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -15,6 +16,7 @@ final class Preconditions {
     }
 
     static void requireValidExecutor(Executor executor) {
+        Objects.requireNonNull(executor, "Executor can't be null");
         if (executor instanceof ThreadPoolExecutor tpe) {
             switch (tpe.getRejectedExecutionHandler()) {
                 case ThreadPoolExecutor.DiscardPolicy __ ->
