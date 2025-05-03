@@ -30,11 +30,11 @@ final class AsyncParallelCollector<T, R, C>
   implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
 
     private final Dispatcher<R> dispatcher;
-    private final Function<T, R> task;
+    private final Function<? super T, R> task;
     private final Function<Stream<R>, C> finalizer;
 
     private AsyncParallelCollector(
-      Function<T, R> task,
+      Function<? super T, R> task,
       Dispatcher<R> dispatcher,
       Function<Stream<R>, C> finalizer) {
         this.dispatcher = dispatcher;
@@ -93,7 +93,7 @@ final class AsyncParallelCollector<T, R, C>
         return combined;
     }
 
-    static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(Function<Stream<R>, C> finalizer, Function<T, R> mapper, Option... options) {
+    static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(Function<Stream<R>, C> finalizer, Function<? super T, R> mapper, Option... options) {
         requireNonNull(mapper, "mapper can't be null");
 
         Option.Configuration config = Option.process(options);
@@ -135,7 +135,7 @@ final class AsyncParallelCollector<T, R, C>
         }
     }
 
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<? super T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
         return collectingAndThen(toList(), list -> {
             try {
                 return supplyAsync(() -> {
@@ -151,11 +151,11 @@ final class AsyncParallelCollector<T, R, C>
         });
     }
 
-    private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<T, R> mapper, int parallelism, Function<Stream<R>, RR> finisher) {
+    private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<? super T, R> mapper, int parallelism, Function<Stream<R>, RR> finisher) {
         return batchingCollector(mapper, null, parallelism, finisher);
     }
 
-    private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
+    private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<? super T, R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
         return collectingAndThen(
           toList(),
           list -> {
