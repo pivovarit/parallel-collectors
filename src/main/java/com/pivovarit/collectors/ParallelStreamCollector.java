@@ -30,7 +30,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     private static final EnumSet<Characteristics> UNORDERED = EnumSet.of(Characteristics.UNORDERED);
 
-    private final Function<T, R> function;
+    private final Function<? super T, R> function;
 
     private final CompletionStrategy<R> completionStrategy;
 
@@ -39,7 +39,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
     private final Dispatcher<R> dispatcher;
 
     private ParallelStreamCollector(
-      Function<T, R> function,
+      Function<? super T, R> function,
       CompletionStrategy<R> completionStrategy,
       Set<Characteristics> characteristics,
       Dispatcher<R> dispatcher) {
@@ -83,7 +83,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         return characteristics;
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<T, R> mapper, boolean ordered, Option... options) {
+    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, R> mapper, boolean ordered, Option... options) {
         requireNonNull(mapper, "mapper can't be null");
 
         Option.Configuration config = Option.process(options);
@@ -127,7 +127,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
         }
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper, Executor executor, int parallelism) {
+    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, R> mapper, Executor executor, int parallelism) {
         return collectingAndThen(
           toList(),
           list -> {
@@ -155,11 +155,11 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
           });
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<T, R> mapper, int parallelism) {
+    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, R> mapper, int parallelism) {
         return batchingCollector(mapper, null, parallelism);
     }
 
-    static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<T, R> mapper) {
+    static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<? super T, R> mapper) {
         return Collector.of(Stream::builder, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
             throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
         }, Stream.Builder::build);

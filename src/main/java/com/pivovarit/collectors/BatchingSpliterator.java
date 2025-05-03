@@ -55,7 +55,7 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
         return acc.build();
     }
 
-    static <T, R> Function<List<T>, List<R>> batching(Function<T, R> mapper) {
+    static <T, R> Function<List<T>, List<R>> batching(Function<? super T, R> mapper) {
         return batch -> {
             List<R> list = new ArrayList<>(batch.size());
             for (T t : batch) {
