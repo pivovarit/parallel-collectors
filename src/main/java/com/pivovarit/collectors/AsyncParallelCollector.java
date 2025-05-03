@@ -19,7 +19,6 @@ import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
@@ -108,7 +107,7 @@ final class AsyncParallelCollector<T, R, C>
             if (config.executor().isPresent()) {
                 var executor = config.executor().orElseThrow();
                 return parallelism == 1
-                  ? asyncCollector(mapper, executor, finalizer)
+                  ? new AsyncCollector<>(mapper, finalizer, executor)
                   : batchingCollector(mapper, executor, parallelism, finalizer);
             } else {
                 return batchingCollector(mapper, parallelism, finalizer);
@@ -120,7 +119,7 @@ final class AsyncParallelCollector<T, R, C>
             var parallelism = config.parallelism().orElseThrow();
 
             return parallelism == 1
-              ? asyncCollector(mapper, executor, finalizer)
+              ? new AsyncCollector<>(mapper, finalizer, executor)
               : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), finalizer);
         } else if (config.executor().isPresent()) {
             var executor = config.executor().orElseThrow();
@@ -133,22 +132,6 @@ final class AsyncParallelCollector<T, R, C>
         } else {
             return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(), finalizer);
         }
-    }
-
-    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> asyncCollector(Function<? super T, R> mapper, Executor executor, Function<Stream<R>, RR> finisher) {
-        return collectingAndThen(toList(), list -> {
-            try {
-                return supplyAsync(() -> {
-                    Stream.Builder<R> acc = Stream.builder();
-                    for (T t : list) {
-                        acc.add(mapper.apply(t));
-                    }
-                    return finisher.apply(acc.build());
-                }, executor);
-            } catch (Exception e) {
-                throw new CompletionException(e);
-            }
-        });
     }
 
     private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<? super T, R> mapper, int parallelism, Function<Stream<R>, RR> finisher) {
@@ -178,5 +161,53 @@ final class AsyncParallelCollector<T, R, C>
                       listStream -> finisher.apply(listStream.flatMap(Collection::stream))));
               }
           });
+    }
+
+    private static class AsyncCollector<T, R, RR> implements Collector<T, Stream.Builder<T>, CompletableFuture<RR>> {
+
+        private final Function<? super T, R> mapper;
+        private final Function<Stream<R>, RR> finisher;
+
+        private final Executor executor;
+
+        AsyncCollector(Function<? super T, R> mapper, Function<Stream<R>, RR> finisher, Executor executor) {
+            this.mapper = mapper;
+            this.finisher = finisher;
+            this.executor = executor;
+        }
+
+        @Override
+        public Supplier<Stream.Builder<T>> supplier() {
+            return Stream::builder;
+        }
+
+        @Override
+        public BiConsumer<Stream.Builder<T>, T> accumulator() {
+            return Stream.Builder::add;
+        }
+
+        @Override
+        public BinaryOperator<Stream.Builder<T>> combiner() {
+            return (left, right) -> {
+                right.build().forEach(left::add);
+                return left;
+            };
+        }
+
+        @Override
+        public Function<Stream.Builder<T>, CompletableFuture<RR>> finisher() {
+            return acc -> {
+                try {
+                    return CompletableFuture.supplyAsync(() -> finisher.apply(acc.build().map(mapper)), executor);
+                } catch (Exception e) {
+                    throw new CompletionException(e);
+                }
+            };
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Set.of();
+        }
     }
 }
