@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
@@ -89,5 +90,27 @@ class StreamingTest {
 
               assertThat(result).containsExactlyElementsOf(source);
           }));
+    }
+
+    @Test
+    void shouldUseSyncFallback() {
+        var result = Stream.of(1, 2, 3, 4)
+          .collect(ParallelCollectors.parallelToStream(i -> i, r -> {
+              throw new IllegalStateException("boo!");
+          }, 1))
+          .toList();
+
+        assertThat(result).containsExactly(1, 2, 3, 4);
+    }
+
+    @Test
+    void shouldUseSyncFallbackForOrdered() {
+        var result = Stream.of(1, 2, 3, 4)
+          .collect(ParallelCollectors.parallelToOrderedStream(i -> i, r -> {
+              throw new IllegalStateException("boo!");
+          }, 1))
+          .toList();
+
+        assertThat(result).containsExactly(1, 2, 3, 4);
     }
 }
