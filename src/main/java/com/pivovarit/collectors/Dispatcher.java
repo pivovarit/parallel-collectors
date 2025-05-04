@@ -3,8 +3,6 @@ package com.pivovarit.collectors;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -35,19 +33,9 @@ final class Dispatcher<T> {
 
     private volatile boolean shortCircuited = false;
 
-    private Dispatcher() {
-        this.executor = defaultExecutorService();
-        this.limiter = null;
-    }
-
     private Dispatcher(Executor executor, int permits) {
         requireValidExecutor(executor);
         this.executor = executor;
-        this.limiter = new Semaphore(permits);
-    }
-
-    private Dispatcher(int permits) {
-        this.executor = defaultExecutorService();
         this.limiter = new Semaphore(permits);
     }
 
@@ -63,14 +51,6 @@ final class Dispatcher<T> {
 
     static <T> Dispatcher<T> from(Executor executor, int permits) {
         return new Dispatcher<>(executor, permits);
-    }
-
-    static <T> Dispatcher<T> virtual() {
-        return new Dispatcher<>();
-    }
-
-    static <T> Dispatcher<T> virtual(int permits) {
-        return new Dispatcher<>(permits);
     }
 
     void start() {
@@ -168,10 +148,6 @@ final class Dispatcher<T> {
             }
             return super.cancel(mayInterruptIfRunning);
         }
-    }
-
-    private static ExecutorService defaultExecutorService() {
-        return Executors.newVirtualThreadPerTaskExecutor();
     }
 
     private static void retry(Runnable runnable) {

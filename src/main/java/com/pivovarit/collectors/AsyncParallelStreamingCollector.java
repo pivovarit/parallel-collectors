@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -85,45 +86,24 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         requireNonNull(mapper, "mapper can't be null");
 
         var config = Option.process(options);
+        var batching = config.batching().orElse(false);
+        var executor = config.executor().orElseGet(Executors::newVirtualThreadPerTaskExecutor);
 
-        if (config.batching().isPresent() && config.batching().get()) {
-            if (config.parallelism().isEmpty()) {
-                throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
-            }
+        if (batching) {
+            var parallelism = config.parallelism().orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
 
+            return parallelism == 1
+              ? new SyncCollector<>(mapper)
+              : new BatchingCollector<>(mapper, executor, parallelism, ordered);
+        } else if (config.parallelism().isPresent()) {
             var parallelism = config.parallelism().orElseThrow();
 
-            if (config.executor().isPresent()) {
-                var executor = config.executor().orElseThrow();
-
-                return parallelism == 1
-                  ? new SyncCollector<>(mapper)
-                  : new BatchingCollector<>(mapper, executor, parallelism, ordered);
-            } else {
-                return new BatchingCollector<>(mapper, parallelism, ordered);
-            }
-        } else {
-            if (config.executor().isPresent() && config.parallelism().isPresent()) {
-                var executor = config.executor().orElseThrow();
-                var parallelism = config.parallelism().orElseThrow();
-
-                return parallelism == 1
-                  ? new SyncCollector<>(mapper)
-                  : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, parallelism), ordered);
-            } else if (config.executor().isPresent()) {
-                var executor = config.executor().orElseThrow();
-
-                return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor), ordered);
-            } else if (config.parallelism().isPresent()) {
-                var parallelism = config.parallelism().orElseThrow();
-
-                return parallelism == 1
-                  ? new SyncCollector<>(mapper)
-                  : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.virtual(parallelism), ordered);
-            }
-
-            return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.virtual(), ordered);
+            return parallelism == 1
+              ? new SyncCollector<>(mapper)
+              : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, parallelism), ordered);
         }
+
+        return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor), ordered);
     }
 
     private record SyncCollector<T, R>(Function<? super T, ? extends R> mapper)
@@ -157,34 +137,8 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         }
     }
 
-    private static final class BatchingCollector<T, R>
+    private record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism, boolean ordered)
       implements Collector<T, ArrayList<T>, Stream<R>> {
-
-        private final Function<? super T, ? extends R> task;
-        private final Executor executor;
-        private final int parallelism;
-        private final boolean ordered;
-
-        BatchingCollector(
-          Function<? super T, ? extends R> task,
-          Executor executor,
-          int parallelism,
-          boolean ordered) {
-            this.executor = executor;
-            this.task = task;
-            this.parallelism = parallelism;
-            this.ordered = ordered;
-        }
-
-        BatchingCollector(
-          Function<? super T, ? extends R> task,
-          int parallelism,
-          boolean ordered) {
-            this.executor = null;
-            this.task = task;
-            this.parallelism = parallelism;
-            this.ordered = ordered;
-        }
 
         @Override
         public Supplier<ArrayList<T>> supplier() {
@@ -208,20 +162,13 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         public Function<ArrayList<T>, Stream<R>> finisher() {
             return items -> {
                 if (items.size() == parallelism) {
-                    return items.stream()
-                      .collect(new AsyncParallelStreamingCollector<>(task, resolveDispatcher(), ordered));
+                    return items.stream().collect(new AsyncParallelStreamingCollector<>(task, Dispatcher.from(executor, parallelism), ordered));
                 } else {
                     return partitioned(items, parallelism)
-                      .collect(new AsyncParallelStreamingCollector<>(batching(task), resolveDispatcher(), ordered))
+                      .collect(new AsyncParallelStreamingCollector<>(batching(task), Dispatcher.from(executor, parallelism), ordered))
                       .flatMap(Collection::stream);
                 }
             };
-        }
-
-        private <TT> Dispatcher<TT> resolveDispatcher() {
-            return executor != null
-              ? Dispatcher.from(executor, parallelism)
-              : Dispatcher.virtual(parallelism);
         }
 
         @Override
