@@ -110,9 +110,9 @@ final class AsyncParallelCollector<T, R, C>
                 var executor = config.executor().orElseThrow();
                 return parallelism == 1
                   ? new AsyncCollector<>(mapper, finalizer, executor)
-                  : new BatchingAsyncParallelCollector<>(mapper, finalizer, executor, parallelism);
+                  : new BatchingCollector<>(mapper, finalizer, executor, parallelism);
             } else {
-                return new BatchingAsyncParallelCollector<>(mapper, finalizer, parallelism);
+                return new BatchingCollector<>(mapper, finalizer, parallelism);
             }
         }
 
@@ -185,7 +185,7 @@ final class AsyncParallelCollector<T, R, C>
         }
     }
 
-    private static final class BatchingAsyncParallelCollector<T, R, C>
+    private static final class BatchingCollector<T, R, C>
       implements Collector<T, ArrayList<T>, CompletableFuture<C>> {
 
         private final Function<? super T, ? extends R> task;
@@ -193,7 +193,7 @@ final class AsyncParallelCollector<T, R, C>
         private final Executor executor;
         private final int parallelism;
 
-        BatchingAsyncParallelCollector(
+        BatchingCollector(
           Function<? super T, ? extends R> task,
           Function<Stream<R>, C> finalizer,
           Executor executor,
@@ -204,7 +204,7 @@ final class AsyncParallelCollector<T, R, C>
             this.parallelism = parallelism;
         }
 
-        BatchingAsyncParallelCollector(
+        BatchingCollector(
           Function<? super T, ? extends R> task,
           Function<Stream<R>, C> finalizer,
           int parallelism) {
