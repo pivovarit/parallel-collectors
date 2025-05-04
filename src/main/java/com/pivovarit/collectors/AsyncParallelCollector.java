@@ -103,21 +103,18 @@ final class AsyncParallelCollector<T, R, C>
         var batching = config.batching().orElse(false);
         var executor = config.executor().orElseGet(Executors::newVirtualThreadPerTaskExecutor);
 
-        if (batching) {
-            var parallelism = config.parallelism().orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
-
-            return parallelism == 1
-              ? new AsyncCollector<>(mapper, finalizer, executor)
-              : new BatchingCollector<>(mapper, finalizer, executor, parallelism);
-        } else if (config.parallelism().isPresent()) {
-            var parallelism = config.parallelism().orElseThrow();
-
-            return parallelism == 1
-              ? new AsyncCollector<>(mapper, finalizer, executor)
-              : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, parallelism), finalizer);
+        if (config.parallelism().orElse(-1) == 1) {
+            return new AsyncCollector<>(mapper, finalizer, executor);
         }
 
-        return new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), finalizer);
+        if (batching) {
+            var parallelism = config.parallelism().orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
+            return new BatchingCollector<>(mapper, finalizer, executor, parallelism);
+        }
+
+        return config.parallelism().isPresent()
+          ? new AsyncParallelCollector<>(mapper, Dispatcher.from(executor, config.parallelism().getAsInt()), finalizer)
+          : new AsyncParallelCollector<>(mapper, Dispatcher.from(executor), finalizer);
     }
 
     private static class AsyncCollector<T, R, RR>

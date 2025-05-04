@@ -48,6 +48,16 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         this.function = function;
     }
 
+    public static <T, R> Collector<T, ?, Stream<R>> from(
+      Function<? super T, ? extends R> function, Executor executor, int parallelism, boolean ordered) {
+        return new AsyncParallelStreamingCollector<>(function, Dispatcher.from(executor, parallelism), ordered);
+    }
+
+    public static <T, R> Collector<T, ?, Stream<R>> from(
+      Function<? super T, ? extends R> function, Executor executor, boolean ordered) {
+        return new AsyncParallelStreamingCollector<>(function, Dispatcher.from(executor), ordered);
+    }
+
     @Override
     public Supplier<List<CompletableFuture<R>>> supplier() {
         return ArrayList::new;
@@ -89,21 +99,18 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         var batching = config.batching().orElse(false);
         var executor = config.executor().orElseGet(Executors::newVirtualThreadPerTaskExecutor);
 
-        if (batching) {
-            var parallelism = config.parallelism().orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
-
-            return parallelism == 1
-              ? new SyncCollector<>(mapper)
-              : new BatchingCollector<>(mapper, executor, parallelism, ordered);
-        } else if (config.parallelism().isPresent()) {
-            var parallelism = config.parallelism().orElseThrow();
-
-            return parallelism == 1
-              ? new SyncCollector<>(mapper)
-              : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, parallelism), ordered);
+        if (config.parallelism().orElse(-1) == 1) {
+            return new SyncCollector<>(mapper);
         }
 
-        return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor), ordered);
+        if (batching) {
+            var parallelism = config.parallelism().orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
+            return new BatchingCollector<>(mapper, executor, parallelism, ordered);
+        }
+
+        return config.parallelism().isPresent()
+          ? new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, config.parallelism().getAsInt()), ordered)
+          : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor), ordered);
     }
 
     private record SyncCollector<T, R>(Function<? super T, ? extends R> mapper)
@@ -137,7 +144,8 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         }
     }
 
-    private record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism, boolean ordered)
+    private record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism,
+                                           boolean ordered)
       implements Collector<T, ArrayList<T>, Stream<R>> {
 
         @Override
@@ -162,7 +170,8 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         public Function<ArrayList<T>, Stream<R>> finisher() {
             return items -> {
                 if (items.size() == parallelism) {
-                    return items.stream().collect(new AsyncParallelStreamingCollector<>(task, Dispatcher.from(executor, parallelism), ordered));
+                    return items.stream()
+                      .collect(new AsyncParallelStreamingCollector<>(task, Dispatcher.from(executor, parallelism), ordered));
                 } else {
                     return partitioned(items, parallelism)
                       .collect(new AsyncParallelStreamingCollector<>(batching(task), Dispatcher.from(executor, parallelism), ordered))
