@@ -2,7 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -27,8 +26,6 @@ import static java.util.Objects.requireNonNull;
  */
 class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
-    private static final EnumSet<Characteristics> UNORDERED = EnumSet.of(Characteristics.UNORDERED);
-
     private final Function<? super T, ? extends R> function;
 
     private final CompletionStrategy<R> completionStrategy;
@@ -39,11 +36,13 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
 
     private AsyncParallelStreamingCollector(
       Function<? super T, ? extends R> function,
-      CompletionStrategy<R> completionStrategy,
-      Set<Characteristics> characteristics,
-      Dispatcher<R> dispatcher) {
-        this.completionStrategy = completionStrategy;
-        this.characteristics = characteristics;
+      Dispatcher<R> dispatcher,
+      boolean ordered) {
+        this.completionStrategy = ordered ? ordered() : unordered();
+        this.characteristics = switch (completionStrategy) {
+            case CompletionStrategy.Ordered<R> __ -> emptySet();
+            case CompletionStrategy.Unordered<R> __ -> EnumSet.of(Characteristics.UNORDERED);
+        };
         this.dispatcher = dispatcher;
         this.function = function;
     }
@@ -85,10 +84,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
     static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, boolean ordered, Option... options) {
         requireNonNull(mapper, "mapper can't be null");
 
-        Option.Configuration config = Option.process(options);
-
-        CompletionStrategy<R> completionStrategy = ordered ? ordered() : unordered();
-        Set<Characteristics> characteristics = ordered ? emptySet() : UNORDERED;
+        var config = Option.process(options);
 
         if (config.batching().isPresent() && config.batching().get()) {
             if (config.parallelism().isEmpty()) {
@@ -100,7 +96,9 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
             if (config.executor().isPresent()) {
                 var executor = config.executor().orElseThrow();
 
-                return parallelism == 1 ? syncCollector(mapper) : new BatchingCollector<T, R, Object>(mapper, executor, parallelism, ordered);
+                return parallelism == 1
+                  ? syncCollector(mapper)
+                  : new BatchingCollector<>(mapper, executor, parallelism, ordered);
             } else {
                 return new BatchingCollector<>(mapper, parallelism, ordered);
             }
@@ -109,18 +107,18 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
                 var executor = config.executor().orElseThrow();
                 var parallelism = config.parallelism().orElseThrow();
 
-                return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.from(executor, parallelism));
+                return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, parallelism), ordered);
             } else if (config.executor().isPresent()) {
                 var executor = config.executor().orElseThrow();
 
-                return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.from(executor));
+                return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor), ordered);
             } else if (config.parallelism().isPresent()) {
                 var parallelism = config.parallelism().orElseThrow();
 
-                return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.virtual(parallelism));
+                return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.virtual(parallelism), ordered);
             }
 
-            return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.virtual());
+            return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.virtual(), ordered);
         }
     }
 
@@ -180,15 +178,12 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         @Override
         public Function<ArrayList<T>, Stream<R>> finisher() {
             return items -> {
-
-                Set<Characteristics> characteristics = ordered ? emptySet() : UNORDERED;
-
                 if (items.size() == parallelism) {
                     return items.stream()
-                      .collect(new AsyncParallelStreamingCollector<>(task, ordered ? ordered() : unordered(), characteristics, resolveDispatcher()));
+                      .collect(new AsyncParallelStreamingCollector<>(task, resolveDispatcher(), ordered));
                 } else {
                     return partitioned(items, parallelism)
-                      .collect(new AsyncParallelStreamingCollector<>(batching(task), ordered ? ordered() : unordered(), characteristics, resolveDispatcher()))
+                      .collect(new AsyncParallelStreamingCollector<>(batching(task), resolveDispatcher(), ordered))
                       .flatMap(Collection::stream);
                 }
             };
@@ -202,7 +197,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
 
         @Override
         public Set<Characteristics> characteristics() {
-            return Collections.emptySet();
+            return emptySet();
         }
     }
 }
