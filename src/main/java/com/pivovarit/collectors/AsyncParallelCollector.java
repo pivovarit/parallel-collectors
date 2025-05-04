@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -130,7 +131,9 @@ final class AsyncParallelCollector<T, R, C>
         } else if (config.parallelism().isPresent()) {
             var parallelism = config.parallelism().orElseThrow();
 
-            return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(parallelism), finalizer);
+            return parallelism == 1
+              ? new AsyncCollector<>(mapper, finalizer, Executors.newVirtualThreadPerTaskExecutor())
+              : new AsyncParallelCollector<>(mapper, Dispatcher.virtual(parallelism), finalizer);
         } else {
             return new AsyncParallelCollector<>(mapper, Dispatcher.virtual(), finalizer);
         }
