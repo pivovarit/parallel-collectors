@@ -92,12 +92,32 @@ By default, all `ExecutorService` threads _compete_ for each task separately - w
 
 However, if the processing time for all subtasks is similar, it might be better to distribute tasks in batches to avoid excessive contention.
 
-![](docs/default.svg)
+For example, processing 1000 tasks with two threads will result in 1000 tasks being submitted to the thread pool, where two threads will be competing for the same task queue:
 
-![](docs/batched.svg)
+Batching allows converting this into two tasks, each with 500 subtasks:
+
+[<img src="docs/default.svg" width="600"/>](docs/default.svg)
+
+
+[<img src="docs/batched.svg" width="600"/>](docs/batched.svg)
+
+The difference in performance is enormous:
+
+```plain
+Benchmark                              Mode  Cnt      Score     Error  Units
+BatchedVsNonBatchedBenchmark.batch    thrpt    5  41558.548 ± 959.057  ops/s
+BatchedVsNonBatchedBenchmark.normal   thrpt    5    254.869 ±   5.667  ops/s
+```
 
 Batching alternatives are available under the `ParallelCollectors.Batching` namespace.
 
+#### Normal
+
+![](docs/flamegraph_normal.png)
+
+#### Batched
+
+![](docs/flamegraph_batched.png)
 
 ### Leveraging CompletableFuture
 
