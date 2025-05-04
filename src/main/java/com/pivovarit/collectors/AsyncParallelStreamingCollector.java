@@ -103,9 +103,9 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
 
                 return parallelism == 1
                   ? syncCollector(mapper)
-                  : batchingCollector(mapper, executor, parallelism);
+                  : batchingCollector(mapper, executor, parallelism, ordered);
             } else {
-                return batchingCollector(mapper, parallelism);
+                return batchingCollector(mapper, parallelism, ordered);
             }
         } else {
             if (config.executor().isPresent() && config.parallelism().isPresent()) {
@@ -127,7 +127,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         }
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
+    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, ? extends R> mapper, Executor executor, int parallelism, boolean ordered) {
         return collectingAndThen(
           toList(),
           list -> {
@@ -136,7 +136,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
                   return list.stream()
                     .collect(new AsyncParallelStreamingCollector<>(
                       mapper,
-                      ordered(),
+                      ordered ? ordered() : unordered(),
                       emptySet(),
                       executor != null
                         ? Dispatcher.from(executor, parallelism)
@@ -145,7 +145,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
                   return partitioned(list, parallelism)
                     .collect(collectingAndThen(new AsyncParallelStreamingCollector<>(
                         batching(mapper),
-                        ordered(),
+                        ordered ? ordered() : unordered(),
                         emptySet(),
                         executor != null
                           ? Dispatcher.from(executor, parallelism)
@@ -155,8 +155,8 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
           });
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, ? extends R> mapper, int parallelism) {
-        return batchingCollector(mapper, null, parallelism);
+    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, ? extends R> mapper, int parallelism, boolean ordered) {
+        return batchingCollector(mapper, null, parallelism, ordered);
     }
 
     static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<? super T, ? extends R> mapper) {

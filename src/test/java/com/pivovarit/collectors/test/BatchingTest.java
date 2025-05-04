@@ -3,14 +3,19 @@ package com.pivovarit.collectors.test;
 import com.pivovarit.collectors.ParallelCollectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
+import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
 import static com.pivovarit.collectors.test.Factory.e;
+import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class BatchingTest {
@@ -39,5 +44,23 @@ class BatchingTest {
 
               assertThat(threads).hasSizeLessThanOrEqualTo(parallelism);
           }));
+    }
+
+    @Test
+    void shouldCollectInCompletionOrder() {
+        var result = of(300, 200, 0, 400)
+          .collect(ParallelCollectors.Batching.parallelToStream(i -> returnWithDelay(i, ofMillis(i)), Executors.newVirtualThreadPerTaskExecutor(), 2))
+          .toList();
+
+        assertThat(result).containsExactly(0, 400, 300, 200);
+    }
+
+    @Test
+    void shouldCollectInOriginalOrder() {
+        var result = of(300, 200, 0, 400)
+          .collect(ParallelCollectors.Batching.parallelToOrderedStream(i -> returnWithDelay(i, ofMillis(i)), Executors.newVirtualThreadPerTaskExecutor(), 2))
+          .toList();
+
+        assertThat(result).containsExactly(300, 200, 0, 400);
     }
 }
