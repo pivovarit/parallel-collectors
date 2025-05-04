@@ -122,13 +122,8 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         }
     }
 
-    private static final class SynchronousCollector<T, R> implements Collector<T, Stream.Builder<R>, Stream<R>> {
-
-        private final Function<? super T, ? extends R> mapper;
-
-        SynchronousCollector(Function<? super T, ? extends R> mapper) {
-            this.mapper = mapper;
-        }
+    private record SynchronousCollector<T, R>(Function<? super T, ? extends R> mapper)
+      implements Collector<T, Stream.Builder<R>, Stream<R>> {
 
         @Override
         public Supplier<Stream.Builder<R>> supplier() {
