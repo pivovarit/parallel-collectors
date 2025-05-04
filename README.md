@@ -96,9 +96,10 @@ For example, processing 1000 tasks with two threads will result in 1000 tasks be
 
 Batching allows converting this into two tasks, each with 500 subtasks:
 
-![](docs/default.svg)
+[<img src="docs/default.svg" width="600"/>](docs/default.svg)
 
-![](docs/batched.svg)
+
+[<img src="docs/batched.svg" width="600"/>](docs/batched.svg)
 
 The difference in performance is enormous:
 
@@ -110,13 +111,11 @@ BatchedVsNonBatchedBenchmark.normal   thrpt    5    254.869 ±   5.667  ops/s
 
 Batching alternatives are available under the `ParallelCollectors.Batching` namespace.
 
-#### Flamegraphs
-
-##### Normal
+#### Normal
 
 ![](docs/flamegraph_normal.png)
 
-##### Batched
+#### Batched
 
 ![](docs/flamegraph_batched.png)
 
