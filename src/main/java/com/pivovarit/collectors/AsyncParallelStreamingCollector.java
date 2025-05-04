@@ -97,7 +97,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
                 var executor = config.executor().orElseThrow();
 
                 return parallelism == 1
-                  ? syncCollector(mapper)
+                  ? new SynchronousCollector<>(mapper)
                   : new BatchingCollector<>(mapper, executor, parallelism, ordered);
             } else {
                 return new BatchingCollector<>(mapper, parallelism, ordered);
@@ -122,13 +122,43 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         }
     }
 
-    static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<? super T, ? extends R> mapper) {
-        return Collector.of(Stream::builder, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
-            throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
-        }, Stream.Builder::build);
+    private static final class SynchronousCollector<T, R> implements Collector<T, Stream.Builder<R>, Stream<R>> {
+
+        private final Function<? super T, ? extends R> mapper;
+
+        SynchronousCollector(Function<? super T, ? extends R> mapper) {
+            this.mapper = mapper;
+        }
+
+        @Override
+        public Supplier<Stream.Builder<R>> supplier() {
+            return Stream::builder;
+        }
+
+        @Override
+        public BiConsumer<Stream.Builder<R>, T> accumulator() {
+            return (rs, t) -> rs.add(mapper.apply(t));
+        }
+
+        @Override
+        public BinaryOperator<Stream.Builder<R>> combiner() {
+            return (rs, rs2) -> {
+                throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
+            };
+        }
+
+        @Override
+        public Function<Stream.Builder<R>, Stream<R>> finisher() {
+            return Stream.Builder::build;
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Set.of();
+        }
     }
 
-    private static final class BatchingCollector<T, R, C>
+    private static final class BatchingCollector<T, R>
       implements Collector<T, ArrayList<T>, Stream<R>> {
 
         private final Function<? super T, ? extends R> task;
