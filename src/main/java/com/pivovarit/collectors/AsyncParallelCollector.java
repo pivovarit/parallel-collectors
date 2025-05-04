@@ -15,12 +15,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.allOf;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
 
 /**
  * @author Grzegorz Piwowarek
@@ -113,9 +110,9 @@ final class AsyncParallelCollector<T, R, C>
                 var executor = config.executor().orElseThrow();
                 return parallelism == 1
                   ? new AsyncCollector<>(mapper, finalizer, executor)
-                  : batchingCollector(mapper, executor, parallelism, finalizer);
+                  : new BatchingAsyncParallelCollector<>(mapper, finalizer, executor, parallelism);
             } else {
-                return batchingCollector(mapper, parallelism, finalizer);
+                return new BatchingAsyncParallelCollector<>(mapper, finalizer, parallelism);
             }
         }
 
@@ -139,36 +136,8 @@ final class AsyncParallelCollector<T, R, C>
         }
     }
 
-    private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<? super T, ? extends R> mapper, int parallelism, Function<Stream<R>, RR> finisher) {
-        return batchingCollector(mapper, null, parallelism, finisher);
-    }
-
-    private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<? super T, ? extends R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
-        return collectingAndThen(
-          toList(),
-          list -> {
-              // no sense to repack into batches of size 1
-              if (list.size() == parallelism) {
-                  return list.stream()
-                    .collect(new AsyncParallelCollector<>(
-                      mapper,
-                      executor != null
-                        ? Dispatcher.from(executor, parallelism)
-                        : Dispatcher.virtual(parallelism),
-                      finisher));
-              } else {
-                  return partitioned(list, parallelism)
-                    .collect(new AsyncParallelCollector<>(
-                      batching(mapper),
-                      executor != null
-                        ? Dispatcher.from(executor, parallelism)
-                        : Dispatcher.virtual(parallelism),
-                      listStream -> finisher.apply(listStream.flatMap(Collection::stream))));
-              }
-          });
-    }
-
-    private static class AsyncCollector<T, R, RR> implements Collector<T, Stream.Builder<T>, CompletableFuture<RR>> {
+    private static class AsyncCollector<T, R, RR>
+      implements Collector<T, Stream.Builder<T>, CompletableFuture<RR>> {
 
         private final Function<? super T, ? extends R> mapper;
         private final Function<Stream<R>, RR> finisher;
@@ -213,6 +182,84 @@ final class AsyncParallelCollector<T, R, C>
         @Override
         public Set<Characteristics> characteristics() {
             return Set.of();
+        }
+    }
+
+    private static final class BatchingAsyncParallelCollector<T, R, C>
+      implements Collector<T, ArrayList<T>, CompletableFuture<C>> {
+
+        private final Function<? super T, ? extends R> task;
+        private final Function<Stream<R>, C> finalizer;
+        private final Executor executor;
+        private final int parallelism;
+
+        BatchingAsyncParallelCollector(
+          Function<? super T, ? extends R> task,
+          Function<Stream<R>, C> finalizer,
+          Executor executor,
+          int parallelism) {
+            this.executor = executor;
+            this.finalizer = finalizer;
+            this.task = task;
+            this.parallelism = parallelism;
+        }
+
+        BatchingAsyncParallelCollector(
+          Function<? super T, ? extends R> task,
+          Function<Stream<R>, C> finalizer,
+          int parallelism) {
+            this.executor = null;
+            this.finalizer = finalizer;
+            this.task = task;
+            this.parallelism = parallelism;
+        }
+
+        @Override
+        public Supplier<ArrayList<T>> supplier() {
+            return ArrayList::new;
+        }
+
+        @Override
+        public BiConsumer<ArrayList<T>, T> accumulator() {
+            return ArrayList::add;
+        }
+
+        @Override
+        public BinaryOperator<ArrayList<T>> combiner() {
+            return (left, right) -> {
+                left.addAll(right);
+                return left;
+            };
+        }
+
+        @Override
+        public Function<ArrayList<T>, CompletableFuture<C>> finisher() {
+            return items -> {
+                if (items.size() == parallelism) {
+                    return items.stream()
+                      .collect(new AsyncParallelCollector<>(task, resolveDispatcher(), finalizer));
+                } else {
+                    return partitioned(items, parallelism)
+                      .collect(new AsyncParallelCollector<>(batch -> {
+                          List<R> list = new ArrayList<>(batch.size());
+                          for (T t : batch) {
+                              list.add(task.apply(t));
+                          }
+                          return list;
+                      }, resolveDispatcher(), r -> finalizer.apply(r.flatMap(Collection::stream))));
+                }
+            };
+        }
+
+        private <TT> Dispatcher<TT> resolveDispatcher() {
+            return executor != null
+              ? Dispatcher.from(executor, parallelism)
+              : Dispatcher.virtual(parallelism);
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Collections.emptySet();
         }
     }
 }
