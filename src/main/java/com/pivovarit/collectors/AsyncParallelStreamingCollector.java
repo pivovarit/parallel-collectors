@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -20,7 +19,6 @@ import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static com.pivovarit.collectors.CompletionStrategy.ordered;
 import static com.pivovarit.collectors.CompletionStrategy.unordered;
 import static java.util.Collections.emptySet;
-import static java.util.Objects.requireNonNull;
 
 /**
  * @author Grzegorz Piwowarek
@@ -92,59 +90,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         return characteristics;
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, boolean ordered, Option... options) {
-        requireNonNull(mapper, "mapper can't be null");
-
-        var config = Option.process(options);
-        var batching = config.batching().orElse(false);
-        var executor = config.executor().orElseGet(Executors::newVirtualThreadPerTaskExecutor);
-
-        if (config.parallelism().orElse(-1) == 1) {
-            return new SyncCollector<>(mapper);
-        }
-
-        if (batching) {
-            var parallelism = config.parallelism().orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
-            return new BatchingCollector<>(mapper, executor, parallelism, ordered);
-        }
-
-        return config.parallelism().isPresent()
-          ? new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, config.parallelism().getAsInt()), ordered)
-          : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor), ordered);
-    }
-
-    private record SyncCollector<T, R>(Function<? super T, ? extends R> mapper)
-      implements Collector<T, Stream.Builder<R>, Stream<R>> {
-
-        @Override
-        public Supplier<Stream.Builder<R>> supplier() {
-            return Stream::builder;
-        }
-
-        @Override
-        public BiConsumer<Stream.Builder<R>, T> accumulator() {
-            return (rs, t) -> rs.add(mapper.apply(t));
-        }
-
-        @Override
-        public BinaryOperator<Stream.Builder<R>> combiner() {
-            return (rs, rs2) -> {
-                throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
-            };
-        }
-
-        @Override
-        public Function<Stream.Builder<R>, Stream<R>> finisher() {
-            return Stream.Builder::build;
-        }
-
-        @Override
-        public Set<Characteristics> characteristics() {
-            return Set.of();
-        }
-    }
-
-    private record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism,
+    record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism,
                                            boolean ordered)
       implements Collector<T, ArrayList<T>, Stream<R>> {
 
