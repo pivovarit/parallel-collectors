@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * @author Grzegorz Piwowarek
  */
-class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
     private static final EnumSet<Characteristics> UNORDERED = EnumSet.of(Characteristics.UNORDERED);
 
@@ -38,7 +38,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
 
     private final Dispatcher<R> dispatcher;
 
-    private ParallelStreamCollector(
+    private AsyncParallelStreamingCollector(
       Function<? super T, ? extends R> function,
       CompletionStrategy<R> completionStrategy,
       Set<Characteristics> characteristics,
@@ -112,18 +112,18 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
                 var executor = config.executor().orElseThrow();
                 var parallelism = config.parallelism().orElseThrow();
 
-                return new ParallelStreamCollector<>(mapper, completionStrategy, characteristics, Dispatcher.from(executor, parallelism));
+                return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.from(executor, parallelism));
             } else if (config.executor().isPresent()) {
                 var executor = config.executor().orElseThrow();
 
-                return new ParallelStreamCollector<>(mapper, completionStrategy, characteristics, Dispatcher.from(executor));
+                return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.from(executor));
             } else if (config.parallelism().isPresent()) {
                 var parallelism = config.parallelism().orElseThrow();
 
-                return new ParallelStreamCollector<>(mapper, completionStrategy, characteristics, Dispatcher.virtual(parallelism));
+                return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.virtual(parallelism));
             }
 
-            return new ParallelStreamCollector<>(mapper, completionStrategy, characteristics, Dispatcher.virtual());
+            return new AsyncParallelStreamingCollector<>(mapper, completionStrategy, characteristics, Dispatcher.virtual());
         }
     }
 
@@ -134,7 +134,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
               // no sense to repack into batches of size 1
               if (list.size() == parallelism) {
                   return list.stream()
-                    .collect(new ParallelStreamCollector<>(
+                    .collect(new AsyncParallelStreamingCollector<>(
                       mapper,
                       ordered(),
                       emptySet(),
@@ -143,7 +143,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
                         : Dispatcher.virtual(parallelism)));
               } else {
                   return partitioned(list, parallelism)
-                    .collect(collectingAndThen(new ParallelStreamCollector<>(
+                    .collect(collectingAndThen(new AsyncParallelStreamingCollector<>(
                         batching(mapper),
                         ordered(),
                         emptySet(),
