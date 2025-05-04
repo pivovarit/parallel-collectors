@@ -97,7 +97,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
                 var executor = config.executor().orElseThrow();
 
                 return parallelism == 1
-                  ? new SynchronousCollector<>(mapper)
+                  ? new SyncCollector<>(mapper)
                   : new BatchingCollector<>(mapper, executor, parallelism, ordered);
             } else {
                 return new BatchingCollector<>(mapper, parallelism, ordered);
@@ -107,7 +107,9 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
                 var executor = config.executor().orElseThrow();
                 var parallelism = config.parallelism().orElseThrow();
 
-                return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, parallelism), ordered);
+                return parallelism == 1
+                  ? new SyncCollector<>(mapper)
+                  : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.from(executor, parallelism), ordered);
             } else if (config.executor().isPresent()) {
                 var executor = config.executor().orElseThrow();
 
@@ -115,14 +117,16 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
             } else if (config.parallelism().isPresent()) {
                 var parallelism = config.parallelism().orElseThrow();
 
-                return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.virtual(parallelism), ordered);
+                return parallelism == 1
+                  ? new SyncCollector<>(mapper)
+                  : new AsyncParallelStreamingCollector<>(mapper, Dispatcher.virtual(parallelism), ordered);
             }
 
             return new AsyncParallelStreamingCollector<>(mapper, Dispatcher.virtual(), ordered);
         }
     }
 
-    private record SynchronousCollector<T, R>(Function<? super T, ? extends R> mapper)
+    private record SyncCollector<T, R>(Function<? super T, ? extends R> mapper)
       implements Collector<T, Stream.Builder<R>, Stream<R>> {
 
         @Override
