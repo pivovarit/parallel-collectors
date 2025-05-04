@@ -1,56 +1,56 @@
 [
     {
         "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_collect",
+        "benchmark" : "com.pivovarit.collectors.benchmark.BatchedVsNonBatchedBenchmark.batch",
         "mode" : "thrpt",
         "threads" : 1,
         "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
+        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-24/Contents/Home/bin/java",
         "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
+            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=58867",
             "-Dfile.encoding=UTF-8",
             "-Dsun.stdout.encoding=UTF-8",
             "-Dsun.stderr.encoding=UTF-8"
         ],
-        "jdkVersion" : "23",
+        "jdkVersion" : "24",
         "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
+        "vmVersion" : "24+36-3646",
+        "warmupIterations" : 3,
         "warmupTime" : "10 s",
         "warmupBatchSize" : 1,
         "measurementIterations" : 5,
         "measurementTime" : "10 s",
         "measurementBatchSize" : 1,
         "params" : {
-            "parallelism" : "1"
+            "parallelism" : "2"
         },
         "primaryMetric" : {
-            "score" : 24717.848610511945,
-            "scoreError" : 173.3503987038738,
+            "score" : 41558.54816750877,
+            "scoreError" : 959.0570362693659,
             "scoreConfidence" : [
-                24544.49821180807,
-                24891.19900921582
+                40599.4911312394,
+                42517.60520377814
             ],
             "scorePercentiles" : {
-                "0.0" : 24661.068189033736,
-                "50.0" : 24733.25297254149,
-                "90.0" : 24766.604945591484,
-                "95.0" : 24766.604945591484,
-                "99.0" : 24766.604945591484,
-                "99.9" : 24766.604945591484,
-                "99.99" : 24766.604945591484,
-                "99.999" : 24766.604945591484,
-                "99.9999" : 24766.604945591484,
-                "100.0" : 24766.604945591484
+                "0.0" : 41308.79117092309,
+                "50.0" : 41542.549224186965,
+                "90.0" : 41963.54913651832,
+                "95.0" : 41963.54913651832,
+                "99.0" : 41963.54913651832,
+                "99.9" : 41963.54913651832,
+                "99.99" : 41963.54913651832,
+                "99.999" : 41963.54913651832,
+                "99.9999" : 41963.54913651832,
+                "100.0" : 41963.54913651832
             },
             "scoreUnit" : "ops/s",
             "rawData" : [
                 [
-                    24733.25297254149,
-                    24747.63199652638,
-                    24680.684948866627,
-                    24766.604945591484,
-                    24661.068189033736
+                    41963.54913651832,
+                    41542.549224186965,
+                    41565.661367576744,
+                    41412.18993833873,
+                    41308.79117092309
                 ]
             ]
         },
@@ -59,868 +59,56 @@
     },
     {
         "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_collect",
+        "benchmark" : "com.pivovarit.collectors.benchmark.BatchedVsNonBatchedBenchmark.normal",
         "mode" : "thrpt",
         "threads" : 1,
         "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
+        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-24/Contents/Home/bin/java",
         "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
+            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=58867",
             "-Dfile.encoding=UTF-8",
             "-Dsun.stdout.encoding=UTF-8",
             "-Dsun.stderr.encoding=UTF-8"
         ],
-        "jdkVersion" : "23",
+        "jdkVersion" : "24",
         "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
+        "vmVersion" : "24+36-3646",
+        "warmupIterations" : 3,
         "warmupTime" : "10 s",
         "warmupBatchSize" : 1,
         "measurementIterations" : 5,
         "measurementTime" : "10 s",
         "measurementBatchSize" : 1,
         "params" : {
-            "parallelism" : "10"
+            "parallelism" : "2"
         },
         "primaryMetric" : {
-            "score" : 3468.773574596741,
-            "scoreError" : 159.3683879806492,
+            "score" : 254.86949584400912,
+            "scoreError" : 5.666629161927805,
             "scoreConfidence" : [
-                3309.405186616092,
-                3628.14196257739
+                249.20286668208132,
+                260.5361250059369
             ],
             "scorePercentiles" : {
-                "0.0" : 3421.2531109173224,
-                "50.0" : 3483.3660644980428,
-                "90.0" : 3522.3176942160158,
-                "95.0" : 3522.3176942160158,
-                "99.0" : 3522.3176942160158,
-                "99.9" : 3522.3176942160158,
-                "99.99" : 3522.3176942160158,
-                "99.999" : 3522.3176942160158,
-                "99.9999" : 3522.3176942160158,
-                "100.0" : 3522.3176942160158
+                "0.0" : 252.60912808474396,
+                "50.0" : 255.13200195501267,
+                "90.0" : 256.68714749560354,
+                "95.0" : 256.68714749560354,
+                "99.0" : 256.68714749560354,
+                "99.9" : 256.68714749560354,
+                "99.99" : 256.68714749560354,
+                "99.999" : 256.68714749560354,
+                "99.9999" : 256.68714749560354,
+                "100.0" : 256.68714749560354
             },
             "scoreUnit" : "ops/s",
             "rawData" : [
                 [
-                    3421.2531109173224,
-                    3432.9599328524673,
-                    3522.3176942160158,
-                    3483.971070499858,
-                    3483.3660644980428
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "100"
-        },
-        "primaryMetric" : {
-            "score" : 2113.161381188691,
-            "scoreError" : 225.55876179612065,
-            "scoreConfidence" : [
-                1887.6026193925702,
-                2338.7201429848114
-            ],
-            "scorePercentiles" : {
-                "0.0" : 2022.9845938626295,
-                "50.0" : 2111.532557438932,
-                "90.0" : 2177.22401335682,
-                "95.0" : 2177.22401335682,
-                "99.0" : 2177.22401335682,
-                "99.9" : 2177.22401335682,
-                "99.99" : 2177.22401335682,
-                "99.999" : 2177.22401335682,
-                "99.9999" : 2177.22401335682,
-                "100.0" : 2177.22401335682
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    2022.9845938626295,
-                    2150.5024977403536,
-                    2111.532557438932,
-                    2103.563243544721,
-                    2177.22401335682
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "1000"
-        },
-        "primaryMetric" : {
-            "score" : 506.96556672981313,
-            "scoreError" : 46.81048869401396,
-            "scoreConfidence" : [
-                460.1550780357992,
-                553.7760554238271
-            ],
-            "scorePercentiles" : {
-                "0.0" : 486.9511426556734,
-                "50.0" : 511.73789445288736,
-                "90.0" : 516.4286640935273,
-                "95.0" : 516.4286640935273,
-                "99.0" : 516.4286640935273,
-                "99.9" : 516.4286640935273,
-                "99.99" : 516.4286640935273,
-                "99.999" : 516.4286640935273,
-                "99.9999" : 516.4286640935273,
-                "100.0" : 516.4286640935273
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    516.4286640935273,
-                    486.9511426556734,
-                    504.30869403505505,
-                    515.4014384119228,
-                    511.73789445288736
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_streaming_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "1"
-        },
-        "primaryMetric" : {
-            "score" : 235988.42845743388,
-            "scoreError" : 905.90482392532,
-            "scoreConfidence" : [
-                235082.52363350856,
-                236894.3332813592
-            ],
-            "scorePercentiles" : {
-                "0.0" : 235575.13001766914,
-                "50.0" : 236096.03066420066,
-                "90.0" : 236127.942945054,
-                "95.0" : 236127.942945054,
-                "99.0" : 236127.942945054,
-                "99.9" : 236127.942945054,
-                "99.99" : 236127.942945054,
-                "99.999" : 236127.942945054,
-                "99.9999" : 236127.942945054,
-                "100.0" : 236127.942945054
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    236096.03066420066,
-                    236018.02214734987,
-                    235575.13001766914,
-                    236127.942945054,
-                    236125.01651289567
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_streaming_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "10"
-        },
-        "primaryMetric" : {
-            "score" : 3142.2753541806464,
-            "scoreError" : 75.53490379003172,
-            "scoreConfidence" : [
-                3066.7404503906146,
-                3217.8102579706783
-            ],
-            "scorePercentiles" : {
-                "0.0" : 3117.234378182228,
-                "50.0" : 3144.0177563325806,
-                "90.0" : 3165.3631378598484,
-                "95.0" : 3165.3631378598484,
-                "99.0" : 3165.3631378598484,
-                "99.9" : 3165.3631378598484,
-                "99.99" : 3165.3631378598484,
-                "99.999" : 3165.3631378598484,
-                "99.9999" : 3165.3631378598484,
-                "100.0" : 3165.3631378598484
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    3144.0177563325806,
-                    3117.234378182228,
-                    3156.092474443973,
-                    3165.3631378598484,
-                    3128.6690240846037
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_streaming_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "100"
-        },
-        "primaryMetric" : {
-            "score" : 1811.7965323973956,
-            "scoreError" : 72.94696879786662,
-            "scoreConfidence" : [
-                1738.849563599529,
-                1884.7435011952623
-            ],
-            "scorePercentiles" : {
-                "0.0" : 1785.0959308469291,
-                "50.0" : 1812.6580136147688,
-                "90.0" : 1835.5445683985542,
-                "95.0" : 1835.5445683985542,
-                "99.0" : 1835.5445683985542,
-                "99.9" : 1835.5445683985542,
-                "99.99" : 1835.5445683985542,
-                "99.999" : 1835.5445683985542,
-                "99.9999" : 1835.5445683985542,
-                "100.0" : 1835.5445683985542
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    1804.01894272086,
-                    1835.5445683985542,
-                    1785.0959308469291,
-                    1812.6580136147688,
-                    1821.6652064058671
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_batch_streaming_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "1000"
-        },
-        "primaryMetric" : {
-            "score" : 292.07444746989995,
-            "scoreError" : 60.83543749911727,
-            "scoreConfidence" : [
-                231.2390099707827,
-                352.90988496901724
-            ],
-            "scorePercentiles" : {
-                "0.0" : 267.35971523450564,
-                "50.0" : 296.76791828619747,
-                "90.0" : 310.2179353809017,
-                "95.0" : 310.2179353809017,
-                "99.0" : 310.2179353809017,
-                "99.9" : 310.2179353809017,
-                "99.99" : 310.2179353809017,
-                "99.999" : 310.2179353809017,
-                "99.9999" : 310.2179353809017,
-                "100.0" : 310.2179353809017
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    267.35971523450564,
-                    288.8534846567691,
-                    297.1731837911257,
-                    296.76791828619747,
-                    310.2179353809017
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "1"
-        },
-        "primaryMetric" : {
-            "score" : 24199.656194570147,
-            "scoreError" : 59.87435502024803,
-            "scoreConfidence" : [
-                24139.781839549898,
-                24259.530549590396
-            ],
-            "scorePercentiles" : {
-                "0.0" : 24183.395127469365,
-                "50.0" : 24201.57460907602,
-                "90.0" : 24223.019181532538,
-                "95.0" : 24223.019181532538,
-                "99.0" : 24223.019181532538,
-                "99.9" : 24223.019181532538,
-                "99.99" : 24223.019181532538,
-                "99.999" : 24223.019181532538,
-                "99.9999" : 24223.019181532538,
-                "100.0" : 24223.019181532538
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    24187.646261260175,
-                    24223.019181532538,
-                    24201.57460907602,
-                    24183.395127469365,
-                    24202.64579351264
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "10"
-        },
-        "primaryMetric" : {
-            "score" : 43.42989242464389,
-            "scoreError" : 6.561101858672947,
-            "scoreConfidence" : [
-                36.86879056597094,
-                49.99099428331684
-            ],
-            "scorePercentiles" : {
-                "0.0" : 42.17504906805364,
-                "50.0" : 42.99169574156569,
-                "90.0" : 46.339438668947665,
-                "95.0" : 46.339438668947665,
-                "99.0" : 46.339438668947665,
-                "99.9" : 46.339438668947665,
-                "99.99" : 46.339438668947665,
-                "99.999" : 46.339438668947665,
-                "99.9999" : 46.339438668947665,
-                "100.0" : 46.339438668947665
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    42.25550635891243,
-                    42.99169574156569,
-                    46.339438668947665,
-                    42.17504906805364,
-                    43.38777228574004
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "100"
-        },
-        "primaryMetric" : {
-            "score" : 641.5415815126114,
-            "scoreError" : 72.74610329872276,
-            "scoreConfidence" : [
-                568.7954782138886,
-                714.2876848113342
-            ],
-            "scorePercentiles" : {
-                "0.0" : 622.2665958909932,
-                "50.0" : 640.9472974060573,
-                "90.0" : 666.1350834108837,
-                "95.0" : 666.1350834108837,
-                "99.0" : 666.1350834108837,
-                "99.9" : 666.1350834108837,
-                "99.99" : 666.1350834108837,
-                "99.999" : 666.1350834108837,
-                "99.9999" : 666.1350834108837,
-                "100.0" : 666.1350834108837
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    622.2665958909932,
-                    666.1350834108837,
-                    654.0075235570164,
-                    624.3514072981068,
-                    640.9472974060573
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_collect",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "1000"
-        },
-        "primaryMetric" : {
-            "score" : 381.40087779566113,
-            "scoreError" : 74.58649916687335,
-            "scoreConfidence" : [
-                306.8143786287878,
-                455.9873769625345
-            ],
-            "scorePercentiles" : {
-                "0.0" : 359.650820424704,
-                "50.0" : 381.6477260824629,
-                "90.0" : 407.3861307549852,
-                "95.0" : 407.3861307549852,
-                "99.0" : 407.3861307549852,
-                "99.9" : 407.3861307549852,
-                "99.99" : 407.3861307549852,
-                "99.999" : 407.3861307549852,
-                "99.9999" : 407.3861307549852,
-                "100.0" : 407.3861307549852
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    407.3861307549852,
-                    359.650820424704,
-                    366.0761851912779,
-                    392.24352652487573,
-                    381.6477260824629
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_streaming",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "1"
-        },
-        "primaryMetric" : {
-            "score" : 19.076697753503563,
-            "scoreError" : 0.06459925193383798,
-            "scoreConfidence" : [
-                19.012098501569724,
-                19.1412970054374
-            ],
-            "scorePercentiles" : {
-                "0.0" : 19.049159777476365,
-                "50.0" : 19.082978221963238,
-                "90.0" : 19.092451504707054,
-                "95.0" : 19.092451504707054,
-                "99.0" : 19.092451504707054,
-                "99.9" : 19.092451504707054,
-                "99.99" : 19.092451504707054,
-                "99.999" : 19.092451504707054,
-                "99.9999" : 19.092451504707054,
-                "100.0" : 19.092451504707054
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    19.073763879471546,
-                    19.085135383899626,
-                    19.049159777476365,
-                    19.082978221963238,
-                    19.092451504707054
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_streaming",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "10"
-        },
-        "primaryMetric" : {
-            "score" : 40.29567255806252,
-            "scoreError" : 3.5151813327708354,
-            "scoreConfidence" : [
-                36.780491225291684,
-                43.81085389083336
-            ],
-            "scorePercentiles" : {
-                "0.0" : 38.83391357982014,
-                "50.0" : 40.391342913181106,
-                "90.0" : 41.26948576713002,
-                "95.0" : 41.26948576713002,
-                "99.0" : 41.26948576713002,
-                "99.9" : 41.26948576713002,
-                "99.99" : 41.26948576713002,
-                "99.999" : 41.26948576713002,
-                "99.9999" : 41.26948576713002,
-                "100.0" : 41.26948576713002
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    38.83391357982014,
-                    40.20697195895568,
-                    40.77664857122566,
-                    40.391342913181106,
-                    41.26948576713002
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_streaming",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "100"
-        },
-        "primaryMetric" : {
-            "score" : 349.12943335182,
-            "scoreError" : 16.668727675407748,
-            "scoreConfidence" : [
-                332.46070567641226,
-                365.79816102722776
-            ],
-            "scorePercentiles" : {
-                "0.0" : 343.137158565326,
-                "50.0" : 349.0085715056616,
-                "90.0" : 355.009456329203,
-                "95.0" : 355.009456329203,
-                "99.0" : 355.009456329203,
-                "99.9" : 355.009456329203,
-                "99.99" : 355.009456329203,
-                "99.999" : 355.009456329203,
-                "99.9999" : 355.009456329203,
-                "100.0" : 355.009456329203
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    343.137158565326,
-                    350.73440772770965,
-                    349.0085715056616,
-                    355.009456329203,
-                    347.75757263119976
-                ]
-            ]
-        },
-        "secondaryMetrics" : {
-        }
-    },
-    {
-        "jmhVersion" : "1.37",
-        "benchmark" : "com.pivovarit.collectors.benchmark.Bench.parallel_streaming",
-        "mode" : "thrpt",
-        "threads" : 1,
-        "forks" : 1,
-        "jvm" : "/Users/pivovarit/Library/Java/JavaVirtualMachines/openjdk-23/Contents/Home/bin/java",
-        "jvmArgs" : [
-            "-javaagent:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/lib/idea_rt.jar=54783:/Users/pivovarit/Applications/IntelliJ IDEA Ultimate.app/Contents/bin",
-            "-Dfile.encoding=UTF-8",
-            "-Dsun.stdout.encoding=UTF-8",
-            "-Dsun.stderr.encoding=UTF-8"
-        ],
-        "jdkVersion" : "23",
-        "vmName" : "OpenJDK 64-Bit Server VM",
-        "vmVersion" : "23+37-2369",
-        "warmupIterations" : 5,
-        "warmupTime" : "10 s",
-        "warmupBatchSize" : 1,
-        "measurementIterations" : 5,
-        "measurementTime" : "10 s",
-        "measurementBatchSize" : 1,
-        "params" : {
-            "parallelism" : "1000"
-        },
-        "primaryMetric" : {
-            "score" : 288.4142030036393,
-            "scoreError" : 51.24049964572966,
-            "scoreConfidence" : [
-                237.1737033579096,
-                339.6547026493689
-            ],
-            "scorePercentiles" : {
-                "0.0" : 277.85812797178846,
-                "50.0" : 279.9734986265659,
-                "90.0" : 305.04022178088417,
-                "95.0" : 305.04022178088417,
-                "99.0" : 305.04022178088417,
-                "99.9" : 305.04022178088417,
-                "99.99" : 305.04022178088417,
-                "99.999" : 305.04022178088417,
-                "99.9999" : 305.04022178088417,
-                "100.0" : 305.04022178088417
-            },
-            "scoreUnit" : "ops/s",
-            "rawData" : [
-                [
-                    278.5001800965005,
-                    277.85812797178846,
-                    300.6989865424574,
-                    305.04022178088417,
-                    279.9734986265659
+                    256.68714749560354,
+                    255.24615357151168,
+                    252.60912808474396,
+                    254.67304811317393,
+                    255.13200195501267
                 ]
             ]
         },
