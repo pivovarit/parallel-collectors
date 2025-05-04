@@ -2,6 +2,7 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -20,8 +21,6 @@ import static com.pivovarit.collectors.CompletionStrategy.ordered;
 import static com.pivovarit.collectors.CompletionStrategy.unordered;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
 
 /**
  * @author Grzegorz Piwowarek
@@ -101,11 +100,9 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
             if (config.executor().isPresent()) {
                 var executor = config.executor().orElseThrow();
 
-                return parallelism == 1
-                  ? syncCollector(mapper)
-                  : batchingCollector(mapper, executor, parallelism, ordered);
+                return parallelism == 1 ? syncCollector(mapper) : new BatchingAsyncParallelStreamingCollector<T, R, Object>(mapper, executor, parallelism, ordered);
             } else {
-                return batchingCollector(mapper, parallelism, ordered);
+                return new BatchingAsyncParallelStreamingCollector<>(mapper, parallelism, ordered);
             }
         } else {
             if (config.executor().isPresent() && config.parallelism().isPresent()) {
@@ -127,41 +124,85 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         }
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, ? extends R> mapper, Executor executor, int parallelism, boolean ordered) {
-        return collectingAndThen(
-          toList(),
-          list -> {
-              // no sense to repack into batches of size 1
-              if (list.size() == parallelism) {
-                  return list.stream()
-                    .collect(new AsyncParallelStreamingCollector<>(
-                      mapper,
-                      ordered ? ordered() : unordered(),
-                      emptySet(),
-                      executor != null
-                        ? Dispatcher.from(executor, parallelism)
-                        : Dispatcher.virtual(parallelism)));
-              } else {
-                  return partitioned(list, parallelism)
-                    .collect(collectingAndThen(new AsyncParallelStreamingCollector<>(
-                        batching(mapper),
-                        ordered ? ordered() : unordered(),
-                        emptySet(),
-                        executor != null
-                          ? Dispatcher.from(executor, parallelism)
-                          : Dispatcher.virtual(parallelism)),
-                      s -> s.flatMap(Collection::stream)));
-              }
-          });
-    }
-
-    static <T, R> Collector<T, ?, Stream<R>> batchingCollector(Function<? super T, ? extends R> mapper, int parallelism, boolean ordered) {
-        return batchingCollector(mapper, null, parallelism, ordered);
-    }
-
     static <T, R> Collector<T, Stream.Builder<R>, Stream<R>> syncCollector(Function<? super T, ? extends R> mapper) {
         return Collector.of(Stream::builder, (rs, t) -> rs.add(mapper.apply(t)), (rs, rs2) -> {
             throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
         }, Stream.Builder::build);
+    }
+
+    private static final class BatchingAsyncParallelStreamingCollector<T, R, C>
+      implements Collector<T, ArrayList<T>, Stream<R>> {
+
+        private final Function<? super T, ? extends R> task;
+        private final Executor executor;
+        private final int parallelism;
+        private final boolean ordered;
+
+        BatchingAsyncParallelStreamingCollector(
+          Function<? super T, ? extends R> task,
+          Executor executor,
+          int parallelism,
+          boolean ordered) {
+            this.executor = executor;
+            this.task = task;
+            this.parallelism = parallelism;
+            this.ordered = ordered;
+        }
+
+        BatchingAsyncParallelStreamingCollector(
+          Function<? super T, ? extends R> task,
+          int parallelism,
+          boolean ordered) {
+            this.executor = null;
+            this.task = task;
+            this.parallelism = parallelism;
+            this.ordered = ordered;
+        }
+
+        @Override
+        public Supplier<ArrayList<T>> supplier() {
+            return ArrayList::new;
+        }
+
+        @Override
+        public BiConsumer<ArrayList<T>, T> accumulator() {
+            return ArrayList::add;
+        }
+
+        @Override
+        public BinaryOperator<ArrayList<T>> combiner() {
+            return (left, right) -> {
+                left.addAll(right);
+                return left;
+            };
+        }
+
+        @Override
+        public Function<ArrayList<T>, Stream<R>> finisher() {
+            return items -> {
+
+                Set<Characteristics> characteristics = ordered ? emptySet() : UNORDERED;
+
+                if (items.size() == parallelism) {
+                    return items.stream()
+                      .collect(new AsyncParallelStreamingCollector<>(task, ordered ? ordered() : unordered(), characteristics, resolveDispatcher()));
+                } else {
+                    return partitioned(items, parallelism)
+                      .collect(new AsyncParallelStreamingCollector<>(batching(task), ordered ? ordered() : unordered(), characteristics, resolveDispatcher()))
+                      .flatMap(Collection::stream);
+                }
+            };
+        }
+
+        private <TT> Dispatcher<TT> resolveDispatcher() {
+            return executor != null
+              ? Dispatcher.from(executor, parallelism)
+              : Dispatcher.virtual(parallelism);
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Collections.emptySet();
+        }
     }
 }
