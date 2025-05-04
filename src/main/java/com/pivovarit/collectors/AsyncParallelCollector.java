@@ -1,7 +1,6 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -143,7 +142,7 @@ final class AsyncParallelCollector<T, R, C>
         return batchingCollector(mapper, null, parallelism, finisher);
     }
 
-    private static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<? super T, ? extends R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
+    static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> batchingCollector(Function<? super T, ? extends R> mapper, Executor executor, int parallelism, Function<Stream<R>, RR> finisher) {
         return collectingAndThen(
           toList(),
           list -> {
@@ -163,7 +162,7 @@ final class AsyncParallelCollector<T, R, C>
                       executor != null
                         ? Dispatcher.from(executor, parallelism)
                         : Dispatcher.virtual(parallelism),
-                      listStream -> finisher.apply(listStream.flatMap(Collection::stream))));
+                      listStream -> finisher.apply(listStream.flatMap(i -> i))));
               }
           });
     }

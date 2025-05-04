@@ -1,6 +1,5 @@
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -55,13 +54,13 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
         return acc.build();
     }
 
-    static <T, R> Function<List<T>, List<R>> batching(Function<? super T, R> mapper) {
+    static <T, R> Function<List<T>, Stream<R>> batching(Function<? super T, R> mapper) {
         return batch -> {
-            List<R> list = new ArrayList<>(batch.size());
+            Stream.Builder<R> stream = Stream.builder();
             for (T t : batch) {
-                list.add(mapper.apply(t));
+                stream.add(mapper.apply(t));
             }
-            return list;
+            return stream.build();
         };
     }
 

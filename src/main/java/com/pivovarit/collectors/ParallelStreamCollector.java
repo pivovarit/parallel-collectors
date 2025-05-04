@@ -150,7 +150,7 @@ class ParallelStreamCollector<T, R> implements Collector<T, List<CompletableFutu
                         executor != null
                           ? Dispatcher.from(executor, parallelism)
                           : Dispatcher.virtual(parallelism)),
-                      s -> s.flatMap(Collection::stream)));
+                      s -> s.flatMap(i -> i)));
               }
           });
     }
