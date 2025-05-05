@@ -1,8 +1,10 @@
 package com.pivovarit.collectors;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -19,7 +21,7 @@ final class Factory {
         var config = Option.process(options);
 
         var batching = config.batching().orElse(false);
-        var executor = config.executor().orElseGet(Executors::newVirtualThreadPerTaskExecutor);
+        var executor = config.executor().orElseGet(defaultExecutor());
 
         if (config.parallelism().orElse(-1) == 1) {
             return new AsyncCollector<>(mapper, finalizer, executor);
@@ -45,7 +47,7 @@ final class Factory {
 
         var config = Option.process(options);
         var batching = config.batching().orElse(false);
-        var executor = config.executor().orElseGet(Executors::newVirtualThreadPerTaskExecutor);
+        var executor = config.executor().orElseGet(defaultExecutor());
 
         if (config.parallelism().orElse(-1) == 1) {
             return new SyncCollector<>(mapper);
@@ -59,5 +61,9 @@ final class Factory {
         return config.parallelism().isPresent()
           ? AsyncParallelStreamingCollector.from(mapper, executor, config.parallelism().getAsInt(), ordered)
           : AsyncParallelStreamingCollector.from(mapper, executor, ordered);
+    }
+
+    private static Supplier<Executor> defaultExecutor() {
+        return Executors::newVirtualThreadPerTaskExecutor;
     }
 }
