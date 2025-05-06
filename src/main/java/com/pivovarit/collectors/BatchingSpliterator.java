@@ -17,13 +17,13 @@ import static java.util.stream.StreamSupport.stream;
 final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     private final List<T> source;
-    private final int maxChunks;
+    private int maxChunks;
 
     private int chunks;
     private int chunkSize;
     private int consumed;
 
-    private BatchingSpliterator(List<T> list, int batches) {
+    BatchingSpliterator(List<T> list, int batches) {
         if (batches < 1) {
             throw new IllegalArgumentException("batches can't be lower than one");
         }
@@ -80,7 +80,23 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     @Override
     public Spliterator<List<T>> trySplit() {
-        return null;
+        int remaining = source.size() - consumed;
+        if (remaining <= chunkSize || chunks <= 1) {
+            return null;
+        }
+
+        int midChunks = chunks / 2;
+        int midSize = midChunks * chunkSize;
+
+        var subList = source.subList(consumed, consumed + midSize);
+        var split = new BatchingSpliterator<>(subList, midChunks);
+
+        consumed += midSize;
+        chunks -= midChunks;
+        maxChunks -= midChunks;
+        chunkSize = (int) Math.ceil(((double) (source.size() - consumed)) / chunks);
+
+        return split;
     }
 
     @Override
