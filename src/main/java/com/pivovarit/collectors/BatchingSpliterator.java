@@ -68,7 +68,7 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
     @Override
     public boolean tryAdvance(Consumer<? super List<T>> action) {
         if (consumed < source.size() && chunks != 0) {
-            List<T> batch = source.subList(consumed, consumed + chunkSize);
+            List<T> batch = source.subList(consumed, Math.min(source.size(), consumed + chunkSize));
             consumed += chunkSize;
             chunkSize = (int) Math.ceil(((double) (source.size() - consumed)) / --chunks);
             action.accept(batch);
