@@ -33,24 +33,16 @@ final class Dispatcher<T> {
 
     private volatile boolean shortCircuited = false;
 
-    private Dispatcher(Executor executor, int permits) {
+    Dispatcher(Executor executor, int permits) {
         requireValidExecutor(executor);
         this.executor = executor;
         this.limiter = new Semaphore(permits);
     }
 
-    private Dispatcher(Executor executor) {
+    Dispatcher(Executor executor) {
         requireValidExecutor(executor);
         this.executor = executor;
         this.limiter = null;
-    }
-
-    static <T> Dispatcher<T> from(Executor executor) {
-        return new Dispatcher<>(executor);
-    }
-
-    static <T> Dispatcher<T> from(Executor executor, int permits) {
-        return new Dispatcher<>(executor, permits);
     }
 
     void start() {

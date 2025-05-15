@@ -48,12 +48,12 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
 
     public static <T, R> Collector<T, ?, Stream<R>> from(
       Function<? super T, ? extends R> function, Executor executor, int parallelism, boolean ordered) {
-        return new AsyncParallelStreamingCollector<>(function, Dispatcher.from(executor, parallelism), ordered);
+        return new AsyncParallelStreamingCollector<>(function, new Dispatcher<>(executor, parallelism), ordered);
     }
 
     public static <T, R> Collector<T, ?, Stream<R>> from(
       Function<? super T, ? extends R> function, Executor executor, boolean ordered) {
-        return new AsyncParallelStreamingCollector<>(function, Dispatcher.from(executor), ordered);
+        return new AsyncParallelStreamingCollector<>(function, new Dispatcher<>(executor), ordered);
     }
 
     @Override
@@ -117,10 +117,10 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
             return items -> {
                 if (items.size() == parallelism) {
                     return items.stream()
-                      .collect(new AsyncParallelStreamingCollector<>(task, Dispatcher.from(executor, parallelism), ordered));
+                      .collect(new AsyncParallelStreamingCollector<>(task, new Dispatcher<>(executor, parallelism), ordered));
                 } else {
                     return partitioned(items, parallelism)
-                      .collect(new AsyncParallelStreamingCollector<>(batching(task), Dispatcher.from(executor, parallelism), ordered))
+                      .collect(new AsyncParallelStreamingCollector<>(batching(task), new Dispatcher<>(executor, parallelism), ordered))
                       .flatMap(Collection::stream);
                 }
             };
