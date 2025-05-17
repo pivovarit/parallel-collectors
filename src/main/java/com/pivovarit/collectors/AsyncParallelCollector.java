@@ -41,14 +41,14 @@ final class AsyncParallelCollector<T, R, C>
       Function<Stream<R>, C> finalizer,
       Executor executor,
       int parallelism) {
-        return new AsyncParallelCollector<>(task, Dispatcher.from(executor, parallelism), finalizer);
+        return new AsyncParallelCollector<>(task, new Dispatcher<>(executor, parallelism), finalizer);
     }
 
     public static <T,R, C> Collector<T, ?, CompletableFuture<C>> from(
       Function<? super T, ? extends R> task,
       Function<Stream<R>, C> finalizer,
       Executor executor) {
-        return new AsyncParallelCollector<>(task, Dispatcher.from(executor), finalizer);
+        return new AsyncParallelCollector<>(task, new Dispatcher<>(executor), finalizer);
     }
 
     @Override
