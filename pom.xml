@@ -231,7 +231,7 @@
                     <plugin>
                         <groupId>org.pitest</groupId>
                         <artifactId>pitest-maven</artifactId>
-                        <version>1.19.3</version>
+                        <version>1.19.4</version>
                         <configuration>
                             <excludedTestClasses>
                                 <excludedTestClass>*ArchitectureTest</excludedTestClass>
