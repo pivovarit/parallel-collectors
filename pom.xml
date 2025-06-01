@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <licenses>
         <license>
@@ -109,11 +110,11 @@
                 <version>2.44.5</version>
                 <configuration>
                     <java>
-                        <removeUnusedImports />
+                        <removeUnusedImports/>
                         <importOrder>
                             <order>,\#</order>
                         </importOrder>
-                        <endWithNewline />
+                        <endWithNewline/>
                     </java>
                 </configuration>
                 <executions>
@@ -202,22 +203,14 @@
                         </configuration>
                     </plugin>
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.7.0</version>
-                        <executions>
-                            <execution>
-                                <id>deploy-to-sonatype</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>deploy</goal>
-                                    <goal>release</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
                         <configuration>
-                            <serverId>oss.sonatype.org</serverId>
-                            <nexusUrl>https://oss.sonatype.org</nexusUrl>
+                            <publishingServerId>central</publishingServerId>
+                            <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/
+                            </centralSnapshotsUrl>
                         </configuration>
                     </plugin>
                 </plugins>
