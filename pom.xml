@@ -115,6 +115,11 @@
                             <order>,\#</order>
                         </importOrder>
                         <endWithNewline/>
+                        <trimTrailingWhitespace/>
+                        <indent>
+                            <spaces>true</spaces>
+                            <spacesPerTab>4</spacesPerTab>
+                        </indent>
                     </java>
                 </configuration>
                 <executions>
