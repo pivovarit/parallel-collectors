@@ -37,7 +37,7 @@ sealed interface Option {
             }
 
             switch (option) {
-                case Batching batchingOption -> batching = Optional.of(batchingOption.batched());
+                case Batching __ -> batching = Optional.of(true);
                 case Parallelism parallelismOption -> parallelism = OptionalInt.of(parallelismOption.parallelism());
                 case ThreadPool threadPoolOption -> executor = Optional.ofNullable(threadPoolOption.executor());
             }
@@ -46,7 +46,7 @@ sealed interface Option {
         return new Configuration(batching, parallelism, executor);
     }
 
-    record Batching(boolean batched) implements Option {
+    record Batching() implements Option {
     }
 
     record ThreadPool(Executor executor) implements Option {
@@ -66,7 +66,7 @@ sealed interface Option {
     }
 
     static Option batched() {
-        return new Batching(true);
+        return new Batching();
     }
 
     static Option parallelism(int parallelism) {
