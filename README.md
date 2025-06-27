@@ -3,12 +3,12 @@
 [![build](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml)
 [![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=master)](http://pivovarit.github.io/parallel-collectors)
 [![Maven Central Version](https://img.shields.io/maven-central/v/com.pivovarit/parallel-collectors)](https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors/versions)
-            
-[![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg?variant=adaptive)](https://starchart.cc/pivovarit/parallel-collectors)
 
 ![](docs/logo.png)
 
-Parallel Collectors is a toolkit that eases parallel collection processing in Java using Stream API without the limitations imposed by standard Parallel Streams.
+[![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg?variant=adaptive)](https://starchart.cc/pivovarit/parallel-collectors)
+
+Parallel Collectors is a toolkit that eases parallel collection processing in Java using the Stream API without the limitations imposed by standard Parallel Streams.
 
     list.stream()
       .collect(parallel(i -> blockingOp(i), toList()))
@@ -21,7 +21,7 @@ They are:
 - powerful (the combined power of Stream API and `CompletableFuture`s, allowing for timeout specification, composition with other `CompletableFuture`s, and asynchronous processing)
 - configurable (flexibility with customizable `Executor`s and _parallelism_ levels)
 - non-blocking (eliminates the need to block the calling thread while awaiting results)
-- short-circuiting (if one of the operations raises an exception, remaining tasks will get interrupted)  
+- short-circuiting (if one of the operations raises an exception, the remaining tasks will get interrupted)  
 - non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies, no Stream API internals hacking)
 - versatile (enables easy integration with existing Stream API `Collectors`)
 
