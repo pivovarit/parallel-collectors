@@ -6,6 +6,7 @@
             
 [![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg?variant=adaptive)](https://starchart.cc/pivovarit/parallel-collectors)
 
+![](docs/logo.png)
 
 Parallel Collectors is a toolkit that eases parallel collection processing in Java using Stream API without the limitations imposed by standard Parallel Streams.
 
