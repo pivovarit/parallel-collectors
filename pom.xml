@@ -34,7 +34,7 @@
         <maven.javadoc.plugin.version>3.11.2</maven.javadoc.plugin.version>
         <maven.release.version>3.1.1</maven.release.version>
 
-        <junit.version>5.13.3</junit.version>
+        <junit.version>5.13.4</junit.version>
         <assertj.version>3.27.3</assertj.version>
         <awaitility.version>4.3.0</awaitility.version>
         <jmh.version>1.37</jmh.version>
