@@ -72,7 +72,7 @@ class OptionTest {
             return testData()
               .map(data ->
                 DynamicTest.dynamicTest("Batching[%s], Parallelism[%s], Executor[%s]".formatted(printable(data.batching), printable(data.parallelism), printable(data.executor)),
-                () -> Assertions.assertThatThrownBy(() -> new Option.Configuration(data.batching, data.parallelism, data.executor)).isInstanceOf(NullPointerException.class)
+                () -> Assertions.assertThatThrownBy(() -> new Option.Configuration(Optional.empty(), data.batching, data.parallelism, data.executor)).isInstanceOf(NullPointerException.class)
               ));
         }
 

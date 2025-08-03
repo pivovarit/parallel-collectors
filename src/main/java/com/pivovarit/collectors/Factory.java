@@ -42,11 +42,12 @@ final class Factory {
         return collecting(finalizer, mapper, options);
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, boolean ordered, Option... options) {
+    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, StreamingOption... options) {
         requireNonNull(mapper, "mapper can't be null");
 
         var config = Option.process(options);
-        var batching = config.batching().orElse(false);
+        boolean batching = config.batching().orElse(false);
+        boolean ordered = config.ordered().orElse(false);
         var executor = config.executor().orElseGet(defaultExecutor());
 
         if (config.parallelism().orElse(-1) == 1) {

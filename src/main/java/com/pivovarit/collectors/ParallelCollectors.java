@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import static com.pivovarit.collectors.Option.batched;
 import static com.pivovarit.collectors.Option.executor;
+import static com.pivovarit.collectors.Option.ordered;
 import static com.pivovarit.collectors.Option.parallelism;
 
 /**
@@ -256,7 +257,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper) {
-        return Factory.streaming(mapper, false);
+        return Factory.streaming(mapper);
     }
 
     /**
@@ -283,7 +284,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, int parallelism) {
-        return Factory.streaming(mapper, false, parallelism(parallelism));
+        return Factory.streaming(mapper, parallelism(parallelism));
     }
 
     /**
@@ -310,7 +311,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor) {
-        return Factory.streaming(mapper, false, executor(executor));
+        return Factory.streaming(mapper, executor(executor));
     }
 
     /**
@@ -338,7 +339,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-        return Factory.streaming(mapper, false, executor(executor), parallelism(parallelism));
+        return Factory.streaming(mapper, executor(executor), parallelism(parallelism));
     }
 
     /**
@@ -364,7 +365,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper) {
-        return Factory.streaming(mapper, true);
+        return Factory.streaming(mapper, ordered());
     }
 
     /**
@@ -391,7 +392,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, int parallelism) {
-        return Factory.streaming(mapper, true, parallelism(parallelism));
+        return Factory.streaming(mapper, ordered(), parallelism(parallelism));
     }
 
     /**
@@ -418,7 +419,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, Executor executor) {
-        return Factory.streaming(mapper, true, executor(executor));
+        return Factory.streaming(mapper, ordered(), executor(executor));
     }
 
     /**
@@ -446,7 +447,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-        return Factory.streaming(mapper, true, executor(executor), parallelism(parallelism));
+        return Factory.streaming(mapper, ordered(), executor(executor), parallelism(parallelism));
     }
 
     /**
@@ -574,7 +575,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-            return Factory.streaming(mapper, false,
+            return Factory.streaming(mapper,
               batched(),
               executor(executor),
               parallelism(parallelism));
@@ -605,7 +606,8 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-            return Factory.streaming(mapper, true,
+            return Factory.streaming(mapper,
+              ordered(),
               batched(),
               executor(executor),
               parallelism(parallelism));

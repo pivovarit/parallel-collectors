@@ -8,31 +8,35 @@ import java.util.concurrent.Executor;
 
 import static java.util.Objects.requireNonNull;
 
-sealed interface Option {
+// while this might seem weird at first, this allows spotting configuration issues at compile-time without duplicating the whole Option hierarchy
+sealed interface Option extends StreamingOption {
 
-    record Configuration(Optional<Boolean> batching, OptionalInt parallelism, Optional<Executor> executor) {
+    record Configuration(Optional<Boolean> ordered, Optional<Boolean> batching, OptionalInt parallelism, Optional<Executor> executor) {
         public Configuration {
-            requireNonNull(batching, "batching can't be null");
-            requireNonNull(parallelism, "parallelism can't be null");
-            requireNonNull(executor, "executor can't be null");
+            requireNonNull(ordered, "'ordered' can't be null");
+            requireNonNull(batching, "'batching' can't be null");
+            requireNonNull(parallelism, "'parallelism' can't be null");
+            requireNonNull(executor, "'executor' can't be null");
         }
     }
 
-    static Configuration process(Option... options) {
+    static Configuration process(StreamingOption... options) {
         requireNonNull(options, "options can't be null");
 
-        Set<Class<? extends Option>> seen = new HashSet<>();
+        Set<Class<? extends StreamingOption>> seen = new HashSet<>();
 
         Optional<Boolean> batching = Optional.empty();
+        Optional<Boolean> ordered = Optional.empty();
         OptionalInt parallelism = OptionalInt.empty();
         Optional<Executor> executor = Optional.empty();
 
         for (var option : options) {
             if (!seen.add(option.getClass())) {
                 throw new IllegalArgumentException("each option can be used at most once, and you configured '%s' multiple times".formatted(switch (option) {
-                    case Option.Batching __ -> "batching";
-                    case Option.Parallelism __ -> "parallelism";
-                    case Option.ThreadPool __ -> "executor";
+                    case Batching __ -> "batching";
+                    case Parallelism __ -> "parallelism";
+                    case ThreadPool __ -> "executor";
+                    case Ordered __ -> "ordered";
                 }));
             }
 
@@ -40,10 +44,15 @@ sealed interface Option {
                 case Batching __ -> batching = Optional.of(true);
                 case Parallelism parallelismOption -> parallelism = OptionalInt.of(parallelismOption.parallelism());
                 case ThreadPool threadPoolOption -> executor = Optional.ofNullable(threadPoolOption.executor());
+                case Ordered __ -> ordered = Optional.of(true);
             }
         }
 
-        return new Configuration(batching, parallelism, executor);
+        return new Configuration(ordered, batching, parallelism, executor);
+    }
+
+    record Ordered() implements StreamingOption {
+
     }
 
     record Batching() implements Option {
@@ -61,15 +70,19 @@ sealed interface Option {
         }
     }
 
-    static Option executor(Executor executor) {
+    static ThreadPool executor(Executor executor) {
         return new ThreadPool(executor);
     }
 
-    static Option batched() {
+    static Batching batched() {
         return new Batching();
     }
 
-    static Option parallelism(int parallelism) {
+    static Parallelism parallelism(int parallelism) {
         return new Parallelism(parallelism);
+    }
+
+    static Ordered ordered() {
+        return new Ordered();
     }
 }
