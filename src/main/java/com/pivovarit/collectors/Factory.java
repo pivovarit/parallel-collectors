@@ -15,10 +15,10 @@ final class Factory {
     private Factory() {
     }
 
-    static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(Function<Stream<R>, C> finalizer, Function<? super T, ? extends R> mapper, Option... options) {
+    static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(Function<Stream<R>, C> finalizer, Function<? super T, ? extends R> mapper, Options.CollectingOption... options) {
         requireNonNull(mapper, "mapper can't be null");
 
-        var config = Option.process(options);
+        var config = ConfigProcessor.process(options);
 
         var batching = config.batching().orElse(false);
         var executor = config.executor().orElseGet(defaultExecutor());
@@ -37,15 +37,15 @@ final class Factory {
           : AsyncParallelCollector.from(mapper, finalizer, executor);
     }
 
-    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collecting(Function<? super T, ? extends R> mapper, Option... options) {
+    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collecting(Function<? super T, ? extends R> mapper, Options.CollectingOption... options) {
         Function<Stream<R>, Stream<R>> finalizer = i -> i;
         return collecting(finalizer, mapper, options);
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, StreamingOption... options) {
+    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, Options.StreamingOption... options) {
         requireNonNull(mapper, "mapper can't be null");
 
-        var config = Option.process(options);
+        var config = ConfigProcessor.process(options);
         boolean batching = config.batching().orElse(false);
         boolean ordered = config.ordered().orElse(false);
         var executor = config.executor().orElseGet(defaultExecutor());

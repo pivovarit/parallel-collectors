@@ -7,11 +7,6 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.Option.batched;
-import static com.pivovarit.collectors.Option.executor;
-import static com.pivovarit.collectors.Option.ordered;
-import static com.pivovarit.collectors.Option.parallelism;
-
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
  *
@@ -70,7 +65,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, int parallelism) {
-        return Factory.collecting(s -> s.collect(collector), mapper, parallelism(parallelism));
+        return Factory.collecting(s -> s.collect(collector), mapper, Options.parallelism(parallelism));
     }
 
     /**
@@ -97,7 +92,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
-        return Factory.collecting(s -> s.collect(collector), mapper, executor(executor), parallelism(parallelism));
+        return Factory.collecting(s -> s.collect(collector), mapper, Options.executor(executor), Options.parallelism(parallelism));
     }
 
     /**
@@ -123,7 +118,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, Executor executor) {
-        return Factory.collecting(s -> s.collect(collector), mapper, executor(executor));
+        return Factory.collecting(s -> s.collect(collector), mapper, Options.executor(executor));
     }
 
     /**
@@ -176,7 +171,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<? super T, ? extends R> mapper, int parallelism) {
-        return Factory.collecting(mapper, parallelism(parallelism));
+        return Factory.collecting(mapper, Options.parallelism(parallelism));
     }
 
     /**
@@ -204,7 +199,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-        return Factory.collecting(mapper, executor(executor), parallelism(parallelism));
+        return Factory.collecting(mapper, Options.executor(executor), Options.parallelism(parallelism));
     }
 
     /**
@@ -231,7 +226,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<? super T, ? extends R> mapper, Executor executor) {
-        return Factory.collecting(mapper, executor(executor));
+        return Factory.collecting(mapper, Options.executor(executor));
     }
 
     /**
@@ -284,7 +279,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, int parallelism) {
-        return Factory.streaming(mapper, parallelism(parallelism));
+        return Factory.streaming(mapper, Options.parallelism(parallelism));
     }
 
     /**
@@ -311,7 +306,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor) {
-        return Factory.streaming(mapper, executor(executor));
+        return Factory.streaming(mapper, Options.executor(executor));
     }
 
     /**
@@ -339,7 +334,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-        return Factory.streaming(mapper, executor(executor), parallelism(parallelism));
+        return Factory.streaming(mapper, Options.executor(executor), Options.parallelism(parallelism));
     }
 
     /**
@@ -365,7 +360,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper) {
-        return Factory.streaming(mapper, ordered());
+        return Factory.streaming(mapper, Options.ordered());
     }
 
     /**
@@ -392,7 +387,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, int parallelism) {
-        return Factory.streaming(mapper, ordered(), parallelism(parallelism));
+        return Factory.streaming(mapper, Options.ordered(), Options.parallelism(parallelism));
     }
 
     /**
@@ -419,7 +414,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, Executor executor) {
-        return Factory.streaming(mapper, ordered(), executor(executor));
+        return Factory.streaming(mapper, Options.ordered(), Options.executor(executor));
     }
 
     /**
@@ -447,7 +442,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-        return Factory.streaming(mapper, ordered(), executor(executor), parallelism(parallelism));
+        return Factory.streaming(mapper, Options.ordered(), Options.executor(executor), Options.parallelism(parallelism));
     }
 
     /**
@@ -514,9 +509,9 @@ public final class ParallelCollectors {
          */
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
             return Factory.collecting(s -> s.collect(collector), mapper,
-              batched(),
-              executor(executor),
-              parallelism(parallelism));
+              Options.batched(),
+              Options.executor(executor),
+              Options.parallelism(parallelism));
         }
 
         /**
@@ -545,9 +540,9 @@ public final class ParallelCollectors {
          */
         public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
             return Factory.collecting(mapper,
-              batched(),
-              executor(executor),
-              parallelism(parallelism));
+              Options.batched(),
+              Options.executor(executor),
+              Options.parallelism(parallelism));
         }
 
         /**
@@ -576,9 +571,9 @@ public final class ParallelCollectors {
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
             return Factory.streaming(mapper,
-              batched(),
-              executor(executor),
-              parallelism(parallelism));
+              Options.batched(),
+              Options.executor(executor),
+              Options.parallelism(parallelism));
         }
 
         /**
@@ -607,10 +602,10 @@ public final class ParallelCollectors {
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
             return Factory.streaming(mapper,
-              ordered(),
-              batched(),
-              executor(executor),
-              parallelism(parallelism));
+              Options.ordered(),
+              Options.batched(),
+              Options.executor(executor),
+              Options.parallelism(parallelism));
         }
     }
 }
