@@ -19,18 +19,18 @@ class OptionTest {
 
     @Test
     void shouldThrowOnInvalidParallelism() {
-        assertThatThrownBy(() -> Option.parallelism(0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Options.parallelism(0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void shouldThrowOnNullExecutor() {
-        assertThatThrownBy(() -> Option.executor(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Options.executor(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void shouldRejectExecutorWithDiscardPolicy() {
         try (var executor = new ThreadPoolExecutor(2, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10), new ThreadPoolExecutor.DiscardPolicy())) {
-            assertThatThrownBy(() -> Option.executor(executor)).isInstanceOf(IllegalArgumentException.class)
+            assertThatThrownBy(() -> Options.executor(executor)).isInstanceOf(IllegalArgumentException.class)
               .hasMessageContaining("Executor's RejectedExecutionHandler can't discard tasks");
         }
     }
@@ -38,26 +38,27 @@ class OptionTest {
     @Test
     void shouldRejectExecutorWithDiscardOldestPolicy() {
         try (var executor = new ThreadPoolExecutor(2, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10), new ThreadPoolExecutor.DiscardOldestPolicy())) {
-            assertThatThrownBy(() -> Option.executor(executor)).isInstanceOf(IllegalArgumentException.class)
+            assertThatThrownBy(() -> Options.executor(executor)).isInstanceOf(IllegalArgumentException.class)
               .hasMessageContaining("Executor's RejectedExecutionHandler can't discard tasks");
         }
     }
 
     @TestFactory
     Stream<DynamicTest> shouldThrowWhenSameOptionsAreUsedMultipleTimes() {
-        return Stream.of(Option.batched(), Option.executor(r -> {}), Option.parallelism(1))
+        return Stream.<Options.CollectingOption>of(Options.batched(), Options.executor(r -> {}), Options.parallelism(1))
             .map(o -> DynamicTest.dynamicTest("should handle duplicated: " + nameOf(o), () -> {
-                assertThatThrownBy(() -> Option.process(o, o))
+                assertThatThrownBy(() -> ConfigProcessor.process(o, o))
                   .isInstanceOf(IllegalArgumentException.class)
                   .hasMessageContaining("each option can be used at most once, and you configured '%s' multiple times".formatted(nameOf(o)));
             }));
     }
 
-    private String nameOf(Option option) {
+    private String nameOf(Options.CollectingOption option) {
         return switch (option) {
-            case Option.Batching __ -> "batching";
-            case Option.Parallelism __ -> "parallelism";
-            case Option.ThreadPool __ -> "executor";
+            case Options.Batched __ -> "batching";
+            case Options.Parallelism __ -> "parallelism";
+            case Options.ThreadPool __ -> "executor";
+            case Options.Ordered __ -> "ordered";
         };
     }
 
@@ -72,7 +73,7 @@ class OptionTest {
             return testData()
               .map(data ->
                 DynamicTest.dynamicTest("Batching[%s], Parallelism[%s], Executor[%s]".formatted(printable(data.batching), printable(data.parallelism), printable(data.executor)),
-                () -> Assertions.assertThatThrownBy(() -> new Option.Configuration(data.batching, data.parallelism, data.executor)).isInstanceOf(NullPointerException.class)
+                () -> Assertions.assertThatThrownBy(() -> new ConfigProcessor.Configuration(Optional.empty(), data.batching, data.parallelism, data.executor)).isInstanceOf(NullPointerException.class)
               ));
         }
 
