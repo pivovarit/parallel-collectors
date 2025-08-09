@@ -37,7 +37,8 @@ class BatchingSpliteratorTest {
           .toList();
 
         assertThat(combined).containsExactlyElementsOf(input);
-        assertThat(splitChunks.size() + remainingChunks.size()).isEqualTo(4);
+        assertThat(splitChunks.size()).isEqualTo(2);
+        assertThat(remainingChunks.size()).isEqualTo(2);
     }
 
     @Test
