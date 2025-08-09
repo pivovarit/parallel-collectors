@@ -107,6 +107,6 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     @Override
     public int characteristics() {
-        return ORDERED | SIZED;
+        return IMMUTABLE | ORDERED | SIZED | SUBSIZED;
     }
 }
