@@ -3,6 +3,7 @@ package com.pivovarit.collectors;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Spliterator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -190,5 +191,21 @@ class BatchingSpliteratorTest {
         partitioned(input, 2).forEach(c -> {});
 
         assertThat(input).isEqualTo(List.of(1, 2, 3, 4, 5));
+    }
+
+    @Test
+    void shouldNotOvershootConsumedOnLastBatch() {
+        List<Integer> source = List.of(1, 2, 3, 4, 5);
+
+        Spliterator<List<Integer>> spliterator = new BatchingSpliterator<>(source, 2);
+
+        List<List<Integer>> result = new ArrayList<>();
+        while (spliterator.tryAdvance(result::add)) {
+            // no-op
+        }
+
+        assertThat(result).containsExactly(List.of(1, 2, 3), List.of(4, 5));
+
+        assertThat(result.stream().mapToInt(List::size).sum()).isEqualTo(source.size());
     }
 }
