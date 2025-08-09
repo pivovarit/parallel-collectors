@@ -36,12 +36,12 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
     static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
         int size = list.size();
 
-        if (size <= numberOfParts) {
-            return asSingletonListStream(list);
-        } else if (size == 0) {
+        if (size == 0) {
             return empty();
         } else if (numberOfParts == 1) {
             return of(list);
+        } else if (size <= numberOfParts) {
+            return asSingletonListStream(list);
         } else {
             return stream(new BatchingSpliterator<>(list, numberOfParts), false);
         }
