@@ -186,4 +186,17 @@ class BatchingSpliteratorTest {
 
         assertThat(input).isEqualTo(List.of(1, 2, 3, 4, 5));
     }
+
+    @Test
+    void shouldDecreaseEstimateSizeAsBatchesConsumed() {
+        List<Integer> source = IntStream.rangeClosed(1, 6).boxed().toList();
+        BatchingSpliterator<Integer> spliterator = new BatchingSpliterator<>(source, 3);
+
+        long initial = spliterator.estimateSize();
+        assertThat(initial).isEqualTo(3);
+
+        spliterator.tryAdvance(l -> {});
+        long afterOne = spliterator.estimateSize();
+        assertThat(afterOne).isLessThanOrEqualTo(initial);
+    }
 }
