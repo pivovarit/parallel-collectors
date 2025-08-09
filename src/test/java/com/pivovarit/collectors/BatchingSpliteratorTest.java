@@ -17,6 +17,11 @@ import static org.junit.Assert.assertThrows;
 class BatchingSpliteratorTest {
 
     @Test
+    void shouldReturnEmptyStreamForEmptyList() {
+        assertThat(BatchingSpliterator.partitioned(List.of(), 3).toList()).isEmpty();
+    }
+
+    @Test
     void shouldSplitAndProcessIndependently() {
         var input = List.of(1, 2, 3, 4, 5, 6, 7, 8);
         var original = new BatchingSpliterator<>(input, 4);
