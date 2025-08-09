@@ -208,4 +208,16 @@ class BatchingSpliteratorTest {
 
         assertThat(result.stream().mapToInt(List::size).sum()).isEqualTo(source.size());
     }
+
+    @Test
+    void shouldReportOrderedSizedAndSubSized() {
+        Spliterator<List<Integer>> spliterator = new BatchingSpliterator<>(List.of(1, 2, 3), 2);
+
+        int characteristics = spliterator.characteristics();
+
+        assertThat(characteristics & Spliterator.IMMUTABLE).isNotZero();
+        assertThat(characteristics & Spliterator.ORDERED).isNotZero();
+        assertThat(characteristics & Spliterator.SIZED).isNotZero();
+        assertThat(characteristics & Spliterator.SUBSIZED).isNotZero();
+    }
 }
