@@ -2,7 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -38,7 +37,7 @@ record AsyncCollector<T, R, RR>(Function<? super T, ? extends R> mapper, Functio
             try {
                 return CompletableFuture.supplyAsync(() -> processor.apply(acc.build().map(mapper)), executor);
             } catch (Exception e) {
-                throw new CompletionException(e);
+                return CompletableFuture.failedFuture(e);
             }
         };
     }
