@@ -30,9 +30,10 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
     }
 
     private CompletableFuture<T> nextCompleted() {
-        remaining--;
         try {
-            return completed.take();
+            var next = completed.take();
+            remaining--;
+            return next;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
 
