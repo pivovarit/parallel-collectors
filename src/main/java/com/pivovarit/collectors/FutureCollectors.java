@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -12,6 +13,8 @@ import static java.util.stream.Collectors.toList;
  */
 final class FutureCollectors {
     static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
+        Objects.requireNonNull(collector, "collector cannot be null");
+
         return Collectors.collectingAndThen(toList(), list -> {
             var future = CompletableFuture.allOf(list.toArray(CompletableFuture[]::new))
               .thenApply(__ -> list.stream()
