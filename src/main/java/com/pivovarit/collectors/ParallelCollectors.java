@@ -1,6 +1,7 @@
 package com.pivovarit.collectors;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -39,6 +40,7 @@ public final class ParallelCollectors {
      * @since 3.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector) {
+        Objects.requireNonNull(collector, "collector cannot be null");
         return Factory.collecting(s -> s.collect(collector), mapper);
     }
 
@@ -65,6 +67,7 @@ public final class ParallelCollectors {
      * @since 3.2.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, int parallelism) {
+        Objects.requireNonNull(collector, "collector cannot be null");
         return Factory.collecting(s -> s.collect(collector), mapper, Options.parallelism(parallelism));
     }
 
@@ -92,6 +95,7 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
+        Objects.requireNonNull(collector, "collector cannot be null");
         return Factory.collecting(s -> s.collect(collector), mapper, Options.executor(executor), Options.parallelism(parallelism));
     }
 
@@ -118,6 +122,7 @@ public final class ParallelCollectors {
      * @since 3.3.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, Executor executor) {
+        Objects.requireNonNull(collector, "collector cannot be null");
         return Factory.collecting(s -> s.collect(collector), mapper, Options.executor(executor));
     }
 
@@ -508,6 +513,7 @@ public final class ParallelCollectors {
          * @since 2.1.0
          */
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
+            Objects.requireNonNull(collector, "collector cannot be null");
             return Factory.collecting(s -> s.collect(collector), mapper,
               Options.batched(),
               Options.executor(executor),
