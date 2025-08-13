@@ -18,7 +18,7 @@ jobs:
         architecture: [ 'x64' ]
     name: Mutation Testing with JDK ${{ matrix.java }} on ${{ matrix.architecture }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
