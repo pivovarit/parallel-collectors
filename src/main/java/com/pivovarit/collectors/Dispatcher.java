@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -55,7 +56,10 @@ final class Dispatcher<T> {
                                 limiter.acquire();
                             }
                         } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            cancelQueuedTasks();
                             handle(e);
+                            break;
                         }
                         Runnable task;
                         if ((task = workingQueue.take()) != POISON_PILL) {
@@ -76,6 +80,16 @@ final class Dispatcher<T> {
                     handle(e);
                 }
             });
+        }
+    }
+
+    private void cancelQueuedTasks() {
+        var pending = new ArrayList<>();
+        workingQueue.drainTo(pending);
+        for (Object task : pending) {
+            if (task instanceof FutureTask<?> ft) {
+                ft.cancel(true);
+            }
         }
     }
 
