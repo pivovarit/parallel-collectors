@@ -56,7 +56,6 @@ final class Dispatcher<T> {
                                 limiter.acquire();
                             }
                         } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
                             cancelQueuedTasks();
                             handle(e);
                             break;
