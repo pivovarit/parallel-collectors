@@ -35,7 +35,7 @@
         <maven.release.version>3.1.1</maven.release.version>
 
         <junit.version>5.13.4</junit.version>
-        <assertj.version>3.27.5</assertj.version>
+        <assertj.version>3.27.6</assertj.version>
         <awaitility.version>4.3.0</awaitility.version>
         <jmh.version>1.37</jmh.version>
         <jmh.generator>default</jmh.generator>
