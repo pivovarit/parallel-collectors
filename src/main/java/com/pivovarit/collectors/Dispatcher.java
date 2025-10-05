@@ -31,8 +31,6 @@ final class Dispatcher<T> {
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
-    private volatile boolean shortCircuited = false;
-
     Dispatcher(Executor executor, int permits) {
         requireValidExecutor(executor);
         this.executor = executor;
@@ -56,6 +54,7 @@ final class Dispatcher<T> {
                             }
                         } catch (InterruptedException e) {
                             handle(e);
+                            break;
                         }
                         Runnable task;
                         if ((task = workingQueue.take()) != POISON_PILL) {
@@ -101,9 +100,7 @@ final class Dispatcher<T> {
     private FutureTask<Void> completionTask(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) {
         FutureTask<Void> task = new FutureTask<>(() -> {
             try {
-                if (!shortCircuited) {
-                    future.complete(supplier.get());
-                }
+                future.complete(supplier.get());
             } catch (Throwable e) {
                 handle(e);
             }
@@ -113,8 +110,11 @@ final class Dispatcher<T> {
     }
 
     private void handle(Throwable e) {
-        shortCircuited = true;
-        completionSignaller.completeExceptionally(e);
+        workingQueue.forEach(runnable -> {
+            if (runnable instanceof FutureTask<?> task) {
+                task.cancel(true);
+            }
+        });
     }
 
     private static Function<Throwable, Void> shortcircuit(InterruptibleCompletableFuture<?> future) {
