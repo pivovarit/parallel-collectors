@@ -10,8 +10,11 @@ import static java.util.Objects.requireNonNull;
 
 final class ConfigProcessor {
 
-    record Configuration(Optional<Boolean> ordered, Optional<Boolean> batching, OptionalInt parallelism,
-                         Optional<Executor> executor) {
+    record Configuration(
+      Optional<Boolean> ordered,
+      Optional<Boolean> batching,
+      OptionalInt parallelism,
+      Optional<Executor> executor) {
         public Configuration {
             requireNonNull(ordered, "'ordered' can't be null");
             requireNonNull(batching, "'batching' can't be null");
@@ -37,7 +40,8 @@ final class ConfigProcessor {
 
             switch (option) {
                 case Options.Batched __ -> batching = Optional.of(true);
-                case Options.Parallelism parallelismOption -> parallelism = OptionalInt.of(parallelismOption.parallelism());
+                case Options.Parallelism parallelismOption ->
+                  parallelism = OptionalInt.of(parallelismOption.parallelism());
                 case Options.ThreadPool threadPoolOption -> executor = Optional.ofNullable(threadPoolOption.executor());
                 case Options.Ordered __ -> ordered = Optional.of(true);
             }
