@@ -22,18 +22,7 @@ final class Factory {
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Options.CollectingOption... options) {
-        Objects.requireNonNull(classifier, "classifier cannot be null");
-        Objects.requireNonNull(mapper, "mapper cannot be null");
-        Objects.requireNonNull(options, "options cannot be null");
-
-        return Collectors.collectingAndThen(
-          Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
-          groups -> groups.entrySet()
-            .stream()
-            .collect(collecting(e -> new Grouped<>(e.getKey(), e.getValue().stream()
-              .map(mapper.andThen(a -> (R) a))
-              .toList()), options))
-        );
+        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, Stream<Grouped<K, R>>>) i -> i, mapper, options);
     }
 
     static <T, K, R, C> Collector<T, ?, CompletableFuture<C>> collectingBy(
