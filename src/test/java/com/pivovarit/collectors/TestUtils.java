@@ -1,7 +1,6 @@
 package com.pivovarit.collectors;
 
 import java.time.Duration;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,20 +36,10 @@ public final class TestUtils {
     }
 
     public synchronized static Integer incrementAndThrow(AtomicInteger counter) {
-        if (counter.incrementAndGet() >= 10) {
+        if (counter.get() >= 10) {
             throw new IllegalArgumentException();
         }
 
-        return counter.intValue();
-    }
-
-    public static void runWithExecutor(Consumer<Executor> consumer, int size) {
-        ExecutorService executor = Executors.newFixedThreadPool(size);
-
-        try {
-            consumer.accept(executor);
-        } finally {
-            executor.shutdown();
-        }
+        return counter.incrementAndGet();
     }
 }
