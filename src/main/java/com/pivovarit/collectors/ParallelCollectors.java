@@ -25,6 +25,10 @@ public final class ParallelCollectors {
      * <p>
      * Each element is transformed using the provided {@code mapper} in parallel on Virtual Threads,
      * and the results are reduced according to the supplied {@code collector}.
+     * <p>
+     * The collector is not reusable.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -33,14 +37,15 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(i), toList()));
      * }</pre>
      *
-     * @param mapper    transformation applied to each element
-     * @param collector the {@code Collector} describing the reduction
+     * @param mapper    transformation applied to each element (must not be null)
+     * @param collector the {@code Collector} describing the reduction (must not be null)
      * @param <T>       the input element type
      * @param <R>       the type produced by {@code mapper}
      * @param <RR>      the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced result
      *
+     * @throws NullPointerException if {@code collector} is null
      * @since 3.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
@@ -59,6 +64,8 @@ public final class ParallelCollectors {
      * <p>
      * Each batch is reduced independently using the provided {@code collector}, and the results
      * are combined according to the classification keys.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads. The collector is not reusable.
      *
      * <br>
      * Example:
@@ -70,9 +77,9 @@ public final class ParallelCollectors {
      *       toList()));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
-     * @param collector  the {@code Collector} describing the reduction for each batch
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
+     * @param collector  the {@code Collector} describing the reduction for each batch (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
@@ -80,7 +87,8 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced batch results
      *
-     * @since TODO
+     * @throws NullPointerException if {@code classifier} or {@code collector} is null
+     * @since 3.3.0
      */
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -101,6 +109,10 @@ public final class ParallelCollectors {
      * <p>
      * Each element is transformed using the provided {@code mapper} in parallel on Virtual Threads,
      * and the results are reduced according to the supplied {@code collector}.
+     * <p>
+     * The collector is not reusable.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -109,8 +121,8 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(i), toList(), 2));
      * }</pre>
      *
-     * @param mapper      transformation applied to each element
-     * @param collector   the {@code Collector} describing the reduction
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param collector   the {@code Collector} describing the reduction (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the type produced by {@code mapper}
@@ -118,6 +130,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced result
      *
+     * @throws NullPointerException if {@code collector} is null
      * @since 3.2.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
@@ -137,6 +150,8 @@ public final class ParallelCollectors {
      * <p>
      * Each batch is reduced independently using the provided {@code collector}, and the results
      * are combined according to the classification keys.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads. The collector is not reusable.
      *
      * <br>
      * Example:
@@ -149,9 +164,9 @@ public final class ParallelCollectors {
      *       4));
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
-     * @param mapper      transformation applied to each element
-     * @param collector   the {@code Collector} describing the reduction for each batch
+     * @param classifier  function that groups elements into batches (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param collector   the {@code Collector} describing the reduction for each batch (must not be null)
      * @param parallelism the maximum allowed parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -160,7 +175,8 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced batch results
      *
-     * @since TODO
+     * @throws NullPointerException if {@code collector} is null
+     * @since 3.3.0
      */
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -180,6 +196,8 @@ public final class ParallelCollectors {
      * <p>
      * Each element is transformed using the provided {@code mapper} in parallel on the specified
      * {@code executor}, and the results are reduced according to the supplied {@code collector}.
+     * <p>
+     * The collector is not reusable.
      *
      * <br>
      * Example:
@@ -188,9 +206,9 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(i), toList(), executor, 2));
      * }</pre>
      *
-     * @param mapper      transformation applied to each element
-     * @param collector   the {@code Collector} describing the reduction
-     * @param executor    the {@code Executor} used for asynchronous execution
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param collector   the {@code Collector} describing the reduction (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the type produced by {@code mapper}
@@ -198,6 +216,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced result
      *
+     * @throws NullPointerException if {@code collector} is null
      * @since 2.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
@@ -218,6 +237,8 @@ public final class ParallelCollectors {
      * <p>
      * Each batch is reduced independently using the provided {@code collector}, and the results
      * are combined according to the classification keys.
+     * <p>
+     * The collector is not reusable.
      *
      * <br>
      * Example:
@@ -231,10 +252,10 @@ public final class ParallelCollectors {
      *       4));
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
-     * @param mapper      transformation applied to each element
-     * @param collector   the {@code Collector} describing the reduction for each batch
-     * @param executor    the {@code Executor} used for asynchronous execution
+     * @param classifier  function that groups elements into batches (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param collector   the {@code Collector} describing the reduction for each batch (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum allowed parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -243,7 +264,8 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced batch results
      *
-     * @since TODO
+     * @throws NullPointerException if {@code classifier} or {@code collector} is null
+     * @since 3.3.0
      */
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -265,6 +287,8 @@ public final class ParallelCollectors {
      * <p>
      * Each element is transformed using the provided {@code mapper} in parallel on the specified
      * {@code executor}, and the results are reduced according to the supplied {@code collector}.
+     * <p>
+     * The collector is not reusable.
      *
      * <br>
      * Example:
@@ -273,15 +297,16 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(i), toList(), executor));
      * }</pre>
      *
-     * @param mapper    transformation applied to each element
-     * @param collector the {@code Collector} describing the reduction
-     * @param executor  the {@code Executor} used for asynchronous execution
+     * @param mapper    transformation applied to each element (must not be null)
+     * @param collector the {@code Collector} describing the reduction (must not be null)
+     * @param executor  the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>       the input element type
      * @param <R>       the type produced by {@code mapper}
      * @param <RR>      the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced result
      *
+     * @throws NullPointerException if {@code collector} is null
      * @since 3.3.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
@@ -301,6 +326,8 @@ public final class ParallelCollectors {
      * <p>
      * Each batch is reduced independently using the provided {@code collector}, and the results
      * are combined according to the classification keys.
+     * <p>
+     * The collector is not reusable.
      *
      * <br>
      * Example:
@@ -313,10 +340,10 @@ public final class ParallelCollectors {
      *       executor));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
-     * @param collector  the {@code Collector} describing the reduction for each batch
-     * @param executor   the {@code Executor} used for asynchronous execution
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
+     * @param collector  the {@code Collector} describing the reduction for each batch (must not be null)
+     * @param executor   the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
@@ -324,7 +351,8 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced batch results
      *
-     * @since TODO
+     * @throws NullPointerException if {@code collector} is null
+     * @since 3.3.0
      */
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -341,6 +369,8 @@ public final class ParallelCollectors {
      * <p>
      * The collector maintains the encounter order of the processed elements. Instances of this
      * collector should not be reused.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -349,7 +379,7 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo()));
      * }</pre>
      *
-     * @param mapper a transformation applied to each element
+     * @param mapper a transformation applied to each element (must not be null)
      * @param <T>    the input element type
      * @param <R>    the type produced by {@code mapper}
      *
@@ -370,6 +400,8 @@ public final class ParallelCollectors {
      * <p>
      * Each batch is processed independently, but the encounter order of elements within batches
      * is preserved. Instances of this collector should not be reused.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -378,15 +410,15 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t)));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of a {@link Stream} of mapped elements
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -401,6 +433,8 @@ public final class ParallelCollectors {
      * <p>
      * The collector maintains the encounter order of the processed elements. Instances of this
      * collector should not be reused.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -409,7 +443,7 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(), 4));
      * }</pre>
      *
-     * @param mapper      a transformation applied to each element
+     * @param mapper      a transformation applied to each element (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the type produced by {@code mapper}
@@ -431,6 +465,8 @@ public final class ParallelCollectors {
      * <p>
      * Each batch is processed independently, but the encounter order of elements within batches
      * is preserved. Instances of this collector should not be reused.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -439,8 +475,8 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t), 4));
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
-     * @param mapper      transformation applied to each element
+     * @param classifier  function that groups elements into batches (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -448,7 +484,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of a {@link Stream} of mapped elements
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -472,8 +508,8 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(), executor, 2));
      * }</pre>
      *
-     * @param mapper      a transformation applied to each element
-     * @param executor    the {@code Executor} used for asynchronous execution
+     * @param mapper      a transformation applied to each element (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the type produced by {@code mapper}
@@ -505,9 +541,9 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t), executor, 4));
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
-     * @param mapper      transformation applied to each element
-     * @param executor    the {@code Executor} used for asynchronous execution
+     * @param classifier  function that groups elements into batches (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -515,7 +551,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of a {@link Stream} of mapped elements
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -540,8 +576,8 @@ public final class ParallelCollectors {
      *   .collect(parallel(i -> foo(), executor));
      * }</pre>
      *
-     * @param mapper   a transformation applied to each element
-     * @param executor the {@code Executor} used for asynchronous execution
+     * @param mapper   a transformation applied to each element (must not be null)
+     * @param executor the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>      the input element type
      * @param <R>      the type produced by {@code mapper}
      *
@@ -571,16 +607,16 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t), executor));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
-     * @param executor   the {@code Executor} used for asynchronous execution
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
+     * @param executor   the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of a {@link Stream} of mapped elements
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallelBy(
       Function<? super T, ? extends K> classifier,
@@ -596,6 +632,8 @@ public final class ParallelCollectors {
      * and returns a {@link Stream} of the mapped elements as they arrive.
      * <p>
      * For a parallelism of 1, the stream is executed by the calling thread.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -605,7 +643,7 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper a transformation applied to each element
+     * @param mapper a transformation applied to each element (must not be null)
      * @param <T>    the input element type
      * @param <R>    the type produced by {@code mapper}
      *
@@ -623,6 +661,8 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} that performs parallel computations by classifying elements
      * into batches using the provided {@code classifier}, executed on Virtual Threads,
      * and returns a {@link Stream} of mapped elements as they arrive.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -632,15 +672,15 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
      *
      * @return a {@code Collector} producing a {@link Stream} of mapped elements in parallel
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
@@ -655,6 +695,8 @@ public final class ParallelCollectors {
      * and returns a {@link Stream} of the mapped elements as they arrive.
      * <p>
      * For a parallelism of 1, the stream is executed by the calling thread.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -664,7 +706,7 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      a transformation applied to each element
+     * @param mapper      a transformation applied to each element (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the type produced by {@code mapper}
@@ -684,6 +726,8 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} that performs parallel computations by classifying elements
      * into batches using the provided {@code classifier}, executed on Virtual Threads,
      * and returns a {@link Stream} of mapped elements as they arrive.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -693,8 +737,8 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
-     * @param mapper      transformation applied to each element
+     * @param classifier  function that groups elements into batches (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -702,7 +746,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link Stream} of mapped elements in parallel
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
@@ -727,8 +771,8 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper   a transformation applied to each element
-     * @param executor the {@code Executor} used for asynchronous execution
+     * @param mapper   a transformation applied to each element (must not be null)
+     * @param executor the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>      the input element type
      * @param <R>      the type produced by {@code mapper}
      *
@@ -756,16 +800,16 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
-     * @param executor   the {@code Executor} used for asynchronous execution
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
+     * @param executor   the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
      *
      * @return a {@code Collector} producing a {@link Stream} of mapped elements in parallel
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
@@ -797,8 +841,8 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      transformation applied to each element
-     * @param executor    the {@code Executor} used for asynchronous execution
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the result type produced by {@code mapper}
@@ -842,9 +886,9 @@ public final class ParallelCollectors {
      * }</pre>
      *
      * @param classifier  function that groups elements; all elements with the same key
-     *                    are guaranteed to run on the same thread
-     * @param mapper      transformation applied to each element
-     * @param executor    the {@code Executor} used for asynchronous execution
+     *                    are guaranteed to run on the same thread (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum allowed parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -852,7 +896,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link Stream} of mapped results as they complete
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToStreamBy(Function<? super T, ? extends K> classifier, Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
         return Factory.streamingBy(classifier, mapper, Options.executor(executor), Options.parallelism(parallelism));
@@ -863,6 +907,8 @@ public final class ParallelCollectors {
      * and returns a {@link Stream} of the mapped elements as they arrive while maintaining the initial order.
      * <p>
      * For a parallelism of 1, the stream is executed by the calling thread.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -872,7 +918,7 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper a transformation applied to each element
+     * @param mapper a transformation applied to each element (must not be null)
      * @param <T>    the input element type
      * @param <R>    the type produced by {@code mapper}
      *
@@ -890,11 +936,15 @@ public final class ParallelCollectors {
      * A convenience {@link Collector} that performs parallel computations by classifying elements
      * into batches using the provided {@code classifier}, executed on Virtual Threads,
      * and returns a {@link Stream} of mapped elements as they arrive while maintaining the initial order.
+     * <p>
      * Ordering guarantees:
      * <ul>
      *   <li>The encounter order of input elements is preserved.</li>
      *   <li>Parallel execution does not affect the final ordering of the resulting stream.</li>
      * </ul>
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
+     * 
      * <br>
      * Example:
      * <pre>{@code
@@ -903,15 +953,15 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
      *
      * @return a {@code Collector} producing a {@link Stream} of mapped elements in parallel, preserving order
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToOrderedStreamBy(
       Function<? super T, ? extends K> classifier,
@@ -937,6 +987,8 @@ public final class ParallelCollectors {
      *   <li>The encounter order of input elements is preserved.</li>
      *   <li>Parallel execution does not affect the final ordering of the resulting stream.</li>
      * </ul>
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -946,7 +998,7 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      transformation applied to each element
+     * @param mapper      transformation applied to each element (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the mapped result type
@@ -978,6 +1030,8 @@ public final class ParallelCollectors {
      * </ul>
      * <p>
      * When the {@code parallelism} is {@code 1}, all processing is performed on the calling thread.
+     * <p>
+     * <b>Note:</b> Requires Java 21+ for Virtual Threads.
      *
      * <br>
      * Example:
@@ -990,8 +1044,8 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
-     * @param mapper      transformation applied to each element
+     * @param classifier  function that groups elements into batches (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
      * @param parallelism the maximum allowed parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -999,7 +1053,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing an ordered {@link Stream} of mapped results
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToOrderedStreamBy(
       Function<? super T, ? extends K> classifier,
@@ -1032,8 +1086,8 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper   transformation applied to each element
-     * @param executor the {@code Executor} used for asynchronous execution
+     * @param mapper   transformation applied to each element (must not be null)
+     * @param executor the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>      the input element type
      * @param <R>      the mapped result type
      *
@@ -1074,16 +1128,16 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
-     * @param mapper     transformation applied to each element
-     * @param executor   the {@code Executor} used for asynchronous execution
+     * @param classifier function that groups elements into batches (must not be null)
+     * @param mapper     transformation applied to each element (must not be null)
+     * @param executor   the {@code Executor} used for asynchronous execution (must not be null)
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the mapped result type
      *
      * @return a {@code Collector} producing an ordered {@link Stream} of mapped results
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToOrderedStreamBy(
       Function<? super T, ? extends K> classifier,
@@ -1116,8 +1170,8 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param mapper      transformation applied to each element
-     * @param executor    the {@code Executor} used for asynchronous execution
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum degree of parallelism
      * @param <T>         the input element type
      * @param <R>         the mapped result type
@@ -1166,9 +1220,9 @@ public final class ParallelCollectors {
      *   .forEach(System.out::println);
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
-     * @param mapper      transformation applied to each element
-     * @param executor    the {@code Executor} used for asynchronous execution
+     * @param classifier  function that groups elements into batches (must not be null)
+     * @param mapper      transformation applied to each element (must not be null)
+     * @param executor    the {@code Executor} used for asynchronous execution (must not be null)
      * @param parallelism the maximum allowed parallelism
      * @param <T>         the input element type
      * @param <K>         the classification key type
@@ -1176,7 +1230,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing an ordered {@link Stream} of mapped results
      *
-     * @since TODO
+     * @since 3.3.0
      */
     public static <T, K, R> Collector<T, ?, Stream<R>> parallelToOrderedStreamBy(
       Function<? super T, ? extends K> classifier,
