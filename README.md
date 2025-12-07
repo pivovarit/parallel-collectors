@@ -205,7 +205,6 @@ What's more, since JDK 9, [you can even provide your own timeout easily](https:/
     list.stream()
       .collect(parallelToOrderedStream(i -> foo(i), executor))
       .forEach(i -> ...);
-      .forEach(i -> ...);
 
 ## Rationale
 
