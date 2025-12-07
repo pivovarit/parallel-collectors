@@ -16,137 +16,209 @@ final class TypeChecks {
     private TypeChecks() {
     }
 
-    private static <A, R> void expectCollector(Collector<A, ?, R> c) {
-        // compile-time only
+    static class SuperClass {
     }
 
-    /* ============================================================
-     * COVARIANCE
-     * Integer -> Integer  (identity)
-     * Integer -> Number   (wider)
-     * ============================================================ */
-    private static final class Covariance {
-        private static final Function<Integer, Number> itn = i -> i;
-        private static final Function<Integer, Integer> iti = i -> i;
+    static class SubClass extends SuperClass {
+    }
 
-        static {
-            // ---------- Batching.parallel ----------
-            expectCollector(ParallelCollectors.Batching.parallel(itn, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallel(iti, r -> {}, 42));
+    private static <A, R> void expectCollector(Collector<A, ?, R> c) {
+        // compile-only
+    }
 
-            // ---------- Batching.parallel (toList) ----------
-            expectCollector(ParallelCollectors.Batching.parallel(itn, toList(), r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallel(iti, toList(), r -> {}, 42));
+    static final class Covariance {
 
-            // ---------- Batching.parallelToStream ----------
-            expectCollector(ParallelCollectors.Batching.parallelToStream(itn, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallelToStream(iti, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(itn, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(iti, r -> {}, 42));
+        record Functions(
+          Function<SubClass, SuperClass> subToSuper,
+          Function<SubClass, SubClass> subToSub
+        ) {
+        }
 
-            // ---------- parallel ----------
-            expectCollector(ParallelCollectors.parallel(itn, r -> {}, 42));
-            expectCollector(ParallelCollectors.parallel(iti, r -> {}, 42));
+        private static final Functions fns =
+          new Functions(x -> x, x -> x);
 
-            expectCollector(ParallelCollectors.parallel(itn, r -> {}));
-            expectCollector(ParallelCollectors.parallel(iti, r -> {}));
+        record BatchingParallel(Functions f) {
+            BatchingParallel {
+                expectCollector(ParallelCollectors.Batching.parallel(f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallel(f.subToSub(), r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallel(itn, 42));
-            expectCollector(ParallelCollectors.parallel(iti, 42));
+        record BatchingParallelToList(Functions f) {
+            BatchingParallelToList {
+                expectCollector(ParallelCollectors.Batching.parallel(f.subToSuper(), toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallel(f.subToSub(), toList(), r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallel(itn));
-            expectCollector(ParallelCollectors.parallel(iti));
+        record BatchingParallelToStream(Functions f) {
+            BatchingParallelToStream {
+                expectCollector(ParallelCollectors.Batching.parallelToStream(f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallelToStream(f.subToSub(), r -> {}, 42));
 
-            // ---------- parallel (toList) ----------
-            expectCollector(ParallelCollectors.parallel(itn, toList(), r -> {}, 42));
-            expectCollector(ParallelCollectors.parallel(iti, toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(f.subToSub(), r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallel(itn, toList(), r -> {}));
-            expectCollector(ParallelCollectors.parallel(iti, toList(), r -> {}));
+        record Parallel(Functions f) {
+            Parallel {
+                expectCollector(ParallelCollectors.parallel(f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallel(f.subToSub(), r -> {}, 42));
 
-            expectCollector(ParallelCollectors.parallel(itn, toList(), 42));
-            expectCollector(ParallelCollectors.parallel(iti, toList(), 42));
+                expectCollector(ParallelCollectors.parallel(f.subToSuper(), r -> {}));
+                expectCollector(ParallelCollectors.parallel(f.subToSub(), r -> {}));
 
-            expectCollector(ParallelCollectors.parallel(itn, toList()));
-            expectCollector(ParallelCollectors.parallel(iti, toList()));
+                expectCollector(ParallelCollectors.parallel(f.subToSuper(), 42));
+                expectCollector(ParallelCollectors.parallel(f.subToSub(), 42));
 
-            // ---------- streaming ----------
-            expectCollector(ParallelCollectors.parallelToStream(itn, r -> {}, 42));
-            expectCollector(ParallelCollectors.parallelToStream(iti, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallel(f.subToSuper()));
+                expectCollector(ParallelCollectors.parallel(f.subToSub()));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallelToStream(itn, r -> {}));
-            expectCollector(ParallelCollectors.parallelToStream(iti, r -> {}));
+        record ParallelBy(Functions f) {
+            ParallelBy {
+                expectCollector(ParallelCollectors.parallelBy(f.subToSuper(), f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSuper(), f.subToSub(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSub(), f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSub(), f.subToSub(), r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallelToOrderedStream(itn, r -> {}, 42));
-            expectCollector(ParallelCollectors.parallelToOrderedStream(iti, r -> {}, 42));
+        record ParallelToList(Functions f) {
+            ParallelToList {
+                expectCollector(ParallelCollectors.parallel(f.subToSuper(), toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallel(f.subToSub(), toList(), r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallelToOrderedStream(itn, r -> {}));
-            expectCollector(ParallelCollectors.parallelToOrderedStream(iti, r -> {}));
+        record ParallelByToList(Functions f) {
+            ParallelByToList {
+                expectCollector(ParallelCollectors.parallelBy(f.subToSuper(), f.subToSuper(), toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSuper(), f.subToSub(), toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSub(), f.subToSuper(), toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSub(), f.subToSub(), toList(), r -> {}, 42));
+            }
+        }
+
+        record Streaming(Functions f) {
+            Streaming {
+                expectCollector(ParallelCollectors.parallelToStream(f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStream(f.subToSub(), r -> {}, 42));
+
+                expectCollector(ParallelCollectors.parallelToOrderedStream(f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStream(f.subToSub(), r -> {}, 42));
+            }
+        }
+
+        record StreamingBy(Functions f) {
+            StreamingBy {
+                expectCollector(ParallelCollectors.parallelToStreamBy(f.subToSuper(), f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStreamBy(f.subToSuper(), f.subToSub(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStreamBy(f.subToSub(), f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStreamBy(f.subToSub(), f.subToSub(), r -> {}, 42));
+
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(f.subToSuper(), f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(f.subToSuper(), f.subToSub(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(f.subToSub(), f.subToSuper(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(f.subToSub(), f.subToSub(), r -> {}, 42));
+            }
         }
     }
 
-    /* ============================================================
-     * CONTRAVARIANCE
-     * Integer -> String   (narrow)
-     * Object  -> String   (wider argument type)
-     * ============================================================ */
-    private static final class Contravariance {
-        private static final Function<Integer, String> its = Object::toString;
-        private static final Function<Object, String> ots = Object::toString;
+    static final class Contravariance {
 
-        static {
-            // ---------- Batching.parallel ----------
-            expectCollector(ParallelCollectors.Batching.parallel(its, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallel(ots, r -> {}, 42));
+        private static final Function<SuperClass, SubClass> superToSub = x -> new SubClass();
+        private static final Function<Object, SubClass> objToSub = x -> new SubClass();
 
-            // ---------- Batching.parallel (toList) ----------
-            expectCollector(ParallelCollectors.Batching.parallel(its, toList(), r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallel(ots, toList(), r -> {}, 42));
+        record BatchingParallel() {
+            BatchingParallel {
+                expectCollector(ParallelCollectors.Batching.parallel(superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallel(objToSub, r -> {}, 42));
+            }
+        }
 
-            // ---------- Batching.parallelToStream ----------
-            expectCollector(ParallelCollectors.Batching.parallelToStream(its, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallelToStream(ots, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(its, r -> {}, 42));
-            expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(ots, r -> {}, 42));
+        record BatchingParallelToList() {
+            BatchingParallelToList {
+                expectCollector(ParallelCollectors.Batching.parallel(superToSub, toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallel(objToSub, toList(), r -> {}, 42));
+            }
+        }
 
-            // ---------- parallel ----------
-            expectCollector(ParallelCollectors.parallel(its, r -> {}, 42));
-            expectCollector(ParallelCollectors.parallel(ots, r -> {}, 42));
+        record BatchingParallelToStream() {
+            BatchingParallelToStream {
+                expectCollector(ParallelCollectors.Batching.parallelToStream(superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallelToStream(objToSub, r -> {}, 42));
 
-            expectCollector(ParallelCollectors.parallel(its, r -> {}));
-            expectCollector(ParallelCollectors.parallel(ots, r -> {}));
+                expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.Batching.parallelToOrderedStream(objToSub, r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallel(its, 42));
-            expectCollector(ParallelCollectors.parallel(ots, 42));
+        record Parallel() {
+            Parallel {
+                expectCollector(ParallelCollectors.parallel(superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallel(objToSub, r -> {}, 42));
 
-            expectCollector(ParallelCollectors.parallel(its));
-            expectCollector(ParallelCollectors.parallel(ots));
+                expectCollector(ParallelCollectors.parallel(superToSub, r -> {}));
+                expectCollector(ParallelCollectors.parallel(objToSub, r -> {}));
 
-            // ---------- parallel (toList) ----------
-            expectCollector(ParallelCollectors.parallel(its, toList(), r -> {}, 42));
-            expectCollector(ParallelCollectors.parallel(ots, toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallel(superToSub, 42));
+                expectCollector(ParallelCollectors.parallel(objToSub, 42));
 
-            expectCollector(ParallelCollectors.parallel(its, toList(), r -> {}));
-            expectCollector(ParallelCollectors.parallel(ots, toList(), r -> {}));
+                expectCollector(ParallelCollectors.parallel(superToSub));
+                expectCollector(ParallelCollectors.parallel(objToSub));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallel(its, toList(), 42));
-            expectCollector(ParallelCollectors.parallel(ots, toList(), 42));
+        record ParallelBy() {
+            ParallelBy {
+                expectCollector(ParallelCollectors.parallelBy(superToSub, superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(superToSub, objToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(objToSub, superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(objToSub, objToSub, r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallel(its, toList()));
-            expectCollector(ParallelCollectors.parallel(ots, toList()));
+        record ParallelToList() {
+            ParallelToList {
+                expectCollector(ParallelCollectors.parallel(superToSub, toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallel(objToSub, toList(), r -> {}, 42));
+            }
+        }
 
-            // ---------- streaming ----------
-            expectCollector(ParallelCollectors.parallelToStream(its, r -> {}, 42));
-            expectCollector(ParallelCollectors.parallelToStream(ots, r -> {}, 42));
+        record ParallelByToList() {
+            ParallelByToList {
+                expectCollector(ParallelCollectors.parallelBy(superToSub, superToSub, toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(superToSub, objToSub, toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(objToSub, superToSub, toList(), r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelBy(objToSub, objToSub, toList(), r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallelToStream(its, r -> {}));
-            expectCollector(ParallelCollectors.parallelToStream(ots, r -> {}));
+        record Streaming() {
+            Streaming {
+                expectCollector(ParallelCollectors.parallelToStream(superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStream(objToSub, r -> {}, 42));
 
-            expectCollector(ParallelCollectors.parallelToOrderedStream(its, r -> {}, 42));
-            expectCollector(ParallelCollectors.parallelToOrderedStream(ots, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStream(superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStream(objToSub, r -> {}, 42));
+            }
+        }
 
-            expectCollector(ParallelCollectors.parallelToOrderedStream(its, r -> {}));
-            expectCollector(ParallelCollectors.parallelToOrderedStream(ots, r -> {}));
+        record StreamingBy() {
+            StreamingBy {
+                expectCollector(ParallelCollectors.parallelToStreamBy(superToSub, superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStreamBy(superToSub, objToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStreamBy(objToSub, superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToStreamBy(objToSub, objToSub, r -> {}, 42));
+
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(superToSub, superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(superToSub, objToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(objToSub, superToSub, r -> {}, 42));
+                expectCollector(ParallelCollectors.parallelToOrderedStreamBy(objToSub, objToSub, r -> {}, 42));
+            }
         }
     }
 }

@@ -30,6 +30,7 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule shouldHaveSingleFacade = classes()
       .that().arePublic()
+      .and().doNotHaveFullyQualifiedName("com.pivovarit.collectors.Grouped")
       .and().areNotNestedClasses()
       .should().haveSimpleName("ParallelCollectors").orShould().haveSimpleName("Batching")
       .andShould().haveOnlyFinalFields()
