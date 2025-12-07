@@ -216,7 +216,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced result
      *
-     * @throws NullPointerException if {@code mapper} or {@code collector} is null
+     * @throws NullPointerException if {@code mapper}, {@code collector}, or {@code executor} is null
      * @since 2.0.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
@@ -264,7 +264,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced batch results
      *
-     * @throws NullPointerException if {@code mapper}, {@code classifier}, or {@code collector} is null
+     * @throws NullPointerException if {@code classifier}, {@code mapper}, {@code collector}, or {@code executor} is null
      * @since 3.3.0
      */
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
@@ -306,7 +306,7 @@ public final class ParallelCollectors {
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of the reduced result
      *
-     * @throws NullPointerException if {@code mapper} or {@code collector} is null
+     * @throws NullPointerException if {@code mapper}, {@code collector}, or {@code executor} is null
      * @since 3.3.0
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
