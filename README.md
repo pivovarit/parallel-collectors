@@ -33,7 +33,7 @@ They are:
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
     </dependency>
 
 #### JDK 8+:
@@ -48,7 +48,7 @@ They are:
 
 #### JDK 21+:
 
-    implementation 'com.pivovarit:parallel-collectors:3.3.0'`
+    implementation 'com.pivovarit:parallel-collectors:3.4.0'`
 
 #### JDK 8+:
 
