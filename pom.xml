@@ -60,7 +60,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>${maven.release.version}</version>
                 <configuration>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
                     <mavenExecutorId>forked-path</mavenExecutorId>
                     <useReleaseProfile>false</useReleaseProfile>
                     <arguments>${arguments} -Psonatype-oss-release</arguments>
