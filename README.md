@@ -74,20 +74,47 @@ All parallel collectors are one-off and must not be reused.
 
 ### Available Collectors:
 
+#### CompletableFuture-based (non-blocking)
 
--  `CompletableFuture<Stream<T>> parallel(Function)` (uses Virtual Threads)
--  `CompletableFuture<Collection<T>> parallel(Function, Collector)` (uses Virtual Threads)
--  `CompletableFuture<Stream<T>> parallel(Function, parallelism)` (uses Virtual Threads)
--  `CompletableFuture<Collection<T>> parallel(Function, Collector, parallelism)` (uses Virtual Threads)
--  `CompletableFuture<Stream<T>> parallel(Function, Executor, parallelism)`
--  `CompletableFuture<Collection<T>> parallel(Function, Collector, Executor, parallelism)`
+- `CompletableFuture<Stream<T>> parallel(Function)`
+- `CompletableFuture<Collection<T>> parallel(Function, Collector)`
+- `CompletableFuture<Stream<T>> parallel(Function, parallelism)`
+- `CompletableFuture<Collection<T>> parallel(Function, Collector, parallelism)`
+- `CompletableFuture<Stream<T>> parallel(Function, Executor, parallelism)`
+- `CompletableFuture<Collection<T>> parallel(Function, Collector, Executor, parallelism)`
 
--  `Stream<T> parallelToStream(Function)` (uses Virtual Threads)
--  `Stream<T> parallelToOrderedStream(Function)` (uses Virtual Threads)
--  `Stream<T> parallelToStream(Function, parallelism)` (uses Virtual Threads)
--  `Stream<T> parallelToOrderedStream(Function, parallelism)` (uses Virtual Threads)
--  `Stream<T> parallelToStream(Function, Executor, parallelism)`
--  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
+##### With classification (*By* variants):
+- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper)`
+- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector)`
+- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper, parallelism)`
+- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector, parallelism)`
+- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper, Executor)`
+- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector, Executor)`
+- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper, Executor, parallelism)`
+- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector, Executor, parallelism)`
+
+#### Stream-based (blocking)
+
+- `Stream<T> parallelToStream(Function)`
+- `Stream<T> parallelToOrderedStream(Function)`
+- `Stream<T> parallelToStream(Function, parallelism)`
+- `Stream<T> parallelToOrderedStream(Function, parallelism)`
+- `Stream<T> parallelToStream(Function, Executor, parallelism)`
+- `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
+
+##### With classification (*By* variants):
+- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper)`
+- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper, parallelism)`
+- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper, Executor)`
+- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper, Executor, parallelism)`
+- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper)`
+- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper, parallelism)`
+- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper, Executor)`
+- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper, Executor, parallelism)`
+
+> **Notes:**
+> - All collectors default to using **Virtual Threads** when no custom `Executor` is provided.
+> - The *By* variants allow **classifying elements by a key** before mapping and reducing, ensuring that all elements with the same key are processed together. This avoids redundant computations and enables controlled parallelism per group.
 
 #### Batching Collectors
 When you use non-batching parallel collectors, **every input element is turned into an individual task** submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks. 
