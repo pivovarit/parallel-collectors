@@ -90,20 +90,27 @@ All parallel collectors are one-off and must not be reused.
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
 #### Batching Collectors
-By default, all `ExecutorService` threads _compete_ for each task separately - which results in a basic form of _work-stealing_, which, unfortunately, is not free, but can decrease processing time for subtasks with varying processing times.
+When you use non-batching parallel collectors, every input element is turned into an individual task submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks. 
+Even if you only have two threads processing them, both threads hammer the same task queue, repeatedly competing for the next piece of work. That competition creates contention, and overall overhead.
+
+This behaviour resembles a primitive form of *work-stealing*, where each worker repeatedly tries to grab the next available task. *Work-stealing is great in scenarios where task durations vary significantly*, since it keeps faster workers busy, *but it's not free*.
 
 However, if the processing time for all subtasks is similar, it might be better to distribute tasks in batches to avoid excessive contention.
 
-For example, processing 1000 tasks with two threads will result in 1000 tasks being submitted to the thread pool, where two threads will be competing for the same task queue:
+Without batching:
 
-Batching allows converting this into two tasks, each with 500 subtasks:
+```
+Thread 1: [] [] [] [] [] [] [] [] [] [] [] ... (500 tiny tasks)
+Thread 2: [] [] [] [] [] [] [] [] [] [] [] ... (500 tiny tasks)
+```
 
-[<img src="docs/default.svg" width="600"/>](docs/default.svg)
+With batching:
+```
+Thread 1: [--------------------------------------------------] (1 large task)
+Thread 2: [--------------------------------------------------] (1 large task)
+```
 
-
-[<img src="docs/batched.svg" width="600"/>](docs/batched.svg)
-
-The difference in performance is enormous:
+The difference in performance for lightweight tasks can be enormous:
 
 ```plain
 Benchmark                              Mode  Cnt      Score     Error  Units
