@@ -64,6 +64,18 @@ Parallel Collectors are intentionally unopinionated, leaving responsibility to u
 
 Review the API documentation before deploying in production.
 
+## Why This Exists?
+
+The goal is to use the Stream API without inheriting the limitations of parallel streams, especially for I/O-heavy or structured workloads.
+
+Java's built-in parallelization story is geared toward CPU-bound workloads - `parallelStream()` runs everything on the shared ForkJoinPool, which makes it a poor fit for blocking I/O, remote calls, database access, or anything that can stall a worker thread. Once that pool is saturated, everything else using it slows down as well.
+
+This library fills that gap. It keeps the Stream API model but replaces the execution strategy:
+- user-provided executors instead of the common pool
+- virtual-thread defaults for low-overhead concurrency
+- classification and batching for further scheduling fine-tuning
+- `CompletableFuture` integration so you can work asynchronously and apply timeouts, callbacks, or composition naturally
+
 ## Basic API
 
 The main entry point is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
@@ -72,45 +84,35 @@ By design, it's obligatory to supply a custom `Executor` instance and manage its
 
 All parallel collectors are one-off and must not be reused.
 
-### Available Collectors:
+## Available Collectors
 
-#### CompletableFuture-based (non-blocking)
+### CompletableFuture-based (non-blocking)
 
-- `CompletableFuture<Stream<T>> parallel(Function)`
-- `CompletableFuture<Collection<T>> parallel(Function, Collector)`
-- `CompletableFuture<Stream<T>> parallel(Function, parallelism)`
-- `CompletableFuture<Collection<T>> parallel(Function, Collector, parallelism)`
-- `CompletableFuture<Stream<T>> parallel(Function, Executor, parallelism)`
-- `CompletableFuture<Collection<T>> parallel(Function, Collector, Executor, parallelism)`
+A typical usage looks like this:
 
-##### With classification (*By* variants):
-- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper)`
-- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector)`
-- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper, parallelism)`
-- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector, parallelism)`
-- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper, Executor)`
-- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector, Executor)`
-- `CompletableFuture<Stream<Grouped<K, R>>> parallelBy(classifier, mapper, Executor, parallelism)`
-- `CompletableFuture<Collection<Grouped<K, R>>> parallelBy(classifier, mapper, collector, Executor, parallelism)`
+```java
+CompletableFuture<Stream<R>> future = items.stream().collect(parallel(i -> foo(i)));
+```
 
-#### Stream-based (blocking)
+This variant returns a `CompletableFuture` so you can compose, add timeouts, or run the pipeline asynchronously.
 
-- `Stream<T> parallelToStream(Function)`
-- `Stream<T> parallelToOrderedStream(Function)`
-- `Stream<T> parallelToStream(Function, parallelism)`
-- `Stream<T> parallelToOrderedStream(Function, parallelism)`
-- `Stream<T> parallelToStream(Function, Executor, parallelism)`
-- `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
+All other overloads simply let you configure:
+- a custom `Collector`
+- a custom `Executor` (defaults to Virtual Threads)
+- a custom parallelism level
+- or classification via `parallelBy(...)` to group elements by a key before mapping
+- or batching via `Batching` namespace
 
-##### With classification (*By* variants):
-- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper)`
-- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper, parallelism)`
-- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper, Executor)`
-- `Stream<Grouped<K, R>> parallelToStreamBy(classifier, mapper, Executor, parallelism)`
-- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper)`
-- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper, parallelism)`
-- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper, Executor)`
-- `Stream<Grouped<K, R>> parallelToOrderedStreamBy(classifier, mapper, Executor, parallelism)`
+### Stream-based (blocking)
+
+```java
+Stream<R> result1 = items.stream().collect(parallelToStream(this::callRemote));
+Stream<R> result2 = items.stream().collect(parallelToOrderedStream(this::callRemote));
+```
+
+This blocks internally until all tasks complete and returns a Stream<R> either in original order or completion order.
+
+Again, all overloads configure collector, executor, parallelism, or classification via the _By_ variants.
 
 > **Notes:**
 > - All collectors default to using **Virtual Threads** when no custom `Executor` is provided.
