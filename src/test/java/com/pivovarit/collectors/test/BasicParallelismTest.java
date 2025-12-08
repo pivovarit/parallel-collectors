@@ -3,13 +3,14 @@ package com.pivovarit.collectors.test;
 import com.pivovarit.collectors.TestUtils;
 import java.time.Duration;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.test.Factory.allBounded;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -39,9 +40,22 @@ class BasicParallelismTest {
     Stream<DynamicTest> shouldRespectMaxParallelism() {
         return allBounded()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              var duration = timed(() -> IntStream.range(0, 10).boxed()
-                .collect(c.factory().collector(i -> TestUtils.returnWithDelay(i, Duration.ofMillis(100)), 2)));
-              assertThat(duration).isCloseTo(Duration.ofMillis(500), Duration.ofMillis(100));
+              var counter = new AtomicInteger(0);
+              var parallelism = 4;
+
+              assertThatCode(() -> {
+                  IntStream.range(0, 100).boxed()
+                    .collect(c.factory().collector(i -> {
+                        int value = counter.incrementAndGet();
+                        if (value > parallelism) {
+                            throw new IllegalStateException("more than two tasks executing at once!");
+                        }
+                        Integer result = TestUtils.returnWithDelay(i, Duration.ofMillis(10));
+                        counter.decrementAndGet();
+                        return result;
+                    }, parallelism))
+                    .forEach(i -> {});
+              }).doesNotThrowAnyException();
           }));
     }
 
@@ -53,11 +67,5 @@ class BasicParallelismTest {
                 assertThatThrownBy(() -> Stream.of(1).collect(c.factory().collector(i -> i, p)))
                   .isExactlyInstanceOf(IllegalArgumentException.class);
             })));
-    }
-
-    private static Duration timed(Supplier<?> action) {
-        long start = System.currentTimeMillis();
-        var ignored = action.get();
-        return Duration.ofMillis(System.currentTimeMillis() - start);
     }
 }
