@@ -33,7 +33,7 @@ They are:
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
     </dependency>
 
 #### JDK 8+:
@@ -48,11 +48,11 @@ They are:
 
 #### JDK 21+:
 
-    implementation 'com.pivovarit:parallel-collectors:3.3.0'`
+    implementation 'com.pivovarit:parallel-collectors:3.4.0'
 
 #### JDK 8+:
 
-    implementation 'com.pivovarit:parallel-collectors:2.6.1'`
+    implementation 'com.pivovarit:parallel-collectors:2.6.1'
 
 ## Philosophy
 
@@ -68,7 +68,7 @@ Review the API documentation before deploying in production.
 
 The main entry point is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
 
-By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.
+By default, collectors use Virtual Threads, but you can optionally provide a custom `Executor` instance for more control. When using a custom `Executor`, you are responsible for its lifecycle management.
 
 All parallel collectors are one-off and must not be reused.
 
@@ -114,7 +114,11 @@ All parallel collectors are one-off and must not be reused.
 
 > **Notes:**
 > - All collectors default to using **Virtual Threads** when no custom `Executor` is provided.
-> - The *By* variants allow **classifying elements by a key** before mapping and reducing, ensuring that all elements with the same key are processed together. This avoids redundant computations and enables controlled parallelism per group.
+> - The ***By* variants** (new in v3.4.0) enable **classification-based batching**. They allow classifying elements by a key before mapping, ensuring that all elements with the same classification key are processed together on the same thread. This is particularly useful when:
+>   - You need to avoid redundant setup/teardown operations per group (e.g., database connections per customer)
+>   - Processing elements with the same key together provides performance benefits
+>   - You want to maintain data locality for better cache utilization
+>   - The classifier groups elements into distinct batches that can be processed independently
 
 #### Batching Collectors
 When you use non-batching parallel collectors, **every input element is turned into an individual task** submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks. 
@@ -216,6 +220,38 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
       .collect(parallelToOrderedStream(i -> foo(i), executor))
       .forEach(i -> ...);
 
+##### 6. Classify by key and process groups in parallel (classification-based batching)
+
+    Executor executor = ...
+
+    // Group users by country, then fetch profile details for each user
+    CompletableFuture<List<Grouped<String, UserProfile>>> result = users.stream()
+      .collect(parallelBy(
+        user -> user.getCountry(),              // classifier: group by country
+        user -> fetchUserProfile(user.getId()), // mapper: fetch profile for each user
+        toList(),
+        executor));
+    
+    // All users from the same country are guaranteed to be processed on the same thread,
+    // avoiding redundant operations like repeated database connections per country
+
+##### 7. Stream classified results in parallel
+
+    Executor executor = ...
+
+    // Process orders by customer, ensuring all orders for the same customer 
+    // are processed together
+    orders.stream()
+      .collect(parallelToStreamBy(
+        order -> order.getCustomerId(),    // classifier: group by customer
+        order -> processOrder(order),      // mapper: process each order
+        executor))
+      .forEach(grouped -> {
+        String customerId = grouped.key();
+        Object result = grouped.value();
+        // handle result...
+      });
+
 ## Rationale
 
 Stream API is a great tool for collection processing, especially if you need to parallelize the execution of CPU-intensive tasks, for example:
@@ -269,9 +305,11 @@ This means that none of these should be used to work with infinite streams. The 
 
 ## Words of Caution
 
-While Parallel Collectors and Virtual Threads make parallelization easy, it doesn't always mean it's the best choice. Platform threads are resource-intensive, and parallelism comes with a cost. 
+While Parallel Collectors and Virtual Threads make parallelization easy, it doesn't always mean it's the best choice. Even with Virtual Threads, parallelism comes with overhead and complexity.
 
-Before opting for parallel processing, consider addressing the root cause through alternatives like DB-level JOIN statements, batching, data reorganization, or... simply selecting a more suitable API method.
+Before opting for parallel processing, consider addressing the root cause through alternatives like DB-level JOIN statements, batching, data reorganization, or simply selecting a more suitable API method.
+
+When using custom platform thread pools, keep in mind that platform threads are resource-intensive, so proper configuration and lifecycle management are crucial.
 
 ----
 See [CHANGELOG.MD](https://github.com/pivovarit/parallel-collectors/blob/master/CHANGELOG.MD) for a complete version history.

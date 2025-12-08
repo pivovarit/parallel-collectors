@@ -1,5 +1,18 @@
 # Version History
 
+### [3.4.0](https://github.com/pivovarit/parallel-collectors/releases/tag/v3.4.0) (08-12-2025)
+- introduced new family of collector factories with classification-based batching (`*By` variants)
+- integrated JSpecify for better null-safety annotations
+- improved internal structure and configuration model
+- enhanced cancellation mechanism using FutureTask
+
+### [3.3.0](https://github.com/pivovarit/parallel-collectors/releases/tag/v3.3.0) (07-05-2025)
+- enhanced type variance support for better generic compatibility
+- introduced new API methods supporting custom Executors with unbounded parallelism
+- improved performance of async collectors
+- fixed ordering in batching stream collectors
+- introduced Option-based configuration model internally
+
 ### [3.2.0](https://github.com/pivovarit/parallel-collectors/releases/tag/3.2.0) (17-08-2024)
 - add new API methods defaulting to Virtual Threads but allowing setting max parallelism
 
