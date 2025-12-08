@@ -15,7 +15,7 @@ Parallel Collectors is a toolkit that eases parallel collection processing in Ja
       .collect(parallel(i -> blockingOp(i), toList()))
         .orTimeout(1000, MILLISECONDS)
         .thenAcceptAsync(System.out::println, executor)
-        .thenRun(() -> System.out::println("Finished!"));
+        .thenRun(() -> System.out.println("Finished!"));
 
 **New in v3.4.0:** Classification-based batching with `*By` variants - process elements grouped by a key on the same thread for improved performance and data locality.
       
