@@ -714,7 +714,7 @@ public final class ParallelCollectors {
      * @param <K>         the classification key type
      * @param <R>         the mapped element type
      *
-     * @return a {@code Collector} producing a {@link Stream} of {@link Grouped<K, R>} elements
+     * @return a {@code Collector} producing a {@link Stream} of {@link Grouped} elements
      *         computed in parallel
      *
      * @since 3.4.0
@@ -928,7 +928,7 @@ public final class ParallelCollectors {
      * @param <K>        the classification key type
      * @param <R>        the mapped element type
      *
-     * @return a {@code Collector} producing a {@link Stream} of {@link Grouped<K, R>} elements
+     * @return a {@code Collector} producing a {@link Stream} of {@link Grouped} elements
      *         computed in parallel while preserving input order
      *
      * @since 3.4.0
@@ -1095,7 +1095,7 @@ public final class ParallelCollectors {
      * @param <K>        the classification key type
      * @param <R>        the mapped result type
      *
-     * @return a {@code Collector} producing an ordered {@link Stream} of {@link Grouped<K, R>} results
+     * @return a {@code Collector} producing an ordered {@link Stream} of {@link Grouped} results
      *
      * @since 3.4.0
      */
@@ -1185,7 +1185,7 @@ public final class ParallelCollectors {
      * @param <K>         the classification key type
      * @param <R>         the mapped result type
      *
-     * @return a {@code Collector} producing an ordered {@link Stream} of {@link Grouped<K, R>} results
+     * @return a {@code Collector} producing an ordered {@link Stream} of {@link Grouped} results
      *
      * @since 3.4.0
      */
