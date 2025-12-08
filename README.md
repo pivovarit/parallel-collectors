@@ -80,43 +80,28 @@ This library fills that gap. It keeps the Stream API model but replaces the exec
 
 The main entry point is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
 
-By design, it's obligatory to supply a custom `Executor` instance and manage its lifecycle.
-
 All parallel collectors are one-off and must not be reused.
 
-## Available Collectors
+## Choosing the Right Collector
 
-### CompletableFuture-based (non-blocking)
+```mermaid
+flowchart TD
 
-A typical usage looks like this:
+A[Are you ok blocking the caller thread while waiting for processing to finish?] -->|No| B[Use ParallelCollectors.parallel]
+A -->|Yes| C{Does the order of elements matter?}
 
-```java
-CompletableFuture<Stream<R>> future = items.stream().collect(parallel(i -> foo(i)));
+C -->|Yes| D[Use ParallelCollectors.parallelToOrderedStream]
+C -->|No| E[Use ParallelCollectors.parallelToStream]
 ```
 
-This variant returns a `CompletableFuture` so you can compose, add timeouts, or run the pipeline asynchronously.
+`ParallelCollectors.parallel` family returns `CompletableFuture` while `ParallelCollectors.parallelToStream` family returns `Stream`.
 
-All other overloads simply let you configure:
-- a custom `Collector`
+Additionally, you can customize:
 - a custom `Executor` (defaults to Virtual Threads)
 - a custom parallelism level
-- or classification via `parallelBy(...)` to group elements by a key before mapping
-- or batching via `Batching` namespace
-
-### Stream-based (blocking)
-
-```java
-Stream<R> result1 = items.stream().collect(parallelToStream(this::callRemote));
-Stream<R> result2 = items.stream().collect(parallelToOrderedStream(this::callRemote));
-```
-
-This blocks internally until all tasks complete and returns a Stream<R> either in original order or completion order.
-
-Again, all overloads configure collector, executor, parallelism, or classification via the _By_ variants.
-
-> **Notes:**
-> - All collectors default to using **Virtual Threads** when no custom `Executor` is provided.
-> - The *By* variants allow **classifying elements by a key** before mapping and reducing, ensuring that all elements with the same key are processed together. This avoids redundant computations and enables controlled parallelism per group.
+- batching by key via `*By(...)` methods
+- batching by size via `Batching` namespace
+- a custom `Collector` (`ParallelCollectors.parallel` only)
 
 #### Batching Collectors
 When you use non-batching parallel collectors, **every input element is turned into an individual task** submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks. 
@@ -159,7 +144,7 @@ Batching alternatives are available under the `ParallelCollectors.Batching` name
 
 ### Leveraging CompletableFuture
 
-Parallel Collectors™ expose results wrapped in `CompletableFuture` instances which provides great flexibility and the possibility of working with them in a non-blocking fashion:
+Parallel Collectors™ expose results wrapped in `CompletableFuture` instances, which provides great flexibility and the possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
