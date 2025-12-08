@@ -3,4 +3,6 @@
  */
 module parallel.collectors {
     exports com.pivovarit.collectors;
+
+    requires static org.jspecify;
 }

@@ -49,7 +49,7 @@ class ArchitectureTest {
       .that().resideInAPackage("com.pivovarit.collectors")
       .should()
       .onlyDependOnClassesThat()
-      .resideInAnyPackage("com.pivovarit.collectors", "java..")
+      .resideInAnyPackage("com.pivovarit.collectors", "org.jspecify.annotations", "java..")
       .as("the library should depend only on core Java classes")
       .because("users appreciate not experiencing a dependency hell");
 
