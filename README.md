@@ -15,7 +15,9 @@ Parallel Collectors is a toolkit that eases parallel collection processing in Ja
       .collect(parallel(i -> blockingOp(i), toList()))
         .orTimeout(1000, MILLISECONDS)
         .thenAcceptAsync(System.out::println, executor)
-        .thenRun(() -> System.out.println("Finished!"));
+        .thenRun(() -> System.out::println("Finished!"));
+
+**New in v3.4.0:** Classification-based batching with `*By` variants - process elements grouped by a key on the same thread for improved performance and data locality.
       
 They are:
 - lightweight, defaulting to Virtual Threads (an alternative to Project Reactor for scenarios where a lighter solution is preferred)
@@ -163,20 +165,25 @@ Batching alternatives are available under the `ParallelCollectors.Batching` name
 
 Parallel Collectors™ expose results wrapped in `CompletableFuture` instances which provides great flexibility and the possibility of working with them in a non-blocking fashion:
 
+    // Using default Virtual Threads
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(parallel(i -> foo(i), toList()));
+
+    // Or with a custom Executor
     CompletableFuture<List<String>> result = list.stream()
       .collect(parallel(i -> foo(i), toList(), executor));
 
 This makes it possible to conveniently apply callbacks and compose with other `CompletableFuture`s:
 
     list.stream()
-      .collect(parallel(i -> foo(i), toSet(), executor))
+      .collect(parallel(i -> foo(i), toSet()))
       .thenAcceptAsync(System.out::println, otherExecutor)
       .thenRun(() -> System.out.println("Finished!"));
       
 Or just `join()` if you just want to block the calling thread and wait for the result:
 
     List<String> result = list.stream()
-      .collect(parallel(i -> foo(i), toList(), executor))
+      .collect(parallel(i -> foo(i), toList()))
       .join();
       
 What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
@@ -251,6 +258,20 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
         Object result = grouped.value();
         // handle result...
       });
+
+##### 8. Use batching collectors for better performance with many small tasks
+
+    Executor executor = ...
+
+    // Without batching: 1000 elements = 1000 individual tasks
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(parallel(i -> lightweightOp(i), toList(), executor));
+
+    // With batching: 1000 elements = fewer batched tasks (distributed across threads)
+    CompletableFuture<List<String>> batchedResult = list.stream()
+      .collect(Batching.parallel(i -> lightweightOp(i), toList(), executor));
+    
+    // Batching significantly reduces contention and overhead for lightweight operations
 
 ## Rationale
 
