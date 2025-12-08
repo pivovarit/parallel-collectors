@@ -7,12 +7,14 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
  *
  * @author Grzegorz Piwowarek
  */
+@NullMarked
 public final class ParallelCollectors {
 
     private ParallelCollectors() {
