@@ -90,10 +90,10 @@ All parallel collectors are one-off and must not be reused.
 -  `Stream<T> parallelToOrderedStream(Function, Executor, parallelism)`
 
 #### Batching Collectors
-When you use non-batching parallel collectors, every input element is turned into an individual task submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks. 
+When you use non-batching parallel collectors, **every input element is turned into an individual task** submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks. 
 Even if you only have two threads processing them, both threads hammer the same task queue, repeatedly competing for the next piece of work. That competition creates contention, and overall overhead.
 
-This behaviour resembles a primitive form of *work-stealing*, where each worker repeatedly tries to grab the next available task. *Work-stealing is great in scenarios where task durations vary significantly*, since it keeps faster workers busy, *but it's not free*.
+This behaviour resembles a primitive form of **work-stealing**, where each worker repeatedly tries to grab the next available task. **Work-stealing is great in scenarios where task durations vary significantly**, since it keeps faster workers busy, **but it's not free**.
 
 However, if the processing time for all subtasks is similar, it might be better to distribute tasks in batches to avoid excessive contention.
 
