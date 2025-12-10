@@ -1,8 +1,8 @@
 # Java Stream API Virtual-Threads-enabled Parallel Collectors
 Overcoming limitations of standard Parallel Streams
 
-[![build](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml)
-[![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=master)](http://pivovarit.github.io/parallel-collectors)
+[![build](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml)
+[![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=main)](http://pivovarit.github.io/parallel-collectors)
 [![Maven Central Version](https://img.shields.io/maven-central/v/com.pivovarit/parallel-collectors)](https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors/versions)
 
 ![](docs/logo.png)
@@ -263,4 +263,4 @@ While Parallel Collectors and Virtual Threads make parallelization easy, it does
 Before opting for parallel processing, consider addressing the root cause through alternatives like DB-level JOIN statements, batching, data reorganization, or... simply selecting a more suitable API method.
 
 ----
-See [CHANGELOG.MD](https://github.com/pivovarit/parallel-collectors/blob/master/CHANGELOG.MD) for a complete version history.
+See [CHANGELOG.MD](https://github.com/pivovarit/parallel-collectors/blob/main/CHANGELOG.MD) for a complete version history.
