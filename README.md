@@ -80,6 +80,8 @@ This library fills that gap. It keeps the Stream API model but replaces the exec
 
 The main entry point is the `com.pivovarit.collectors.ParallelCollectors` class - which follows the convention established by `java.util.stream.Collectors` and features static factory methods returning custom `java.util.stream.Collector` implementations spiced up with parallel processing capabilities.
 
+By default, collectors use Virtual Threads, but you can optionally provide a custom `Executor` instance for more control. When using a custom `Executor`, you are responsible for its lifecycle management.
+
 All parallel collectors are one-off and must not be reused.
 
 ## Choosing the Right Collector
