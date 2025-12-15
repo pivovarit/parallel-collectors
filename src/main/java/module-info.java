@@ -4,5 +4,5 @@
 module parallel.collectors {
     exports com.pivovarit.collectors;
 
-    requires static org.jspecify;
+    requires transitive org.jspecify;
 }
