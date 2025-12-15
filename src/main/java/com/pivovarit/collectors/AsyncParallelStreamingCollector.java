@@ -13,11 +13,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
-import static com.pivovarit.collectors.CompletionStrategy.ordered;
-import static com.pivovarit.collectors.CompletionStrategy.unordered;
 import static java.util.Collections.emptySet;
 
 /**
@@ -27,7 +26,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
 
     private final Function<? super T, ? extends R> function;
 
-    private final CompletionStrategy<R> completionStrategy;
+    private final CompletionStrategy completionStrategy;
 
     private final Set<Characteristics> characteristics;
 
@@ -37,10 +36,10 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
       Function<? super T, ? extends R> function,
       Dispatcher<R> dispatcher,
       boolean ordered) {
-        this.completionStrategy = ordered ? ordered() : unordered();
+        this.completionStrategy = ordered ? CompletionStrategy.ORDERED : CompletionStrategy.UNORDERED;
         this.characteristics = switch (completionStrategy) {
-            case CompletionStrategy.Ordered<R> __ -> emptySet();
-            case CompletionStrategy.Unordered<R> __ -> EnumSet.of(Characteristics.UNORDERED);
+            case ORDERED -> emptySet();
+            case UNORDERED -> EnumSet.of(Characteristics.UNORDERED);
         };
         this.dispatcher = dispatcher;
         this.function = function;
@@ -81,7 +80,10 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
     public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
         return acc -> {
             dispatcher.stop();
-            return completionStrategy.apply(acc);
+            return switch (completionStrategy) {
+                case ORDERED -> acc.stream().map(CompletableFuture::join);
+                case UNORDERED -> StreamSupport.stream(new CompletionOrderSpliterator<>(acc), false);
+            };
         };
     }
 
@@ -91,7 +93,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
     }
 
     record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism,
-                                           boolean ordered)
+                                   boolean ordered)
       implements Collector<T, ArrayList<T>, Stream<R>> {
 
         @Override
