@@ -8,15 +8,12 @@ import java.util.stream.StreamSupport;
 
 sealed interface CompletionStrategy<T> extends Function<List<CompletableFuture<T>>, Stream<T>> permits CompletionStrategy.Unordered, CompletionStrategy.Ordered {
 
-    Unordered<?> UNORDERED = new Unordered<>();
-    Ordered<?> ORDERED = new Ordered<>();
-
     static <R> CompletionStrategy<R> unordered() {
-        return (CompletionStrategy<R>) UNORDERED;
+        return new Unordered<>();
     }
 
     static <R> CompletionStrategy<R> ordered() {
-        return (CompletionStrategy<R>) ORDERED;
+        return new Ordered<>();
     }
 
     final class Unordered<T> implements CompletionStrategy<T> {
