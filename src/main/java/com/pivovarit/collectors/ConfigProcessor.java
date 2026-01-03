@@ -5,12 +5,16 @@ import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
 final class ConfigProcessor {
+
+    private static final ExecutorService DEFAULT_EXECUTOR = Executors.newThreadPerTaskExecutor(Thread.ofVirtual()
+      .name("parallel-collectors-", 0)
+      .factory());
 
     static final class Config {
         private final Boolean ordered;
@@ -38,7 +42,7 @@ final class ConfigProcessor {
         }
 
         public Executor executor() {
-            return Objects.requireNonNullElseGet(executor, defaultExecutor());
+            return Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR);
         }
     }
 
@@ -75,11 +79,5 @@ final class ConfigProcessor {
             case Options.ThreadPool __ -> "executor";
             case Options.Ordered __ -> "ordered";
         };
-    }
-
-    private static Supplier<Executor> defaultExecutor() {
-        return () -> Executors.newThreadPerTaskExecutor(Thread.ofVirtual()
-          .name("parallel-collectors-", 0)
-          .factory());
     }
 }
