@@ -46,14 +46,6 @@ final class Factory {
         );
     }
 
-    static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> collecting(
-      Function<? super T, ? extends R> mapper,
-      Options.CollectingOption... options) {
-        requireNonNull(mapper, "mapper can't be null");
-
-        return collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper, options);
-    }
-
     static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(
       Function<Stream<R>, C> finalizer,
       Function<? super T, ? extends R> mapper,
