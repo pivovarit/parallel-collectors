@@ -15,37 +15,53 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ExceptionHandlingTest {
 
-    @TestFactory
-    Stream<DynamicTest> shouldPropagateExceptionFactory() {
-        return all()
-          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              assertThatThrownBy(() -> IntStream.range(0, 10)
-                .boxed()
-                .collect(c.factory().collector(i -> {
-                    if (i == 7) {
-                        throw new IllegalArgumentException();
-                    } else {
-                        return i;
-                    }
-                })))
-                .isInstanceOf(CompletionException.class)
-                .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-          }));
-    }
+  @TestFactory
+  Stream<DynamicTest> shouldPropagateExceptionFactory() {
+    return all()
+        .map(
+            c ->
+                DynamicTest.dynamicTest(
+                    c.name(),
+                    () -> {
+                      assertThatThrownBy(
+                              () ->
+                                  IntStream.range(0, 10)
+                                      .boxed()
+                                      .collect(
+                                          c.factory()
+                                              .collector(
+                                                  i -> {
+                                                    if (i == 7) {
+                                                      throw new IllegalArgumentException();
+                                                    } else {
+                                                      return i;
+                                                    }
+                                                  })))
+                          .isInstanceOf(CompletionException.class)
+                          .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+                    }));
+  }
 
-    @TestFactory
-    Stream<DynamicTest> shouldShortcircuitOnException() {
-        return all()
-          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              List<Integer> elements = IntStream.range(0, 100).boxed().toList();
-              AtomicInteger counter = new AtomicInteger();
+  @TestFactory
+  Stream<DynamicTest> shouldShortcircuitOnException() {
+    return all()
+        .map(
+            c ->
+                DynamicTest.dynamicTest(
+                    c.name(),
+                    () -> {
+                      List<Integer> elements = IntStream.range(0, 100).boxed().toList();
+                      AtomicInteger counter = new AtomicInteger();
 
-              assertThatThrownBy(() -> elements.stream()
-                .collect(c.factory().collector(i -> incrementAndThrow(counter))))
-                .isInstanceOf(CompletionException.class)
-                .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+                      assertThatThrownBy(
+                              () ->
+                                  elements.stream()
+                                      .collect(
+                                          c.factory().collector(i -> incrementAndThrow(counter))))
+                          .isInstanceOf(CompletionException.class)
+                          .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
 
-              assertThat(counter.longValue()).isLessThan(elements.size());
-          }));
-    }
+                      assertThat(counter.longValue()).isLessThan(elements.size());
+                    }));
+  }
 }

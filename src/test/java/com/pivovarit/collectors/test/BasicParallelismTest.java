@@ -16,56 +16,95 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 class BasicParallelismTest {
 
-    @TestFactory
-    Stream<DynamicTest> shouldProcessEmptyWithMaxParallelism() {
-        return Stream.of(1, 2, 4, 8, 16, 32, 64, 100)
-          .flatMap(p -> allBounded()
-            .map(c -> DynamicTest.dynamicTest("%s (parallelism: %d)".formatted(c.name(), p), () -> {
-                assertThat(Stream.<Integer>empty().collect(c.factory().collector(i -> i, p))).isEmpty();
-            })));
-    }
+  @TestFactory
+  Stream<DynamicTest> shouldProcessEmptyWithMaxParallelism() {
+    return Stream.of(1, 2, 4, 8, 16, 32, 64, 100)
+        .flatMap(
+            p ->
+                allBounded()
+                    .map(
+                        c ->
+                            DynamicTest.dynamicTest(
+                                "%s (parallelism: %d)".formatted(c.name(), p),
+                                () -> {
+                                  assertThat(
+                                          Stream.<Integer>empty()
+                                              .collect(c.factory().collector(i -> i, p)))
+                                      .isEmpty();
+                                })));
+  }
 
-    @TestFactory
-    Stream<DynamicTest> shouldProcessAllElementsWithMaxParallelism() {
-        return Stream.of(1, 2, 4, 8, 16, 32, 64, 100)
-          .flatMap(p -> allBounded()
-            .map(c -> DynamicTest.dynamicTest("%s (parallelism: %d)".formatted(c.name(), p), () -> {
-                var list = IntStream.range(0, 100).boxed().toList();
-                List<Integer> result = list.stream().collect(c.factory().collector(i -> i, p));
-                assertThat(result).containsExactlyInAnyOrderElementsOf(list);
-            })));
-    }
+  @TestFactory
+  Stream<DynamicTest> shouldProcessAllElementsWithMaxParallelism() {
+    return Stream.of(1, 2, 4, 8, 16, 32, 64, 100)
+        .flatMap(
+            p ->
+                allBounded()
+                    .map(
+                        c ->
+                            DynamicTest.dynamicTest(
+                                "%s (parallelism: %d)".formatted(c.name(), p),
+                                () -> {
+                                  var list = IntStream.range(0, 100).boxed().toList();
+                                  List<Integer> result =
+                                      list.stream().collect(c.factory().collector(i -> i, p));
+                                  assertThat(result).containsExactlyInAnyOrderElementsOf(list);
+                                })));
+  }
 
-    @TestFactory
-    Stream<DynamicTest> shouldRespectMaxParallelism() {
-        return allBounded()
-          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              var counter = new AtomicInteger(0);
-              var parallelism = 4;
+  @TestFactory
+  Stream<DynamicTest> shouldRespectMaxParallelism() {
+    return allBounded()
+        .map(
+            c ->
+                DynamicTest.dynamicTest(
+                    c.name(),
+                    () -> {
+                      var counter = new AtomicInteger(0);
+                      var parallelism = 4;
 
-              assertThatCode(() -> {
-                  IntStream.range(0, 100).boxed()
-                    .collect(c.factory().collector(i -> {
-                        int value = counter.incrementAndGet();
-                        if (value > parallelism) {
-                            throw new IllegalStateException("more than two tasks executing at once!");
-                        }
-                        Integer result = TestUtils.returnWithDelay(i, Duration.ofMillis(10));
-                        counter.decrementAndGet();
-                        return result;
-                    }, parallelism))
-                    .forEach(i -> {});
-              }).doesNotThrowAnyException();
-          }));
-    }
+                      assertThatCode(
+                              () -> {
+                                IntStream.range(0, 100)
+                                    .boxed()
+                                    .collect(
+                                        c.factory()
+                                            .collector(
+                                                i -> {
+                                                  int value = counter.incrementAndGet();
+                                                  if (value > parallelism) {
+                                                    throw new IllegalStateException(
+                                                        "more than two tasks executing at once!");
+                                                  }
+                                                  Integer result =
+                                                      TestUtils.returnWithDelay(
+                                                          i, Duration.ofMillis(10));
+                                                  counter.decrementAndGet();
+                                                  return result;
+                                                },
+                                                parallelism))
+                                    .forEach(i -> {});
+                              })
+                          .doesNotThrowAnyException();
+                    }));
+  }
 
-    @TestFactory
-    Stream<DynamicTest> shouldRejectInvalidParallelism() {
-        return allBounded()
-          .flatMap(c -> Stream.of(-1, 0)
-            .map(p -> DynamicTest.dynamicTest("%s [p=%d]".formatted(c.name(), p), () -> {
-                assertThatThrownBy(() -> Stream.of(1).collect(c.factory().collector(i -> i, p)))
-                  .isExactlyInstanceOf(IllegalArgumentException.class);
-            })));
-    }
+  @TestFactory
+  Stream<DynamicTest> shouldRejectInvalidParallelism() {
+    return allBounded()
+        .flatMap(
+            c ->
+                Stream.of(-1, 0)
+                    .map(
+                        p ->
+                            DynamicTest.dynamicTest(
+                                "%s [p=%d]".formatted(c.name(), p),
+                                () -> {
+                                  assertThatThrownBy(
+                                          () ->
+                                              Stream.of(1)
+                                                  .collect(c.factory().collector(i -> i, p)))
+                                      .isExactlyInstanceOf(IllegalArgumentException.class);
+                                })));
+  }
 }

@@ -22,115 +22,123 @@ import static java.util.Collections.emptySet;
 /**
  * @author Grzegorz Piwowarek
  */
-class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+class AsyncParallelStreamingCollector<T, R>
+    implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
-    private final Function<? super T, ? extends R> function;
+  private final Function<? super T, ? extends R> function;
 
-    private final CompletionStrategy completionStrategy;
+  private final CompletionStrategy completionStrategy;
 
-    private final Set<Characteristics> characteristics;
+  private final Set<Characteristics> characteristics;
 
-    private final Dispatcher<R> dispatcher;
+  private final Dispatcher<R> dispatcher;
 
-    private AsyncParallelStreamingCollector(
+  private AsyncParallelStreamingCollector(
+      Function<? super T, ? extends R> function, Dispatcher<R> dispatcher, boolean ordered) {
+    this.completionStrategy = ordered ? CompletionStrategy.ORDERED : CompletionStrategy.UNORDERED;
+    this.characteristics =
+        switch (completionStrategy) {
+          case ORDERED -> emptySet();
+          case UNORDERED -> EnumSet.of(Characteristics.UNORDERED);
+        };
+    this.dispatcher = dispatcher;
+    this.function = function;
+  }
+
+  public static <T, R> Collector<T, ?, Stream<R>> from(
       Function<? super T, ? extends R> function,
-      Dispatcher<R> dispatcher,
+      Executor executor,
+      int parallelism,
       boolean ordered) {
-        this.completionStrategy = ordered ? CompletionStrategy.ORDERED : CompletionStrategy.UNORDERED;
-        this.characteristics = switch (completionStrategy) {
-            case ORDERED -> emptySet();
-            case UNORDERED -> EnumSet.of(Characteristics.UNORDERED);
-        };
-        this.dispatcher = dispatcher;
-        this.function = function;
-    }
+    return new AsyncParallelStreamingCollector<>(
+        function, new Dispatcher<>(executor, parallelism), ordered);
+  }
 
-    public static <T, R> Collector<T, ?, Stream<R>> from(
-      Function<? super T, ? extends R> function, Executor executor, int parallelism, boolean ordered) {
-        return new AsyncParallelStreamingCollector<>(function, new Dispatcher<>(executor, parallelism), ordered);
-    }
-
-    public static <T, R> Collector<T, ?, Stream<R>> from(
+  public static <T, R> Collector<T, ?, Stream<R>> from(
       Function<? super T, ? extends R> function, Executor executor, boolean ordered) {
-        return new AsyncParallelStreamingCollector<>(function, new Dispatcher<>(executor), ordered);
+    return new AsyncParallelStreamingCollector<>(function, new Dispatcher<>(executor), ordered);
+  }
+
+  @Override
+  public Supplier<List<CompletableFuture<R>>> supplier() {
+    return ArrayList::new;
+  }
+
+  @Override
+  public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
+    return (acc, e) -> {
+      dispatcher.start();
+      acc.add(dispatcher.enqueue(() -> function.apply(e)));
+    };
+  }
+
+  @Override
+  public BinaryOperator<List<CompletableFuture<R>>> combiner() {
+    return (left, right) -> {
+      throw new UnsupportedOperationException(
+          "Using parallel stream with parallel collectors is a bad idea");
+    };
+  }
+
+  @Override
+  public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
+    return acc -> {
+      dispatcher.stop();
+      return switch (completionStrategy) {
+        case ORDERED -> acc.stream().map(CompletableFuture::join);
+        case UNORDERED -> StreamSupport.stream(new CompletionOrderSpliterator<>(acc), false);
+      };
+    };
+  }
+
+  @Override
+  public Set<Characteristics> characteristics() {
+    return characteristics;
+  }
+
+  record BatchingCollector<T, R>(
+      Function<? super T, ? extends R> task, Executor executor, int parallelism, boolean ordered)
+      implements Collector<T, ArrayList<T>, Stream<R>> {
+
+    @Override
+    public Supplier<ArrayList<T>> supplier() {
+      return ArrayList::new;
     }
 
     @Override
-    public Supplier<List<CompletableFuture<R>>> supplier() {
-        return ArrayList::new;
+    public BiConsumer<ArrayList<T>, T> accumulator() {
+      return ArrayList::add;
     }
 
     @Override
-    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
-            dispatcher.start();
-            acc.add(dispatcher.enqueue(() -> function.apply(e)));
-        };
+    public BinaryOperator<ArrayList<T>> combiner() {
+      return (left, right) -> {
+        left.addAll(right);
+        return left;
+      };
     }
 
     @Override
-    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
-        return (left, right) -> {
-            throw new UnsupportedOperationException(
-              "Using parallel stream with parallel collectors is a bad idea");
-        };
-    }
-
-    @Override
-    public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
-        return acc -> {
-            dispatcher.stop();
-            return switch (completionStrategy) {
-                case ORDERED -> acc.stream().map(CompletableFuture::join);
-                case UNORDERED -> StreamSupport.stream(new CompletionOrderSpliterator<>(acc), false);
-            };
-        };
+    public Function<ArrayList<T>, Stream<R>> finisher() {
+      return items -> {
+        if (items.size() == parallelism) {
+          return items.stream()
+              .collect(
+                  new AsyncParallelStreamingCollector<>(
+                      task, new Dispatcher<>(executor, parallelism), ordered));
+        } else {
+          return partitioned(items, parallelism)
+              .collect(
+                  new AsyncParallelStreamingCollector<>(
+                      batching(task), new Dispatcher<>(executor, parallelism), ordered))
+              .flatMap(Collection::stream);
+        }
+      };
     }
 
     @Override
     public Set<Characteristics> characteristics() {
-        return characteristics;
+      return emptySet();
     }
-
-    record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism,
-                                   boolean ordered)
-      implements Collector<T, ArrayList<T>, Stream<R>> {
-
-        @Override
-        public Supplier<ArrayList<T>> supplier() {
-            return ArrayList::new;
-        }
-
-        @Override
-        public BiConsumer<ArrayList<T>, T> accumulator() {
-            return ArrayList::add;
-        }
-
-        @Override
-        public BinaryOperator<ArrayList<T>> combiner() {
-            return (left, right) -> {
-                left.addAll(right);
-                return left;
-            };
-        }
-
-        @Override
-        public Function<ArrayList<T>, Stream<R>> finisher() {
-            return items -> {
-                if (items.size() == parallelism) {
-                    return items.stream()
-                      .collect(new AsyncParallelStreamingCollector<>(task, new Dispatcher<>(executor, parallelism), ordered));
-                } else {
-                    return partitioned(items, parallelism)
-                      .collect(new AsyncParallelStreamingCollector<>(batching(task), new Dispatcher<>(executor, parallelism), ordered))
-                      .flatMap(Collection::stream);
-                }
-            };
-        }
-
-        @Override
-        public Set<Characteristics> characteristics() {
-            return emptySet();
-        }
-    }
+  }
 }

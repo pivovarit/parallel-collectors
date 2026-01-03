@@ -17,104 +17,110 @@ import static org.awaitility.Awaitility.await;
 
 class CompletionOrderSpliteratorTest {
 
-    @Test
-    void shouldTraverseInCompletionOrder() {
-        CompletableFuture<Integer> f1 = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        CompletableFuture<Integer> f3 = new CompletableFuture<>();
-        List<CompletableFuture<Integer>> futures = asList(f1, f2, f3);
+  @Test
+  void shouldTraverseInCompletionOrder() {
+    CompletableFuture<Integer> f1 = new CompletableFuture<>();
+    CompletableFuture<Integer> f2 = new CompletableFuture<>();
+    CompletableFuture<Integer> f3 = new CompletableFuture<>();
+    List<CompletableFuture<Integer>> futures = asList(f1, f2, f3);
 
-        CompletableFuture.runAsync(() -> {
-            f3.complete(3);
-            sleep(100);
-            f1.complete(2);
-            sleep(100);
-            f2.complete(1);
+    CompletableFuture.runAsync(
+        () -> {
+          f3.complete(3);
+          sleep(100);
+          f1.complete(2);
+          sleep(100);
+          f2.complete(1);
         });
-        var results = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList();
+    var results = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList();
 
-        assertThat(results).containsExactly(3, 2, 1);
-    }
+    assertThat(results).containsExactly(3, 2, 1);
+  }
 
-    @Test
-    void shouldPropagateException() {
-        CompletableFuture<Integer> f1 = new CompletableFuture<>();
-        CompletableFuture<Integer> f2 = new CompletableFuture<>();
-        CompletableFuture<Integer> f3 = new CompletableFuture<>();
-        List<CompletableFuture<Integer>> futures = asList(f1, f2, f3);
+  @Test
+  void shouldPropagateException() {
+    CompletableFuture<Integer> f1 = new CompletableFuture<>();
+    CompletableFuture<Integer> f2 = new CompletableFuture<>();
+    CompletableFuture<Integer> f3 = new CompletableFuture<>();
+    List<CompletableFuture<Integer>> futures = asList(f1, f2, f3);
 
-        CompletableFuture.runAsync(() -> {
-            f3.complete(3);
-            sleep(100);
-            f1.completeExceptionally(new RuntimeException());
-            sleep(100);
-            f2.complete(1);
+    CompletableFuture.runAsync(
+        () -> {
+          f3.complete(3);
+          sleep(100);
+          f1.completeExceptionally(new RuntimeException());
+          sleep(100);
+          f2.complete(1);
         });
-        assertThatThrownBy(() -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList())
-          .isInstanceOf(CompletionException.class)
-          .hasCauseExactlyInstanceOf(RuntimeException.class);
+    assertThatThrownBy(
+            () -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList())
+        .isInstanceOf(CompletionException.class)
+        .hasCauseExactlyInstanceOf(RuntimeException.class);
+  }
+
+  private static void sleep(int millis) {
+    try {
+      Thread.sleep(millis);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
+  }
 
-    private static void sleep(int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
+  @Test
+  void shouldStreamInCompletionOrder() {
+    int value = 42;
+    List<CompletableFuture<Integer>> futures =
+        asList(new CompletableFuture<>(), CompletableFuture.completedFuture(value));
 
-    @Test
-    void shouldStreamInCompletionOrder() {
-        int value = 42;
-        List<CompletableFuture<Integer>> futures = asList(new CompletableFuture<>(), CompletableFuture
-          .completedFuture(value));
+    Optional<Integer> result =
+        StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).findAny();
 
-        Optional<Integer> result = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).findAny();
+    assertThat(result).contains(value);
+  }
 
-        assertThat(result).contains(value);
-    }
+  @Test
+  void shouldNotConsumeOnEmpty() {
+    List<CompletableFuture<Integer>> futures = Collections.emptyList();
 
-    @Test
-    void shouldNotConsumeOnEmpty() {
-        List<CompletableFuture<Integer>> futures = Collections.emptyList();
+    Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
 
-        Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(futures);
+    ResultHolder<Integer> result = new ResultHolder<>();
+    boolean consumed = spliterator.tryAdvance(result);
 
-        ResultHolder<Integer> result = new ResultHolder<>();
-        boolean consumed = spliterator.tryAdvance(result);
+    assertThat(consumed).isFalse();
+    assertThat(result.result).isNull();
+  }
 
-        assertThat(consumed).isFalse();
-        assertThat(result.result).isNull();
-    }
-
-    @Test
-    void shouldRestoreInterrupt() {
-        Thread executorThread = new Thread(() -> {
-            Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(List.of(new CompletableFuture<>()));
-            try {
+  @Test
+  void shouldRestoreInterrupt() {
+    Thread executorThread =
+        new Thread(
+            () -> {
+              Spliterator<Integer> spliterator =
+                  new CompletionOrderSpliterator<>(List.of(new CompletableFuture<>()));
+              try {
                 spliterator.tryAdvance(i -> {});
-            } catch (Exception e) {
+              } catch (Exception e) {
                 while (true) {
-                    Thread.onSpinWait();
+                  Thread.onSpinWait();
                 }
-            }
-        });
+              }
+            });
 
-        executorThread.start();
+    executorThread.start();
 
-        executorThread.interrupt();
+    executorThread.interrupt();
 
-        await()
-          .until(executorThread::isInterrupted);
+    await().until(executorThread::isInterrupted);
+  }
+
+  static class ResultHolder<T> implements Consumer<T> {
+
+    private volatile T result;
+
+    @Override
+    public void accept(T t) {
+      result = t;
     }
-
-    static class ResultHolder<T> implements Consumer<T> {
-
-        private volatile T result;
-
-        @Override
-        public void accept(T t) {
-            result = t;
-        }
-    }
+  }
 }

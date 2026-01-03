@@ -12,28 +12,31 @@ import static java.util.stream.Collectors.toList;
  * @author Grzegorz Piwowarek
  */
 final class FutureCollectors {
-    static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(Collector<T, ?, R> collector) {
-        Objects.requireNonNull(collector, "collector cannot be null");
+  static <T, R> Collector<CompletableFuture<T>, ?, CompletableFuture<R>> toFuture(
+      Collector<T, ?, R> collector) {
+    Objects.requireNonNull(collector, "collector cannot be null");
 
-        return Collectors.collectingAndThen(toList(), list -> {
-            var future = CompletableFuture.allOf(list.toArray(CompletableFuture[]::new))
-              .thenApply(__ -> list.stream()
-                .map(CompletableFuture::join)
-                .collect(collector));
+    return Collectors.collectingAndThen(
+        toList(),
+        list -> {
+          var future =
+              CompletableFuture.allOf(list.toArray(CompletableFuture[]::new))
+                  .thenApply(__ -> list.stream().map(CompletableFuture::join).collect(collector));
 
-            for (var f : list) {
-                f.whenComplete((__, throwable) -> {
-                    if (throwable != null) {
-                        future.completeExceptionally(throwable);
-                    }
+          for (var f : list) {
+            f.whenComplete(
+                (__, throwable) -> {
+                  if (throwable != null) {
+                    future.completeExceptionally(throwable);
+                  }
                 });
-            }
+          }
 
-            return future;
+          return future;
         });
-    }
+  }
 
-    static <T> Collector<CompletableFuture<T>, ?, CompletableFuture<List<T>>> toFuture() {
-        return toFuture(toList());
-    }
+  static <T> Collector<CompletableFuture<T>, ?, CompletableFuture<List<T>>> toFuture() {
+    return toFuture(toList());
+  }
 }

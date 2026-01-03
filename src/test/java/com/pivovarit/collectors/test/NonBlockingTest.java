@@ -16,25 +16,44 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class NonBlockingTest {
 
-    private static Stream<Factory.GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>> allAsync() {
-        return Stream.of(
-          asyncCollector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.thenApply(Stream::toList))),
-          asyncCollector("parallel(toList())", f -> ParallelCollectors.parallel(f, toList())),
-          asyncCollector("parallel(toList(), e)", f -> ParallelCollectors.parallel(f, toList(), e())),
-          asyncCollector("parallel(toList(), e, p=1)", f -> ParallelCollectors.parallel(f, toList(), e(), 1)),
-          asyncCollector("parallel(toList(), e, p=2)", f -> ParallelCollectors.parallel(f, toList(), e(), 2)),
-          asyncCollector("parallel(toList(), e, p=1) [batching]", f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 1)),
-          asyncCollector("parallel(toList(), e, p=2) [batching]", f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 2))
-        );
-    }
+  private static Stream<Factory.GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>>
+      allAsync() {
+    return Stream.of(
+        asyncCollector(
+            "parallel()",
+            f ->
+                collectingAndThen(
+                    ParallelCollectors.parallel(f), c -> c.thenApply(Stream::toList))),
+        asyncCollector("parallel(toList())", f -> ParallelCollectors.parallel(f, toList())),
+        asyncCollector("parallel(toList(), e)", f -> ParallelCollectors.parallel(f, toList(), e())),
+        asyncCollector(
+            "parallel(toList(), e, p=1)", f -> ParallelCollectors.parallel(f, toList(), e(), 1)),
+        asyncCollector(
+            "parallel(toList(), e, p=2)", f -> ParallelCollectors.parallel(f, toList(), e(), 2)),
+        asyncCollector(
+            "parallel(toList(), e, p=1) [batching]",
+            f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 1)),
+        asyncCollector(
+            "parallel(toList(), e, p=2) [batching]",
+            f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 2)));
+  }
 
-    @TestFactory
-    Stream<DynamicTest> shouldNotBlockTheCallingThread() {
-        return allAsync()
-          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              assertTimeoutPreemptively(Duration.ofMillis(100), () -> {
-                  var __ = Stream.of(1, 2, 3, 4).collect(c.factory().collector(i -> returnWithDelay(i, ofDays(1))));
-              });
-          }));
-    }
+  @TestFactory
+  Stream<DynamicTest> shouldNotBlockTheCallingThread() {
+    return allAsync()
+        .map(
+            c ->
+                DynamicTest.dynamicTest(
+                    c.name(),
+                    () -> {
+                      assertTimeoutPreemptively(
+                          Duration.ofMillis(100),
+                          () -> {
+                            var __ =
+                                Stream.of(1, 2, 3, 4)
+                                    .collect(
+                                        c.factory().collector(i -> returnWithDelay(i, ofDays(1))));
+                          });
+                    }));
+  }
 }

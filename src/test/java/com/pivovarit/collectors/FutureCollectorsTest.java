@@ -15,55 +15,63 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 class FutureCollectorsTest {
 
-    @Test
-    void shouldCollect() {
-        List<Integer> list = Arrays.asList(1, 2, 3);
+  @Test
+  void shouldCollect() {
+    List<Integer> list = Arrays.asList(1, 2, 3);
 
-        CompletableFuture<List<Integer>> result = list.stream()
-          .map(i -> CompletableFuture.supplyAsync(() -> i))
-          .collect(ParallelCollectors.toFuture());
+    CompletableFuture<List<Integer>> result =
+        list.stream()
+            .map(i -> CompletableFuture.supplyAsync(() -> i))
+            .collect(ParallelCollectors.toFuture());
 
-        assertThat(result.join()).containsExactlyElementsOf(list);
-    }
+    assertThat(result.join()).containsExactlyElementsOf(list);
+  }
 
-    @Test
-    void shouldCollectToList() {
-        var list = Arrays.asList(1, 2, 3);
+  @Test
+  void shouldCollectToList() {
+    var list = Arrays.asList(1, 2, 3);
 
-        var result = list.stream()
-          .map(i -> CompletableFuture.supplyAsync(() -> i))
-          .collect(ParallelCollectors.toFuture(toList()));
+    var result =
+        list.stream()
+            .map(i -> CompletableFuture.supplyAsync(() -> i))
+            .collect(ParallelCollectors.toFuture(toList()));
 
-        assertThat(result.join()).containsExactlyElementsOf(list);
-    }
+    assertThat(result.join()).containsExactlyElementsOf(list);
+  }
 
-    @Test
-    void shouldShortcircuit() {
-        var list = IntStream.range(0, 10).boxed().toList();
+  @Test
+  void shouldShortcircuit() {
+    var list = IntStream.range(0, 10).boxed().toList();
 
-        try (var e = Executors.newFixedThreadPool(10)) {
-            CompletableFuture<List<Integer>> result
-              = list.stream()
-              .map(i -> CompletableFuture.supplyAsync(() -> {
-                  if (i != 9) {
-                      try {
-                          Thread.sleep(1000);
-                      } catch (InterruptedException ex) {
-                          ex.printStackTrace();
-                      }
-                      return i;
-                  } else {
-                      throw new RuntimeException();
-                  }
-              }, e))
+    try (var e = Executors.newFixedThreadPool(10)) {
+      CompletableFuture<List<Integer>> result =
+          list.stream()
+              .map(
+                  i ->
+                      CompletableFuture.supplyAsync(
+                          () -> {
+                            if (i != 9) {
+                              try {
+                                Thread.sleep(1000);
+                              } catch (InterruptedException ex) {
+                                ex.printStackTrace();
+                              }
+                              return i;
+                            } else {
+                              throw new RuntimeException();
+                            }
+                          },
+                          e))
               .collect(ParallelCollectors.toFuture(toList()));
 
-            assertTimeout(Duration.ofMillis(100), () -> {
-                try {
-                    result.join();
-                } catch (CompletionException ex) {
-                }
-            });
-        }
+      assertTimeout(
+          Duration.ofMillis(100),
+          () -> {
+            try {
+              result.join();
+            } catch (CompletionException ex) {
+            }
+          });
     }
+  }
 }

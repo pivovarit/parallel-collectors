@@ -12,47 +12,45 @@ import java.util.function.Consumer;
  */
 final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
-    private final int initialSize;
-    private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
-    private int remaining;
+  private final int initialSize;
+  private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
+  private int remaining;
 
-    CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
-        this.initialSize = futures.size();
-        this.remaining = initialSize;
-        futures.forEach(f -> f.whenComplete((__, ___) -> completed.add(f)));
+  CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
+    this.initialSize = futures.size();
+    this.remaining = initialSize;
+    futures.forEach(f -> f.whenComplete((__, ___) -> completed.add(f)));
+  }
+
+  @Override
+  public boolean tryAdvance(Consumer<? super T> action) {
+    return remaining > 0 ? nextCompleted().thenAccept(action).thenApply(__ -> true).join() : false;
+  }
+
+  private CompletableFuture<T> nextCompleted() {
+    try {
+      var next = completed.take();
+      remaining--;
+      return next;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+
+      throw new RuntimeException(e);
     }
+  }
 
-    @Override
-    public boolean tryAdvance(Consumer<? super T> action) {
-        return remaining > 0
-          ? nextCompleted().thenAccept(action).thenApply(__ -> true).join()
-          : false;
-    }
+  @Override
+  public Spliterator<T> trySplit() {
+    return null;
+  }
 
-    private CompletableFuture<T> nextCompleted() {
-        try {
-            var next = completed.take();
-            remaining--;
-            return next;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+  @Override
+  public long estimateSize() {
+    return initialSize;
+  }
 
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Spliterator<T> trySplit() {
-        return null;
-    }
-
-    @Override
-    public long estimateSize() {
-        return initialSize;
-    }
-
-    @Override
-    public int characteristics() {
-        return SIZED | IMMUTABLE | NONNULL;
-    }
+  @Override
+  public int characteristics() {
+    return SIZED | IMMUTABLE | NONNULL;
+  }
 }
