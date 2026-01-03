@@ -2,7 +2,6 @@ package com.pivovarit.collectors;
 
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -16,33 +15,9 @@ final class ConfigProcessor {
       .name("parallel-collectors-", 0)
       .factory());
 
-    static final class Config {
-        private final Boolean ordered;
-        private final Boolean batching;
-        private final Integer parallelism;
-        private final Executor executor;
-
-        Config(Boolean ordered, Boolean batching, Integer parallelism, Executor executor) {
-            this.ordered = ordered;
-            this.batching = batching;
-            this.parallelism = parallelism;
-            this.executor = executor;
-        }
-
-        public boolean ordered() {
-            return Objects.requireNonNullElse(ordered, false);
-        }
-
-        public boolean batching() {
-            return Objects.requireNonNullElse(batching, false);
-        }
-
-        public OptionalInt parallelism() {
-            return parallelism == null ? OptionalInt.empty() : OptionalInt.of(parallelism);
-        }
-
-        public Executor executor() {
-            return Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR);
+    record Config(boolean ordered, boolean batching, int parallelism, Executor executor) {
+        Config {
+            Objects.requireNonNull(executor, "executor can't be null");
         }
     }
 
@@ -69,7 +44,11 @@ final class ConfigProcessor {
             }
         }
 
-        return new Config(ordered, batching, parallelism, executor);
+        return new Config(
+          Objects.requireNonNullElse(ordered, false),
+          Objects.requireNonNullElse(batching, false),
+          Objects.requireNonNullElse(parallelism, 0),
+          Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR));
     }
 
     private static String toHumanReadableString(Options.CollectingOption option) {

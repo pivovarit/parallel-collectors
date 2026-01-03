@@ -51,20 +51,20 @@ final class Factory {
 
         var config = ConfigProcessor.process(options);
 
-        if (config.parallelism().orElse(0) == 1) {
+        if (config.parallelism() == 1) {
             return new AsyncCollector<>(mapper, finalizer, config.executor());
         }
 
         if (config.batching()) {
-            if (config.parallelism().isEmpty()) {
+            if (config.parallelism() == 0) {
                 throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
             }
 
-            return new AsyncParallelCollector.BatchingCollector<>(mapper, finalizer, config.executor(), config.parallelism().getAsInt());
+            return new AsyncParallelCollector.BatchingCollector<>(mapper, finalizer, config.executor(), config.parallelism());
         }
 
-        return config.parallelism().isPresent()
-          ? AsyncParallelCollector.from(mapper, finalizer, config.executor(), config.parallelism().getAsInt())
+        return config.parallelism() > 0
+          ? AsyncParallelCollector.from(mapper, finalizer, config.executor(), config.parallelism())
           : AsyncParallelCollector.from(mapper, finalizer, config.executor());
     }
 
@@ -91,20 +91,20 @@ final class Factory {
 
         var config = ConfigProcessor.process(options);
 
-        if (config.parallelism().orElse(0) == 1) {
+        if (config.parallelism() == 1) {
             return new SyncCollector<>(mapper);
         }
 
         if (config.batching()) {
-            if (config.parallelism().isEmpty()) {
+            if (config.parallelism() == 0) {
                 throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
             }
 
-            return new AsyncParallelStreamingCollector.BatchingCollector<>(mapper, config.executor(), config.parallelism().getAsInt(), config.ordered());
+            return new AsyncParallelStreamingCollector.BatchingCollector<>(mapper, config.executor(), config.parallelism(), config.ordered());
         }
 
-        return config.parallelism().isPresent()
-          ? AsyncParallelStreamingCollector.from(mapper, config.executor(), config.parallelism().getAsInt(), config.ordered())
+        return config.parallelism() > 0
+          ? AsyncParallelStreamingCollector.from(mapper, config.executor(), config.parallelism(), config.ordered())
           : AsyncParallelStreamingCollector.from(mapper, config.executor(), config.ordered());
     }
 }
