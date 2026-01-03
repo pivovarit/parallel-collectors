@@ -1,37 +1,35 @@
 package com.pivovarit.collectors;
 
 import java.util.HashSet;
-import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static java.util.Objects.requireNonNull;
 
 final class ConfigProcessor {
 
-    record Configuration(
-      Optional<Boolean> ordered,
-      Optional<Boolean> batching,
-      OptionalInt parallelism,
-      Optional<Executor> executor) {
-        public Configuration {
-            requireNonNull(ordered, "'ordered' can't be null");
-            requireNonNull(batching, "'batching' can't be null");
-            requireNonNull(parallelism, "'parallelism' can't be null");
-            requireNonNull(executor, "'executor' can't be null");
+    private static final ExecutorService DEFAULT_EXECUTOR = Executors.newThreadPerTaskExecutor(Thread.ofVirtual()
+      .name("parallel-collectors-", 0)
+      .factory());
+
+    record Config(boolean ordered, boolean batching, int parallelism, Executor executor) {
+        Config {
+            Objects.requireNonNull(executor, "executor can't be null");
         }
     }
 
-    static ConfigProcessor.Configuration process(Options.CollectingOption... options) {
+    static Config process(Options.CollectingOption... options) {
         requireNonNull(options, "options can't be null");
 
         Set<Class<? extends Options.CollectingOption>> seen = new HashSet<>();
 
-        Optional<Boolean> batching = Optional.empty();
-        Optional<Boolean> ordered = Optional.empty();
-        OptionalInt parallelism = OptionalInt.empty();
-        Optional<Executor> executor = Optional.empty();
+        Boolean batching = null;
+        Boolean ordered = null;
+        Integer parallelism = null;
+        Executor executor = null;
 
         for (var option : options) {
             if (!seen.add(option.getClass())) {
@@ -39,15 +37,18 @@ final class ConfigProcessor {
             }
 
             switch (option) {
-                case Options.Batched __ -> batching = Optional.of(true);
-                case Options.Parallelism parallelismOption ->
-                  parallelism = OptionalInt.of(parallelismOption.parallelism());
-                case Options.ThreadPool threadPoolOption -> executor = Optional.ofNullable(threadPoolOption.executor());
-                case Options.Ordered __ -> ordered = Optional.of(true);
+                case Options.Batched __ -> batching = true;
+                case Options.Parallelism parallelismOption -> parallelism = parallelismOption.parallelism();
+                case Options.ThreadPool threadPoolOption -> executor = threadPoolOption.executor();
+                case Options.Ordered __ -> ordered = true;
             }
         }
 
-        return new Configuration(ordered, batching, parallelism, executor);
+        return new Config(
+          Objects.requireNonNullElse(ordered, false),
+          Objects.requireNonNullElse(batching, false),
+          Objects.requireNonNullElse(parallelism, 0),
+          Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR));
     }
 
     private static String toHumanReadableString(Options.CollectingOption option) {
