@@ -3,10 +3,7 @@ package com.pivovarit.collectors;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,22 +51,21 @@ final class Factory {
 
         var config = ConfigProcessor.process(options);
 
-        var batching = config.batching().orElse(false);
-        var executor = config.executor().orElseGet(defaultExecutor());
-
-        if (config.parallelism().orElse(-1) == 1) {
-            return new AsyncCollector<>(mapper, finalizer, executor);
+        if (config.parallelism().orElse(0) == 1) {
+            return new AsyncCollector<>(mapper, finalizer, config.executor());
         }
 
-        if (batching) {
-            var parallelism = config.parallelism()
-              .orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
-            return new AsyncParallelCollector.BatchingCollector<>(mapper, finalizer, executor, parallelism);
+        if (config.batching()) {
+            if (config.parallelism().isEmpty()) {
+                throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
+            }
+
+            return new AsyncParallelCollector.BatchingCollector<>(mapper, finalizer, config.executor(), config.parallelism().getAsInt());
         }
 
         return config.parallelism().isPresent()
-          ? AsyncParallelCollector.from(mapper, finalizer, executor, config.parallelism().getAsInt())
-          : AsyncParallelCollector.from(mapper, finalizer, executor);
+          ? AsyncParallelCollector.from(mapper, finalizer, config.executor(), config.parallelism().getAsInt())
+          : AsyncParallelCollector.from(mapper, finalizer, config.executor());
     }
 
     static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> streamingBy(
@@ -94,28 +90,21 @@ final class Factory {
         requireNonNull(mapper, "mapper can't be null");
 
         var config = ConfigProcessor.process(options);
-        boolean batching = config.batching().orElse(false);
-        boolean ordered = config.ordered().orElse(false);
-        var executor = config.executor().orElseGet(defaultExecutor());
 
-        if (config.parallelism().orElse(-1) == 1) {
+        if (config.parallelism().orElse(0) == 1) {
             return new SyncCollector<>(mapper);
         }
 
-        if (batching) {
-            var parallelism = config.parallelism()
-              .orElseThrow(() -> new IllegalArgumentException("it's obligatory to provide parallelism when using batching"));
-            return new AsyncParallelStreamingCollector.BatchingCollector<>(mapper, executor, parallelism, ordered);
+        if (config.batching()) {
+            if (config.parallelism().isEmpty()) {
+                throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
+            }
+
+            return new AsyncParallelStreamingCollector.BatchingCollector<>(mapper, config.executor(), config.parallelism().getAsInt(), config.ordered());
         }
 
         return config.parallelism().isPresent()
-          ? AsyncParallelStreamingCollector.from(mapper, executor, config.parallelism().getAsInt(), ordered)
-          : AsyncParallelStreamingCollector.from(mapper, executor, ordered);
-    }
-
-    private static Supplier<Executor> defaultExecutor() {
-        return () -> Executors.newThreadPerTaskExecutor(Thread.ofVirtual()
-          .name("parallel-collectors-", 0)
-          .factory());
+          ? AsyncParallelStreamingCollector.from(mapper, config.executor(), config.parallelism().getAsInt(), config.ordered())
+          : AsyncParallelStreamingCollector.from(mapper, config.executor(), config.ordered());
     }
 }

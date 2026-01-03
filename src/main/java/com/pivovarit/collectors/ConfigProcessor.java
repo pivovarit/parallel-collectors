@@ -1,37 +1,56 @@
 package com.pivovarit.collectors;
 
 import java.util.HashSet;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
 final class ConfigProcessor {
 
-    record Configuration(
-      Optional<Boolean> ordered,
-      Optional<Boolean> batching,
-      OptionalInt parallelism,
-      Optional<Executor> executor) {
-        public Configuration {
-            requireNonNull(ordered, "'ordered' can't be null");
-            requireNonNull(batching, "'batching' can't be null");
-            requireNonNull(parallelism, "'parallelism' can't be null");
-            requireNonNull(executor, "'executor' can't be null");
+    static final class Config {
+        private final Boolean ordered;
+        private final Boolean batching;
+        private final Integer parallelism;
+        private final Executor executor;
+
+        Config(Boolean ordered, Boolean batching, Integer parallelism, Executor executor) {
+            this.ordered = ordered;
+            this.batching = batching;
+            this.parallelism = parallelism;
+            this.executor = executor;
+        }
+
+        public boolean ordered() {
+            return Objects.requireNonNullElse(ordered, false);
+        }
+
+        public boolean batching() {
+            return Objects.requireNonNullElse(batching, false);
+        }
+
+        public OptionalInt parallelism() {
+            return parallelism == null ? OptionalInt.empty() : OptionalInt.of(parallelism);
+        }
+
+        public Executor executor() {
+            return Objects.requireNonNullElseGet(executor, defaultExecutor());
         }
     }
 
-    static ConfigProcessor.Configuration process(Options.CollectingOption... options) {
+    static Config process(Options.CollectingOption... options) {
         requireNonNull(options, "options can't be null");
 
         Set<Class<? extends Options.CollectingOption>> seen = new HashSet<>();
 
-        Optional<Boolean> batching = Optional.empty();
-        Optional<Boolean> ordered = Optional.empty();
-        OptionalInt parallelism = OptionalInt.empty();
-        Optional<Executor> executor = Optional.empty();
+        Boolean batching = null;
+        Boolean ordered = null;
+        Integer parallelism = null;
+        Executor executor = null;
 
         for (var option : options) {
             if (!seen.add(option.getClass())) {
@@ -39,15 +58,14 @@ final class ConfigProcessor {
             }
 
             switch (option) {
-                case Options.Batched __ -> batching = Optional.of(true);
-                case Options.Parallelism parallelismOption ->
-                  parallelism = OptionalInt.of(parallelismOption.parallelism());
-                case Options.ThreadPool threadPoolOption -> executor = Optional.ofNullable(threadPoolOption.executor());
-                case Options.Ordered __ -> ordered = Optional.of(true);
+                case Options.Batched __ -> batching = true;
+                case Options.Parallelism parallelismOption -> parallelism = parallelismOption.parallelism();
+                case Options.ThreadPool threadPoolOption -> executor = threadPoolOption.executor();
+                case Options.Ordered __ -> ordered = true;
             }
         }
 
-        return new Configuration(ordered, batching, parallelism, executor);
+        return new Config(ordered, batching, parallelism, executor);
     }
 
     private static String toHumanReadableString(Options.CollectingOption option) {
@@ -57,5 +75,11 @@ final class ConfigProcessor {
             case Options.ThreadPool __ -> "executor";
             case Options.Ordered __ -> "ordered";
         };
+    }
+
+    private static Supplier<Executor> defaultExecutor() {
+        return () -> Executors.newThreadPerTaskExecutor(Thread.ofVirtual()
+          .name("parallel-collectors-", 0)
+          .factory());
     }
 }

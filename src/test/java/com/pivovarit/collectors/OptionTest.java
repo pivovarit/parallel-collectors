@@ -63,9 +63,9 @@ class OptionTest {
     }
 
     @Nested
-    class ConfigurationTests {
+    class ConfigTests {
 
-        record TestData(Optional<Boolean> batching, OptionalInt parallelism, Optional<Executor> executor) {
+        record TestData(Boolean batching, Integer parallelism, Executor executor) {
         }
 
         @TestFactory
@@ -73,14 +73,14 @@ class OptionTest {
             return testData()
               .map(data ->
                 DynamicTest.dynamicTest("Batching[%s], Parallelism[%s], Executor[%s]".formatted(printable(data.batching), printable(data.parallelism), printable(data.executor)),
-                () -> Assertions.assertThatThrownBy(() -> new ConfigProcessor.Configuration(Optional.empty(), data.batching, data.parallelism, data.executor)).isInstanceOf(NullPointerException.class)
+                () -> Assertions.assertThatThrownBy(() -> new ConfigProcessor.Config(null, data.batching, data.parallelism, data.executor)).isInstanceOf(NullPointerException.class)
               ));
         }
 
         private static Stream<TestData> testData() {
-            var batchings = Stream.of(null, Optional.<Boolean>empty(), Optional.of(true)).toList();
-            var parallelisms = Stream.of(null, OptionalInt.empty(), OptionalInt.of(42)).toList();
-            var executors = Stream.of(null, Optional.<Executor>empty(), Optional.<Executor>of(r -> {})).toList();
+            var batchings = Stream.of(null, null, true).toList();
+            var parallelisms = Stream.of(null, null, 42).toList();
+            var executors = Stream.of(null, null, (Executor)r -> {}).toList();
 
             return batchings.stream()
               .flatMap(b -> parallelisms.stream()
