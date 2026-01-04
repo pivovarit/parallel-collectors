@@ -147,10 +147,6 @@ final class Dispatcher<T> {
             public Task {
                 Objects.requireNonNull(task);
             }
-
-            public void cancel() {
-                task.cancel(true);
-            }
         }
 
         enum Stop implements DispatchItem {
