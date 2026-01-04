@@ -1,7 +1,7 @@
 # Java Stream API Virtual-Threads-enabled Parallel Collectors
 Overcoming limitations of standard Parallel Streams
 
-[![build](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/pivovarit/parallel-collectors/actions/workflows/build.yml)
+[![ci](https://github.com/pivovarit/parallel-collectors/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pivovarit/parallel-collectors/actions/workflows/ci.yml)
 [![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=main)](http://pivovarit.github.io/parallel-collectors)
 [![Maven Central Version](https://img.shields.io/maven-central/v/com.pivovarit/parallel-collectors)](https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors/versions)
 
