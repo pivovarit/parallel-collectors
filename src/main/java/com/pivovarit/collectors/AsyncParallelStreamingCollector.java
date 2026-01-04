@@ -24,11 +24,11 @@ import static java.util.Collections.emptySet;
  */
 class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
 
+    private static final EnumSet<Characteristics> UNORDERED_CHARACTERISTICS = EnumSet.of(Characteristics.UNORDERED);
+
     private final Function<? super T, ? extends R> function;
 
     private final CompletionStrategy completionStrategy;
-
-    private final Set<Characteristics> characteristics;
 
     private final Dispatcher<R> dispatcher;
 
@@ -36,11 +36,9 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
       Function<? super T, ? extends R> function,
       Dispatcher<R> dispatcher,
       boolean ordered) {
-        this.completionStrategy = ordered ? CompletionStrategy.ORDERED : CompletionStrategy.UNORDERED;
-        this.characteristics = switch (completionStrategy) {
-            case ORDERED -> emptySet();
-            case UNORDERED -> EnumSet.of(Characteristics.UNORDERED);
-        };
+        this.completionStrategy = ordered
+          ? CompletionStrategy.ORDERED
+          : CompletionStrategy.UNORDERED;
         this.dispatcher = dispatcher;
         this.function = function;
     }
@@ -89,7 +87,10 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
 
     @Override
     public Set<Characteristics> characteristics() {
-        return characteristics;
+        return switch (completionStrategy) {
+            case ORDERED -> emptySet();
+            case UNORDERED -> UNORDERED_CHARACTERISTICS;
+        };
     }
 
     record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism,
