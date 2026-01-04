@@ -10,7 +10,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
@@ -93,10 +92,15 @@ final class Dispatcher<T> {
         return started.get();
     }
 
-    CompletableFuture<T> enqueue(Supplier<T> supplier) {
+    CompletableFuture<T> submit(Supplier<T> supplier) {
         InterruptibleCompletableFuture<T> future = new InterruptibleCompletableFuture<>();
+        completionSignaller.whenComplete((result, ex) -> {
+            if (ex != null) {
+                future.completeExceptionally(ex);
+                future.cancel(true);
+            }
+        });
         workingQueue.add(completionTask(supplier, future));
-        completionSignaller.exceptionally(shortcircuit(future));
         return future;
     }
 
@@ -123,14 +127,6 @@ final class Dispatcher<T> {
                 }
             }
         }
-    }
-
-    private static Function<Throwable, Void> shortcircuit(InterruptibleCompletableFuture<?> future) {
-        return throwable -> {
-            future.completeExceptionally(throwable);
-            future.cancel(true);
-            return null;
-        };
     }
 
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
