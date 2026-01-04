@@ -30,7 +30,7 @@ class DispatcherSemaphoreLeakTest {
         Semaphore limiter = extractSemaphore(dispatcher);
 
         assertThat(limiter.tryAcquire(100, TimeUnit.MILLISECONDS))
-          .as("permit should be released on stop")
+          .as("no permit should be leaked on stop")
           .isTrue();
     }
 
