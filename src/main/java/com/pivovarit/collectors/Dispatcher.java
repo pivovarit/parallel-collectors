@@ -1,5 +1,6 @@
 package com.pivovarit.collectors;
 
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -19,12 +20,12 @@ import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
  */
 final class Dispatcher<T> {
 
-    private static final Runnable POISON_PILL = () -> System.out.println("Why so serious?");
-
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
-    private final BlockingQueue<Runnable> workingQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
 
-    private final ThreadFactory dispatcherThreadFactory = Thread::startVirtualThread;
+    private final ThreadFactory dispatcherThreadFactory = Thread.ofVirtual()
+      .name("parallel-collectors-dispatcher-",0)
+      .factory();
 
     private final Executor executor;
     private final Semaphore limiter;
@@ -48,38 +49,41 @@ final class Dispatcher<T> {
             dispatcherThreadFactory.newThread(() -> {
                 try {
                     while (true) {
-                        Runnable task;
-                        if ((task = workingQueue.take()) != POISON_PILL) {
-                            try {
-                                if (limiter != null) {
-                                    limiter.acquire();
-                                }
-                            } catch (InterruptedException e) {
-                                handleException(e);
-                            }
-                            retry(() -> executor.execute(() -> {
+                        switch (workingQueue.take()) {
+                            case DispatchItem.Task(Runnable task) -> {
                                 try {
-                                    task.run();
-                                } finally {
                                     if (limiter != null) {
-                                        limiter.release();
+                                        limiter.acquire();
                                     }
+                                } catch (InterruptedException e) {
+                                    interrupt(e);
+                                    return;
                                 }
-                            }));
-                        } else {
-                            break;
+                                retry(() -> executor.execute(() -> {
+                                    try {
+                                        task.run();
+                                    } finally {
+                                        if (limiter != null) {
+                                            limiter.release();
+                                        }
+                                    }
+                                }));
+                            }
+                            case DispatchItem.Stop ignored -> {
+                                return;
+                            }
                         }
                     }
                 } catch (Throwable e) {
-                    handleException(e);
+                    interrupt(e);
                 }
-            });
+            }).start();
         }
     }
 
     void stop() {
         try {
-            workingQueue.put(POISON_PILL);
+            workingQueue.put(DispatchItem.Stop.POISON_PILL);
         } catch (InterruptedException e) {
             completionSignaller.completeExceptionally(e);
         }
@@ -96,24 +100,27 @@ final class Dispatcher<T> {
         return future;
     }
 
-    private FutureTask<Void> completionTask(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) {
+    private DispatchItem.Task completionTask(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) {
         FutureTask<Void> task = new FutureTask<>(() -> {
             try {
                 future.complete(supplier.get());
             } catch (Throwable e) {
-                handleException(e);
+                interrupt(e);
             }
         }, null);
         future.completedBy(task);
-        return task;
+        return new DispatchItem.Task(task);
     }
 
-    private void handleException(Throwable e) {
+    private void interrupt(Throwable e) {
         completionSignaller.completeExceptionally(e);
 
-        for (Runnable runnable : workingQueue) {
-            if (runnable instanceof FutureTask<?> task) {
-                task.cancel(true);
+        for (var item : workingQueue) {
+            switch (item) {
+                case DispatchItem.Task task -> task.cancel();
+                case DispatchItem.Stop ignored -> {
+                    // nothing to cancel
+                }
             }
         }
     }
@@ -149,6 +156,22 @@ final class Dispatcher<T> {
         } catch (RejectedExecutionException e) {
             Thread.onSpinWait();
             runnable.run();
+        }
+    }
+
+    sealed interface DispatchItem permits DispatchItem.Task, DispatchItem.Stop {
+        record Task(FutureTask<?> task) implements DispatchItem {
+            public Task {
+                Objects.requireNonNull(task);
+            }
+
+            public void cancel() {
+                task.cancel(true);
+            }
+        }
+
+        enum Stop implements DispatchItem {
+            POISON_PILL
         }
     }
 }
