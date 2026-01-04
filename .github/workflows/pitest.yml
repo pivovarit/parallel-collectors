@@ -27,12 +27,12 @@ jobs:
           distribution: 'temurin'
           
       - name: Run Mutation Testing
-        run: mvn package -Ppitest org.pitest:pitest-maven:mutationCoverage
+        run: mvn package -Ppitest org.pitest:pitest-maven:mutationCoverage -Djunit.jupiter.execution.parallel.enabled=false
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}git
           publish_dir: ./target/pit-reports
 
 
