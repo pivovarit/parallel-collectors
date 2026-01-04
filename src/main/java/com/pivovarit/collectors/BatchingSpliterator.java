@@ -2,6 +2,7 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -24,11 +25,12 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
     private int consumed;
 
     BatchingSpliterator(List<T> list, int batches) {
+        Objects.requireNonNull(list, "list can't be null");
         if (batches < 1) {
             throw new IllegalArgumentException("batches can't be lower than one");
         }
         source = list;
-        chunks = batches;
+        chunks = list.isEmpty() ? 0 : batches;
         maxChunks = Math.min(list.size(), batches);
         chunkSize = (int) Math.ceil(((double) source.size()) / batches);
     }
@@ -102,7 +104,9 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     @Override
     public long estimateSize() {
-        return maxChunks;
+        return chunks == 0
+          ? 0
+          : Math.max(1, (int) Math.ceil((double) (source.size() - consumed) / chunkSize));
     }
 
     @Override
