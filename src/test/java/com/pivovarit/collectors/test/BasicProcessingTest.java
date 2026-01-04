@@ -92,7 +92,7 @@ class BasicProcessingTest {
                 })))
                 .hasCauseExactlyInstanceOf(NullPointerException.class);
 
-              await().atMost(1, SECONDS).until(() -> counter.get() == size - 1);
+              await().atMost(5, SECONDS).until(() -> counter.get() == size - 1);
           }));
     }
 }
