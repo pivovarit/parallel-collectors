@@ -249,6 +249,9 @@
                     </plugin>
                 </plugins>
             </build>
+            <properties>
+                <junit.jupiter.execution.parallel.enabled>false</junit.jupiter.execution.parallel.enabled>
+            </properties>
         </profile>
         <profile>
             <id>jmh</id>
