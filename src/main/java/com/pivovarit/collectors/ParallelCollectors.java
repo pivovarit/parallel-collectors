@@ -89,7 +89,6 @@ public final class ParallelCollectors {
       Collector<Grouped<K, R>, ?, RR> collector) {
 
         Objects.requireNonNull(collector, "collector cannot be null");
-        Objects.requireNonNull(classifier, "classifier cannot be null");
 
         return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper);
     }
@@ -252,7 +251,7 @@ public final class ParallelCollectors {
       int parallelism) {
 
         Objects.requireNonNull(collector, "collector cannot be null");
-        Objects.requireNonNull(classifier, "classifier cannot be null");
+
         return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper, Options.executor(executor), Options.parallelism(parallelism));
     }
 
