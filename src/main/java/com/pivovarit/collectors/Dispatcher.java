@@ -48,15 +48,15 @@ final class Dispatcher<T> {
             dispatcherThreadFactory.newThread(() -> {
                 try {
                     while (true) {
-                        try {
-                            if (limiter != null) {
-                                limiter.acquire();
-                            }
-                        } catch (InterruptedException e) {
-                            handleException(e);
-                        }
                         Runnable task;
                         if ((task = workingQueue.take()) != POISON_PILL) {
+                            try {
+                                if (limiter != null) {
+                                    limiter.acquire();
+                                }
+                            } catch (InterruptedException e) {
+                                handleException(e);
+                            }
                             retry(() -> executor.execute(() -> {
                                 try {
                                     task.run();
