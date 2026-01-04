@@ -62,7 +62,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             dispatcher.start();
-            acc.add(dispatcher.enqueue(() -> function.apply(e)));
+            acc.add(dispatcher.submit(() -> function.apply(e)));
         };
     }
 

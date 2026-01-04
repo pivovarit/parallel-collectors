@@ -69,7 +69,7 @@ final class AsyncParallelCollector<T, R, C>
             if (!dispatcher.isRunning()) {
                 dispatcher.start();
             }
-            acc.add(dispatcher.enqueue(() -> task.apply(e)));
+            acc.add(dispatcher.submit(() -> task.apply(e)));
         };
     }
 
