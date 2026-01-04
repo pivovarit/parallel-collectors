@@ -55,7 +55,7 @@ final class Dispatcher<T> {
                                         limiter.acquire();
                                     }
                                 } catch (InterruptedException e) {
-                                    interrupt(e);
+                                    propagate(e);
                                     return;
                                 }
                                 retry(() -> executor.execute(() -> {
@@ -74,7 +74,7 @@ final class Dispatcher<T> {
                         }
                     }
                 } catch (Throwable e) {
-                    interrupt(e);
+                    propagate(e);
                 }
             }).start();
         }
@@ -100,40 +100,27 @@ final class Dispatcher<T> {
                 future.cancel(true);
             }
         });
-        workingQueue.add(completionTask(supplier, future));
-        return future;
-    }
-
-    private DispatchItem.Task completionTask(Supplier<T> supplier, InterruptibleCompletableFuture<T> future) {
-        FutureTask<Void> task = new FutureTask<>(() -> {
+        var task = new FutureTask<>(() -> {
             try {
                 future.complete(supplier.get());
             } catch (Throwable e) {
-                interrupt(e);
+                propagate(e);
             }
         }, null);
         future.completedBy(task);
-        return new DispatchItem.Task(task);
+        workingQueue.add(new DispatchItem.Task(task));
+        return future;
     }
 
-    private void interrupt(Throwable e) {
+    private void propagate(Throwable e) {
         completionSignaller.completeExceptionally(e);
-
-        for (var item : workingQueue) {
-            switch (item) {
-                case DispatchItem.Task task -> task.cancel();
-                case DispatchItem.Stop ignored -> {
-                    // nothing to cancel
-                }
-            }
-        }
     }
 
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
 
         private volatile FutureTask<?> backingTask;
 
-        private void completedBy(FutureTask<Void> task) {
+        private void completedBy(FutureTask<?> task) {
             backingTask = task;
         }
 
