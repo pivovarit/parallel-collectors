@@ -1,5 +1,7 @@
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -10,7 +12,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
@@ -20,11 +21,12 @@ import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
  */
 final class Dispatcher<T> {
 
-    private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
+    private final List<InterruptibleCompletableFuture<T>> tasks = new ArrayList<>();
+
     private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
 
     private final ThreadFactory dispatcherThreadFactory = Thread.ofVirtual()
-      .name("parallel-collectors-dispatcher-",0)
+      .name("parallel-collectors-dispatcher-", 0)
       .factory();
 
     private final Executor executor;
@@ -85,7 +87,7 @@ final class Dispatcher<T> {
         try {
             workingQueue.put(DispatchItem.Stop.POISON_PILL);
         } catch (InterruptedException e) {
-            completionSignaller.completeExceptionally(e);
+            interrupt(e);
         }
     }
 
@@ -96,7 +98,7 @@ final class Dispatcher<T> {
     CompletableFuture<T> enqueue(Supplier<T> supplier) {
         InterruptibleCompletableFuture<T> future = new InterruptibleCompletableFuture<>();
         workingQueue.add(completionTask(supplier, future));
-        completionSignaller.exceptionally(shortcircuit(future));
+        tasks.add(future);
         return future;
     }
 
@@ -113,24 +115,10 @@ final class Dispatcher<T> {
     }
 
     private void interrupt(Throwable e) {
-        completionSignaller.completeExceptionally(e);
-
-        for (var item : workingQueue) {
-            switch (item) {
-                case DispatchItem.Task task -> task.cancel();
-                case DispatchItem.Stop ignored -> {
-                    // nothing to cancel
-                }
-            }
+        for (var task : tasks) {
+            task.completeExceptionally(e);
+            task.cancel(true);
         }
-    }
-
-    private static Function<Throwable, Void> shortcircuit(InterruptibleCompletableFuture<?> future) {
-        return throwable -> {
-            future.completeExceptionally(throwable);
-            future.cancel(true);
-            return null;
-        };
     }
 
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
@@ -163,10 +151,6 @@ final class Dispatcher<T> {
         record Task(FutureTask<?> task) implements DispatchItem {
             public Task {
                 Objects.requireNonNull(task);
-            }
-
-            public void cancel() {
-                task.cancel(true);
             }
         }
 
