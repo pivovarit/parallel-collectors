@@ -7,6 +7,7 @@ import java.util.Spliterator;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
@@ -220,5 +221,74 @@ class BatchingSpliteratorTest {
         assertThat(characteristics & Spliterator.ORDERED).isNotZero();
         assertThat(characteristics & Spliterator.SIZED).isNotZero();
         assertThat(characteristics & Spliterator.SUBSIZED).isNotZero();
+    }
+
+    @Nested
+    class EstimateSizeTests {
+        @Test
+        void shouldReturnZeroForEmptyList() {
+            List<Integer> empty = List.of();
+            Spliterator<List<Integer>> spliterator = new BatchingSpliterator<>(empty, 3);
+
+            assertThat(spliterator.estimateSize()).isZero();
+        }
+
+        @Test
+        void shouldReturnOneForSingleBatch() {
+            List<Integer> list = List.of(1, 2, 3, 4);
+            Spliterator<List<Integer>> spliterator = new BatchingSpliterator<>(list, 1);
+
+            assertThat(spliterator.estimateSize()).isEqualTo(1);
+        }
+
+        @Test
+        void shouldReturnNumberOfElementsForMoreBatchesThanElements() {
+            List<Integer> list = List.of(1, 2, 3);
+            Spliterator<List<Integer>> spliterator = new BatchingSpliterator<>(list, 5);
+
+            assertThat(spliterator.estimateSize()).isEqualTo(3);
+        }
+
+        @Test
+        void shouldDecreaseAfterTryAdvance() {
+            List<Integer> list = List.of(1, 2, 3, 4, 5);
+            BatchingSpliterator<Integer> spliterator = new BatchingSpliterator<>(list, 2);
+
+            long initialSize = spliterator.estimateSize();
+            assertThat(initialSize).isEqualTo(2);
+
+            spliterator.tryAdvance(batch -> {
+            });
+
+            long afterAdvance = spliterator.estimateSize();
+            assertThat(afterAdvance).isEqualTo(1);
+        }
+
+        @Test
+        void shouldAdjustCorrectlyAfterTrySplit() {
+            List<Integer> list = List.of(1, 2, 3, 4, 5, 6);
+            BatchingSpliterator<Integer> spliterator = new BatchingSpliterator<>(list, 3);
+
+            long beforeSplit = spliterator.estimateSize();
+            assertThat(beforeSplit).isEqualTo(3);
+
+            Spliterator<List<Integer>> split = spliterator.trySplit();
+            assertThat(split).isNotNull();
+
+            long afterSplit = spliterator.estimateSize();
+            assertThat(afterSplit).isEqualTo(2); // remaining chunks in original
+        }
+
+        @Test
+        void shouldReturnZeroAfterAllConsumed() {
+            List<Integer> list = List.of(1, 2, 3, 4, 5);
+            BatchingSpliterator<Integer> spliterator = new BatchingSpliterator<>(list, 2);
+
+            while (spliterator.tryAdvance(batch -> {
+            })) {
+            }
+
+            assertThat(spliterator.estimateSize()).isZero();
+        }
     }
 }
