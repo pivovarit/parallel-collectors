@@ -37,6 +37,6 @@ class DispatcherSemaphoreLeakTest {
     private static Semaphore extractSemaphore(Dispatcher<?> dispatcher) throws Exception {
         Field limiterField = Dispatcher.class.getDeclaredField("limiter");
         limiterField.setAccessible(true);
-        return (Semaphore) limiterField.get(dispatcher);
+        return ((Dispatcher.Limiter.BoundedLimiter) limiterField.get(dispatcher)).semaphore();
     }
 }

@@ -23,24 +23,24 @@ final class Dispatcher<T> {
     private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
 
     private final ThreadFactory dispatcherThreadFactory = Thread.ofVirtual()
-      .name("parallel-collectors-dispatcher-",0)
+      .name("parallel-collectors-dispatcher-", 0)
       .factory();
 
     private final Executor executor;
-    private final Semaphore limiter;
+    private final Limiter limiter;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
     Dispatcher(Executor executor, int permits) {
         requireValidExecutor(executor);
         this.executor = executor;
-        this.limiter = new Semaphore(permits);
+        this.limiter = new Limiter.BoundedLimiter(permits);
     }
 
     Dispatcher(Executor executor) {
         requireValidExecutor(executor);
         this.executor = executor;
-        this.limiter = null;
+        this.limiter = Limiter.Noop.INSTANCE;
     }
 
     void start() {
@@ -51,9 +51,7 @@ final class Dispatcher<T> {
                         switch (workingQueue.take()) {
                             case DispatchItem.Task(Runnable task) -> {
                                 try {
-                                    if (limiter != null) {
-                                        limiter.acquire();
-                                    }
+                                    limiter.acquire();
                                 } catch (InterruptedException e) {
                                     completionSignaller.completeExceptionally(e);
                                     return;
@@ -63,15 +61,11 @@ final class Dispatcher<T> {
                                         try {
                                             task.run();
                                         } finally {
-                                            if (limiter != null) {
-                                                limiter.release();
-                                            }
+                                            limiter.release();
                                         }
                                     }));
                                 } catch (RejectedExecutionException e) {
-                                    if (limiter != null) {
-                                        limiter.release();
-                                    }
+                                    limiter.release();
 
                                     throw e;
                                 }
@@ -155,6 +149,45 @@ final class Dispatcher<T> {
 
         enum Stop implements DispatchItem {
             POISON_PILL
+        }
+    }
+
+    sealed interface Limiter {
+        void acquire() throws InterruptedException;
+
+        void release();
+
+        record BoundedLimiter(Semaphore semaphore) implements Limiter {
+
+            public BoundedLimiter(int permits) {
+                this(new Semaphore(permits));
+            }
+
+            public BoundedLimiter {
+                Objects.requireNonNull(semaphore);
+            }
+
+            @Override
+            public void acquire() throws InterruptedException {
+                semaphore.acquire();
+            }
+
+            @Override
+            public void release() {
+                semaphore.release();
+            }
+        }
+
+        enum Noop implements Limiter {
+            INSTANCE;
+
+            @Override
+            public void acquire() {
+            }
+
+            @Override
+            public void release() {
+            }
         }
     }
 }
