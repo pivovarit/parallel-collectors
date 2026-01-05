@@ -74,7 +74,7 @@ final class Dispatcher<T> {
                         }
                     }
                 } catch (Throwable e) {
-                    propagate(e);
+                    completionSignaller.completeExceptionally(e);
                 }
             }).start();
         }
@@ -104,7 +104,7 @@ final class Dispatcher<T> {
             try {
                 future.complete(supplier.get());
             } catch (Throwable e) {
-                propagate(e);
+                completionSignaller.completeExceptionally(e);
             }
         }, null);
         future.completedBy(task);
