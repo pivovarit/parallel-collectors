@@ -55,18 +55,26 @@ final class Dispatcher<T> {
                                         limiter.acquire();
                                     }
                                 } catch (InterruptedException e) {
-                                    propagate(e);
+                                    completionSignaller.completeExceptionally(e);
                                     return;
                                 }
-                                retry(() -> executor.execute(() -> {
-                                    try {
-                                        task.run();
-                                    } finally {
-                                        if (limiter != null) {
-                                            limiter.release();
+                                try {
+                                    retry(() -> executor.execute(() -> {
+                                        try {
+                                            task.run();
+                                        } finally {
+                                            if (limiter != null) {
+                                                limiter.release();
+                                            }
                                         }
+                                    }));
+                                } catch (RejectedExecutionException e) {
+                                    if (limiter != null) {
+                                        limiter.release();
                                     }
-                                }));
+
+                                    throw e;
+                                }
                             }
                             case DispatchItem.Stop ignored -> {
                                 return;
@@ -110,10 +118,6 @@ final class Dispatcher<T> {
         future.completedBy(task);
         workingQueue.add(new DispatchItem.Task(task));
         return future;
-    }
-
-    private void propagate(Throwable e) {
-        completionSignaller.completeExceptionally(e);
     }
 
     static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
