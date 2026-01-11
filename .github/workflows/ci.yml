@@ -36,6 +36,11 @@ jobs:
       - name: Build with Maven
         run: mvn package -Djunit.jupiter.execution.parallel.enabled=false
 
+      - name: Verify class file versions
+        uses: pivovarit/verify-jar-action@v1
+        with:
+          bytecode-version: '65'
+
   verify-javadoc:
     runs-on: ubuntu-latest
     name: Validate JavaDocs
