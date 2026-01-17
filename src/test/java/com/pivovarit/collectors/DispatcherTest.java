@@ -17,13 +17,28 @@ package com.pivovarit.collectors;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
-class DispatcherSemaphoreLeakTest {
+class DispatcherTest {
+
+    @Test
+    void shouldShutdownExecutorOnStop() {
+        AtomicReference<Thread> holder = new AtomicReference<>();
+
+        var dispatcher = new Dispatcher<Integer>(Executors.newCachedThreadPool(), 1, holder::set);
+        dispatcher.start();
+        dispatcher.submit(() -> 42);
+        dispatcher.stop();
+
+        await().untilAsserted(() -> assertThat(holder.get().isAlive()).isFalse());
+    }
 
     @Test
     void shouldNotAcquirePermitOnPoisonPill() throws Exception {
