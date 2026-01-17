@@ -74,7 +74,7 @@ final class AsyncParallelCollector<T, R, C>
     @Override
     public BinaryOperator<List<CompletableFuture<R>>> combiner() {
         return (left, right) -> {
-            throw new UnsupportedOperationException("Using parallel stream with parallel collectors is a bad idea");
+            throw new UnsupportedOperationException("using parallel stream with parallel collectors is not supported");
         };
     }
 
@@ -133,8 +133,7 @@ final class AsyncParallelCollector<T, R, C>
         @Override
         public BinaryOperator<ArrayList<T>> combiner() {
             return (left, right) -> {
-                left.addAll(right);
-                return left;
+                throw new UnsupportedOperationException("using parallel stream with parallel collectors is not supported");
             };
         }
 

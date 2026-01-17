@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -29,18 +30,18 @@ class OptionTest {
 
     @Test
     void shouldThrowOnInvalidParallelism() {
-        assertThatThrownBy(() -> Options.parallelism(0)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new ConfigProcessor.Option.Parallelism(0)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void shouldThrowOnNullExecutor() {
-        assertThatThrownBy(() -> Options.executor(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> new ConfigProcessor.Option.ThreadPool(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void shouldRejectExecutorWithDiscardPolicy() {
         try (var executor = new ThreadPoolExecutor(2, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10), new ThreadPoolExecutor.DiscardPolicy())) {
-            assertThatThrownBy(() -> Options.executor(executor)).isInstanceOf(IllegalArgumentException.class)
+            assertThatThrownBy(() -> new ConfigProcessor.Option.ThreadPool(executor)).isInstanceOf(IllegalArgumentException.class)
               .hasMessageContaining("Executor's RejectedExecutionHandler can't discard tasks");
         }
     }
@@ -48,27 +49,27 @@ class OptionTest {
     @Test
     void shouldRejectExecutorWithDiscardOldestPolicy() {
         try (var executor = new ThreadPoolExecutor(2, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(10), new ThreadPoolExecutor.DiscardOldestPolicy())) {
-            assertThatThrownBy(() -> Options.executor(executor)).isInstanceOf(IllegalArgumentException.class)
+            assertThatThrownBy(() -> new ConfigProcessor.Option.ThreadPool(executor)).isInstanceOf(IllegalArgumentException.class)
               .hasMessageContaining("Executor's RejectedExecutionHandler can't discard tasks");
         }
     }
 
     @TestFactory
     Stream<DynamicTest> shouldThrowWhenSameOptionsAreUsedMultipleTimes() {
-        return Stream.<Options.CollectingOption>of(Options.batched(), Options.executor(r -> {}), Options.parallelism(1))
+        return Stream.<ConfigProcessor.Option>of(ConfigProcessor.Option.Batched.INSTANCE, new ConfigProcessor.Option.ThreadPool(r -> {}), new ConfigProcessor.Option.Parallelism(1))
           .map(o -> DynamicTest.dynamicTest("should handle duplicated: " + nameOf(o), () -> {
-              assertThatThrownBy(() -> ConfigProcessor.process(o, o))
+              assertThatThrownBy(() -> ConfigProcessor.process(List.of(o, o)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("each option can be used at most once, and you configured '%s' multiple times".formatted(nameOf(o)));
           }));
     }
 
-    private String nameOf(Options.CollectingOption option) {
+    private String nameOf(ConfigProcessor.Option option) {
         return switch (option) {
-            case Options.Batched __ -> "batching";
-            case Options.Parallelism __ -> "parallelism";
-            case Options.ThreadPool __ -> "executor";
-            case Options.Ordered __ -> "ordered";
+            case ConfigProcessor.Option.Batched __ -> "batching";
+            case ConfigProcessor.Option.Parallelism __ -> "parallelism";
+            case ConfigProcessor.Option.ThreadPool __ -> "executor";
+            case ConfigProcessor.Option.Ordered __ -> "ordered";
         };
     }
 }

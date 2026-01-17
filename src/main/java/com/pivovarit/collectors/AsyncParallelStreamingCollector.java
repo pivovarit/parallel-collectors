@@ -125,8 +125,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         @Override
         public BinaryOperator<ArrayList<T>> combiner() {
             return (left, right) -> {
-                left.addAll(right);
-                return left;
+                throw new UnsupportedOperationException("using parallel stream with parallel collectors is not supported");
             };
         }
 

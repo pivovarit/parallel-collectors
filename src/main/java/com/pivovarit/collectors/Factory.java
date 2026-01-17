@@ -33,19 +33,19 @@ final class Factory {
     static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Grouped<K, R>>>> collectingBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
-      Options.CollectingOption... options) {
-        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, Stream<Grouped<K, R>>>) i -> i, mapper, options);
+      Configurer.Collecting configurer) {
+        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, Stream<Grouped<K, R>>>) i -> i, mapper, configurer);
     }
 
     static <T, K, R, C> Collector<T, ?, CompletableFuture<C>> collectingBy(
       Function<? super T, ? extends K> classifier,
       Function<Stream<Grouped<K, R>>, C> finalizer,
       Function<? super T, ? extends R> mapper,
-      Options.CollectingOption... options) {
+      Configurer.Collecting configurer) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(finalizer, "finalizer cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
-        Objects.requireNonNull(options, "options cannot be null");
+        Objects.requireNonNull(configurer, "configurer cannot be null");
 
         return Collectors.collectingAndThen(
           Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
@@ -54,17 +54,17 @@ final class Factory {
             .collect(collecting(finalizer,
               e -> new Grouped<>(e.getKey(), e.getValue().stream()
                 .map(mapper.andThen(a -> (R) a))
-                .toList()), options))
+                .toList()), configurer))
         );
     }
 
     static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(
       Function<Stream<R>, C> finalizer,
       Function<? super T, ? extends R> mapper,
-      Options.CollectingOption... options) {
+      Configurer.Collecting configurer) {
         requireNonNull(mapper, "mapper can't be null");
 
-        var config = ConfigProcessor.process(options);
+        var config = ConfigProcessor.process(configurer.getConfig());
 
         if (config.parallelism() == 1) {
             return new AsyncCollector<>(mapper, finalizer, config.executor());
@@ -86,10 +86,10 @@ final class Factory {
     static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> streamingBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
-      Options.StreamingOption... options) {
+      Configurer.Streaming configurer) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
-        Objects.requireNonNull(options, "options cannot be null");
+        Objects.requireNonNull(configurer, "configurer cannot be null");
 
         return Collectors.collectingAndThen(
           Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
@@ -97,14 +97,14 @@ final class Factory {
             .stream()
             .collect(streaming(e -> new Grouped<>(e.getKey(), e.getValue().stream()
               .map(mapper.andThen(a -> (R) a))
-              .toList()), options))
+              .toList()), configurer))
         );
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, Options.StreamingOption... options) {
+    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, Configurer.Streaming configurer) {
         requireNonNull(mapper, "mapper can't be null");
 
-        var config = ConfigProcessor.process(options);
+        var config = ConfigProcessor.process(configurer.getConfig());
 
         if (config.parallelism() == 1) {
             return new SyncCollector<>(mapper);

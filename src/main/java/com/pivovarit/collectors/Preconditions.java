@@ -34,9 +34,9 @@ final class Preconditions {
         Objects.requireNonNull(executor, "Executor can't be null");
         if (executor instanceof ThreadPoolExecutor tpe) {
             switch (tpe.getRejectedExecutionHandler()) {
-                case ThreadPoolExecutor.DiscardPolicy __ ->
+                case ThreadPoolExecutor.DiscardPolicy ignored ->
                   throw new IllegalArgumentException("Executor's RejectedExecutionHandler can't discard tasks");
-                case ThreadPoolExecutor.DiscardOldestPolicy __ ->
+                case ThreadPoolExecutor.DiscardOldestPolicy ignored ->
                   throw new IllegalArgumentException("Executor's RejectedExecutionHandler can't discard tasks");
                 default -> {
                     // no-op
