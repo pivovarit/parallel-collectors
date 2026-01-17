@@ -146,11 +146,10 @@ class DispatcherTest {
         // Wait for at least 2 tasks to start
         assertThat(taskStarted.await(5, SECONDS)).isTrue();
 
-        // Give a bit of time to ensure no more than 2 tasks start
-        Thread.sleep(100);
-
-        // Should have at most 2 concurrent tasks due to parallelism limit
-        assertThat(maxConcurrentTasks.get()).isLessThanOrEqualTo(2);
+        // Wait briefly to ensure no more than parallelism limit tasks start
+        await().pollDelay(100, TimeUnit.MILLISECONDS)
+          .atMost(1, SECONDS)
+          .untilAsserted(() -> assertThat(maxConcurrentTasks.get()).isLessThanOrEqualTo(2));
 
         // Release all tasks
         proceedSignal.countDown();
@@ -245,14 +244,8 @@ class DispatcherTest {
         dispatcher.stop();
 
         // Subsequent task should be cancelled/failed after the dispatcher fails
-        // Give some time for the failure to propagate
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        assertThat(subsequentTask.isCompletedExceptionally() || subsequentTask.isCancelled()).isTrue();
+        await().atMost(1, SECONDS)
+          .untilAsserted(() -> assertThat(subsequentTask.isCompletedExceptionally() || subsequentTask.isCancelled()).isTrue());
 
         executor.shutdown();
     }

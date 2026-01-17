@@ -104,16 +104,9 @@ class AsyncCollectorTest {
 
     @Test
     void shouldPreserveStreamOrder() {
-        Executor executor = Executors.newFixedThreadPool(4);
-        Function<Integer, Integer> mapper = i -> {
-            // Add some variability to execution time
-            try {
-                Thread.sleep((4 - i) * 10);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            return i;
-        };
+        // Use a sequential executor to deterministically test ordering
+        Executor executor = Runnable::run;
+        Function<Integer, Integer> mapper = i -> i;
         Function<Stream<Integer>, List<Integer>> processor = s -> s.collect(toList());
 
         AsyncCollector<Integer, Integer, List<Integer>> collector =

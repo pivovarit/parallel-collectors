@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.Test;
@@ -151,7 +152,7 @@ class ConfigProcessorTest {
 
         assertThat(config.executor()).isNotNull();
         // Verify default executor is functional by executing a simple task
-        var future = new java.util.concurrent.CompletableFuture<Integer>();
+        CompletableFuture<Integer> future = new CompletableFuture<>();
         config.executor().execute(() -> future.complete(42));
         assertThat(future.join()).isEqualTo(42);
     }
