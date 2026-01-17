@@ -35,71 +35,18 @@ import static java.util.concurrent.CompletableFuture.allOf;
 /**
  * @author Grzegorz Piwowarek
  */
-final class AsyncParallelCollector<T, R, C>
-  implements Collector<T, List<CompletableFuture<R>>, CompletableFuture<C>> {
+final class AsyncParallelCollector<T, R, C> extends AbstractParallelCollector<T, R, CompletableFuture<C>> {
 
-    private final Dispatcher<R> dispatcher;
-    private final Function<? super T, ? extends R> task;
     private final Function<Stream<R>, C> finalizer;
 
-    private AsyncParallelCollector(
-      Function<? super T, ? extends R> task,
-      Dispatcher<R> dispatcher,
-      Function<Stream<R>, C> finalizer) {
-        this.dispatcher = dispatcher;
+    AsyncParallelCollector(Function<? super T, ? extends R> task, Dispatcher<R> dispatcher, Function<Stream<R>, C> finalizer) {
+        super(task, dispatcher);
         this.finalizer = finalizer;
-        this.task = task;
-    }
-
-    public static <T,R, C> Collector<T, ?, CompletableFuture<C>> from(
-      Function<? super T, ? extends R> task,
-      Function<Stream<R>, C> finalizer,
-      Executor executor,
-      int parallelism) {
-        return new AsyncParallelCollector<>(task, new Dispatcher<>(executor, parallelism), finalizer);
-    }
-
-    public static <T,R, C> Collector<T, ?, CompletableFuture<C>> from(
-      Function<? super T, ? extends R> task,
-      Function<Stream<R>, C> finalizer,
-      Executor executor) {
-        return new AsyncParallelCollector<>(task, new Dispatcher<>(executor), finalizer);
     }
 
     @Override
-    public Supplier<List<CompletableFuture<R>>> supplier() {
-        return ArrayList::new;
-    }
-
-    @Override
-    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
-        return (left, right) -> {
-            throw new UnsupportedOperationException("using parallel stream with parallel collectors is not supported");
-        };
-    }
-
-    @Override
-    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
-            if (!dispatcher.isRunning()) {
-                dispatcher.start();
-            }
-            acc.add(dispatcher.submit(() -> task.apply(e)));
-        };
-    }
-
-    @Override
-    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finisher() {
-        return futures -> {
-            dispatcher.stop();
-
-            return combine(futures).thenApply(finalizer);
-        };
-    }
-
-    @Override
-    public Set<Characteristics> characteristics() {
-        return Collections.emptySet();
+    public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finalizer() {
+        return futures -> combine(futures).thenApply(finalizer);
     }
 
     private static <T> CompletableFuture<Stream<T>> combine(List<CompletableFuture<T>> futures) {
@@ -117,7 +64,9 @@ final class AsyncParallelCollector<T, R, C>
         return combined;
     }
 
-    record BatchingCollector<T, R, C>(Function<? super T, ? extends R> task, Function<Stream<R>, C> finalizer, Executor executor, int parallelism)
+
+    record BatchingCollector<T, R, C>(Function<? super T, ? extends R> task, Function<Stream<R>, C> finalizer,
+                                      Executor executor, int parallelism)
       implements Collector<T, ArrayList<T>, CompletableFuture<C>> {
 
         @Override
@@ -142,16 +91,16 @@ final class AsyncParallelCollector<T, R, C>
             return items -> {
                 if (items.size() == parallelism) {
                     return items.stream()
-                      .collect(AsyncParallelCollector.from(task, finalizer, executor, parallelism));
+                      .collect((Collector<T, ?, CompletableFuture<C>>) new AsyncParallelCollector<T, R, C>(task, new Dispatcher<>(executor, parallelism), finalizer));
                 } else {
                     return partitioned(items, parallelism)
-                      .collect(AsyncParallelCollector.from(batch -> {
+                      .collect((Collector<List<T>, ?, CompletableFuture<C>>) new AsyncParallelCollector<List<T>, List<R>, C>((Function<? super List<T>, ? extends List<R>>) batch -> {
                           List<R> list = new ArrayList<>(batch.size());
                           for (T t : batch) {
                               list.add(task.apply(t));
                           }
                           return list;
-                      }, r -> finalizer.apply(r.flatMap(Collection::stream)), executor, parallelism));
+                      }, new Dispatcher<>(executor, parallelism), (Function<Stream<List<R>>, C>) r -> finalizer.apply(r.flatMap(Collection::stream))));
                 }
             };
         }

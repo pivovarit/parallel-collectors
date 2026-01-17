@@ -78,9 +78,9 @@ final class Factory {
             return new AsyncParallelCollector.BatchingCollector<>(mapper, finalizer, config.executor(), config.parallelism());
         }
 
-        return config.parallelism() > 0
-          ? AsyncParallelCollector.from(mapper, finalizer, config.executor(), config.parallelism())
-          : AsyncParallelCollector.from(mapper, finalizer, config.executor());
+        return new AsyncParallelCollector<>(mapper, config.parallelism() > 0
+          ? new Dispatcher<>(config.executor(), config.parallelism())
+          : new Dispatcher<>(config.executor()), finalizer);
     }
 
     static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> streamingBy(
@@ -118,8 +118,8 @@ final class Factory {
             return new AsyncParallelStreamingCollector.BatchingCollector<>(mapper, config.executor(), config.parallelism(), config.ordered());
         }
 
-        return config.parallelism() > 0
-          ? AsyncParallelStreamingCollector.from(mapper, config.executor(), config.parallelism(), config.ordered())
-          : AsyncParallelStreamingCollector.from(mapper, config.executor(), config.ordered());
+        return new AsyncParallelStreamingCollector<>(mapper, config.parallelism() > 0
+          ? new Dispatcher<>(config.executor(), config.parallelism())
+          : new Dispatcher<>(config.executor()), config.ordered());
     }
 }

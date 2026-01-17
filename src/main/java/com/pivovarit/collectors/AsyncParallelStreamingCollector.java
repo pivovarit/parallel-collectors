@@ -37,66 +37,22 @@ import static java.util.Collections.emptySet;
 /**
  * @author Grzegorz Piwowarek
  */
-class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<CompletableFuture<R>>, Stream<R>> {
+final class AsyncParallelStreamingCollector<T, R> extends AbstractParallelCollector<T, R, Stream<R>> {
 
     private static final EnumSet<Characteristics> UNORDERED_CHARACTERISTICS = EnumSet.of(Characteristics.UNORDERED);
 
-    private final Function<? super T, ? extends R> task;
-
     private final CompletionStrategy completionStrategy;
 
-    private final Dispatcher<R> dispatcher;
-
-    private AsyncParallelStreamingCollector(
-      Function<? super T, ? extends R> task,
-      Dispatcher<R> dispatcher,
-      boolean ordered) {
-        this.completionStrategy = ordered
-          ? CompletionStrategy.ORDERED
-          : CompletionStrategy.UNORDERED;
-        this.dispatcher = dispatcher;
-        this.task = task;
-    }
-
-    public static <T, R> Collector<T, ?, Stream<R>> from(
-      Function<? super T, ? extends R> function, Executor executor, int parallelism, boolean ordered) {
-        return new AsyncParallelStreamingCollector<>(function, new Dispatcher<>(executor, parallelism), ordered);
-    }
-
-    public static <T, R> Collector<T, ?, Stream<R>> from(
-      Function<? super T, ? extends R> function, Executor executor, boolean ordered) {
-        return new AsyncParallelStreamingCollector<>(function, new Dispatcher<>(executor), ordered);
+    AsyncParallelStreamingCollector(Function<? super T, ? extends R> task, Dispatcher<R> dispatcher, boolean ordered) {
+        super(task, dispatcher);
+        this.completionStrategy = ordered ? CompletionStrategy.ORDERED : CompletionStrategy.UNORDERED;
     }
 
     @Override
-    public Supplier<List<CompletableFuture<R>>> supplier() {
-        return ArrayList::new;
-    }
-
-    @Override
-    public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
-        return (acc, e) -> {
-            dispatcher.start();
-            acc.add(dispatcher.submit(() -> task.apply(e)));
-        };
-    }
-
-    @Override
-    public BinaryOperator<List<CompletableFuture<R>>> combiner() {
-        return (left, right) -> {
-            throw new UnsupportedOperationException(
-              "Using parallel stream with parallel collectors is a bad idea");
-        };
-    }
-
-    @Override
-    public Function<List<CompletableFuture<R>>, Stream<R>> finisher() {
-        return acc -> {
-            dispatcher.stop();
-            return switch (completionStrategy) {
-                case ORDERED -> acc.stream().map(CompletableFuture::join);
-                case UNORDERED -> StreamSupport.stream(new CompletionOrderSpliterator<>(acc), false);
-            };
+    public Function<List<CompletableFuture<R>>, Stream<R>> finalizer() {
+        return acc -> switch (completionStrategy) {
+            case ORDERED -> acc.stream().map(CompletableFuture::join);
+            case UNORDERED -> StreamSupport.stream(new CompletionOrderSpliterator<>(acc), false);
         };
     }
 
@@ -108,8 +64,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
         };
     }
 
-    record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism,
-                                   boolean ordered)
+    record BatchingCollector<T, R>(Function<? super T, ? extends R> task, Executor executor, int parallelism, boolean ordered)
       implements Collector<T, ArrayList<T>, Stream<R>> {
 
         @Override
