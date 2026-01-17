@@ -16,6 +16,7 @@
 package com.pivovarit.collectors;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -36,10 +37,10 @@ final class ConfigProcessor {
         }
     }
 
-    static Config process(Options.CollectingOption... options) {
+    static Config process(List<Option> options) {
         requireNonNull(options, "options can't be null");
 
-        Set<Class<? extends Options.CollectingOption>> seen = new HashSet<>();
+        Set<Class<? extends Option>> seen = new HashSet<>();
 
         Boolean batching = null;
         Boolean ordered = null;
@@ -52,10 +53,10 @@ final class ConfigProcessor {
             }
 
             switch (option) {
-                case Options.Batched __ -> batching = true;
-                case Options.Parallelism parallelismOption -> parallelism = parallelismOption.parallelism();
-                case Options.ThreadPool threadPoolOption -> executor = threadPoolOption.executor();
-                case Options.Ordered __ -> ordered = true;
+                case Option.Batched ignored -> batching = true;
+                case Option.Parallelism(var p) -> parallelism = p;
+                case Option.ThreadPool(var e) -> executor = e;
+                case Option.Ordered ignored -> ordered = true;
             }
         }
 
@@ -66,12 +67,35 @@ final class ConfigProcessor {
           Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR));
     }
 
-    private static String toHumanReadableString(Options.CollectingOption option) {
+    private static String toHumanReadableString(Option option) {
         return switch (option) {
-            case Options.Batched __ -> "batching";
-            case Options.Parallelism __ -> "parallelism";
-            case Options.ThreadPool __ -> "executor";
-            case Options.Ordered __ -> "ordered";
+            case Option.Batched ignored -> "batching";
+            case Option.Parallelism ignored -> "parallelism";
+            case Option.ThreadPool ignored -> "executor";
+            case Option.Ordered ignored -> "ordered";
         };
+    }
+
+    public sealed interface Option {
+
+        enum Ordered implements Option {
+            INSTANCE
+        }
+
+        enum Batched implements Option {
+            INSTANCE
+        }
+
+        record ThreadPool(Executor executor) implements Option {
+            public ThreadPool {
+                Preconditions.requireValidExecutor(executor);
+            }
+        }
+
+        record Parallelism(int parallelism) implements Option {
+            public Parallelism {
+                Preconditions.requireValidParallelism(parallelism);
+            }
+        }
     }
 }

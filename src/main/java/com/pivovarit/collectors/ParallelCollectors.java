@@ -65,7 +65,7 @@ public final class ParallelCollectors {
       Collector<R, ?, RR> collector) {
 
         Objects.requireNonNull(collector, "collector cannot be null");
-        return Factory.collecting(s -> s.collect(collector), mapper);
+        return Factory.collecting(s -> s.collect(collector), mapper, Configurer.collecting(c -> {}));
     }
 
     /**
@@ -94,7 +94,7 @@ public final class ParallelCollectors {
      * @param <RR>       the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is obtained
-     *         by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
+     * by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
      *
      * @since 3.4.0
      */
@@ -105,7 +105,7 @@ public final class ParallelCollectors {
 
         Objects.requireNonNull(collector, "collector cannot be null");
 
-        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper);
+        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper, Configurer.collecting(c -> {}));
     }
 
     /**
@@ -140,7 +140,7 @@ public final class ParallelCollectors {
       int parallelism) {
 
         Objects.requireNonNull(collector, "collector cannot be null");
-        return Factory.collecting(s -> s.collect(collector), mapper, Options.parallelism(parallelism));
+        return Factory.collecting(s -> s.collect(collector), mapper, Configurer.collecting(c -> c.parallelism(parallelism)));
     }
 
     /**
@@ -172,7 +172,7 @@ public final class ParallelCollectors {
      * @param <RR>        the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is obtained
-     *         by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
+     * by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
      *
      * @since 3.4.0
      */
@@ -184,7 +184,7 @@ public final class ParallelCollectors {
 
         Objects.requireNonNull(collector, "collector cannot be null");
 
-        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper, Options.parallelism(parallelism));
+        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper, Configurer.collecting(c -> c.parallelism(parallelism)));
     }
 
     /**
@@ -221,7 +221,8 @@ public final class ParallelCollectors {
       int parallelism) {
 
         Objects.requireNonNull(collector, "collector cannot be null");
-        return Factory.collecting(s -> s.collect(collector), mapper, Options.executor(executor), Options.parallelism(parallelism));
+        return Factory.collecting(s -> s.collect(collector), mapper, Configurer.collecting(c -> c.executor(executor)
+          .parallelism(parallelism)));
     }
 
     /**
@@ -254,7 +255,7 @@ public final class ParallelCollectors {
      * @param <RR>        the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is obtained
-     *         by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
+     * by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
      *
      * @since 3.4.0
      */
@@ -267,7 +268,10 @@ public final class ParallelCollectors {
 
         Objects.requireNonNull(collector, "collector cannot be null");
 
-        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper, Options.executor(executor), Options.parallelism(parallelism));
+        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper,
+          Configurer.collecting(c -> c
+            .executor(executor)
+            .parallelism(parallelism)));
     }
 
     /**
@@ -302,7 +306,7 @@ public final class ParallelCollectors {
       Executor executor) {
 
         Objects.requireNonNull(collector, "collector cannot be null");
-        return Factory.collecting(s -> s.collect(collector), mapper, Options.executor(executor));
+        return Factory.collecting(s -> s.collect(collector), mapper, Configurer.collecting(c -> c.executor(executor)));
     }
 
     /**
@@ -336,7 +340,7 @@ public final class ParallelCollectors {
      * @param <RR>       the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is obtained
-     *         by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
+     * by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
      *
      * @since 3.4.0
      */
@@ -346,7 +350,7 @@ public final class ParallelCollectors {
       Collector<Grouped<K, R>, ?, RR> collector,
       Executor executor) {
         Objects.requireNonNull(collector, "collector cannot be null");
-        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper, Options.executor(executor));
+        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector), mapper, Configurer.collecting(c -> c.executor(executor)));
     }
 
     /**
@@ -374,7 +378,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(
       Function<? super T, ? extends R> mapper) {
 
-        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper);
+        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper, Configurer.collecting(c -> {}));
     }
 
     /**
@@ -401,14 +405,14 @@ public final class ParallelCollectors {
      * @param <R>        the type produced by {@code mapper}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is a
-     *         {@link Stream} of {@code Grouped<K, R>} produced by the parallel classification
+     * {@link Stream} of {@code Grouped<K, R>} produced by the parallel classification
      *
      * @since 3.4.0
      */
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Grouped<K, R>>>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper) {
-        return Factory.collectingBy(classifier, mapper);
+        return Factory.collectingBy(classifier, mapper, Configurer.collecting(c -> {}));
     }
 
     /**
@@ -437,7 +441,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(
       Function<? super T, ? extends R> mapper,
       int parallelism) {
-        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper, Options.parallelism(parallelism));
+        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper, Configurer.collecting(c -> c.parallelism(parallelism)));
     }
 
     /**
@@ -465,7 +469,7 @@ public final class ParallelCollectors {
      * @param <R>         the type produced by {@code mapper}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is a
-     *         {@link Stream} of {@code Grouped<K, R>} produced by the parallel classification
+     * {@link Stream} of {@code Grouped<K, R>} produced by the parallel classification
      *
      * @since 3.4.0
      */
@@ -473,7 +477,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       int parallelism) {
-        return Factory.collectingBy(classifier, mapper, Options.parallelism(parallelism));
+        return Factory.collectingBy(classifier, mapper, Configurer.collecting(c -> c.parallelism(parallelism)));
     }
 
     /**
@@ -505,7 +509,10 @@ public final class ParallelCollectors {
       Executor executor,
       int parallelism) {
 
-        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper, Options.executor(executor), Options.parallelism(parallelism));
+        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper,
+          Configurer.collecting(c -> c
+            .executor(executor)
+            .parallelism(parallelism)));
     }
 
     /**
@@ -533,7 +540,7 @@ public final class ParallelCollectors {
      * @param <R>         the mapped element type
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} of a
-     *         {@link Stream} of {@link Grouped} results
+     * {@link Stream} of {@link Grouped} results
      *
      * @since 3.4.0
      */
@@ -542,7 +549,10 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       Executor executor,
       int parallelism) {
-        return Factory.collectingBy(classifier, mapper, Options.executor(executor), Options.parallelism(parallelism));
+        return Factory.collectingBy(classifier, mapper,
+          Configurer.collecting(c -> c
+            .executor(executor)
+            .parallelism(parallelism)));
     }
 
     /**
@@ -573,7 +583,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       Executor executor) {
 
-        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper, Options.executor(executor));
+        return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper, Configurer.collecting(c -> c.executor(executor)));
     }
 
     /**
@@ -600,7 +610,7 @@ public final class ParallelCollectors {
      * @param <R>        the mapped element type
      *
      * @return a {@code Collector} producing a {@link CompletableFuture}
-     *         of a {@link Stream} of {@link Grouped} results
+     * of a {@link Stream} of {@link Grouped} results
      *
      * @since 3.4.0
      */
@@ -609,7 +619,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       Executor executor) {
 
-        return Factory.collectingBy(classifier, mapper, Options.executor(executor));
+        return Factory.collectingBy(classifier, mapper, Configurer.collecting(c -> c.executor(executor)));
     }
 
     /**
@@ -637,7 +647,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(
       Function<? super T, ? extends R> mapper) {
 
-        return Factory.streaming(mapper);
+        return Factory.streaming(mapper, Configurer.streaming(c -> {}));
     }
 
     /**
@@ -663,7 +673,7 @@ public final class ParallelCollectors {
      * @param <R>        the mapped element type
      *
      * @return a {@code Collector} producing a {@link Stream} of {@link Grouped} elements
-     *         computed in parallel
+     * computed in parallel
      *
      * @since 3.4.0
      */
@@ -671,7 +681,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper) {
 
-        return Factory.streamingBy(classifier, mapper);
+        return Factory.streamingBy(classifier, mapper, Configurer.streaming(c -> {}));
     }
 
     /**
@@ -701,7 +711,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       int parallelism) {
 
-        return Factory.streaming(mapper, Options.parallelism(parallelism));
+        return Factory.streaming(mapper, Configurer.streaming(c -> c.parallelism(parallelism)));
     }
 
     /**
@@ -729,7 +739,7 @@ public final class ParallelCollectors {
      * @param <R>         the mapped element type
      *
      * @return a {@code Collector} producing a {@link Stream} of {@link Grouped} elements
-     *         computed in parallel
+     * computed in parallel
      *
      * @since 3.4.0
      */
@@ -738,7 +748,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       int parallelism) {
 
-        return Factory.streamingBy(classifier, mapper, Options.parallelism(parallelism));
+        return Factory.streamingBy(classifier, mapper, Configurer.streaming(c -> c.parallelism(parallelism)));
     }
 
     /**
@@ -768,7 +778,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       Executor executor) {
 
-        return Factory.streaming(mapper, Options.executor(executor));
+        return Factory.streaming(mapper, Configurer.streaming(c -> c.executor(executor)));
     }
 
     /**
@@ -795,7 +805,7 @@ public final class ParallelCollectors {
      * @param <R>        the mapped element type
      *
      * @return a {@code Collector} producing a {@link Stream} of {@link Grouped} elements
-     *         computed in parallel
+     * computed in parallel
      *
      * @since 3.4.0
      */
@@ -804,7 +814,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       Executor executor) {
 
-        return Factory.streamingBy(classifier, mapper, Options.executor(executor));
+        return Factory.streamingBy(classifier, mapper, Configurer.streaming(c -> c.executor(executor)));
     }
 
     /**
@@ -839,7 +849,10 @@ public final class ParallelCollectors {
      * @since 2.0.0
      */
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-        return Factory.streaming(mapper, Options.executor(executor), Options.parallelism(parallelism));
+        return Factory.streaming(mapper,
+          Configurer.streaming(c -> c
+            .executor(executor)
+            .parallelism(parallelism)));
     }
 
     /**
@@ -882,7 +895,10 @@ public final class ParallelCollectors {
      * @since 3.4.0
      */
     public static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> parallelToStreamBy(Function<? super T, ? extends K> classifier, Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
-        return Factory.streamingBy(classifier, mapper, Options.executor(executor), Options.parallelism(parallelism));
+        return Factory.streamingBy(classifier, mapper,
+          Configurer.streaming(c -> c
+            .executor(executor)
+            .parallelism(parallelism)));
     }
 
     /**
@@ -910,7 +926,7 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(
       Function<? super T, ? extends R> mapper) {
 
-        return Factory.streaming(mapper, Options.ordered());
+        return Factory.streaming(mapper, Configurer.streaming(Configurer.Streaming::ordered));
     }
 
     /**
@@ -943,7 +959,7 @@ public final class ParallelCollectors {
      * @param <R>        the mapped element type
      *
      * @return a {@code Collector} producing a {@link Stream} of {@link Grouped} elements
-     *         computed in parallel while preserving input order
+     * computed in parallel while preserving input order
      *
      * @since 3.4.0
      */
@@ -951,7 +967,7 @@ public final class ParallelCollectors {
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper) {
 
-        return Factory.streamingBy(classifier, mapper, Options.ordered());
+        return Factory.streamingBy(classifier, mapper, Configurer.streaming(Configurer.Streaming::ordered));
     }
 
     /**
@@ -991,7 +1007,10 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(
       Function<? super T, ? extends R> mapper,
       int parallelism) {
-        return Factory.streaming(mapper, Options.ordered(), Options.parallelism(parallelism));
+        return Factory.streaming(mapper,
+          Configurer.streaming(c -> c
+            .ordered()
+            .parallelism(parallelism)));
     }
 
     /**
@@ -1035,7 +1054,10 @@ public final class ParallelCollectors {
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       int parallelism) {
-        return Factory.streamingBy(classifier, mapper, Options.ordered(), Options.parallelism(parallelism));
+        return Factory.streamingBy(classifier, mapper,
+          Configurer.streaming(c -> c
+            .ordered()
+            .parallelism(parallelism)));
     }
 
     /**
@@ -1074,8 +1096,10 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(
       Function<? super T, ? extends R> mapper,
       Executor executor) {
-
-        return Factory.streaming(mapper, Options.ordered(), Options.executor(executor));
+        return Factory.streaming(mapper,
+          Configurer.streaming(c -> c
+            .ordered()
+            .executor(executor)));
     }
 
     /**
@@ -1117,7 +1141,10 @@ public final class ParallelCollectors {
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Executor executor) {
-        return Factory.streamingBy(classifier, mapper, Options.ordered(), Options.executor(executor));
+        return Factory.streamingBy(classifier, mapper,
+          Configurer.streaming(c -> c
+            .ordered()
+            .executor(executor)));
     }
 
     /**
@@ -1160,10 +1187,10 @@ public final class ParallelCollectors {
       int parallelism) {
 
         return Factory.streaming(
-          mapper,
-          Options.ordered(),
-          Options.executor(executor),
-          Options.parallelism(parallelism)
+          mapper, Configurer.streaming(c -> c
+            .ordered()
+            .executor(executor)
+            .parallelism(parallelism))
         );
     }
 
@@ -1209,7 +1236,11 @@ public final class ParallelCollectors {
       Executor executor,
       int parallelism) {
 
-        return Factory.streamingBy(classifier, mapper, Options.ordered(), Options.executor(executor), Options.parallelism(parallelism));
+        return Factory.streamingBy(classifier, mapper,
+          Configurer.streaming(c -> c
+            .ordered()
+            .executor(executor)
+            .parallelism(parallelism)));
     }
 
     /**
@@ -1278,9 +1309,10 @@ public final class ParallelCollectors {
         public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(Function<? super T, ? extends R> mapper, Collector<R, ?, RR> collector, Executor executor, int parallelism) {
             Objects.requireNonNull(collector, "collector cannot be null");
             return Factory.collecting(s -> s.collect(collector), mapper,
-              Options.batched(),
-              Options.executor(executor),
-              Options.parallelism(parallelism));
+              Configurer.collecting(c -> c
+                .batching()
+                .executor(executor)
+                .parallelism(parallelism)));
         }
 
         /**
@@ -1309,9 +1341,10 @@ public final class ParallelCollectors {
          */
         public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
             return Factory.collecting((Function<Stream<R>, Stream<R>>) i -> i, mapper,
-              Options.batched(),
-              Options.executor(executor),
-              Options.parallelism(parallelism));
+              Configurer.collecting(c -> c
+                .batching()
+                .executor(executor)
+                .parallelism(parallelism)));
         }
 
         /**
@@ -1340,9 +1373,10 @@ public final class ParallelCollectors {
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
             return Factory.streaming(mapper,
-              Options.batched(),
-              Options.executor(executor),
-              Options.parallelism(parallelism));
+              Configurer.streaming(c -> c
+                .batching()
+                .executor(executor)
+                .parallelism(parallelism)));
         }
 
         /**
@@ -1371,10 +1405,11 @@ public final class ParallelCollectors {
          */
         public static <T, R> Collector<T, ?, Stream<R>> parallelToOrderedStream(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
             return Factory.streaming(mapper,
-              Options.ordered(),
-              Options.batched(),
-              Options.executor(executor),
-              Options.parallelism(parallelism));
+              Configurer.streaming(c -> c
+                .ordered()
+                .batching()
+                .executor(executor)
+                .parallelism(parallelism)));
         }
     }
 }

@@ -41,8 +41,7 @@ record AsyncCollector<T, R, RR>(Function<? super T, ? extends R> mapper, Functio
     @Override
     public BinaryOperator<Stream.Builder<T>> combiner() {
         return (left, right) -> {
-            right.build().forEach(left::add);
-            return left;
+            throw new UnsupportedOperationException("using parallel stream with parallel collectors is not supported");
         };
     }
 
