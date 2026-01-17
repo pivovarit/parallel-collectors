@@ -46,24 +46,21 @@ final class AsyncParallelCollector<T, R, C> extends AbstractParallelCollector<T,
 
     @Override
     public Function<List<CompletableFuture<R>>, CompletableFuture<C>> finalizer() {
-        return futures -> combine(futures).thenApply(finalizer);
+        return futures -> {
+            var combined = allOf(futures.toArray(CompletableFuture[]::new))
+              .thenApply(__ -> futures.stream().map(CompletableFuture::join));
+
+            for (var future : futures) {
+                future.whenComplete((o, ex) -> {
+                    if (ex != null) {
+                        combined.completeExceptionally(ex);
+                    }
+                });
+            }
+
+            return combined.thenApply(finalizer);
+        };
     }
-
-    private static <T> CompletableFuture<Stream<T>> combine(List<CompletableFuture<T>> futures) {
-        var combined = allOf(futures.toArray(CompletableFuture[]::new))
-          .thenApply(__ -> futures.stream().map(CompletableFuture::join));
-
-        for (var future : futures) {
-            future.whenComplete((o, ex) -> {
-                if (ex != null) {
-                    combined.completeExceptionally(ex);
-                }
-            });
-        }
-
-        return combined;
-    }
-
 
     record BatchingCollector<T, R, C>(Function<? super T, ? extends R> task, Function<Stream<R>, C> finalizer,
                                       Executor executor, int parallelism)
@@ -100,7 +97,7 @@ final class AsyncParallelCollector<T, R, C> extends AbstractParallelCollector<T,
                               list.add(task.apply(t));
                           }
                           return list;
-                      }, new Dispatcher<>(executor, parallelism), (Function<Stream<List<R>>, C>) r -> finalizer.apply(r.flatMap(Collection::stream))));
+                      }, new Dispatcher<>(executor, parallelism), r -> finalizer.apply(r.flatMap(Collection::stream))));
                 }
             };
         }
