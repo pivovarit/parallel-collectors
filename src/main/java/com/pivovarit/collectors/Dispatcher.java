@@ -48,6 +48,7 @@ final class Dispatcher<T> {
     private final Semaphore limiter;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(false);
 
     Dispatcher(Executor executor, int permits, Consumer<Thread> dispatcherThreadHook) {
         requireValidExecutor(executor);
@@ -119,15 +120,21 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        try {
-            workingQueue.put(DispatchItem.Stop.POISON_PILL);
-        } catch (InterruptedException e) {
-            completionSignaller.completeExceptionally(e);
+        if (!stopped.getAndSet(true)) {
+            try {
+                workingQueue.put(DispatchItem.Stop.POISON_PILL);
+            } catch (InterruptedException e) {
+                completionSignaller.completeExceptionally(e);
+            }
         }
     }
 
-    boolean isRunning() {
+    boolean wasStarted() {
         return started.get();
+    }
+
+    boolean wasStopped() {
+        return stopped.get();
     }
 
     CompletableFuture<T> submit(Supplier<T> supplier) {
