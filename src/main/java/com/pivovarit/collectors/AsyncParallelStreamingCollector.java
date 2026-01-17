@@ -41,21 +41,21 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
 
     private static final EnumSet<Characteristics> UNORDERED_CHARACTERISTICS = EnumSet.of(Characteristics.UNORDERED);
 
-    private final Function<? super T, ? extends R> function;
+    private final Function<? super T, ? extends R> task;
 
     private final CompletionStrategy completionStrategy;
 
     private final Dispatcher<R> dispatcher;
 
     private AsyncParallelStreamingCollector(
-      Function<? super T, ? extends R> function,
+      Function<? super T, ? extends R> task,
       Dispatcher<R> dispatcher,
       boolean ordered) {
         this.completionStrategy = ordered
           ? CompletionStrategy.ORDERED
           : CompletionStrategy.UNORDERED;
         this.dispatcher = dispatcher;
-        this.function = function;
+        this.task = task;
     }
 
     public static <T, R> Collector<T, ?, Stream<R>> from(
@@ -77,7 +77,7 @@ class AsyncParallelStreamingCollector<T, R> implements Collector<T, List<Complet
     public BiConsumer<List<CompletableFuture<R>>, T> accumulator() {
         return (acc, e) -> {
             dispatcher.start();
-            acc.add(dispatcher.submit(() -> function.apply(e)));
+            acc.add(dispatcher.submit(() -> task.apply(e)));
         };
     }
 

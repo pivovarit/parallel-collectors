@@ -25,6 +25,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
@@ -41,26 +42,38 @@ final class Dispatcher<T> {
       .name("parallel-collectors-dispatcher-",0)
       .factory();
 
+    private final Consumer<Thread> dispatcherThreadHook;
+
     private final Executor executor;
     private final Semaphore limiter;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
-    Dispatcher(Executor executor, int permits) {
+    Dispatcher(Executor executor, int permits, Consumer<Thread> dispatcherThreadHook) {
         requireValidExecutor(executor);
         this.executor = executor;
+        this.dispatcherThreadHook = dispatcherThreadHook;
         this.limiter = new Semaphore(permits);
     }
 
+    Dispatcher(Executor executor, int permits) {
+        this(executor, permits, c -> {});
+    }
+
     Dispatcher(Executor executor) {
+        this(executor, c -> {});
+    }
+
+    Dispatcher(Executor executor, Consumer<Thread> dispatcherThreadHook) {
         requireValidExecutor(executor);
         this.executor = executor;
+        this.dispatcherThreadHook = dispatcherThreadHook;
         this.limiter = null;
     }
 
     void start() {
         if (!started.getAndSet(true)) {
-            dispatcherThreadFactory.newThread(() -> {
+            var thread = dispatcherThreadFactory.newThread(() -> {
                 try {
                     while (true) {
                         switch (workingQueue.take()) {
@@ -99,7 +112,9 @@ final class Dispatcher<T> {
                 } catch (Throwable e) {
                     completionSignaller.completeExceptionally(e);
                 }
-            }).start();
+            });
+            dispatcherThreadHook.accept(thread);
+            thread.start();
         }
     }
 

@@ -20,6 +20,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
+import com.tngtech.archunit.library.GeneralCodingRules;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
@@ -95,4 +96,10 @@ class ArchitectureTest {
       .orShould().callMethod(CompletableFuture.class, "applyToEitherAsync", CompletionStage.class, Function.class)
       .orShould().callMethod(CompletableFuture.class, "whenCompleteAsync", BiConsumer.class)
       .because("those default to ForkJoinPool.commonPool() which is a terrible default for most cases - consider Executors#newVirtualThreadPerTaskExecutor instead. If you really need ForkJoinPool, provide it explicitly (ForkJoinPool.commonPool())");
+
+    @ArchTest
+    private static final ArchRule noClassesShouldAccessStandardStreams = GeneralCodingRules.NO_CLASSES_SHOULD_ACCESS_STANDARD_STREAMS;
+
+    @ArchTest
+    private static final ArchRule noClassesShouldUseJavaUtilLogging = GeneralCodingRules.NO_CLASSES_SHOULD_USE_JAVA_UTIL_LOGGING;
 }
