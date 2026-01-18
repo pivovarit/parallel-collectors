@@ -33,25 +33,25 @@ class ExecutorValidationTest {
 
     private static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithExecutor<Integer, Integer>>> allWithCustomExecutors() {
         return Stream.of(
-          executorCollector("parallel(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e, 1), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, e, 4), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e, 1), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, e, 4), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(toList(), e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e), c -> c.join())),
-          executorCollector("parallel(toList(), e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e, 1), c -> c.join())),
-          executorCollector("parallel(toList(), e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e, 4), c -> c.join())),
-          executorCollector("parallel(toList(), e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e, 1), c -> c.join())),
-          executorCollector("parallel(toList(), e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e, 4), c -> c.join())),
-          executorCollector("parallelToStream(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e), Stream::toList)),
-          executorCollector("parallelToStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e, 1), Stream::toList)),
-          executorCollector("parallelToStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e, 4), Stream::toList)),
-          executorCollector("parallelToStream(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e, 1), Stream::toList)),
-          executorCollector("parallelToStream(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e, 4), Stream::toList)),
-          executorCollector("parallelToOrderedStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e, 1), Stream::toList)),
-          executorCollector("parallelToOrderedStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e, 4), Stream::toList)),
-          executorCollector("parallelToOrderedStream(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e, 1), Stream::toList)),
-          executorCollector("parallelToOrderedStream(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e, 4), Stream::toList))
+          executorCollector("parallel(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e)), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallel(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(1)), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallel(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4)), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallel(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(1).batching()), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallel(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(14).batching()), c -> c.thenApply(Stream::toList).join())),
+          executorCollector("parallel(toList(), e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e)), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e).parallelism(1)), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e).parallelism(4)), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e).parallelism(1).batching()), c -> c.join())),
+          executorCollector("parallel(toList(), e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e).parallelism(4).batching()), c -> c.join())),
+          executorCollector("parallelToStream(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e)), Stream::toList)),
+          executorCollector("parallelToStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(1)), Stream::toList)),
+          executorCollector("parallelToStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4)), Stream::toList)),
+          executorCollector("parallelToStream(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(1).batching()), Stream::toList)),
+          executorCollector("parallelToStream(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4).batching()), Stream::toList)),
+          executorCollector("parallelToOrderedStream(e, p=1)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(1).ordered()), Stream::toList)),
+          executorCollector("parallelToOrderedStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4).ordered()), Stream::toList)),
+          executorCollector("parallelToOrderedStream(e, p=1) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(1).batching().ordered()), Stream::toList)),
+          executorCollector("parallelToOrderedStream(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4).batching().ordered()), Stream::toList))
         );
     }
 

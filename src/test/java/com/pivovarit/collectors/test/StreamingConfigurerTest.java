@@ -35,32 +35,32 @@ import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-class StreamingTest {
+class StreamingConfigurerTest {
 
     private static Stream<Factory.GenericCollector<Factory.StreamingCollectorFactory<Integer, Integer>>> allStreaming() {
         return Stream.of(
           streamingCollector("parallelToStream()", (f) -> ParallelCollectors.parallelToStream(f)),
-          streamingCollector("parallelToStream(e)", (f) -> ParallelCollectors.parallelToStream(f, e())),
-          streamingCollector("parallelToStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, e(), p())),
-          streamingCollector("parallelToOrderedStream()", (f) -> ParallelCollectors.parallelToOrderedStream(f)),
-          streamingCollector("parallelToOrderedStream(e)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e())),
-          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e(), p()))
+          streamingCollector("parallelToStream(e)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e()))),
+          streamingCollector("parallelToStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e()).parallelism(p()))),
+          streamingCollector("parallelToOrderedStream()", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered())),
+          streamingCollector("parallelToOrderedStream(e)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()))),
+          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()).parallelism(p())))
         );
     }
 
     private static Stream<Factory.GenericCollector<Factory.StreamingCollectorFactory<Integer, Integer>>> allCompletionOrderStreaming() {
         return Stream.of(
           streamingCollector("parallelToStream()", (f) -> ParallelCollectors.parallelToStream(f)),
-          streamingCollector("parallelToStream(e)", (f) -> ParallelCollectors.parallelToStream(f, e())),
-          streamingCollector("parallelToStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, e(), p()))
+          streamingCollector("parallelToStream(e)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e()))),
+          streamingCollector("parallelToStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e()).parallelism(p())))
         );
     }
 
     private static Stream<Factory.GenericCollector<Factory.StreamingCollectorFactory<Integer, Integer>>> allOrderedStreaming() {
         return Stream.of(
-          streamingCollector("parallelToOrderedStream()", (f) -> ParallelCollectors.parallelToOrderedStream(f)),
-          streamingCollector("parallelToOrderedStream(e)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e())),
-          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToOrderedStream(f, e(), p()))
+          streamingCollector("parallelToOrderedStream()", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered())),
+          streamingCollector("parallelToOrderedStream(e)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()))),
+          streamingCollector("parallelToOrderedStream(e, p)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()).parallelism(p())))
         );
     }
 
@@ -110,20 +110,19 @@ class StreamingTest {
     @Test
     void shouldUseSyncFallback() {
         var result = Stream.of(1, 2, 3, 4)
-          .collect(ParallelCollectors.parallelToStream(i -> i, r -> {
+          .collect(ParallelCollectors.parallelToStream(i -> i, c -> c.executor(r -> {
               throw new IllegalStateException("boo!");
-          }, 1))
+          }).parallelism(1)))
           .toList();
 
         assertThat(result).containsExactly(1, 2, 3, 4);
     }
-
     @Test
     void shouldUseSyncFallbackForOrdered() {
         var result = Stream.of(1, 2, 3, 4)
-          .collect(ParallelCollectors.parallelToOrderedStream(i -> i, r -> {
+          .collect(ParallelCollectors.parallelToStream(i -> i, c -> c.executor(r -> {
               throw new IllegalStateException("boo!");
-          }, 1))
+          }).parallelism(1).ordered()))
           .toList();
 
         assertThat(result).containsExactly(1, 2, 3, 4);

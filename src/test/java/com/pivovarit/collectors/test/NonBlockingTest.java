@@ -35,11 +35,11 @@ class NonBlockingTest {
         return Stream.of(
           asyncCollector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.thenApply(Stream::toList))),
           asyncCollector("parallel(toList())", f -> ParallelCollectors.parallel(f, toList())),
-          asyncCollector("parallel(toList(), e)", f -> ParallelCollectors.parallel(f, toList(), e())),
-          asyncCollector("parallel(toList(), e, p=1)", f -> ParallelCollectors.parallel(f, toList(), e(), 1)),
-          asyncCollector("parallel(toList(), e, p=2)", f -> ParallelCollectors.parallel(f, toList(), e(), 2)),
-          asyncCollector("parallel(toList(), e, p=1) [batching]", f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 1)),
-          asyncCollector("parallel(toList(), e, p=2) [batching]", f -> ParallelCollectors.Batching.parallel(f, toList(), e(), 2))
+          asyncCollector("parallel(toList(), e)", f -> ParallelCollectors.parallel(f, toList(), c -> c.executor(e()))),
+          asyncCollector("parallel(toList(), e, p=1)", f -> ParallelCollectors.parallel(f, toList(), c -> c.executor(e()).parallelism(1))),
+          asyncCollector("parallel(toList(), e, p=2)", f -> ParallelCollectors.parallel(f, toList(), c -> c.executor(e()).parallelism(2))),
+          asyncCollector("parallel(toList(), e, p=1) [batching]", f -> ParallelCollectors.parallel(f, toList(), c -> c.batching().executor(e()).parallelism(1))),
+          asyncCollector("parallel(toList(), e, p=2) [batching]", f -> ParallelCollectors.parallel(f, toList(), c -> c.batching().executor(e()).parallelism(2)))
         );
     }
 

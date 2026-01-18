@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -34,7 +35,7 @@ final class Factory {
     static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Grouped<K, R>>>> collectingBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
-      Configurer.Collecting configurer) {
+      Consumer<CollectingConfigurer> configurer) {
         return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, Stream<Grouped<K, R>>>) i -> i, mapper, configurer);
     }
 
@@ -42,11 +43,14 @@ final class Factory {
       Function<? super T, ? extends K> classifier,
       Function<Stream<Grouped<K, R>>, C> finalizer,
       Function<? super T, ? extends R> mapper,
-      Configurer.Collecting configurer) {
+      Consumer<CollectingConfigurer> configurer) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(finalizer, "finalizer cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(configurer, "configurer cannot be null");
+
+        // evaluate eagerly
+        configurer.accept(new CollectingConfigurer());
 
         return Collectors.collectingAndThen(
           Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
@@ -62,11 +66,12 @@ final class Factory {
     static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(
       Function<Stream<R>, C> finalizer,
       Function<? super T, ? extends R> mapper,
-      Configurer configurer
+      Consumer<CollectingConfigurer> configurer
     ) {
         requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(mapper, "configurer can't be null");
 
-        var config = ConfigProcessor.process(configurer.getConfig());
+        var config = ConfigProcessor.process(collecting(configurer).getConfig());
 
         return select(mapper, config, new ModeFactory<T, R, CompletableFuture<C>>() {
             @Override
@@ -89,10 +94,13 @@ final class Factory {
     static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> streamingBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
-      Configurer.Streaming configurer) {
+      Consumer<StreamingConfigurer> configurer) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(configurer, "configurer cannot be null");
+
+        // evaluate eagerly
+        configurer.accept(new StreamingConfigurer());
 
         return Collectors.collectingAndThen(
           Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
@@ -106,10 +114,11 @@ final class Factory {
 
     static <T, R> Collector<T, ?, Stream<R>> streaming(
       Function<? super T, ? extends R> mapper,
-      Configurer.Streaming configurer) {
+      Consumer<StreamingConfigurer> configurer) {
         requireNonNull(mapper, "mapper can't be null");
+        requireNonNull(mapper, "configurer can't be null");
 
-        var config = ConfigProcessor.process(configurer.getConfig());
+        var config = ConfigProcessor.process(streaming(configurer).getConfig());
 
         return select(mapper, config, new ModeFactory<T, R, Stream<R>>() {
             @Override
@@ -158,5 +167,17 @@ final class Factory {
         Collector<T, ?, C> batching(Function<? super T, ? extends R> mapper, Executor executor, int parallelism);
 
         Collector<T, ?, C> parallel(Function<? super T, ? extends R> mapper, Dispatcher<R> dispatcher);
+    }
+
+    static StreamingConfigurer streaming(Consumer<StreamingConfigurer> consumer) {
+        var c = new StreamingConfigurer();
+        consumer.accept(c);
+        return c;
+    }
+
+    static CollectingConfigurer collecting(Consumer<CollectingConfigurer> consumer) {
+        var c = new CollectingConfigurer();
+        consumer.accept(c);
+        return c;
     }
 }

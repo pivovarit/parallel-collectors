@@ -27,7 +27,6 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.ParallelCollectors.Batching.parallel;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.advancedCollector;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.collector;
 import static com.pivovarit.collectors.test.Factory.GenericCollector.groupingCollector;
@@ -45,39 +44,39 @@ final class Factory {
         return Stream.of(
           collector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.join().toList())),
           collector("parallel(p)", f -> collectingAndThen(ParallelCollectors.parallel(f, p()), c -> c.join().toList())),
-          collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, e()), c -> c.join().toList())),
-          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, e(), p()), c -> c.join().toList())),
+          collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e())), c -> c.join().toList())),
+          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e()).parallelism(p())), c -> c.join().toList())),
           collector("parallel(toList())", f -> collectingAndThen(ParallelCollectors.parallel(f, toList()), CompletableFuture::join)),
           collector("parallel(toList(), p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), p()), CompletableFuture::join)),
-          collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e()), CompletableFuture::join)),
-          collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e(), p()), CompletableFuture::join)),
-          collector("parallel(toList(), e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e(), p()), CompletableFuture::join)),
+          collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e())), CompletableFuture::join)),
+          collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e()).parallelism(p())), CompletableFuture::join)),
+          collector("parallel(toList(), e, p) [batching]", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.batching().executor(e()).parallelism(p())), CompletableFuture::join)),
           collector("parallelBy()", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f), c -> ungrouped(c.thenApply(Stream::toList)))),
           collector("parallelBy(p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, p()), c -> ungrouped(c.thenApply(Stream::toList)))),
-          collector("parallelBy(e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, e()), c -> ungrouped(c.thenApply(Stream::toList)))),
-          collector("parallelBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, e(), p()), c -> ungrouped(c.thenApply(Stream::toList)))),
+          collector("parallelBy(e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e())), c -> ungrouped(c.thenApply(Stream::toList)))),
+          collector("parallelBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e()).parallelism(p())), c -> ungrouped(c.thenApply(Stream::toList)))),
           collector("parallelBy(toList())", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList()), c -> ungrouped(c.join()))),
           collector("parallelBy(toList(), p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), p()), c -> ungrouped(c.join()))),
-          collector("parallelBy(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), e()), c -> ungrouped(c.join()))),
-          collector("parallelBy(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), e(), p()), c -> ungrouped(c.join()))),
+          collector("parallelBy(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), c -> c.executor(e())), c -> ungrouped(c.join()))),
+          collector("parallelBy(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), c -> c.executor(e()).parallelism(p())), c -> ungrouped(c.join()))),
           collector("parallelToStream()", f -> collectingAndThen(ParallelCollectors.parallelToStream(f), Stream::toList)),
           collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, p()), Stream::toList)),
-          collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, e()), Stream::toList)),
-          collector("parallelToStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, e(), p()), Stream::toList)),
-          collector("parallelToStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e(), p()), Stream::toList)),
+          collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e())), Stream::toList)),
+          collector("parallelToStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e()).parallelism(p())), Stream::toList)),
+          collector("parallelToStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.batching().executor(e()).parallelism(p())), Stream::toList)),
           collector("parallelToStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f), ungrouped())),
           collector("parallelToStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, p()), ungrouped())),
-          collector("parallelToStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, e()), ungrouped())),
-          collector("parallelToStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, e(), p()), ungrouped())),
-          collector("parallelToOrderedStream()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f), Stream::toList)),
-          collector("parallelToOrderedStream(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, p()), Stream::toList)),
-          collector("parallelToOrderedStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e()), Stream::toList)),
-          collector("parallelToOrderedStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e(), p()), Stream::toList)),
-          collector("parallelToOrderedStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e(), p()), Stream::toList)),
-          collector("parallelToOrderedStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f), ungrouped())),
-          collector("parallelToOrderedStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, p()), ungrouped())),
-          collector("parallelToOrderedStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, e()), ungrouped())),
-          collector("parallelToOrderedStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, e(), p()), ungrouped()))
+          collector("parallelToStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e())), ungrouped())),
+          collector("parallelToStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e()).parallelism(p())), ungrouped())),
+          collector("parallelToStream() [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered()), Stream::toList)),
+          collector("parallelToStream(p) [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().parallelism(p())), Stream::toList)),
+          collector("parallelToStream(e) [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e())), Stream::toList)),
+          collector("parallelToStream(e, p) [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()).parallelism(p())), Stream::toList)),
+          collector("parallelToStream(e, p) [batching, ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.batching().ordered().executor(e()).parallelism(p())), Stream::toList)),
+          collector("parallelToStreamBy() [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.ordered()), ungrouped())),
+          collector("parallelToStreamBy(p) [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.ordered().parallelism(p())), ungrouped())),
+          collector("parallelToStreamBy(e) [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.ordered().executor(e())), ungrouped())),
+          collector("parallelToStreamBy(e, p) [ordered]", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.ordered().executor(e()).parallelism(p())), ungrouped()))
         );
     }
 
@@ -85,52 +84,52 @@ final class Factory {
         return Stream.of(
           collector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.join().toList())),
           collector("parallel(p)", f -> collectingAndThen(ParallelCollectors.parallel(f, p()), c -> c.join().toList())),
-          collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, e()), c -> c.join().toList())),
-          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, e(), p()), c -> c.join().toList())),
+          collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e())), c -> c.join().toList())),
+          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e()).parallelism(p())), c -> c.join().toList())),
           collector("parallel(toList())", f -> collectingAndThen(ParallelCollectors.parallel(f, toList()), CompletableFuture::join)),
           collector("parallel(toList(), p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), p()), CompletableFuture::join)),
-          collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e()), CompletableFuture::join)),
-          collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e(), p()), CompletableFuture::join)),
-          collector("parallel(toList(), e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e(), p()), CompletableFuture::join)),
+          collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e())), CompletableFuture::join)),
+          collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e()).parallelism(p())), CompletableFuture::join)),
+          collector("parallel(toList(), e, p) [batching]", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.batching().executor(e()).parallelism(p())), CompletableFuture::join)),
           collector("parallelToStream()", f -> collectingAndThen(ParallelCollectors.parallelToStream(f), Stream::toList)),
           collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, p()), Stream::toList)),
-          collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, e()), Stream::toList)),
-          collector("parallelToStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, e(), p()), Stream::toList)),
-          collector("parallelToStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e(), p()), Stream::toList)),
-          collector("parallelToOrderedStream()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f), Stream::toList)),
-          collector("parallelToOrderedStream(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, p()), Stream::toList)),
-          collector("parallelToOrderedStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e()), Stream::toList)),
-          collector("parallelToOrderedStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e(), p()), Stream::toList)),
-          collector("parallelToOrderedStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e(), p()), Stream::toList))
+          collector("parallelToStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e())), Stream::toList)),
+          collector("parallelToStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e()).parallelism(p())), Stream::toList)),
+          collector("parallelToStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.batching().executor(e()).parallelism(p())), Stream::toList)),
+          collector("parallelToOrderedStream()", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered()), Stream::toList)),
+          collector("parallelToOrderedStream(p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().parallelism(p())), Stream::toList)),
+          collector("parallelToOrderedStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e())), Stream::toList)),
+          collector("parallelToOrderedStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()).parallelism(p())), Stream::toList)),
+          collector("parallelToOrderedStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().batching().executor(e()).parallelism(p())), Stream::toList))
         );
     }
 
     static Stream<Factory.GenericCollector<Factory.GroupingCollectorFactory<Integer, Integer>>> allGrouping(Function<Integer, Integer> classifier, int parallelism) {
         return Stream.of(
           groupingCollector("parallelBy()", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f), c -> c.join().toList())),
-          groupingCollector("parallelBy(e)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, e()), c -> c.join().toList())),
+          groupingCollector("parallelBy(e)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, c -> c.executor(e())), c -> c.join().toList())),
           groupingCollector("parallelBy(p)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, parallelism), c -> c.join().toList())),
-          groupingCollector("parallelBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, e(), parallelism), c -> c.join().toList())),
+          groupingCollector("parallelBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, c -> c.executor(e()).parallelism(parallelism)), c -> c.join().toList())),
           groupingCollector("parallelBy(toList())", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, toList()), c -> c.join())),
           groupingCollector("parallelBy(toList(), p)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, toList(), parallelism), c -> c.join())),
-          groupingCollector("parallelBy(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, toList(), e()), c -> c.join())),
-          groupingCollector("parallelBy(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, toList(), e(), parallelism), c -> c.join())),
+          groupingCollector("parallelBy(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, toList(), c -> c.executor(e())), c -> c.join())),
+          groupingCollector("parallelBy(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, toList(), c -> c.executor(e()).parallelism(parallelism)), c -> c.join())),
           groupingCollector("parallelToStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f), c -> c.toList())),
-          groupingCollector("parallelToStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, e()), c -> c.toList())),
-          groupingCollector("parallelToStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, e(), parallelism), c -> c.toList())),
-          groupingCollector("parallelToOrderedStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f), c -> c.toList())),
-          groupingCollector("parallelToOrderedStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f, parallelism), c -> c.toList())),
-          groupingCollector("parallelToOrderedStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f, e()), c -> c.toList())),
-          groupingCollector("parallelToOrderedStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f, e(), parallelism), c -> c.toList()))
+          groupingCollector("parallelToStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.executor(e())), c -> c.toList())),
+          groupingCollector("parallelToStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.executor(e()).parallelism(parallelism)), c -> c.toList())),
+          groupingCollector("parallelToOrderedStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered()), c -> c.toList())),
+          groupingCollector("parallelToOrderedStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered().parallelism(parallelism)), c -> c.toList())),
+          groupingCollector("parallelToOrderedStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered().executor(e())), c -> c.toList())),
+          groupingCollector("parallelToOrderedStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.executor(e()).parallelism(parallelism)), c -> c.toList()))
         );
     }
 
     static Stream<Factory.GenericCollector<Factory.GroupingCollectorFactory<Integer, Integer>>> allGroupingOrdered(Function<Integer, Integer> classifier, int parallelism) {
         return Stream.of(
-          groupingCollector("parallelToOrderedStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f), c -> c.toList())),
-          groupingCollector("parallelToOrderedStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f, parallelism), c -> c.toList())),
-          groupingCollector("parallelToOrderedStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f, e()), c -> c.toList())),
-          groupingCollector("parallelToOrderedStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(classifier, f, e(), parallelism), c -> c.toList()))
+          groupingCollector("parallelToStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered()), c -> c.toList())),
+          groupingCollector("parallelToStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered().parallelism(parallelism)), c -> c.toList())),
+          groupingCollector("parallelToStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered().executor(e())), c -> c.toList())),
+          groupingCollector("parallelToStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered().executor(e()).parallelism(parallelism)), c -> c.toList()))
         );
     }
 
@@ -138,71 +137,71 @@ final class Factory {
         return Stream.of(
           collector("parallel()", f -> collectingAndThen(ParallelCollectors.parallel(f), c -> c.join().toList())),
           collector("parallel(p)", f -> collectingAndThen(ParallelCollectors.parallel(f, p()), c -> c.join().toList())),
-          collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, e()), c -> c.join().toList())),
-          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, e(), p()), c -> c.join().toList())),
+          collector("parallel(e)", f -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e())), c -> c.join().toList())),
+          collector("parallel(e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e()).parallelism(p())), c -> c.join().toList())),
           collector("parallelBy()", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f), c -> ungrouped(c.join().toList()))),
           collector("parallelBy(p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, p()), c -> ungrouped(c.join().toList()))),
-          collector("parallelBy(e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, e()), c -> ungrouped(c.join().toList()))),
-          collector("parallelBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, e(), p()), c -> ungrouped(c.join().toList()))),
+          collector("parallelBy(e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e())), c -> ungrouped(c.join().toList()))),
+          collector("parallelBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e()).parallelism(p())), c -> ungrouped(c.join().toList()))),
           collector("parallel(toList())", f -> collectingAndThen(ParallelCollectors.parallel(f, toList()), CompletableFuture::join)),
           collector("parallel(toList(), p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), p()), CompletableFuture::join)),
-          collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e()), CompletableFuture::join)),
-          collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e(), p()), CompletableFuture::join)),
-          collector("parallel(toList(), e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e(), p()), CompletableFuture::join)),
+          collector("parallel(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e())), CompletableFuture::join)),
+          collector("parallel(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e()).parallelism(p())), CompletableFuture::join)),
+          collector("parallel(toList(), e, p) [batching]", f -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e()).parallelism(p()).batching()), CompletableFuture::join)),
           collector("parallelBy(toList())", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList()), c -> ungrouped(c.join()))),
           collector("parallelBy(toList(), p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), p()), c -> ungrouped(c.join()))),
-          collector("parallelBy(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), e()), c -> ungrouped(c.join()))),
-          collector("parallelBy(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), e(), p()), c -> ungrouped(c.join()))),
-          collector("parallelToOrderedStream()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f), Stream::toList)),
-          collector("parallelToOrderedStream(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, p()), Stream::toList)),
-          collector("parallelToOrderedStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e()), Stream::toList)),
-          collector("parallelToOrderedStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e(), p()), Stream::toList)),
-          collector("parallelToOrderedStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e(), p()), Stream::toList)),
-          collector("parallelToOrderedStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f), ungrouped())),
-          collector("parallelToOrderedStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, p()), ungrouped())),
-          collector("parallelToOrderedStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, e()), ungrouped())),
-          collector("parallelToOrderedStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, e(), p()), ungrouped()))
+          collector("parallelBy(toList(), e)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), c -> c.executor(e())), c -> ungrouped(c.join()))),
+          collector("parallelBy(toList(), e, p)", f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), c -> c.executor(e()).parallelism(p())), c -> ungrouped(c.join()))),
+          collector("parallelToOrderedStream()", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered()), Stream::toList)),
+          collector("parallelToOrderedStream(p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().parallelism(p())), Stream::toList)),
+          collector("parallelToOrderedStream(e)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e())), Stream::toList)),
+          collector("parallelToOrderedStream(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().parallelism(p()).executor(e())), Stream::toList)),
+          collector("parallelToOrderedStream(e, p) [batching]", f -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().parallelism(p()).executor(e()).batching()), Stream::toList)),
+          collector("parallelToOrderedStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f), ungrouped())),
+          collector("parallelToOrderedStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, p()), ungrouped())),
+          collector("parallelToOrderedStreamBy(e)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e())), ungrouped())),
+          collector("parallelToOrderedStreamBy(e, p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e()).parallelism(p())), ungrouped()))
         );
     }
 
     static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithParallelism<Integer, Integer>>> allBounded() {
         return Stream.of(
           limitedCollector("parallel(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, p), c -> c.join().toList())),
-          limitedCollector("parallel(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, e(), p), c -> c.join().toList())),
+          limitedCollector("parallel(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e()).parallelism(p)), c -> c.join().toList())),
           limitedCollector("parallel(toList(), p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), p), CompletableFuture::join)),
-          limitedCollector("parallel(toList(), e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), e(), p), CompletableFuture::join)),
-          limitedCollector("parallel(toList(), e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallel(f, toList(), e(), p), CompletableFuture::join)),
+          limitedCollector("parallel(toList(), e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.executor(e()).parallelism(p)), CompletableFuture::join)),
+          limitedCollector("parallel(toList(), e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, toList(), c -> c.batching().executor(e()).parallelism(p)), CompletableFuture::join)),
           limitedCollector("parallelBy(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, p), c -> ungrouped(c.join().toList()))),
-          limitedCollector("parallelBy(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, e(), p), c -> ungrouped(c.join().toList()))),
+          limitedCollector("parallelBy(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e()).parallelism(p)), c -> ungrouped(c.join().toList()))),
           limitedCollector("parallelBy(toList(), p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), p), c -> ungrouped(c.join()))),
-          limitedCollector("parallelBy(toList(), e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), e(), p), c -> ungrouped(c.join()))),
+          limitedCollector("parallelBy(toList(), e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, toList(), c -> c.executor(e()).parallelism(p)), c -> ungrouped(c.join()))),
           limitedCollector("parallelToStream(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, p), Stream::toList)),
-          limitedCollector("parallelToStream(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, e(), p), Stream::toList)),
-          limitedCollector("parallelToStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallelToStream(f, e(), p), Stream::toList)),
+          limitedCollector("parallelToStream(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e()).parallelism(p)), Stream::toList)),
+          limitedCollector("parallelToStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.batching().executor(e()).parallelism(p)), Stream::toList)),
           limitedCollector("parallelToStreamBy(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, p), s -> s.map(Grouped::values).flatMap(Collection::stream).toList())),
-          limitedCollector("parallelToStreamBy(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, e(), p), ungrouped())),
-          limitedCollector("parallelToOrderedStream(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, p), Stream::toList)),
-          limitedCollector("parallelToOrderedStream(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStream(f, e(), p), Stream::toList)),
-          limitedCollector("parallelToOrderedStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.Batching.parallelToOrderedStream(f, e(), p), Stream::toList)),
-          limitedCollector("parallelToOrderedStreamBy(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, p), ungrouped())),
-          limitedCollector("parallelToOrderedStreamBy(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, e(), p), ungrouped()))
+          limitedCollector("parallelToStreamBy(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e()).parallelism(p)), ungrouped())),
+          limitedCollector("parallelToOrderedStream(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().parallelism(p)), Stream::toList)),
+          limitedCollector("parallelToOrderedStream(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()).parallelism(p)), Stream::toList)),
+          limitedCollector("parallelToOrderedStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().batching().executor(e()).parallelism(p)), Stream::toList)),
+          limitedCollector("parallelToOrderedStreamBy(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.parallelism(p).ordered()), ungrouped())),
+          limitedCollector("parallelToOrderedStreamBy(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.ordered().executor(e()).parallelism(p)), ungrouped()))
         );
     }
 
     public static Stream<GenericCollector<CollectorFactoryWithParallelismAndExecutor<Integer, Integer>>> boundedCollectors() {
         return Stream.of(
-          advancedCollector("parallel()", ParallelCollectors::parallel),
-          advancedCollector("parallel(toList())", (f, e, p) -> ParallelCollectors.parallel(f, toList(), e, p)),
-          advancedCollector("parallelBy()", (f, e, p) -> ParallelCollectors.parallelBy(noopClassifier(), f, e, p)),
-          advancedCollector("parallelBy(toList())", (f, e, p) -> ParallelCollectors.parallelBy(noopClassifier(), f, toList(), e, p)),
-          advancedCollector("parallelToStream()", ParallelCollectors::parallelToStream),
-          advancedCollector("parallelToStreamBy()", (f, e, p) -> ParallelCollectors.parallelToStreamBy(noopClassifier(), f, e, p)),
-          advancedCollector("parallelToOrderedStream()", ParallelCollectors::parallelToOrderedStream),
-          advancedCollector("parallelToOrderedStreamBy()", (f, e, p) -> ParallelCollectors.parallelToOrderedStreamBy(noopClassifier(), f, e, p)),
-          advancedCollector("parallel() (batching)", ParallelCollectors.Batching::parallel),
-          advancedCollector("parallel(toList()) (batching)", (f, e, p) -> parallel(f, toList(), e, p)),
-          advancedCollector("parallelToStream() (batching)", ParallelCollectors.Batching::parallelToStream),
-          advancedCollector("parallelToOrderedStream() (batching)", ParallelCollectors.Batching::parallelToOrderedStream));
+          advancedCollector("parallel()", (f, e, p) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(p))),
+          advancedCollector("parallel(toList())", (f, e, p) -> ParallelCollectors.parallel(f, toList(), c -> c.executor(e).parallelism(p))),
+          advancedCollector("parallelBy()", (f, e, p) -> ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e).parallelism(p))),
+          advancedCollector("parallelBy(toList())", (f, e, p) -> ParallelCollectors.parallelBy(noopClassifier(), f, toList(), c -> c.executor(e).parallelism(p))),
+          advancedCollector("parallelToStream()", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p))),
+          advancedCollector("parallelToStreamBy()", (f, e, p) -> ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e).parallelism(p))),
+          advancedCollector("parallelToOrderedStream()", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p).ordered())),
+          advancedCollector("parallelToOrderedStreamBy()", (f, e, p) -> ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e).parallelism(p).ordered())),
+          advancedCollector("parallel() (batching)", (f, e, p) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(p).batching())),
+          advancedCollector("parallel(toList()) (batching)", (f, e, p) -> ParallelCollectors.parallel(f, toList(), c -> c.executor(e).parallelism(p).batching())),
+          advancedCollector("parallelToStream() (batching)", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p).batching())),
+          advancedCollector("parallelToOrderedStream() (batching)", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p).batching().ordered())));
     }
 
     @FunctionalInterface
