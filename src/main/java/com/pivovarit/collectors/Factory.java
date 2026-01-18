@@ -18,6 +18,7 @@ package com.pivovarit.collectors;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -61,26 +62,28 @@ final class Factory {
     static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(
       Function<Stream<R>, C> finalizer,
       Function<? super T, ? extends R> mapper,
-      Configurer.Collecting configurer) {
+      Configurer configurer
+    ) {
         requireNonNull(mapper, "mapper can't be null");
 
         var config = ConfigProcessor.process(configurer.getConfig());
 
-        if (config.parallelism() == 1) {
-            return new AsyncCollector<>(mapper, finalizer, config.executor());
-        }
-
-        if (config.batching()) {
-            if (config.parallelism() == 0) {
-                throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
+        return select(mapper, config, new ModeFactory<T, R, CompletableFuture<C>>() {
+            @Override
+            public Collector<T, ?, CompletableFuture<C>> async(Function<? super T, ? extends R> mapper, Executor executor) {
+                return new AsyncCollector<>(mapper, finalizer, executor);
             }
 
-            return new AsyncParallelCollector.BatchingCollector<>(mapper, finalizer, config.executor(), config.parallelism());
-        }
+            @Override
+            public Collector<T, ?, CompletableFuture<C>> batching(Function<? super T, ? extends R> mapper, Executor executor, int parallelism) {
+                return new AsyncParallelCollector.BatchingCollector<>(mapper, finalizer, executor, parallelism);
+            }
 
-        return new AsyncParallelCollector<>(mapper, config.parallelism() > 0
-          ? new Dispatcher<>(config.executor(), config.parallelism())
-          : new Dispatcher<>(config.executor()), finalizer);
+            @Override
+            public Collector<T, ?, CompletableFuture<C>> parallel(Function<? super T, ? extends R> mapper, Dispatcher<R> dispatcher) {
+                return new AsyncParallelCollector<>(mapper, dispatcher, finalizer);
+            }
+        });
     }
 
     static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> streamingBy(
@@ -101,25 +104,59 @@ final class Factory {
         );
     }
 
-    static <T, R> Collector<T, ?, Stream<R>> streaming(Function<? super T, ? extends R> mapper, Configurer.Streaming configurer) {
+    static <T, R> Collector<T, ?, Stream<R>> streaming(
+      Function<? super T, ? extends R> mapper,
+      Configurer.Streaming configurer) {
         requireNonNull(mapper, "mapper can't be null");
 
         var config = ConfigProcessor.process(configurer.getConfig());
 
+        return select(mapper, config, new ModeFactory<T, R, Stream<R>>() {
+            @Override
+            public Collector<T, ?, Stream<R>> async(Function<? super T, ? extends R> m, Executor ex) {
+                return new SyncCollector<>(m);
+            }
+
+            @Override
+            public Collector<T, ?, Stream<R>> batching(Function<? super T, ? extends R> m, Executor ex, int p) {
+                return new AsyncParallelStreamingCollector.BatchingCollector<>(m, ex, p, config.ordered());
+            }
+
+            @Override
+            public Collector<T, ?, Stream<R>> parallel(Function<? super T, ? extends R> m, Dispatcher<R> d) {
+                return new AsyncParallelStreamingCollector<>(m, d, config.ordered());
+            }
+        });
+    }
+
+    private static <T, R, C> Collector<T, ?, C> select(
+      Function<? super T, ? extends R> mapper,
+      ConfigProcessor.Config config,
+      ModeFactory<T, R, C> factory
+    ) {
         if (config.parallelism() == 1) {
-            return new SyncCollector<>(mapper);
+            return factory.async(mapper, config.executor());
         }
 
         if (config.batching()) {
             if (config.parallelism() == 0) {
                 throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
             }
-
-            return new AsyncParallelStreamingCollector.BatchingCollector<>(mapper, config.executor(), config.parallelism(), config.ordered());
+            return factory.batching(mapper, config.executor(), config.parallelism());
         }
 
-        return new AsyncParallelStreamingCollector<>(mapper, config.parallelism() > 0
-          ? new Dispatcher<>(config.executor(), config.parallelism())
-          : new Dispatcher<>(config.executor()), config.ordered());
+        var dispatcher = (config.parallelism() > 0)
+          ? new Dispatcher<R>(config.executor(), config.parallelism())
+          : new Dispatcher<R>(config.executor());
+
+        return factory.parallel(mapper, dispatcher);
+    }
+
+    interface ModeFactory<T, R, C> {
+        Collector<T, ?, C> async(Function<? super T, ? extends R> mapper, Executor executor);
+
+        Collector<T, ?, C> batching(Function<? super T, ? extends R> mapper, Executor executor, int parallelism);
+
+        Collector<T, ?, C> parallel(Function<? super T, ? extends R> mapper, Dispatcher<R> dispatcher);
     }
 }
