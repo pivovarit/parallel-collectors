@@ -15,6 +15,8 @@
  */
 package com.pivovarit.collectors;
 
+import org.jspecify.annotations.NullMarked;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +24,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-import org.jspecify.annotations.NullMarked;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -337,9 +338,10 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallel(i -> foo(i), toList(), c -> c
-     *     .parallelism(64)
-     *     .batching()
+     *   .collect(parallel(i -> foo(i), c -> c
+     *       .parallelism(64)
+     *       .batching(),
+     *     toList()
      *   ));
      * }</pre>
      *
@@ -356,8 +358,8 @@ public final class ParallelCollectors {
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
       Function<? super T, ? extends R> mapper,
-      Collector<R, ?, RR> collector,
-      Consumer<CollectingConfigurer> configurer) {
+      Consumer<CollectingConfigurer> configurer,
+      Collector<R, ?, RR> collector) {
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");
         Objects.requireNonNull(configurer, "configurer cannot be null");
@@ -442,16 +444,17 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<List<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
-     *   .collect(parallelBy(Task::groupId, t -> compute(t), toList(), c -> c
-     *     .parallelism(64)
-     *     .batching()
+     *   .collect(parallelBy(Task::groupId, t -> compute(t), c -> c
+     *       .parallelism(64)
+     *       .batching(),
+     *     toList()
      *   ));
      * }</pre>
      *
      * @param classifier function that groups elements into batches
      * @param mapper     transformation applied to each element
-     * @param collector  the {@code Collector} describing the reduction for grouped results
      * @param configurer callback used to configure execution (see {@link CollectingConfigurer})
+     * @param collector  the {@code Collector} describing the reduction for grouped results
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
@@ -465,8 +468,8 @@ public final class ParallelCollectors {
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
-      Collector<Grouped<K, R>, ?, RR> collector,
-      Consumer<CollectingConfigurer> configurer) {
+      Consumer<CollectingConfigurer> configurer,
+      Collector<Grouped<K, R>, ?, RR> collector) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");
@@ -526,7 +529,6 @@ public final class ParallelCollectors {
 
         return Factory.streaming(mapper, configurer);
     }
-
 
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
@@ -633,12 +635,12 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<List<String>> result = Stream.of(1, 2, 3)
-     *   .collect(parallel(i -> foo(i), toList(), 64));
+     *   .collect(parallel(i -> foo(i), 64, toList()));
      * }</pre>
      *
      * @param mapper      transformation applied to each element
-     * @param collector   the {@code Collector} describing the reduction
      * @param parallelism maximum parallelism (must be positive)
+     * @param collector   the {@code Collector} describing the reduction
      * @param <T>         the input element type
      * @param <R>         the type produced by {@code mapper}
      * @param <RR>        the reduction result type produced by {@code collector}
@@ -649,7 +651,7 @@ public final class ParallelCollectors {
      */
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
       Function<? super T, ? extends R> mapper,
-      Collector<R, ?, RR> collector, int parallelism) {
+      int parallelism, Collector<R, ?, RR> collector) {
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");
 
@@ -708,13 +710,13 @@ public final class ParallelCollectors {
      * Example:
      * <pre>{@code
      * CompletableFuture<List<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
-     *   .collect(parallelBy(Task::groupId, t -> compute(t), toList(), 64));
+     *   .collect(parallelBy(Task::groupId, t -> compute(t), 64, toList()));
      * }</pre>
      *
      * @param classifier  function that groups elements into batches
      * @param mapper      transformation applied to each element
-     * @param collector   the {@code Collector} describing the reduction for grouped results
      * @param parallelism maximum parallelism (must be positive)
+     * @param collector   the {@code Collector} describing the reduction for grouped results
      * @param <T>         the input element type
      * @param <K>         the classification key type
      * @param <R>         the type produced by {@code mapper}
@@ -726,8 +728,8 @@ public final class ParallelCollectors {
      */
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
-      Function<? super T, ? extends R> mapper,
-      Collector<Grouped<K, R>, ?, RR> collector, int parallelism) {
+      Function<? super T, ? extends R> mapper, int parallelism,
+      Collector<Grouped<K, R>, ?, RR> collector) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");

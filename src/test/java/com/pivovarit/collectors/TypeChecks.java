@@ -76,17 +76,17 @@ final class TypeChecks {
 
         record ParallelToList(Functions f) {
             ParallelToList {
-                expectCollector(ParallelCollectors.parallel(f.subToSuper, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallel(f.subToSub, toList(), c -> {}));
+                expectCollector(ParallelCollectors.parallel(f.subToSuper, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallel(f.subToSub, c -> {}, toList()));
             }
         }
 
         record ParallelByToList(Functions f) {
             ParallelByToList {
-                expectCollector(ParallelCollectors.parallelBy(f.subToSuper, f.subToSuper, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallelBy(f.subToSuper, f.subToSub, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallelBy(f.subToSub, f.subToSuper, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallelBy(f.subToSub, f.subToSub, toList(), c -> {}));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSuper, f.subToSuper, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSuper, f.subToSub, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSub, f.subToSuper, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallelBy(f.subToSub, f.subToSub, c -> {}, toList()));
             }
         }
 
@@ -136,17 +136,17 @@ final class TypeChecks {
 
         record ParallelToList() {
             ParallelToList {
-                expectCollector(ParallelCollectors.parallel(superToSub, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallel(objToSub, toList(), c -> {}));
+                expectCollector(ParallelCollectors.parallel(superToSub, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallel(objToSub, c -> {}, toList()));
             }
         }
 
         record ParallelByToList() {
             ParallelByToList {
-                expectCollector(ParallelCollectors.parallelBy(superToSub, superToSub, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallelBy(superToSub, objToSub, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallelBy(objToSub, superToSub, toList(), c -> {}));
-                expectCollector(ParallelCollectors.parallelBy(objToSub, objToSub, toList(), c -> {}));
+                expectCollector(ParallelCollectors.parallelBy(superToSub, superToSub, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallelBy(superToSub, objToSub, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallelBy(objToSub, superToSub, c -> {}, toList()));
+                expectCollector(ParallelCollectors.parallelBy(objToSub, objToSub, c -> {}, toList()));
             }
         }
 
