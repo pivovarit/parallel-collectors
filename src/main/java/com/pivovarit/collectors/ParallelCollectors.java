@@ -15,8 +15,6 @@
  */
 package com.pivovarit.collectors;
 
-import org.jspecify.annotations.NullMarked;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -24,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s

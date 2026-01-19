@@ -40,7 +40,7 @@ class LifecycleTest {
           .collect(new AsyncParallelCollector<>(i -> i, dispatcher, Stream::toList)).join();
 
         assertThat(result).containsExactly(1, 2, 3);
-        await().until(dispatcher::wasStopped);
+        await().until(dispatcher::wasShutdown);
     }
 
     @ParameterizedTest
@@ -54,6 +54,6 @@ class LifecycleTest {
         } else {
             assertThat(result).containsExactlyInAnyOrder(1, 2, 3);
         }
-        await().until(dispatcher::wasStopped);
+        await().until(dispatcher::wasShutdown);
     }
 }

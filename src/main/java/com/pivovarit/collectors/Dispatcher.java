@@ -24,7 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -39,7 +39,7 @@ final class Dispatcher<T> {
     private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
 
     private final ThreadFactory dispatcherThreadFactory = Thread.ofVirtual()
-      .name("parallel-collectors-dispatcher-",0)
+      .name("parallel-collectors-dispatcher-", 0)
       .factory();
 
     private final Consumer<Thread> dispatcherThreadHook;
@@ -47,8 +47,12 @@ final class Dispatcher<T> {
     private final Executor executor;
     private final Semaphore limiter;
 
-    private final AtomicBoolean started = new AtomicBoolean(false);
-    private final AtomicBoolean stopped = new AtomicBoolean(false);
+    // UNSTARTED -> RUNNING -> SHUTTING_DOWN
+    enum State {
+        UNSTARTED, RUNNING, SHUTTING_DOWN
+    }
+
+    private final AtomicReference<State> state = new AtomicReference<>(State.UNSTARTED);
 
     Dispatcher(Executor executor, int permits, Consumer<Thread> dispatcherThreadHook) {
         requireValidExecutor(executor);
@@ -73,7 +77,7 @@ final class Dispatcher<T> {
     }
 
     void start() {
-        if (!started.getAndSet(true)) {
+        if (state.compareAndSet(State.UNSTARTED, State.RUNNING)) {
             var thread = dispatcherThreadFactory.newThread(() -> {
                 try {
                     while (true) {
@@ -120,7 +124,7 @@ final class Dispatcher<T> {
     }
 
     void stop() {
-        if (!stopped.getAndSet(true)) {
+        if (state.compareAndSet(State.RUNNING, State.SHUTTING_DOWN)) {
             try {
                 workingQueue.put(DispatchItem.Stop.POISON_PILL);
             } catch (InterruptedException e) {
@@ -130,11 +134,17 @@ final class Dispatcher<T> {
     }
 
     boolean wasStarted() {
-        return started.get();
+        return switch (state.get()) {
+            case UNSTARTED -> false;
+            case RUNNING, SHUTTING_DOWN -> true;
+        };
     }
 
-    boolean wasStopped() {
-        return stopped.get();
+    boolean wasShutdown() {
+        return switch (state.get()) {
+            case UNSTARTED, RUNNING -> false;
+            case SHUTTING_DOWN -> true;
+        };
     }
 
     CompletableFuture<T> submit(Supplier<T> supplier) {
