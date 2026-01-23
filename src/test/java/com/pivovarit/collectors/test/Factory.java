@@ -19,7 +19,6 @@ import com.pivovarit.collectors.CollectingConfigurer;
 import com.pivovarit.collectors.Grouped;
 import com.pivovarit.collectors.ParallelCollectors;
 import com.pivovarit.collectors.StreamingConfigurer;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -289,15 +288,18 @@ final class Factory {
     interface CollectorFactoryWithParallelismAndExecutor<T, R> {
         Collector<T, ?, ?> apply(Function<T, R> function, Executor executorService, int parallelism);
     }
+
     @FunctionalInterface
     interface CollectorFactoryWithExecutor<T, R> {
 
         Collector<T, ?, List<R>> collector(Function<T, R> f, Executor executor);
     }
+
     @FunctionalInterface
     interface CollectorFactoryWithParallelism<T, R> {
         Collector<T, ?, List<R>> collector(Function<T, R> f, Integer p);
     }
+
     @FunctionalInterface
     interface CollectorFactory<T, R> {
         Collector<T, ?, List<R>> collector(Function<T, R> f);
@@ -324,8 +326,7 @@ final class Factory {
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallel(Consumer<CollectingConfigurer> configurer, String... tags) {
-            String name = "parallel() [%s]".formatted(String.join(", ", tags));
-            return new GenericCollector<>(name, f -> collectingAndThen(ParallelCollectors.parallel(f, configurer), c -> c.join().toList()));
+            return new GenericCollector<>("parallel() [%s]".formatted(String.join(", ", tags)), f -> collectingAndThen(ParallelCollectors.parallel(f, configurer), c -> c.join().toList()));
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallelToList() {
@@ -337,8 +338,7 @@ final class Factory {
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallelToList(Consumer<CollectingConfigurer> configurer, String... tags) {
-            String name = "parallel(toList()) [%s]".formatted(String.join(", ", tags));
-            return new GenericCollector<>(name, f -> collectingAndThen(ParallelCollectors.parallel(f, configurer, toList()), CompletableFuture::join));
+            return new GenericCollector<>("parallel(toList()) [%s]".formatted(String.join(", ", tags)), f -> collectingAndThen(ParallelCollectors.parallel(f, configurer, toList()), CompletableFuture::join));
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallelByToList() {
@@ -350,8 +350,7 @@ final class Factory {
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallelByToList(Consumer<CollectingConfigurer> configurer, String... tags) {
-            String name = "parallelBy(toList())[%s]".formatted(String.join(", ", tags));
-            return new GenericCollector<>(name, f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, configurer, toList()), c -> ungrouped(c.join())));
+            return new GenericCollector<>("parallelBy(toList())[%s]".formatted(String.join(", ", tags)), f -> collectingAndThen(ParallelCollectors.parallelBy(noopClassifier(), f, configurer, toList()), c -> ungrouped(c.join())));
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallelToStreamBy() {
@@ -363,8 +362,7 @@ final class Factory {
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallelToStreamBy(Consumer<StreamingConfigurer> configurer, String... tags) {
-            String name = "parallelToStreamBy() [%s]".formatted(String.join(", ", tags));
-            return new GenericCollector<>(name, f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, configurer), ungrouped()));
+            return new GenericCollector<>("parallelToStreamBy() [%s]".formatted(String.join(", ", tags)), f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, configurer), ungrouped()));
         }
 
         static GenericCollector<CollectorFactory<Integer, Integer>> parallelToStream() {
@@ -388,9 +386,9 @@ final class Factory {
 
     @FunctionalInterface
     interface StreamingCollectorFactory<T, R> {
-
         Collector<T, ?, Stream<R>> collector(Function<T, R> f);
     }
+
     @FunctionalInterface
     interface AsyncCollectorFactory<T, R> {
         Collector<T, ?, CompletableFuture<List<R>>> collector(Function<T, R> f);
@@ -425,8 +423,8 @@ final class Factory {
         static <T, R> GenericCollector<CollectorFactoryWithParallelismAndExecutor<T, R>> advancedCollector(String name, CollectorFactoryWithParallelismAndExecutor<T, R> collector) {
             return new GenericCollector<>(name, collector);
         }
-
     }
+
     static Executor e() {
         return Executors.newCachedThreadPool();
     }
