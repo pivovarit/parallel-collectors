@@ -16,15 +16,16 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.Factory.e;
@@ -37,11 +38,11 @@ import static org.awaitility.Awaitility.await;
 
 class StreamingConfigurerTest {
 
-    static <T, R> Factory.GenericCollector<Factory.StreamingCollectorFactory<T, R>> streamingCollector(String name, Factory.StreamingCollectorFactory<T, R> collector) {
+    static <T, R> Factory.GenericCollector<StreamingCollectorFactory<T, R>> streamingCollector(String name, StreamingCollectorFactory<T, R> collector) {
         return new Factory.GenericCollector<>(name, collector);
     }
 
-    private static Stream<Factory.GenericCollector<Factory.StreamingCollectorFactory<Integer, Integer>>> allStreaming() {
+    private static Stream<Factory.GenericCollector<StreamingCollectorFactory<Integer, Integer>>> allStreaming() {
         return Stream.of(
           streamingCollector("parallelToStream()", (f) -> ParallelCollectors.parallelToStream(f)),
           streamingCollector("parallelToStream(e)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e()))),
@@ -52,7 +53,7 @@ class StreamingConfigurerTest {
         );
     }
 
-    private static Stream<Factory.GenericCollector<Factory.StreamingCollectorFactory<Integer, Integer>>> allCompletionOrderStreaming() {
+    private static Stream<Factory.GenericCollector<StreamingCollectorFactory<Integer, Integer>>> allCompletionOrderStreaming() {
         return Stream.of(
           streamingCollector("parallelToStream()", (f) -> ParallelCollectors.parallelToStream(f)),
           streamingCollector("parallelToStream(e)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e()))),
@@ -60,7 +61,7 @@ class StreamingConfigurerTest {
         );
     }
 
-    private static Stream<Factory.GenericCollector<Factory.StreamingCollectorFactory<Integer, Integer>>> allOrderedStreaming() {
+    private static Stream<Factory.GenericCollector<StreamingCollectorFactory<Integer, Integer>>> allOrderedStreaming() {
         return Stream.of(
           streamingCollector("parallelToOrderedStream()", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered())),
           streamingCollector("parallelToOrderedStream(e)", (f) -> ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()))),
@@ -131,5 +132,10 @@ class StreamingConfigurerTest {
           .toList();
 
         assertThat(result).containsExactly(1, 2, 3, 4);
+    }
+
+    @FunctionalInterface
+    interface StreamingCollectorFactory<T, R> {
+        Collector<T, ?, Stream<R>> collector(Function<T, R> f);
     }
 }

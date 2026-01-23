@@ -17,12 +17,11 @@ package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
 import com.pivovarit.collectors.test.Factory.GenericCollector;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
-
 import java.time.Duration;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static java.time.Duration.ofDays;

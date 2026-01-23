@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors.test;
 
+import com.pivovarit.collectors.ParallelCollectors;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,15 +23,17 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
-import com.pivovarit.collectors.ParallelCollectors;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-import static com.pivovarit.collectors.test.Factory.GenericCollector.advancedCollector;
 import static java.util.stream.Collectors.toList;
 
 class ExecutorPollutionTest {
+
+
+    static <T, R> Factory.GenericCollector<Factory.CollectorFactoryWithParallelismAndExecutor<T, R>> advancedCollector(String name, Factory.CollectorFactoryWithParallelismAndExecutor<T, R> collector) {
+        return new Factory.GenericCollector<>(name, collector);
+    }
 
     public static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithParallelismAndExecutor<Integer, Integer>>> boundedCollectors() {
         return Stream.of(

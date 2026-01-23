@@ -17,9 +17,6 @@ package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.Grouped;
 import com.pivovarit.collectors.ParallelCollectors;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,17 +24,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
-import static com.pivovarit.collectors.test.Factory.GenericCollector.groupingCollector;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GroupingTest {
 
-    static Stream<Factory.GenericCollector<Factory.GroupingCollectorFactory<Integer, Integer>>> allGroupingOrdered(Function<Integer, Integer> classifier, int parallelism) {
+    static <T, R> Factory.GenericCollector<GroupingCollectorFactory<T, R>> groupingCollector(String name, GroupingCollectorFactory<T, R> collector) {
+        return new Factory.GenericCollector<>(name, collector);
+    }
+
+    static Stream<Factory.GenericCollector<GroupingCollectorFactory<Integer, Integer>>> allGroupingOrdered(Function<Integer, Integer> classifier, int parallelism) {
         return Stream.of(
           groupingCollector("parallelToStreamBy()", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered()), c -> c.toList())),
           groupingCollector("parallelToStreamBy(p)", f -> collectingAndThen(ParallelCollectors.parallelToStreamBy(classifier, f, c -> c.ordered().parallelism(parallelism)), c -> c.toList())),
@@ -46,7 +49,7 @@ class GroupingTest {
         );
     }
 
-    static Stream<Factory.GenericCollector<Factory.GroupingCollectorFactory<Integer, Integer>>> allGrouping(Function<Integer, Integer> classifier, int parallelism) {
+    static Stream<Factory.GenericCollector<GroupingCollectorFactory<Integer, Integer>>> allGrouping(Function<Integer, Integer> classifier, int parallelism) {
         return Stream.of(
           groupingCollector("parallelBy()", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f), c -> c.join().toList())),
           groupingCollector("parallelBy(e)", f -> collectingAndThen(ParallelCollectors.parallelBy(classifier, f, c -> c.executor(e())), c -> c.join().toList())),
@@ -153,5 +156,10 @@ class GroupingTest {
 
     static Executor e() {
         return Executors.newCachedThreadPool();
+    }
+
+    @FunctionalInterface
+    interface GroupingCollectorFactory<T, R> {
+        Collector<T, ?, List<Grouped<T, R>>> collector(Function<T, R> f);
     }
 }

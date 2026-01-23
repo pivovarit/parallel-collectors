@@ -19,7 +19,6 @@ import com.pivovarit.collectors.CollectingConfigurer;
 import com.pivovarit.collectors.Grouped;
 import com.pivovarit.collectors.ParallelCollectors;
 import com.pivovarit.collectors.StreamingConfigurer;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +30,6 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static com.pivovarit.collectors.test.Factory.GenericCollector.groupingCollector;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
@@ -310,29 +308,11 @@ final class Factory {
     }
 
     @FunctionalInterface
-    interface GroupingCollectorFactory<T, R> {
-        Collector<T, ?, List<Grouped<T, R>>> collector(Function<T, R> f);
-    }
-
-    @FunctionalInterface
-    interface StreamingCollectorFactory<T, R> {
-        Collector<T, ?, Stream<R>> collector(Function<T, R> f);
-    }
-
-    @FunctionalInterface
     interface AsyncCollectorFactory<T, R> {
         Collector<T, ?, CompletableFuture<List<R>>> collector(Function<T, R> f);
     }
 
     record GenericCollector<T>(String name, T factory) {
-
-        static <T, R> GenericCollector<Factory.GroupingCollectorFactory<T, R>> groupingCollector(String name, Factory.GroupingCollectorFactory<T, R> collector) {
-            return new GenericCollector<>(name, collector);
-        }
-
-        static <T, R> GenericCollector<CollectorFactoryWithParallelismAndExecutor<T, R>> advancedCollector(String name, CollectorFactoryWithParallelismAndExecutor<T, R> collector) {
-            return new GenericCollector<>(name, collector);
-        }
     }
 
     static Executor e() {
