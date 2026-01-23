@@ -16,20 +16,30 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
+import com.pivovarit.collectors.TestUtils;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
+
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.TestFactory;
 
-import static com.pivovarit.collectors.test.Factory.GenericCollector.executorCollector;
+import static java.time.Duration.ofMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+class TaskRejectionTest {
 
-class ExecutorValidationTest {
+    static <T, R> Factory.GenericCollector<Factory.CollectorFactoryWithExecutor<T, R>> executorCollector(String name, Factory.CollectorFactoryWithExecutor<T, R> collector) {
+        return new Factory.GenericCollector<>(name, collector);
+    }
 
     private static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithExecutor<Integer, Integer>>> allWithCustomExecutors() {
         return Stream.of(
@@ -64,5 +74,19 @@ class ExecutorValidationTest {
                     assertThatThrownBy(() -> Stream.of(1, 2, 3).collect(c.factory().collector(i -> i, e))).isExactlyInstanceOf(IllegalArgumentException.class);
                 }
             })));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldHandleRejection() {
+        return allWithCustomExecutors()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
+              assertThatThrownBy(() -> {
+                  try (var e = new ThreadPoolExecutor(2, 2, 0L, MILLISECONDS,
+                    new LinkedBlockingQueue<>(1), new ThreadPoolExecutor.AbortPolicy())) {
+                      assertTimeoutPreemptively(ofMillis(100), () -> of(1, 2, 3, 4)
+                        .collect(c.factory().collector(i -> TestUtils.sleepAndReturn(1_000, i), e)));
+                  }
+              }).isExactlyInstanceOf(CompletionException.class);
+          }));
     }
 }

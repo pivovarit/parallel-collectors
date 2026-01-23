@@ -16,16 +16,16 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.Executors;
+import java.util.stream.Stream;
+
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
-import static com.pivovarit.collectors.test.Factory.GenericCollector.limitedCollector;
 import static com.pivovarit.collectors.test.Factory.e;
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.collectingAndThen;
@@ -34,6 +34,11 @@ import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class BatchingTest {
+
+    static <T, R> Factory.GenericCollector<Factory.CollectorFactoryWithParallelism<T, R>> limitedCollector(String name, Factory.CollectorFactoryWithParallelism<T, R> collector) {
+        return new Factory.GenericCollector<>(name, collector);
+    }
+
     private static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithParallelism<Integer, Integer>>> allBatching() {
         return Stream.of(
           limitedCollector("parallel(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.batching().executor(e()).parallelism(p)), c -> c.thenApply(Stream::toList).join())),

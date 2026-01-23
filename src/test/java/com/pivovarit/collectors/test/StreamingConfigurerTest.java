@@ -16,17 +16,17 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
-import static com.pivovarit.collectors.test.Factory.GenericCollector.streamingCollector;
 import static com.pivovarit.collectors.test.Factory.e;
 import static com.pivovarit.collectors.test.Factory.p;
 import static java.time.Duration.ofMillis;
@@ -36,6 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 class StreamingConfigurerTest {
+
+    static <T, R> Factory.GenericCollector<Factory.StreamingCollectorFactory<T, R>> streamingCollector(String name, Factory.StreamingCollectorFactory<T, R> collector) {
+        return new Factory.GenericCollector<>(name, collector);
+    }
 
     private static Stream<Factory.GenericCollector<Factory.StreamingCollectorFactory<Integer, Integer>>> allStreaming() {
         return Stream.of(
@@ -117,6 +121,7 @@ class StreamingConfigurerTest {
 
         assertThat(result).containsExactly(1, 2, 3, 4);
     }
+
     @Test
     void shouldUseSyncFallbackForOrdered() {
         var result = Stream.of(1, 2, 3, 4)
