@@ -15,31 +15,17 @@
  */
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.ParallelCollectors;
-import com.pivovarit.collectors.test.Factory.GenericCollector;
 import java.time.Duration;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
+import static com.pivovarit.collectors.test.Factory.allAsync;
 import static java.time.Duration.ofDays;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class NonBlockingTest {
-
-    private static Stream<GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>> allAsync() {
-        return Stream.of(
-          new GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>("parallel()", f -> Collectors.collectingAndThen(ParallelCollectors.parallel(f), c -> c.thenApply(Stream::toList))),
-          new GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>("parallel(toList())", f6 -> ParallelCollectors.parallel(f6, Collectors.toList())),
-          new GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>("parallel(toList(), e)", f5 -> ParallelCollectors.parallel(f5, c5 -> c5.executor(Factory.e()), Collectors.toList())),
-          new GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>("parallel(toList(), e, p=1)", f4 -> ParallelCollectors.parallel(f4, c4 -> c4.executor(Factory.e()).parallelism(1), Collectors.toList())),
-          new GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>("parallel(toList(), e, p=2)", f3 -> ParallelCollectors.parallel(f3, c3 -> c3.executor(Factory.e()).parallelism(2), Collectors.toList())),
-          new GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>("parallel(toList(), e, p=1) [batching]", f2 -> ParallelCollectors.parallel(f2, c2 -> c2.batching().executor(Factory.e()).parallelism(1), Collectors.toList())),
-          new GenericCollector<Factory.AsyncCollectorFactory<Integer, Integer>>("parallel(toList(), e, p=2) [batching]", f1 -> ParallelCollectors.parallel(f1, c1 -> c1.batching().executor(Factory.e()).parallelism(2), Collectors.toList()))
-        );
-    }
 
     @TestFactory
     Stream<DynamicTest> shouldNotBlockTheCallingThread() {

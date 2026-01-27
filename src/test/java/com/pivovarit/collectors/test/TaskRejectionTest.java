@@ -15,48 +15,26 @@
  */
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.ParallelCollectors;
 import com.pivovarit.collectors.TestUtils;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
+import static com.pivovarit.collectors.test.Factory.allWithCustomExecutors;
+import static com.pivovarit.collectors.test.Factory.allWithCustomExecutorsParallelismOne;
 import static java.time.Duration.ofMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 class TaskRejectionTest {
-
-    static <T, R> Factory.GenericCollector<Factory.CollectorFactoryWithExecutor<T, R>> executorCollector(String name, Factory.CollectorFactoryWithExecutor<T, R> collector) {
-        return new Factory.GenericCollector<>(name, collector);
-    }
-
-    private static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithExecutor<Integer, Integer>>> allWithCustomExecutors() {
-        return Stream.of(
-          executorCollector("parallel(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e)), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4)), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(14).batching()), c -> c.thenApply(Stream::toList).join())),
-          executorCollector("parallel(toList(), e)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e), toList()), c -> c.join())),
-          executorCollector("parallel(toList(), e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4), toList()), c -> c.join())),
-          executorCollector("parallel(toList(), e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4).batching(), toList()), c -> c.join())),
-          executorCollector("parallelToStream(e)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e)), Stream::toList)),
-          executorCollector("parallelToStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4)), Stream::toList)),
-          executorCollector("parallelToStream(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4).batching()), Stream::toList)),
-          executorCollector("parallelToOrderedStream(e, p=4)", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4).ordered()), Stream::toList)),
-          executorCollector("parallelToOrderedStream(e, p=4) [batching]", (f, e) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(4).batching().ordered()), Stream::toList))
-        );
-    }
 
     @TestFactory
     Stream<DynamicTest> shouldRejectInvalidRejectedExecutionHandlerFactory() {
@@ -84,12 +62,7 @@ class TaskRejectionTest {
     }
     @TestFactory
     Stream<DynamicTest> shouldHandleRejectionWhenParallelismOneFactory() {
-        return Stream.<Factory.GenericCollector<Factory.CollectorFactoryWithExecutor<Integer, Integer>>>of(
-            executorCollector("parallel(e, p=1)", (f, e1) -> Collectors.collectingAndThen(ParallelCollectors.parallel(f, c1 -> c1.executor(e1).parallelism(1)), c1 -> c1.thenApply(Stream::toList).join())),
-            executorCollector("parallel(e, p=1) [batching]", (f, e1) -> Collectors.collectingAndThen(ParallelCollectors.parallel(f, c1 -> c1.executor(e1).parallelism(1).batching()), c1 -> c1.thenApply(Stream::toList).join())),
-            executorCollector("parallel(toList(), e, p=1)", (f, e1) -> Collectors.collectingAndThen(ParallelCollectors.parallel(f, c1 -> c1.executor(e1).parallelism(1), Collectors.toList()), c1 -> c1.join())),
-            executorCollector("parallel(toList(), e, p=1) [batching]", (f, e1) -> Collectors.collectingAndThen(ParallelCollectors.parallel(f, c1 -> c1.executor(e1).parallelism(1).batching(), Collectors.toList()), c1 -> c1.join()))
-          )
+        return allWithCustomExecutorsParallelismOne()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               var e = new ThreadPoolExecutor(1, 1, 0L, SECONDS, new LinkedBlockingQueue<>(1));
               e.submit(() -> TestUtils.sleepAndReturn(10_000, 42));

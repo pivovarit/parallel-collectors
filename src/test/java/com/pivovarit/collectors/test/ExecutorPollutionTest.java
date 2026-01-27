@@ -15,41 +15,17 @@
  */
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.ParallelCollectors;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-import static java.util.stream.Collectors.toList;
+import static com.pivovarit.collectors.test.Factory.boundedCollectors;
 
 class ExecutorPollutionTest {
-
-
-    static <T, R> Factory.GenericCollector<Factory.CollectorFactoryWithParallelismAndExecutor<T, R>> advancedCollector(String name, Factory.CollectorFactoryWithParallelismAndExecutor<T, R> collector) {
-        return new Factory.GenericCollector<>(name, collector);
-    }
-
-    public static Stream<Factory.GenericCollector<Factory.CollectorFactoryWithParallelismAndExecutor<Integer, Integer>>> boundedCollectors() {
-        return Stream.of(
-          advancedCollector("parallel()", (f, e, p) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(p))),
-          advancedCollector("parallel(toList())", (f, e, p) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(p), toList())),
-          advancedCollector("parallelBy()", (f, e, p) -> ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e).parallelism(p))),
-          advancedCollector("parallelBy(toList())", (f, e, p) -> ParallelCollectors.parallelBy(noopClassifier(), f, c -> c.executor(e).parallelism(p), toList())),
-          advancedCollector("parallelToStream()", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p))),
-          advancedCollector("parallelToStreamBy()", (f, e, p) -> ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e).parallelism(p))),
-          advancedCollector("parallelToOrderedStream()", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p).ordered())),
-          advancedCollector("parallelToOrderedStreamBy()", (f, e, p) -> ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e).parallelism(p).ordered())),
-          advancedCollector("parallel() (batching)", (f, e, p) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(p).batching())),
-          advancedCollector("parallel(toList()) (batching)", (f, e, p) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(p).batching(), toList())),
-          advancedCollector("parallelToStream() (batching)", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p).batching())),
-          advancedCollector("parallelToOrderedStream() (batching)", (f, e, p) -> ParallelCollectors.parallelToStream(f, c -> c.executor(e).parallelism(p).batching().ordered())));
-    }
 
     @TestFactory
     Stream<DynamicTest> shouldNotPolluteExecutorFactory() {
@@ -93,9 +69,5 @@ class ExecutorPollutionTest {
             CompletableFuture.runAsync(() -> {}).join();
         }
         return e;
-    }
-
-    static <T> Function<T, UUID> noopClassifier() {
-        return i -> UUID.randomUUID();
     }
 }
