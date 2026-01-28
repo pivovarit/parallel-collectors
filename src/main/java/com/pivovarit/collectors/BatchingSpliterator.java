@@ -33,7 +33,6 @@ import static java.util.stream.StreamSupport.stream;
 final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     private final List<T> source;
-    private int maxChunks;
 
     private int chunks;
     private int chunkSize;
@@ -46,7 +45,6 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
         }
         source = list;
         chunks = list.isEmpty() ? 0 : batches;
-        maxChunks = Math.min(list.size(), batches);
         chunkSize = (int) Math.ceil(((double) source.size()) / batches);
     }
 
@@ -111,7 +109,6 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
         consumed += midSize;
         chunks -= midChunks;
-        maxChunks -= midChunks;
         chunkSize = (int) Math.ceil(((double) (source.size() - consumed)) / chunks);
 
         return split;
