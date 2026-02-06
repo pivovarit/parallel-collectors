@@ -15,10 +15,8 @@
  */
 package com.pivovarit.collectors;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,18 +38,12 @@ final class ConfigProcessor {
     static Config process(List<Option> options) {
         requireNonNull(options, "options can't be null");
 
-        Set<Class<? extends Option>> seen = new HashSet<>();
-
         Boolean batching = null;
         Boolean ordered = null;
         Integer parallelism = null;
         Executor executor = null;
 
         for (var option : options) {
-            if (!seen.add(option.getClass())) {
-                throw new IllegalArgumentException("each option can be used at most once, and you configured '%s' multiple times".formatted(toHumanReadableString(option)));
-            }
-
             switch (option) {
                 case Option.Batched ignored -> batching = true;
                 case Option.Parallelism(var p) -> parallelism = p;
@@ -67,7 +59,7 @@ final class ConfigProcessor {
           Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR));
     }
 
-    private static String toHumanReadableString(Option option) {
+    static String toHumanReadableString(Option option) {
         return switch (option) {
             case Option.Batched ignored -> "batching";
             case Option.Parallelism ignored -> "parallelism";

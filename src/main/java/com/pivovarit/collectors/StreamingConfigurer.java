@@ -17,7 +17,9 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -29,11 +31,9 @@ import java.util.concurrent.Executor;
 public final class StreamingConfigurer {
 
     private final List<ConfigProcessor.Option> modifiers = new ArrayList<>();
+    private final Set<Class<? extends ConfigProcessor.Option>> seen = new HashSet<>();
 
-    /**
-     * Creates a new configurer instance.
-     */
-    public StreamingConfigurer() {
+    StreamingConfigurer() {
     }
 
     /**
@@ -45,7 +45,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer ordered() {
-        modifiers.add(ConfigProcessor.Option.Ordered.INSTANCE);
+        addOnce(ConfigProcessor.Option.Ordered.INSTANCE);
         return this;
     }
 
@@ -62,7 +62,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer batching() {
-        modifiers.add(ConfigProcessor.Option.Batched.INSTANCE);
+        addOnce(ConfigProcessor.Option.Batched.INSTANCE);
         return this;
     }
 
@@ -79,7 +79,7 @@ public final class StreamingConfigurer {
     public StreamingConfigurer parallelism(int parallelism) {
         Preconditions.requireValidParallelism(parallelism);
 
-        modifiers.add(new ConfigProcessor.Option.Parallelism(parallelism));
+        addOnce(new ConfigProcessor.Option.Parallelism(parallelism));
         return this;
     }
 
@@ -99,11 +99,18 @@ public final class StreamingConfigurer {
     public StreamingConfigurer executor(Executor executor) {
         Preconditions.requireValidExecutor(executor);
 
-        modifiers.add(new ConfigProcessor.Option.ThreadPool(executor));
+        addOnce(new ConfigProcessor.Option.ThreadPool(executor));
         return this;
     }
 
     List<ConfigProcessor.Option> getConfig() {
         return Collections.unmodifiableList(modifiers);
+    }
+
+    private void addOnce(ConfigProcessor.Option option) {
+        if (!seen.add(option.getClass())) {
+            throw new IllegalArgumentException("'%s' can only be configured once".formatted(ConfigProcessor.toHumanReadableString(option)));
+        }
+        modifiers.add(option);
     }
 }
