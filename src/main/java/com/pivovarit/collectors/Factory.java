@@ -68,8 +68,8 @@ final class Factory {
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer
     ) {
-        requireNonNull(mapper, "mapper can't be null");
-        requireNonNull(mapper, "configurer can't be null");
+        requireNonNull(mapper, "mapper cannot be null");
+        requireNonNull(configurer, "configurer cannot be null");
 
         var config = ConfigProcessor.process(collecting(configurer).getConfig());
 
@@ -115,8 +115,8 @@ final class Factory {
     static <T, R> Collector<T, ?, Stream<R>> streaming(
       Function<? super T, ? extends R> mapper,
       Consumer<StreamingConfigurer> configurer) {
-        requireNonNull(mapper, "mapper can't be null");
-        requireNonNull(mapper, "configurer can't be null");
+        requireNonNull(mapper, "mapper cannot be null");
+        requireNonNull(configurer, "configurer cannot be null");
 
         var config = ConfigProcessor.process(streaming(configurer).getConfig());
 

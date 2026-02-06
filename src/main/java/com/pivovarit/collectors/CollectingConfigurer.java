@@ -16,6 +16,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -88,6 +89,6 @@ public final class CollectingConfigurer {
     }
 
     List<ConfigProcessor.Option> getConfig() {
-        return modifiers;
+        return Collections.unmodifiableList(modifiers);
     }
 }
