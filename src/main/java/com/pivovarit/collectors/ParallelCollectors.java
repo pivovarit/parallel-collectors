@@ -112,7 +112,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each batch.
+     * emitting {@link Grouped} entries representing each group.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
      * parallel on Virtual Threads. The resulting {@link Grouped} entries are exposed as a
@@ -128,7 +128,7 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t)));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
+     * @param classifier function that assigns a grouping key to each element
      * @param mapper     transformation applied to each element
      * @param <T>        the input element type
      * @param <K>        the classification key type
@@ -150,11 +150,11 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each batch.
+     * emitting {@link Grouped} entries representing each group.
      * <p>
      * The generated {@link Stream} of {@code Grouped<K, R>} instances is then reduced using the
      * user-provided {@code collector}, executed on Virtual Threads. Each group is processed
-     * independently, and every batch is guaranteed to be processed on a single thread.
+     * independently, and every group is guaranteed to be processed on a single thread.
      * The reduction is applied to the grouped results rather than to the raw mapped elements.
      *
      * <p><b>Note:</b> This collector does not limit parallelism in any way (it may spawn work for every
@@ -167,9 +167,9 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t), toList()));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
+     * @param classifier function that assigns a grouping key to each element
      * @param mapper     transformation applied to each element
-     * @param collector  the {@code Collector} describing the reduction for each batch
+     * @param collector  the {@code Collector} describing the reduction of the grouped results
      * @param <T>        the input element type
      * @param <K>        the classification key type
      * @param <R>        the type produced by {@code mapper}
@@ -202,6 +202,9 @@ public final class ParallelCollectors {
      * Each element is transformed using the provided {@code mapper} in parallel on Virtual Threads,
      * and the mapped elements are exposed as a {@code Stream}.
      *
+     * <p><b>Ordering:</b> This collector emits elements in an <em>arbitrary</em> order. To preserve encounter
+     * order, use the {@link StreamingConfigurer} overload and configure {@link StreamingConfigurer#ordered()}.
+     *
      * <p><b>Note:</b> This collector does not limit parallelism in any way (it may spawn work for every
      * element). As a result, it is not suitable for processing huge streams.
      *
@@ -230,11 +233,15 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each batch.
+     * emitting {@link Grouped} entries representing each group.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
      * parallel on Virtual Threads. The resulting grouped entries are exposed as a
      * {@code Stream<Grouped<K, R>>}.
+     *
+     * <p><b>Ordering:</b> This collector emits {@link Grouped} elements in an <em>arbitrary</em> order.
+     * To preserve encounter order, use the {@link StreamingConfigurer} overload and configure
+     * {@link StreamingConfigurer#ordered()}.
      *
      * <p><b>Note:</b> This collector does not limit parallelism in any way (it may spawn work for every
      * element). As a result, it is not suitable for processing huge streams.
@@ -246,7 +253,7 @@ public final class ParallelCollectors {
      *   .collect(parallelToStreamBy(Task::groupId, t -> compute(t)));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
+     * @param classifier function that assigns a grouping key to each element
      * @param mapper     transformation applied to each element
      * @param <T>        the input element type
      * @param <K>        the classification key type
@@ -369,7 +376,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each batch, with additional configuration applied
+     * emitting {@link Grouped} entries representing each group, with additional configuration applied
      * via the provided {@code configurer}.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
@@ -396,7 +403,7 @@ public final class ParallelCollectors {
      *   ));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
+     * @param classifier function that assigns a grouping key to each element
      * @param mapper     transformation applied to each element
      * @param configurer callback used to configure execution (see {@link CollectingConfigurer})
      * @param <T>        the input element type
@@ -420,14 +427,14 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each batch, and then reducing them using the
+     * emitting {@link Grouped} entries representing each group, and then reducing them using the
      * user-provided {@code collector}, with additional configuration applied via the provided
      * {@code configurer}.
      * <p>
      * The generated {@link Stream} of {@code Grouped<K, R>} instances is reduced using the supplied
      * {@code collector}, executed on Virtual Threads by default (unless overridden via
      * {@link CollectingConfigurer#executor(java.util.concurrent.Executor)}). Each group is processed
-     * independently, and every batch is guaranteed to be processed on a single thread.
+     * independently, and every group is guaranteed to be processed on a single thread.
      * The reduction is applied to the grouped results rather than to the raw mapped elements.
      * The {@code configurer} can also be used to enable batching and/or set a maximum parallelism level.
      *
@@ -450,7 +457,7 @@ public final class ParallelCollectors {
      *   ));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
+     * @param classifier function that assigns a grouping key to each element
      * @param mapper     transformation applied to each element
      * @param configurer callback used to configure execution (see {@link CollectingConfigurer})
      * @param collector  the {@code Collector} describing the reduction for grouped results
@@ -532,7 +539,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each batch, with additional configuration applied
+     * emitting {@link Grouped} entries representing each group, with additional configuration applied
      * via the provided {@code configurer}.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
@@ -563,7 +570,7 @@ public final class ParallelCollectors {
      *   ));
      * }</pre>
      *
-     * @param classifier function that groups elements into batches
+     * @param classifier function that assigns a grouping key to each element
      * @param mapper     transformation applied to each element
      * @param configurer callback used to configure execution (see {@link StreamingConfigurer})
      * @param <T>        the input element type
@@ -820,7 +827,7 @@ public final class ParallelCollectors {
      *
      * @param collector the {@code Collector} describing the reduction
      * @param <T>       the type of the collected elements
-     * @param <R>       the result of the transformation
+     * @param <R>       the result type of the downstream {@code Collector}
      *
      * @return a {@code Collector} which collects all futures and combines them into a single future
      * using the provided downstream {@code Collector}

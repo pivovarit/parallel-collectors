@@ -1,4 +1,6 @@
 /**
- * The {@link com.pivovarit.collectors} package contains all internal components backing the {@link com.pivovarit.collectors.ParallelCollectors} APIs
+ * Parallel {@link java.util.stream.Collector} implementations for processing stream elements concurrently.
+ *
+ * <p>The main entry point is {@link com.pivovarit.collectors.ParallelCollectors}.
  */
 package com.pivovarit.collectors;
