@@ -44,22 +44,24 @@ class ArchitectureTest {
       .because("cycles are bad");
 
     @ArchTest
-    static final ArchRule shouldHaveSingleFacade = classes()
-      .that().arePublic()
-      .and().doNotHaveFullyQualifiedName("com.pivovarit.collectors.Grouped")
-      .and().areNotNestedClasses()
-      .should().haveSimpleName("ParallelCollectors").orShould().haveSimpleName("Batching")
-      .andShould().haveOnlyFinalFields()
+    static final ArchRule shouldHaveSingletonFacade = classes()
+      .that().haveSimpleName("ParallelCollectors")
+      .should().haveOnlyFinalFields()
       .andShould().haveOnlyPrivateConstructors()
       .andShould().haveModifier(FINAL)
-      .as("all public factory methods should be accessible from the ParallelCollectors and ParallelCollectors.Batching classes")
-      .because("users of ParallelCollectors should have a single entry point");
+      .as("ParallelCollectors should be a singleton")
+      .because("ParallelCollectors is never supposed to be instantiated");
 
     @ArchTest
-    static final ArchRule shouldHaveBatchingClassesInsideParallelCollectors = classes()
-      .that().arePublic().and().haveSimpleName("Batching")
-      .should().beNestedClasses()
-      .as("all Batching classes are sub namespaces of ParallelCollectors");
+    static final ArchRule shouldLimitPublicAPI = classes()
+      .that().arePublic()
+      .and().areNotNestedClasses()
+      .should().haveSimpleName("ParallelCollectors")
+      .orShould().haveSimpleName("Grouped")
+      .orShould().haveSimpleName("StreamingConfigurer")
+      .orShould().haveSimpleName("CollectingConfigurer")
+      .as("limit public API surface")
+      .because("only the designated API types should be public; everything else should remain internal");
 
     @ArchTest
     static final ArchRule shouldHaveZeroDependencies = classes()

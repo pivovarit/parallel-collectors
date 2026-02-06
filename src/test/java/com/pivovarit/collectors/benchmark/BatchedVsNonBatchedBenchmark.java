@@ -59,28 +59,28 @@ public class BatchedVsNonBatchedBenchmark {
     @Benchmark
     public List<Integer> parallel_collect(BenchmarkState state) {
         return source.stream()
-          .collect(ParallelCollectors.parallel(i -> i, toList(), state.executor, state.parallelism))
+          .collect(ParallelCollectors.parallel(i -> i, c -> c.executor(state.executor).parallelism(state.parallelism), toList()))
           .join();
     }
 
     @Benchmark
     public List<Integer> parallel_batch_collect(BenchmarkState state) {
         return source.stream()
-          .collect(ParallelCollectors.Batching.parallel(i -> i, toList(), state.executor, state.parallelism))
+          .collect(ParallelCollectors.parallel(i -> i, c -> c.batching().executor(state.executor).parallelism(state.parallelism), toList()))
           .join();
     }
 
     @Benchmark
     public List<Integer> parallel_streaming(BenchmarkState state) {
         return source.stream()
-          .collect(ParallelCollectors.parallelToStream(i -> i, state.executor, state.parallelism))
+          .collect(ParallelCollectors.parallelToStream(i -> i, c -> c.batching().executor(state.executor).parallelism(state.parallelism)))
           .toList();
     }
 
     @Benchmark
     public List<Integer> parallel_batch_streaming_collect(BenchmarkState state) {
         return source.stream()
-          .collect(ParallelCollectors.Batching.parallelToStream(i -> i, state.executor, state.parallelism))
+          .collect(ParallelCollectors.parallelToStream(i -> i, c -> c.batching().executor(state.executor).parallelism(state.parallelism)))
           .toList();
     }
 

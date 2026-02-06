@@ -15,14 +15,10 @@
  */
 package com.pivovarit.collectors;
 
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
-import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
@@ -54,22 +50,40 @@ class OptionTest {
         }
     }
 
-    @TestFactory
-    Stream<DynamicTest> shouldThrowWhenSameOptionsAreUsedMultipleTimes() {
-        return Stream.<ConfigProcessor.Option>of(ConfigProcessor.Option.Batched.INSTANCE, new ConfigProcessor.Option.ThreadPool(r -> {}), new ConfigProcessor.Option.Parallelism(1))
-          .map(o -> DynamicTest.dynamicTest("should handle duplicated: " + nameOf(o), () -> {
-              assertThatThrownBy(() -> ConfigProcessor.process(List.of(o, o)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("each option can be used at most once, and you configured '%s' multiple times".formatted(nameOf(o)));
-          }));
+    @Test
+    void shouldThrowOnDuplicateBatching() {
+        var configurer = new CollectingConfigurer();
+        configurer.batching();
+        assertThatThrownBy(configurer::batching)
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'batching' can only be configured once");
     }
 
-    private String nameOf(ConfigProcessor.Option option) {
-        return switch (option) {
-            case ConfigProcessor.Option.Batched __ -> "batching";
-            case ConfigProcessor.Option.Parallelism __ -> "parallelism";
-            case ConfigProcessor.Option.ThreadPool __ -> "executor";
-            case ConfigProcessor.Option.Ordered __ -> "ordered";
-        };
+    @Test
+    void shouldThrowOnDuplicateParallelism() {
+        var configurer = new CollectingConfigurer();
+        configurer.parallelism(1);
+        assertThatThrownBy(() -> configurer.parallelism(2))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'parallelism' can only be configured once");
     }
+
+    @Test
+    void shouldThrowOnDuplicateExecutor() {
+        var configurer = new CollectingConfigurer();
+        configurer.executor(r -> {});
+        assertThatThrownBy(() -> configurer.executor(r -> {}))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'executor' can only be configured once");
+    }
+
+    @Test
+    void shouldThrowOnDuplicateOrdered() {
+        var configurer = new StreamingConfigurer();
+        configurer.ordered();
+        assertThatThrownBy(configurer::ordered)
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'ordered' can only be configured once");
+    }
+
 }

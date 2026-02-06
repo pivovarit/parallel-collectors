@@ -56,12 +56,15 @@ public record Grouped<T, V>(T key, List<V> values) {
 
     /**
      * Transforms the values in this group using the provided mapper function.
+     * <p>
+     * The mapper receives both the group's key and each value, allowing transformations
+     * that depend on the grouping key.
      *
-     * @param mapper the mapping function, must not be null
+     * @param mapper the mapping function receiving (key, value), must not be null
      * @param <R>    the target type of the mapped values
      *
      * @return a new {@code Grouped} instance with the same key and the values produced by applying
-     * {@code mapper} to each element in this group's values
+     * {@code mapper} to the key and each value in this group
      */
     public <R> Grouped<T, R> map(BiFunction<? super T, ? super V, ? extends R> mapper) {
         Objects.requireNonNull(mapper, "mapper cannot be null");
