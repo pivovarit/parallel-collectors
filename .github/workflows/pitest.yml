@@ -36,16 +36,19 @@ jobs:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
           distribution: 'temurin'
+          cache: 'maven'
 
       - name: Run Mutation Testing
         run: mvn -B package -Ppitest org.pitest:pitest-maven:mutationCoverage -Djunit.jupiter.execution.parallel.enabled=false
 
+      - name: Prepare deployment
+        run: mkdir -p docs/pitest && cp -r ./target/pit-reports/* docs/pitest/
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './target/pit-reports'
+          path: './docs'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
