@@ -13,9 +13,16 @@ concurrency:
   group: 'pitest'
   cancel-in-progress: true
 
+permissions:
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     strategy:
       matrix:
         java: [ '24' ]
@@ -29,14 +36,18 @@ jobs:
           java-version: ${{ matrix.java }}
           architecture: ${{ matrix.architecture }}
           distribution: 'temurin'
-          
+
       - name: Run Mutation Testing
         run: mvn -B package -Ppitest org.pitest:pitest-maven:mutationCoverage -Djunit.jupiter.execution.parallel.enabled=false
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4.0.0
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/pit-reports
+          path: './target/pit-reports'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
 
