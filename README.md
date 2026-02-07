@@ -93,7 +93,7 @@ flowchart TD
 A[Are you ok blocking the caller thread while waiting for processing to finish?] -->|No| B[Use ParallelCollectors.parallel]
 A -->|Yes| C{Does the order of elements matter?}
 
-C -->|Yes| D[Use ParallelCollectors.parallelToOrderedStream]
+C -->|Yes| D["Use ParallelCollectors.parallelToStream with c -> c.ordered()"]
 C -->|No| E[Use ParallelCollectors.parallelToStream]
 ```
 
@@ -102,12 +102,22 @@ C -->|No| E[Use ParallelCollectors.parallelToStream]
 Additionally, you can customize:
 - a custom `Executor` (defaults to Virtual Threads)
 - a custom parallelism level
-- batching by key via `*By(...)` methods
-- batching by size via `Batching` namespace
-- a custom `Collector` (`ParallelCollectors.parallel` only)
+- batching via the `batching()` configurer option
+- grouping by key via `parallelBy(...)` / `parallelToStreamBy(...)` methods
+- ordered streaming via the `ordered()` configurer option (streaming collectors only)
+- a custom downstream `Collector` (`ParallelCollectors.parallel` only)
+
+All configuration is done via the `CollectingConfigurer` (for `parallel`/`parallelBy`) or `StreamingConfigurer` (for `parallelToStream`/`parallelToStreamBy`) passed as a `Consumer`:
+
+    list.stream()
+      .collect(parallel(i -> foo(i), c -> c
+        .executor(executor)
+        .parallelism(4)
+        .batching(),
+      toList()));
 
 #### Batching Collectors
-When you use non-batching parallel collectors, **every input element is turned into an individual task** submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks. 
+When you use non-batching parallel collectors, **every input element is turned into an individual task** submitted to an `ExecutorService`. If you have 1000 elements, you end up submitting 1000 tasks.
 Even if you only have two threads processing them, both threads hammer the same task queue, repeatedly competing for the next piece of work. That competition creates contention, and overall overhead.
 
 This behaviour resembles a primitive form of **work-stealing**, where each worker repeatedly tries to grab the next available task. **Work-stealing is great in scenarios where task durations vary significantly**, since it keeps faster workers busy, **but it's not free**.
@@ -135,7 +145,10 @@ BatchedVsNonBatchedBenchmark.batch    thrpt    5  41558.548 ± 959.057  ops/s
 BatchedVsNonBatchedBenchmark.normal   thrpt    5    254.869 ±   5.667  ops/s
 ```
 
-Batching alternatives are available under the `ParallelCollectors.Batching` namespace.
+Batching can be enabled via the `batching()` configurer option:
+
+    list.stream()
+      .collect(parallel(i -> foo(i), c -> c.batching(), toList()));
 
 #### Normal
 
@@ -145,66 +158,90 @@ Batching alternatives are available under the `ParallelCollectors.Batching` name
 
 ![](docs/flamegraph_batched.png)
 
+#### Grouping Collectors
+
+The `parallelBy(...)` and `parallelToStreamBy(...)` methods allow you to classify input elements by a key and process each group in parallel. Each group is guaranteed to be processed on a single thread, and results are returned as `Grouped<K, R>` entries:
+
+    CompletableFuture<Stream<Grouped<String, String>>> result = tasks.stream()
+      .collect(parallelBy(Task::groupId, t -> compute(t)));
+
+    CompletableFuture<List<Grouped<String, String>>> result = tasks.stream()
+      .collect(parallelBy(Task::groupId, t -> compute(t), toList()));
+
+The `Grouped<K, V>` record provides `key()` and `values()` accessors, plus a `map()` method for transforming values while preserving the grouping key.
+
 ### Leveraging CompletableFuture
 
-Parallel Collectors™ expose results wrapped in `CompletableFuture` instances, which provides great flexibility and the possibility of working with them in a non-blocking fashion:
+Parallel Collectors expose results wrapped in `CompletableFuture` instances, which provides great flexibility and the possibility of working with them in a non-blocking fashion:
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallel(i -> foo(i), toList(), executor));
+      .collect(parallel(i -> foo(i), toList()));
 
 This makes it possible to conveniently apply callbacks and compose with other `CompletableFuture`s:
 
     list.stream()
-      .collect(parallel(i -> foo(i), toSet(), executor))
+      .collect(parallel(i -> foo(i), toSet()))
       .thenAcceptAsync(System.out::println, otherExecutor)
       .thenRun(() -> System.out.println("Finished!"));
-      
+
 Or just `join()` if you just want to block the calling thread and wait for the result:
 
     List<String> result = list.stream()
-      .collect(parallel(i -> foo(i), toList(), executor))
+      .collect(parallel(i -> foo(i), toList()))
       .join();
-      
+
 What's more, since JDK9, [you can even provide your own timeout easily](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CompletableFuture.html#orTimeout(long,java.util.concurrent.TimeUnit)).
       
 ## Examples
 
-##### 1. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `List`
-
-    Executor executor = ...
+##### 1. Apply `i -> foo(i)` in parallel using Virtual Threads and collect to `List`
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallel(i -> foo(i), toList(), executor));
-      
+      .collect(parallel(i -> foo(i), toList()));
+
 ##### 2. Apply `i -> foo(i)` in parallel on a custom `Executor` with max parallelism of 4 and collect to `Set`
 
     Executor executor = ...
 
     CompletableFuture<Set<String>> result = list.stream()
-      .collect(parallel(i -> foo(i), toSet(), executor, 4));
-      
-##### 3. Apply `i -> foo(i)` in parallel on a custom `Executor` and collect to `LinkedList`
+      .collect(parallel(i -> foo(i), c -> c
+        .executor(executor)
+        .parallelism(4),
+      toSet()));
+
+##### 3. Apply `i -> foo(i)` in parallel with batching and collect to `LinkedList`
+
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(parallel(i -> foo(i), c -> c.batching(),
+        toCollection(LinkedList::new)));
+
+##### 4. Apply `i -> foo(i)` in parallel and stream results in completion order
+
+    list.stream()
+      .collect(parallelToStream(i -> foo(i)))
+      .forEach(i -> ...);
+
+##### 5. Apply `i -> foo(i)` in parallel and stream results in the original order
+
+    list.stream()
+      .collect(parallelToStream(i -> foo(i), c -> c.ordered()))
+      .forEach(i -> ...);
+
+##### 6. Classify and process elements in parallel by group
+
+    CompletableFuture<Stream<Grouped<String, String>>> result = tasks.stream()
+      .collect(parallelBy(Task::groupId, t -> compute(t)));
+
+##### 7. Apply `i -> foo(i)` in parallel with full configuration
 
     Executor executor = ...
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallel(i -> foo(i), toCollection(LinkedList::new), executor));
-      
-##### 4. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in completion order
-
-    Executor executor = ...
-
-    list.stream()
-      .collect(parallelToStream(i -> foo(i), executor))
-      .forEach(i -> ...);
-      
-##### 5. Apply `i -> foo(i)` in parallel on a custom `Executor` and stream results in the original order
-
-    Executor executor = ...
-
-    list.stream()
-      .collect(parallelToOrderedStream(i -> foo(i), executor))
-      .forEach(i -> ...);
+      .collect(parallel(i -> foo(i), c -> c
+        .executor(executor)
+        .parallelism(64)
+        .batching(),
+      toList()));
 
 ## Rationale
 
