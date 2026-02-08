@@ -4,7 +4,7 @@ Overcoming limitations of standard Parallel Streams
 [![ci](https://github.com/pivovarit/parallel-collectors/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/pivovarit/parallel-collectors/actions/workflows/ci.yml)
 [![pitest](https://github.com/pivovarit/parallel-collectors/actions/workflows/pitest.yml/badge.svg?branch=main)](http://pivovarit.github.io/parallel-collectors/pitest)
 [![Maven Central Version](https://img.shields.io/maven-central/v/com.pivovarit/parallel-collectors)](https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors/versions)
-[![javadoc](https://javadoc.io/badge2/com.pivovarit/parallel-collectors/3.4.0/javadoc.svg)](https://javadoc.io/doc/com.pivovarit/parallel-collectors/3.4.0)
+[![javadoc](https://javadoc.io/badge2/com.pivovarit/parallel-collectors/4.0.0/javadoc.svg)](https://javadoc.io/doc/com.pivovarit/parallel-collectors/4.0.0)
 
 ![](docs/logo.png)
 
@@ -34,7 +34,7 @@ They are:
     <dependency>
         <groupId>com.pivovarit</groupId>
         <artifactId>parallel-collectors</artifactId>
-        <version>3.4.0</version>
+        <version>4.0.0</version>
     </dependency>
 
 #### JDK 8+:
@@ -49,7 +49,7 @@ They are:
 
 #### JDK 21+:
 
-    implementation 'com.pivovarit:parallel-collectors:3.4.0'
+    implementation 'com.pivovarit:parallel-collectors:4.0.0'
 
 #### JDK 8+:
 
