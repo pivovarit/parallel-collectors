@@ -32,16 +32,16 @@ final class Factory {
     private Factory() {
     }
 
-    static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Grouped<K, R>>>> collectingBy(
+    static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Group<K, R>>>> collectingBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer) {
-        return Factory.collectingBy(classifier, (Function<Stream<Grouped<K, R>>, Stream<Grouped<K, R>>>) i -> i, mapper, configurer);
+        return Factory.collectingBy(classifier, (Function<Stream<Group<K, R>>, Stream<Group<K, R>>>) i -> i, mapper, configurer);
     }
 
     static <T, K, R, C> Collector<T, ?, CompletableFuture<C>> collectingBy(
       Function<? super T, ? extends K> classifier,
-      Function<Stream<Grouped<K, R>>, C> finalizer,
+      Function<Stream<Group<K, R>>, C> finalizer,
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
@@ -57,7 +57,7 @@ final class Factory {
           groups -> groups.entrySet()
             .stream()
             .collect(collecting(finalizer,
-              e -> new Grouped<>(e.getKey(), e.getValue().stream()
+              e -> new Group<>(e.getKey(), e.getValue().stream()
                 .map(mapper.andThen(a -> (R) a))
                 .toList()), configurer))
         );
@@ -91,7 +91,7 @@ final class Factory {
         });
     }
 
-    static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> streamingBy(
+    static <T, K, R> Collector<T, ?, Stream<Group<K, R>>> streamingBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Consumer<StreamingConfigurer> configurer) {
@@ -106,7 +106,7 @@ final class Factory {
           Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
           groups -> groups.entrySet()
             .stream()
-            .collect(streaming(e -> new Grouped<>(e.getKey(), e.getValue().stream()
+            .collect(streaming(e -> new Group<>(e.getKey(), e.getValue().stream()
               .map(mapper.andThen(a -> (R) a))
               .toList()), configurer))
         );
