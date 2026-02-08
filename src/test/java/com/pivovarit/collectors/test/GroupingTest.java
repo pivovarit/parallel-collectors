@@ -16,7 +16,6 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.Group;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
