@@ -15,7 +15,7 @@
  */
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.Grouped;
+import com.pivovarit.collectors.Group;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +37,7 @@ class GroupingTest {
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               Map<Thread, List<Integer>> threads = new ConcurrentHashMap<>();
 
-              List<Grouped<Integer, Integer>> results = Stream.iterate(0, i -> i + 1).limit(30)
+              List<Group<Integer, Integer>> results = Stream.iterate(0, i -> i + 1).limit(30)
                 .collect(c.factory().collector(i -> {
                     threads.computeIfAbsent(Thread.currentThread(), (k) -> new ArrayList<>()).add(i);
                     return i;
@@ -45,16 +45,16 @@ class GroupingTest {
 
               assertThat(results)
                 .containsExactlyInAnyOrder(
-                  Grouped.of(0, List.of(0, 10, 20)),
-                  Grouped.of(1, List.of(1, 11, 21)),
-                  Grouped.of(2, List.of(2, 12, 22)),
-                  Grouped.of(3, List.of(3, 13, 23)),
-                  Grouped.of(4, List.of(4, 14, 24)),
-                  Grouped.of(5, List.of(5, 15, 25)),
-                  Grouped.of(6, List.of(6, 16, 26)),
-                  Grouped.of(7, List.of(7, 17, 27)),
-                  Grouped.of(8, List.of(8, 18, 28)),
-                  Grouped.of(9, List.of(9, 19, 29))
+                  Group.of(0, List.of(0, 10, 20)),
+                  Group.of(1, List.of(1, 11, 21)),
+                  Group.of(2, List.of(2, 12, 22)),
+                  Group.of(3, List.of(3, 13, 23)),
+                  Group.of(4, List.of(4, 14, 24)),
+                  Group.of(5, List.of(5, 15, 25)),
+                  Group.of(6, List.of(6, 16, 26)),
+                  Group.of(7, List.of(7, 17, 27)),
+                  Group.of(8, List.of(8, 18, 28)),
+                  Group.of(9, List.of(9, 19, 29))
                 );
 
               assertThat(threads)
@@ -80,23 +80,23 @@ class GroupingTest {
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               Map<Thread, List<Integer>> threads = new ConcurrentHashMap<>();
 
-              List<Grouped<Integer, Integer>> results = Stream.iterate(0, i -> i + 1).limit(30)
+              List<Group<Integer, Integer>> results = Stream.iterate(0, i -> i + 1).limit(30)
                 .collect(c.factory().collector(i -> {
                     threads.computeIfAbsent(Thread.currentThread(), (k) -> new ArrayList<>()).add(i);
                     return i;
                 }));
 
               assertThat(results).containsExactly(
-                Grouped.of(0, List.of(0, 10, 20)),
-                Grouped.of(1, List.of(1, 11, 21)),
-                Grouped.of(2, List.of(2, 12, 22)),
-                Grouped.of(3, List.of(3, 13, 23)),
-                Grouped.of(4, List.of(4, 14, 24)),
-                Grouped.of(5, List.of(5, 15, 25)),
-                Grouped.of(6, List.of(6, 16, 26)),
-                Grouped.of(7, List.of(7, 17, 27)),
-                Grouped.of(8, List.of(8, 18, 28)),
-                Grouped.of(9, List.of(9, 19, 29))
+                Group.of(0, List.of(0, 10, 20)),
+                Group.of(1, List.of(1, 11, 21)),
+                Group.of(2, List.of(2, 12, 22)),
+                Group.of(3, List.of(3, 13, 23)),
+                Group.of(4, List.of(4, 14, 24)),
+                Group.of(5, List.of(5, 15, 25)),
+                Group.of(6, List.of(6, 16, 26)),
+                Group.of(7, List.of(7, 17, 27)),
+                Group.of(8, List.of(8, 18, 28)),
+                Group.of(9, List.of(9, 19, 29))
               );
 
               assertThat(threads)
