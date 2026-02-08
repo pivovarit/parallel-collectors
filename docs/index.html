@@ -848,11 +848,11 @@ urls<span class="op">.</span><span class="mt">stream</span>()
         <p>Returns a stream that emits results in completion order. Use <code style="font-family:var(--font-mono);font-size:12px;color:var(--syn-method)">c &rarr; c.ordered()</code> to preserve input order.</p>
       </div>
       <div class="api-card">
-        <div class="api-sig"><span class="fn">parallelToStreamBy</span>(classifier, mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;Grouped&lt;K, R&gt;&gt;</span></div>
+        <div class="api-sig"><span class="fn">parallelToStreamBy</span>(classifier, mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;Group&lt;K, R&gt;&gt;</span></div>
         <p>Classifies elements into groups and streams grouped results as they complete.</p>
       </div>
       <div class="api-card">
-        <div class="api-sig"><span class="fn">parallelBy</span>(classifier, mapper) <span class="op">&rarr;</span> <span class="tp">CompletableFuture&lt;Stream&lt;Grouped&gt;&gt;</span></div>
+        <div class="api-sig"><span class="fn">parallelBy</span>(classifier, mapper) <span class="op">&rarr;</span> <span class="tp">CompletableFuture&lt;Stream&lt;Group&gt;&gt;</span></div>
         <p>Classifies elements into groups and processes each group in parallel. Results keyed by group.</p>
       </div>
       <div class="api-card">

@@ -160,15 +160,15 @@ Batching can be enabled via the `batching()` configurer option:
 
 #### Grouping Collectors
 
-The `parallelBy(...)` and `parallelToStreamBy(...)` methods allow you to classify input elements by a key and process each group in parallel. Each group is guaranteed to be processed on a single thread, and results are returned as `Grouped<K, R>` entries:
+The `parallelBy(...)` and `parallelToStreamBy(...)` methods allow you to classify input elements by a key and process each group in parallel. Each group is guaranteed to be processed on a single thread, and results are returned as `Group<K, R>` entries:
 
-    CompletableFuture<Stream<Grouped<String, String>>> result = tasks.stream()
+    CompletableFuture<Stream<Group<String, String>>> result = tasks.stream()
       .collect(parallelBy(Task::groupId, t -> compute(t)));
 
-    CompletableFuture<List<Grouped<String, String>>> result = tasks.stream()
+    CompletableFuture<List<Group<String, String>>> result = tasks.stream()
       .collect(parallelBy(Task::groupId, t -> compute(t), toList()));
 
-The `Grouped<K, V>` record provides `key()` and `values()` accessors, plus a `map()` method for transforming values while preserving the grouping key.
+The `Group<K, V>` record provides `key()` and `values()` accessors, plus a `map()` method for transforming values while preserving the grouping key.
 
 ### Leveraging CompletableFuture
 
@@ -229,7 +229,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 
 ##### 6. Classify and process elements in parallel by group
 
-    CompletableFuture<Stream<Grouped<String, String>>> result = tasks.stream()
+    CompletableFuture<Stream<Group<String, String>>> result = tasks.stream()
       .collect(parallelBy(Task::groupId, t -> compute(t)));
 
 ##### 7. Apply `i -> foo(i)` in parallel with full configuration
