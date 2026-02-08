@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parallel Collectors — Parallel processing for Java Stream API</title>
+<meta name="description" content="Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-deep: #0a0a0f;
+    --bg-surface: #111118;
+    --bg-elevated: #1a1a24;
+    --bg-code: #0d0d14;
+    --border: #222233;
+    --border-accent: #2a2a3e;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a0;
+    --text-muted: #555568;
+    --accent: #6ee7b7;
+    --accent-dim: #3a8c6e;
+    --accent-glow: rgba(110, 231, 183, 0.08);
+    --syn-keyword: #c792ea;
+    --syn-type: #82aaff;
+    --syn-string: #c3e88d;
+    --syn-method: #ffcb6b;
+    --syn-comment: #546e7a;
+    --syn-number: #f78c6c;
+    --syn-operator: #89ddff;
+    --syn-annotation: #f07178;
+    --syn-param: #e8e8f0;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── Grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  /* ── Layout ── */
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  section {
+    padding: 96px 0;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 16px 0;
+    background: rgba(10, 10, 15, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+
+  nav .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-brand span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 180px 0 120px;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(110, 231, 183, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-glow);
+    border: 1px solid rgba(110, 231, 183, 0.15);
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 32px;
+    letter-spacing: 0.02em;
+    animation: fadeInUp 0.6s ease both;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse-dot 2s ease infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hero h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(36px, 5.5vw, 64px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    margin-bottom: 24px;
+    animation: fadeInUp 0.6s ease 0.1s both;
+  }
+
+  .hero h1 .thin {
+    font-weight: 300;
+    color: var(--text-secondary);
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 40px;
+    animation: fadeInUp 0.6s ease 0.2s both;
+  }
+
+  .hero-sub strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: fadeInUp 0.6s ease 0.3s both;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+    letter-spacing: -0.01em;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg-deep);
+  }
+
+  .btn-primary:hover {
+    background: #8bf0cc;
+    box-shadow: 0 0 24px rgba(110, 231, 183, 0.2);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-accent);
+  }
+
+  .btn-ghost:hover {
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  /* ── Install bar ── */
+  .install-bar {
+    margin-top: 48px;
+    animation: fadeInUp 0.6s ease 0.4s both;
+  }
+
+  .install-snippet {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .install-snippet:hover {
+    border-color: var(--border-accent);
+    background: var(--bg-elevated);
+  }
+
+  .install-snippet code {
+    color: var(--text-primary);
+  }
+
+  .install-snippet .copy-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    transition: color 0.2s;
+  }
+
+  .install-snippet:hover .copy-hint { color: var(--accent); }
+
+  .install-snippet.copied .copy-hint { color: var(--accent); }
+
+  /* ── Section headers ── */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: clamp(24px, 3.5vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-secondary);
+    max-width: 520px;
+    line-height: 1.7;
+  }
+
+  /* ── Features grid ── */
+  .features {
+    border-top: 1px solid var(--border);
+  }
+
+  .features-header {
+    margin-bottom: 64px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .feature-card {
+    background: var(--bg-surface);
+    padding: 36px 32px;
+    transition: background 0.25s;
+  }
+
+  .feature-card:hover {
+    background: var(--bg-elevated);
+  }
+
+  .feature-icon {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    margin-bottom: 20px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-glow);
+    border: 1px solid rgba(110, 231, 183, 0.1);
+    border-radius: 10px;
+    color: var(--accent);
+  }
+
+  .feature-card h3 {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  /* ── Code examples ── */
+  .examples {
+    border-top: 1px solid var(--border);
+  }
+
+  .examples-header {
+    margin-bottom: 64px;
+  }
+
+  .code-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+    overflow-x: auto;
+  }
+
+  .code-tab {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 12px 20px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+
+  .code-tab:hover { color: var(--text-secondary); }
+
+  .code-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .code-panels {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    overflow: hidden;
+  }
+
+  .code-panel {
+    display: none;
+    padding: 28px 32px;
+    overflow-x: auto;
+  }
+
+  .code-panel.active { display: block; }
+
+  .code-block-wrap {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .code-block-wrap .code-tabs {
+    background: var(--bg-surface);
+    border-radius: 12px 12px 0 0;
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.75;
+    letter-spacing: -0.01em;
+  }
+
+  pre code {
+    font-family: inherit;
+  }
+
+  /* Syntax highlighting */
+  .kw { color: var(--syn-keyword); }
+  .tp { color: var(--syn-type); }
+  .st { color: var(--syn-string); }
+  .mt { color: var(--syn-method); }
+  .cm { color: var(--syn-comment); font-style: italic; }
+  .nm { color: var(--syn-number); }
+  .op { color: var(--syn-operator); }
+  .an { color: var(--syn-annotation); }
+  .pr { color: var(--syn-param); }
+  .fn { color: var(--syn-method); }
+  .xml-tag { color: var(--syn-annotation); }
+  .xml-attr { color: var(--syn-method); }
+  .xml-val { color: var(--syn-string); }
+  .xml-content { color: var(--text-primary); }
+
+  /* ── API section ── */
+  .api {
+    border-top: 1px solid var(--border);
+  }
+
+  .api-header {
+    margin-bottom: 64px;
+  }
+
+  .api-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .api-card {
+    background: var(--bg-surface);
+    padding: 32px;
+  }
+
+  .api-card:hover { background: var(--bg-elevated); transition: background 0.25s; }
+
+  .api-sig {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--syn-method);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .api-sig .tp { color: var(--syn-type); }
+  .api-sig .op { color: var(--syn-operator); }
+
+  .api-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── Install section ── */
+  .install {
+    border-top: 1px solid var(--border);
+  }
+
+  .install-header { margin-bottom: 48px; }
+
+  .install-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .install-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .install-card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .install-card-header h3 {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .install-card-header .copy-btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .install-card-header .copy-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+    background: var(--accent-glow);
+  }
+
+  .install-card-header .copy-btn.copied {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  .install-card-header .version {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--accent-glow);
+    padding: 2px 10px;
+    border-radius: 100px;
+    border: 1px solid rgba(110, 231, 183, 0.12);
+  }
+
+  .install-card pre {
+    padding: 20px 24px;
+    font-size: 13px;
+    overflow-x: auto;
+  }
+
+  .install-note {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-dim);
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .install-note code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 0;
+  }
+
+  footer .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-left {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .footer-left a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-left a:hover { color: var(--accent); }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--accent); }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    section { padding: 64px 0; }
+    .hero { padding: 140px 0 80px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .api-grid { grid-template-columns: 1fr; }
+    .install-grid { grid-template-columns: 1fr; }
+    .nav-links { gap: 16px; }
+    .nav-links a { font-size: 12px; }
+    footer .container { flex-direction: column; gap: 24px; text-align: center; }
+    .hero-actions { flex-direction: column; align-items: flex-start; }
+    .code-tab { padding: 10px 14px; font-size: 12px; }
+  }
+
+  @media (max-width: 480px) {
+    .nav-links { display: none; }
+    .container { padding: 0 16px; }
+    .feature-card { padding: 28px 24px; }
+    .api-card { padding: 24px; }
+    pre { font-size: 12px; }
+  }
+
+  /* ── Scroll reveal ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav>
+  <div class="container">
+    <a href="#" class="nav-brand"><span>//</span> parallel-collectors</a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#examples">Examples</a></li>
+      <li><a href="#api">API</a></li>
+      <li><a href="#install">Install</a></li>
+      <li><a href="https://github.com/pivovarit/parallel-collectors">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">v3.4.0 — Virtual Threads</div>
+    <h1>Parallel<br><span class="thin">Collectors</span></h1>
+    <p class="hero-sub">
+      Custom <strong>java.util.stream.Collector</strong> implementations for parallel processing with <strong>CompletableFutures</strong> and <strong>Virtual Threads</strong>. Zero dependencies.
+    </p>
+    <div class="hero-actions">
+      <a href="#install" class="btn btn-primary">
+        Get Started
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="https://github.com/pivovarit/parallel-collectors" class="btn btn-ghost">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <a href="https://javadoc.io/doc/com.pivovarit/parallel-collectors" class="btn btn-ghost">
+        Javadoc
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M9 2h5v5M14 2L7 9"/></svg>
+      </a>
+    </div>
+    <div class="install-bar">
+      <div class="install-snippet" onclick="copySnippet(this)" data-copy="implementation 'com.pivovarit:parallel-collectors:3.4.0'">
+        <code>implementation '<span style="color:var(--syn-string)">com.pivovarit:parallel-collectors:3.4.0</span>'</code>
+        <span class="copy-hint">click to copy</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="features-header reveal">
+      <div class="section-label">Features</div>
+      <h2 class="section-title">Built for real-world<br>parallel workloads</h2>
+      <p class="section-desc">Standard parallel streams use the shared ForkJoinPool — terrible for I/O-bound work. Parallel Collectors fix that.</p>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon">&#8593;&#8593;</div>
+        <h3>Virtual Threads</h3>
+        <p>Defaults to Virtual Threads on JDK 21+. Lightweight concurrency without managing thread pools.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9096;</div>
+        <h3>Non-blocking</h3>
+        <p>Returns CompletableFuture — the calling thread never blocks. Compose, chain, and add timeouts freely.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9881;</div>
+        <h3>Configurable</h3>
+        <p>Custom executors, parallelism limits, and batching. Full control over how work gets distributed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9618;</div>
+        <h3>Batching</h3>
+        <p>Group fine-grained tasks into batches to minimize contention. Benchmarked up to 162x speedup.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#8709;</div>
+        <h3>Zero dependencies</h3>
+        <p>Nothing but the JDK. No transitive dependency trees, no version conflicts, no bloat.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#8644;</div>
+        <h3>Stream API native</h3>
+        <p>Works with any existing Collector. Drop it into your stream pipeline — no rewrites needed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Code Examples ── -->
+<section class="examples" id="examples">
+  <div class="container">
+    <div class="examples-header reveal">
+      <div class="section-label">Examples</div>
+      <h2 class="section-title">Parallel streams,<br>done right</h2>
+      <p class="section-desc">Familiar Stream API patterns with parallel execution backed by CompletableFuture.</p>
+    </div>
+    <div class="code-block-wrap reveal">
+      <div class="code-tabs">
+        <button class="code-tab active" onclick="switchTab(event, 'tab-basic')">Basic</button>
+        <button class="code-tab" onclick="switchTab(event, 'tab-config')">Configured</button>
+        <button class="code-tab" onclick="switchTab(event, 'tab-stream')">Streaming</button>
+        <button class="code-tab" onclick="switchTab(event, 'tab-async')">Async + Timeout</button>
+      </div>
+      <div class="code-panels">
+        <div class="code-panel active" id="tab-basic">
+<pre><code><span class="cm">// Parallel collection with Virtual Threads (default)</span>
+<span class="tp">CompletableFuture</span><span class="op">&lt;</span><span class="tp">List</span><span class="op">&lt;</span><span class="tp">String</span><span class="op">&gt;&gt;</span> result <span class="op">=</span> urls<span class="op">.</span><span class="mt">stream</span>()
+  <span class="op">.</span><span class="mt">collect</span>(<span class="mt">parallel</span>(url <span class="op">-&gt;</span> <span class="mt">fetchData</span>(url), <span class="mt">toList</span>()));</code></pre>
+        </div>
+        <div class="code-panel" id="tab-config">
+<pre><code><span class="cm">// With parallelism limit, batching, custom executor</span>
+<span class="tp">CompletableFuture</span><span class="op">&lt;</span><span class="tp">List</span><span class="op">&lt;</span><span class="tp">String</span><span class="op">&gt;&gt;</span> result <span class="op">=</span> urls<span class="op">.</span><span class="mt">stream</span>()
+  <span class="op">.</span><span class="mt">collect</span>(<span class="mt">parallel</span>(url <span class="op">-&gt;</span> <span class="mt">fetchData</span>(url), c <span class="op">-&gt;</span> c
+    <span class="op">.</span><span class="mt">parallelism</span>(<span class="nm">64</span>)
+    <span class="op">.</span><span class="mt">batching</span>()
+  , <span class="mt">toList</span>()));</code></pre>
+        </div>
+        <div class="code-panel" id="tab-stream">
+<pre><code><span class="cm">// Stream results as they complete</span>
+<span class="tp">Stream</span><span class="op">&lt;</span><span class="tp">String</span><span class="op">&gt;</span> result <span class="op">=</span> urls<span class="op">.</span><span class="mt">stream</span>()
+  <span class="op">.</span><span class="mt">collect</span>(<span class="mt">parallelToStream</span>(url <span class="op">-&gt;</span> <span class="mt">fetchData</span>(url)));
+
+<span class="cm">// Or preserve input order</span>
+<span class="tp">Stream</span><span class="op">&lt;</span><span class="tp">String</span><span class="op">&gt;</span> ordered <span class="op">=</span> urls<span class="op">.</span><span class="mt">stream</span>()
+  <span class="op">.</span><span class="mt">collect</span>(<span class="mt">parallelToOrderedStream</span>(url <span class="op">-&gt;</span> <span class="mt">fetchData</span>(url)));</code></pre>
+        </div>
+        <div class="code-panel" id="tab-async">
+<pre><code><span class="cm">// Non-blocking with timeout and async callback</span>
+urls<span class="op">.</span><span class="mt">stream</span>()
+  <span class="op">.</span><span class="mt">collect</span>(<span class="mt">parallel</span>(url <span class="op">-&gt;</span> <span class="mt">fetchData</span>(url), <span class="mt">toList</span>()))
+  <span class="op">.</span><span class="mt">orTimeout</span>(<span class="nm">5</span>, <span class="tp">SECONDS</span>)
+  <span class="op">.</span><span class="mt">thenAccept</span>(<span class="tp">System</span><span class="op">.</span>out<span class="op">::</span><span class="mt">println</span>);</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── API ── -->
+<section class="api" id="api">
+  <div class="container">
+    <div class="api-header reveal">
+      <div class="section-label">API</div>
+      <h2 class="section-title">Core collectors</h2>
+      <p class="section-desc">Static factory methods on <code style="font-family:var(--font-mono);color:var(--syn-type);background:var(--bg-elevated);padding:2px 6px;border-radius:4px;font-size:14px">ParallelCollectors</code> — follows <code style="font-family:var(--font-mono);color:var(--syn-type);background:var(--bg-elevated);padding:2px 6px;border-radius:4px;font-size:14px">java.util.stream.Collectors</code> conventions.</p>
+    </div>
+    <div class="api-grid reveal">
+      <div class="api-card">
+        <div class="api-sig"><span class="fn">parallel</span>(mapper, collector) <span class="op">&rarr;</span> <span class="tp">CompletableFuture&lt;R&gt;</span></div>
+        <p>Parallel mapping with a downstream collector for reduction. Returns a future of the collected result.</p>
+      </div>
+      <div class="api-card">
+        <div class="api-sig"><span class="fn">parallelToStream</span>(mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;R&gt;</span></div>
+        <p>Returns a stream that emits results in completion order — process results as soon as they're ready.</p>
+      </div>
+      <div class="api-card">
+        <div class="api-sig"><span class="fn">parallelToOrderedStream</span>(mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;R&gt;</span></div>
+        <p>Same as above, but preserves the encounter order of the input stream elements.</p>
+      </div>
+      <div class="api-card">
+        <div class="api-sig"><span class="fn">parallelBy</span>(classifier, mapper) <span class="op">&rarr;</span> <span class="tp">CompletableFuture&lt;Stream&lt;Grouped&gt;&gt;</span></div>
+        <p>Classifies elements into groups and processes each group in parallel. Results keyed by group.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:48px" class="reveal">
+      <div class="section-label" style="margin-bottom:24px">Configuration</div>
+      <div class="code-block-wrap">
+        <div class="code-panels" style="border-top:1px solid var(--border)">
+          <div class="code-panel active">
+<pre><code><span class="cm">// The Configurer API — fluent configuration for all collectors</span>
+urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">collect</span>(<span class="mt">parallel</span>(url <span class="op">-&gt;</span> <span class="mt">fetch</span>(url), c <span class="op">-&gt;</span> c
+    <span class="op">.</span><span class="mt">executor</span>(myExecutor)       <span class="cm">// custom Executor (default: Virtual Threads)</span>
+    <span class="op">.</span><span class="mt">parallelism</span>(<span class="nm">32</span>)           <span class="cm">// max concurrent tasks</span>
+    <span class="op">.</span><span class="mt">batching</span>()                <span class="cm">// group work into batches</span>
+, <span class="mt">toList</span>()));</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Installation ── -->
+<section class="install" id="install">
+  <div class="container">
+    <div class="install-header reveal">
+      <div class="section-label">Installation</div>
+      <h2 class="section-title">Add to your project</h2>
+    </div>
+    <div class="install-grid reveal">
+      <div class="install-card">
+        <div class="install-card-header">
+          <h3>Maven</h3>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="version">JDK 21+</span>
+            <button class="copy-btn" onclick="copyInstall(this)">copy</button>
+          </div>
+        </div>
+<pre><code><span class="xml-tag">&lt;dependency&gt;</span>
+  <span class="xml-tag">&lt;groupId&gt;</span><span class="xml-content">com.pivovarit</span><span class="xml-tag">&lt;/groupId&gt;</span>
+  <span class="xml-tag">&lt;artifactId&gt;</span><span class="xml-content">parallel-collectors</span><span class="xml-tag">&lt;/artifactId&gt;</span>
+  <span class="xml-tag">&lt;version&gt;</span><span class="xml-val">3.4.0</span><span class="xml-tag">&lt;/version&gt;</span>
+<span class="xml-tag">&lt;/dependency&gt;</span></code></pre>
+      </div>
+      <div class="install-card">
+        <div class="install-card-header">
+          <h3>Gradle</h3>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="version">JDK 21+</span>
+            <button class="copy-btn" onclick="copyInstall(this)">copy</button>
+          </div>
+        </div>
+<pre><code><span class="mt">implementation</span> <span class="st">'com.pivovarit:parallel-collectors:3.4.0'</span></code></pre>
+      </div>
+    </div>
+    <div class="install-grid reveal" style="margin-top:24px">
+      <div class="install-card">
+        <div class="install-card-header">
+          <h3>Maven</h3>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="version" style="color:var(--text-secondary);background:rgba(255,255,255,0.04);border-color:var(--border)">JDK 8+</span>
+            <button class="copy-btn" onclick="copyInstall(this)">copy</button>
+          </div>
+        </div>
+<pre><code><span class="xml-tag">&lt;dependency&gt;</span>
+  <span class="xml-tag">&lt;groupId&gt;</span><span class="xml-content">com.pivovarit</span><span class="xml-tag">&lt;/groupId&gt;</span>
+  <span class="xml-tag">&lt;artifactId&gt;</span><span class="xml-content">parallel-collectors</span><span class="xml-tag">&lt;/artifactId&gt;</span>
+  <span class="xml-tag">&lt;version&gt;</span><span class="xml-val">2.6.1</span><span class="xml-tag">&lt;/version&gt;</span>
+<span class="xml-tag">&lt;/dependency&gt;</span></code></pre>
+      </div>
+      <div class="install-card">
+        <div class="install-card-header">
+          <h3>Gradle</h3>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="version" style="color:var(--text-secondary);background:rgba(255,255,255,0.04);border-color:var(--border)">JDK 8+</span>
+            <button class="copy-btn" onclick="copyInstall(this)">copy</button>
+          </div>
+        </div>
+<pre><code><span class="mt">implementation</span> <span class="st">'com.pivovarit:parallel-collectors:2.6.1'</span></code></pre>
+      </div>
+    </div>
+    <div class="install-note reveal">
+      <strong>JDK 21+</strong> recommended — version <code>3.x</code> uses Virtual Threads by default. Version <code>2.x</code> supports JDK 8+ with platform threads.
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <div class="footer-left">
+      Apache 2.0 &middot; <a href="https://github.com/pivovarit">Grzegorz Piwowarek</a>
+    </div>
+    <ul class="footer-links">
+      <li><a href="https://github.com/pivovarit/parallel-collectors">GitHub</a></li>
+      <li><a href="https://javadoc.io/doc/com.pivovarit/parallel-collectors">Javadoc</a></li>
+      <li><a href="https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors">Maven Central</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  // Tab switching
+  function switchTab(e, panelId) {
+    const wrap = e.target.closest('.code-block-wrap');
+    wrap.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+    wrap.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
+    e.target.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  // Copy snippet
+  function copySnippet(el) {
+    const text = el.getAttribute('data-copy');
+    navigator.clipboard.writeText(text).then(() => {
+      el.classList.add('copied');
+      el.querySelector('.copy-hint').textContent = 'copied!';
+      setTimeout(() => {
+        el.classList.remove('copied');
+        el.querySelector('.copy-hint').textContent = 'click to copy';
+      }, 2000);
+    });
+  }
+
+  // Copy install snippet
+  function copyInstall(btn) {
+    const card = btn.closest('.install-card');
+    const text = card.querySelector('pre').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied');
+      btn.textContent = 'copied!';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = 'copy';
+      }, 2000);
+    });
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
