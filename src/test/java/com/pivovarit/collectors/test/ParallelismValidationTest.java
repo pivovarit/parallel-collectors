@@ -15,7 +15,7 @@
  */
 package com.pivovarit.collectors.test;
 
-import com.pivovarit.collectors.Grouped;
+import com.pivovarit.collectors.Group;
 import com.pivovarit.collectors.ParallelCollectors;
 import java.util.Collection;
 import java.util.List;
@@ -53,7 +53,7 @@ class ParallelismValidationTest {
           limitedCollector("parallelToStream(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, p), Stream::toList)),
           limitedCollector("parallelToStream(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.executor(e()).parallelism(p)), Stream::toList)),
           limitedCollector("parallelToStream(e, p) [batching]", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.batching().executor(e()).parallelism(p)), Stream::toList)),
-          limitedCollector("parallelToStreamBy(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, p), s -> s.map(Grouped::values).flatMap(Collection::stream).toList())),
+          limitedCollector("parallelToStreamBy(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, p), s -> s.map(Group::values).flatMap(Collection::stream).toList())),
           limitedCollector("parallelToStreamBy(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStreamBy(noopClassifier(), f, c -> c.executor(e()).parallelism(p)), ungrouped())),
           limitedCollector("parallelToOrderedStream(p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().parallelism(p)), Stream::toList)),
           limitedCollector("parallelToOrderedStream(e, p)", (f, p) -> collectingAndThen(ParallelCollectors.parallelToStream(f, c -> c.ordered().executor(e()).parallelism(p)), Stream::toList)),
@@ -102,11 +102,11 @@ class ParallelismValidationTest {
         return Executors.newCachedThreadPool();
     }
 
-    private static <K, V> Function<Stream<Grouped<K, V>>, List<V>> ungrouped() {
+    private static <K, V> Function<Stream<Group<K, V>>, List<V>> ungrouped() {
         return s -> s.flatMap(g -> g.values().stream()).toList();
     }
 
-    private static <K, V> List<V> ungrouped(Collection<Grouped<K, V>> collection) {
+    private static <K, V> List<V> ungrouped(Collection<Group<K, V>> collection) {
         return collection.stream().flatMap(g -> g.values().stream()).toList();
     }
 }
