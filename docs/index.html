@@ -812,7 +812,7 @@
 
 <span class="cm">// Or preserve input order</span>
 <span class="tp">Stream</span><span class="op">&lt;</span><span class="tp">String</span><span class="op">&gt;</span> ordered <span class="op">=</span> urls<span class="op">.</span><span class="mt">stream</span>()
-  <span class="op">.</span><span class="mt">collect</span>(<span class="mt">parallelToOrderedStream</span>(url <span class="op">-&gt;</span> <span class="mt">fetchData</span>(url)));</code></pre>
+  <span class="op">.</span><span class="mt">collect</span>(<span class="mt">parallelToStream</span>(url <span class="op">-&gt;</span> <span class="mt">fetchData</span>(url), c <span class="op">-&gt;</span> c<span class="op">.</span><span class="mt">ordered</span>()));</code></pre>
         </div>
         <div class="code-panel" id="tab-async">
 <pre><code><span class="cm">// Non-blocking with timeout and async callback</span>
@@ -840,16 +840,24 @@ urls<span class="op">.</span><span class="mt">stream</span>()
         <p>Parallel mapping with a downstream collector for reduction. Returns a future of the collected result.</p>
       </div>
       <div class="api-card">
-        <div class="api-sig"><span class="fn">parallelToStream</span>(mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;R&gt;</span></div>
-        <p>Returns a stream that emits results in completion order — process results as soon as they're ready.</p>
+        <div class="api-sig"><span class="fn">parallel</span>(mapper) <span class="op">&rarr;</span> <span class="tp">CompletableFuture&lt;Stream&lt;R&gt;&gt;</span></div>
+        <p>Parallel mapping without reduction. Returns a future wrapping a stream of mapped results.</p>
       </div>
       <div class="api-card">
-        <div class="api-sig"><span class="fn">parallelToOrderedStream</span>(mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;R&gt;</span></div>
-        <p>Same as above, but preserves the encounter order of the input stream elements.</p>
+        <div class="api-sig"><span class="fn">parallelToStream</span>(mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;R&gt;</span></div>
+        <p>Returns a stream that emits results in completion order. Use <code style="font-family:var(--font-mono);font-size:12px;color:var(--syn-method)">c &rarr; c.ordered()</code> to preserve input order.</p>
+      </div>
+      <div class="api-card">
+        <div class="api-sig"><span class="fn">parallelToStreamBy</span>(classifier, mapper) <span class="op">&rarr;</span> <span class="tp">Stream&lt;Grouped&lt;K, R&gt;&gt;</span></div>
+        <p>Classifies elements into groups and streams grouped results as they complete.</p>
       </div>
       <div class="api-card">
         <div class="api-sig"><span class="fn">parallelBy</span>(classifier, mapper) <span class="op">&rarr;</span> <span class="tp">CompletableFuture&lt;Stream&lt;Grouped&gt;&gt;</span></div>
         <p>Classifies elements into groups and processes each group in parallel. Results keyed by group.</p>
+      </div>
+      <div class="api-card">
+        <div class="api-sig"><span class="fn">parallelBy</span>(classifier, mapper, collector) <span class="op">&rarr;</span> <span class="tp">CompletableFuture&lt;R&gt;</span></div>
+        <p>Groups elements in parallel and reduces grouped results with a downstream collector.</p>
       </div>
     </div>
 
@@ -863,7 +871,13 @@ urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">c
     <span class="op">.</span><span class="mt">executor</span>(myExecutor)       <span class="cm">// custom Executor (default: Virtual Threads)</span>
     <span class="op">.</span><span class="mt">parallelism</span>(<span class="nm">32</span>)           <span class="cm">// max concurrent tasks</span>
     <span class="op">.</span><span class="mt">batching</span>()                <span class="cm">// group work into batches</span>
-, <span class="mt">toList</span>()));</code></pre>
+, <span class="mt">toList</span>()));
+
+<span class="cm">// Streaming collectors also support ordered emission</span>
+urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">collect</span>(<span class="mt">parallelToStream</span>(url <span class="op">-&gt;</span> <span class="mt">fetch</span>(url), c <span class="op">-&gt;</span> c
+    <span class="op">.</span><span class="mt">ordered</span>()                 <span class="cm">// preserve input order</span>
+    <span class="op">.</span><span class="mt">parallelism</span>(<span class="nm">32</span>)
+));</code></pre>
           </div>
         </div>
       </div>
