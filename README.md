@@ -148,7 +148,7 @@ BatchedVsNonBatchedBenchmark.normal   thrpt    5    254.869 ±   5.667  ops/s
 Batching can be enabled via the `batching()` configurer option:
 
     list.stream()
-      .collect(parallel(i -> foo(i), c -> c.batching(), toList()));
+      .collect(parallel(i -> foo(i), c -> c.parallelism(4).batching(), toList()));
 
 #### Normal
 
@@ -212,7 +212,7 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
 ##### 3. Apply `i -> foo(i)` in parallel with batching and collect to `LinkedList`
 
     CompletableFuture<List<String>> result = list.stream()
-      .collect(parallel(i -> foo(i), c -> c.batching(),
+      .collect(parallel(i -> foo(i), c -> c.parallelism(4).batching(),
         toCollection(LinkedList::new)));
 
 ##### 4. Apply `i -> foo(i)` in parallel and stream results in completion order
