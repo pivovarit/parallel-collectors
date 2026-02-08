@@ -420,6 +420,7 @@ public final class ParallelCollectors {
       Consumer<CollectingConfigurer> configurer) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
+        Objects.requireNonNull(configurer, "configurer cannot be null");
 
         return Factory.collectingBy(classifier, mapper, configurer);
     }
@@ -478,6 +479,7 @@ public final class ParallelCollectors {
       Collector<Group<K, R>, ?, RR> collector) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
+        Objects.requireNonNull(configurer, "configurer cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");
 
         return Factory.collectingBy(
@@ -592,7 +594,7 @@ public final class ParallelCollectors {
         return Factory.streamingBy(classifier, mapper, configurer);
     }
 
-    // convenience (defaults + parallelizm)
+    // convenience (defaults + parallelism)
 
     /**
      * A convenience {@link Collector} that performs parallel computations using Virtual Threads

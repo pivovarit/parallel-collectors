@@ -69,8 +69,7 @@ public record Group<T, V>(T key, List<V> values) {
     public <R> Group<T, R> map(BiFunction<? super T, ? super V, ? extends R> mapper) {
         Objects.requireNonNull(mapper, "mapper cannot be null");
         return new Group<>(key, values.stream()
-          .map(v -> mapper.apply(key, v))
-          .map(a -> (R) a)
+          .map(v -> (R) mapper.apply(key, v))
           .toList());
     }
 }
