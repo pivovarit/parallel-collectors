@@ -112,11 +112,11 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each group.
+     * emitting {@link Group} entries representing each group.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
-     * parallel on Virtual Threads. The resulting {@link Grouped} entries are exposed as a
-     * {@link CompletableFuture} of {@code Stream<Grouped<K, R>>}.
+     * parallel on Virtual Threads. The resulting {@link Group} entries are exposed as a
+     * {@link CompletableFuture} of {@code Stream<Group<K, R>>}.
      *
      * <p><b>Note:</b> This collector does not limit parallelism in any way (it may spawn work for every
      * element). As a result, it is not suitable for processing huge streams.
@@ -124,7 +124,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<Stream<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
+     * CompletableFuture<Stream<Group<String, String>>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelBy(Task::groupId, t -> compute(t)));
      * }</pre>
      *
@@ -138,7 +138,7 @@ public final class ParallelCollectors {
      *
      * @since 3.4.0
      */
-    public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Grouped<K, R>>>> parallelBy(
+    public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Group<K, R>>>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
@@ -150,9 +150,9 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each group.
+     * emitting {@link Group} entries representing each group.
      * <p>
-     * The generated {@link Stream} of {@code Grouped<K, R>} instances is then reduced using the
+     * The generated {@link Stream} of {@code Group<K, R>} instances is then reduced using the
      * user-provided {@code collector}, executed on Virtual Threads. Each group is processed
      * independently, and every group is guaranteed to be processed on a single thread.
      * The reduction is applied to the grouped results rather than to the raw mapped elements.
@@ -163,7 +163,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<List<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
+     * CompletableFuture<List<Group<String, String>>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelBy(Task::groupId, t -> compute(t), toList()));
      * }</pre>
      *
@@ -176,21 +176,21 @@ public final class ParallelCollectors {
      * @param <RR>       the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is obtained
-     * by reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
+     * by reducing the {@code Stream<Group<K, R>>} produced by the parallel classification
      *
      * @since 3.4.0
      */
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
-      Collector<Grouped<K, R>, ?, RR> collector) {
+      Collector<Group<K, R>, ?, RR> collector) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");
 
         return Factory.collectingBy(
           classifier,
-          (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector),
+          (Function<Stream<Group<K, R>>, RR>) s -> s.collect(collector),
           mapper,
           c -> {});
     }
@@ -233,13 +233,13 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each group.
+     * emitting {@link Group} entries representing each group.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
      * parallel on Virtual Threads. The resulting grouped entries are exposed as a
-     * {@code Stream<Grouped<K, R>>}.
+     * {@code Stream<Group<K, R>>}.
      *
-     * <p><b>Ordering:</b> This collector emits {@link Grouped} elements in an <em>arbitrary</em> order.
+     * <p><b>Ordering:</b> This collector emits {@link Group} elements in an <em>arbitrary</em> order.
      * To preserve encounter order, use the {@link StreamingConfigurer} overload and configure
      * {@link StreamingConfigurer#ordered()}.
      *
@@ -249,7 +249,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * Stream<Grouped<String, String>> result = Stream.of(t1, t2, t3)
+     * Stream<Group<String, String>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelToStreamBy(Task::groupId, t -> compute(t)));
      * }</pre>
      *
@@ -263,7 +263,7 @@ public final class ParallelCollectors {
      *
      * @since 3.4.0
      */
-    public static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> parallelToStreamBy(
+    public static <T, K, R> Collector<T, ?, Stream<Group<K, R>>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
@@ -376,13 +376,13 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each group, with additional configuration applied
+     * emitting {@link Group} entries representing each group, with additional configuration applied
      * via the provided {@code configurer}.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
      * parallel. Unless overridden via {@link CollectingConfigurer#executor(java.util.concurrent.Executor)},
      * tasks are executed on Virtual Threads. The resulting grouped entries are exposed as a
-     * {@link CompletableFuture} of {@code Stream<Grouped<K, R>>}. The {@code configurer} can also be used
+     * {@link CompletableFuture} of {@code Stream<Group<K, R>>}. The {@code configurer} can also be used
      * to enable batching and/or set a maximum parallelism level.
      *
      * <p><b>Note:</b> Unless the {@code configurer} explicitly limits parallelism (e.g. via
@@ -396,7 +396,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<Stream<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
+     * CompletableFuture<Stream<Group<String, String>>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelBy(Task::groupId, t -> compute(t), c -> c
      *     .parallelism(64)
      *     .batching()
@@ -414,12 +414,13 @@ public final class ParallelCollectors {
      *
      * @since 4.0.0
      */
-    public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Grouped<K, R>>>> parallelBy(
+    public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Group<K, R>>>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
+        Objects.requireNonNull(configurer, "configurer cannot be null");
 
         return Factory.collectingBy(classifier, mapper, configurer);
     }
@@ -427,11 +428,11 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each group, and then reducing them using the
+     * emitting {@link Group} entries representing each group, and then reducing them using the
      * user-provided {@code collector}, with additional configuration applied via the provided
      * {@code configurer}.
      * <p>
-     * The generated {@link Stream} of {@code Grouped<K, R>} instances is reduced using the supplied
+     * The generated {@link Stream} of {@code Group<K, R>} instances is reduced using the supplied
      * {@code collector}, executed on Virtual Threads by default (unless overridden via
      * {@link CollectingConfigurer#executor(java.util.concurrent.Executor)}). Each group is processed
      * independently, and every group is guaranteed to be processed on a single thread.
@@ -449,7 +450,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<List<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
+     * CompletableFuture<List<Group<String, String>>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelBy(Task::groupId, t -> compute(t), c -> c
      *       .parallelism(64)
      *       .batching(),
@@ -467,7 +468,7 @@ public final class ParallelCollectors {
      * @param <RR>       the reduction result type produced by {@code collector}
      *
      * @return a {@code Collector} producing a {@link CompletableFuture} whose value is obtained by
-     * reducing the {@code Stream<Grouped<K, R>>} produced by the parallel classification
+     * reducing the {@code Stream<Group<K, R>>} produced by the parallel classification
      *
      * @since 4.0.0
      */
@@ -475,14 +476,15 @@ public final class ParallelCollectors {
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer,
-      Collector<Grouped<K, R>, ?, RR> collector) {
+      Collector<Group<K, R>, ?, RR> collector) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
+        Objects.requireNonNull(configurer, "configurer cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");
 
         return Factory.collectingBy(
           classifier,
-          (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector),
+          (Function<Stream<Group<K, R>>, RR>) s -> s.collect(collector),
           mapper,
           configurer);
     }
@@ -539,15 +541,15 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input
      * elements using the provided {@code classifier}, applying the given {@code mapper}, and
-     * emitting {@link Grouped} entries representing each group, with additional configuration applied
+     * emitting {@link Group} entries representing each group, with additional configuration applied
      * via the provided {@code configurer}.
      * <p>
      * Each element is classified using {@code classifier}, then transformed using {@code mapper} in
      * parallel. Unless overridden via {@link StreamingConfigurer#executor(java.util.concurrent.Executor)},
      * tasks are executed on Virtual Threads. The resulting grouped entries are exposed as a
-     * {@code Stream<Grouped<K, R>>}.
+     * {@code Stream<Group<K, R>>}.
      *
-     * <p><b>Ordering:</b> By default, this collector emits {@link Grouped} elements in an
+     * <p><b>Ordering:</b> By default, this collector emits {@link Group} elements in an
      * <em>arbitrary</em> order. To preserve encounter order, configure ordered emission via
      * {@link StreamingConfigurer#ordered()}.
      *
@@ -562,7 +564,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * Stream<Grouped<String, String>> result = Stream.of(t1, t2, t3)
+     * Stream<Group<String, String>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelToStreamBy(Task::groupId, t -> compute(t), c -> c
      *     .ordered()
      *     .parallelism(64)
@@ -581,7 +583,7 @@ public final class ParallelCollectors {
      *
      * @since 4.0.0
      */
-    public static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> parallelToStreamBy(
+    public static <T, K, R> Collector<T, ?, Stream<Group<K, R>>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Consumer<StreamingConfigurer> configurer) {
@@ -592,7 +594,7 @@ public final class ParallelCollectors {
         return Factory.streamingBy(classifier, mapper, configurer);
     }
 
-    // convenience (defaults + parallelizm)
+    // convenience (defaults + parallelism)
 
     /**
      * A convenience {@link Collector} that performs parallel computations using Virtual Threads
@@ -670,7 +672,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input elements
      * using the provided {@code classifier}, applying the given {@code mapper}, and emitting
-     * {@link Grouped} entries representing each batch.
+     * {@link Group} entries representing each batch.
      * <p>
      * This overload is a convenience for applying an easy parallelism cap. For additional configuration
      * options (e.g. batching or a custom {@link java.util.concurrent.Executor}), use the overload
@@ -679,7 +681,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<Stream<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
+     * CompletableFuture<Stream<Group<String, String>>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelBy(Task::groupId, t -> compute(t), 64));
      * }</pre>
      *
@@ -694,7 +696,7 @@ public final class ParallelCollectors {
      *
      * @since 4.0.0
      */
-    public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Grouped<K, R>>>> parallelBy(
+    public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Group<K, R>>>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper, int parallelism) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
@@ -705,7 +707,7 @@ public final class ParallelCollectors {
 
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input elements
-     * using the provided {@code classifier}, applying the given {@code mapper}, emitting {@link Grouped}
+     * using the provided {@code classifier}, applying the given {@code mapper}, emitting {@link Group}
      * entries representing each batch, and then reducing them using the user-provided {@code collector}.
      * <p>
      * This overload is a convenience for applying an easy parallelism cap. For additional configuration
@@ -715,7 +717,7 @@ public final class ParallelCollectors {
      * <br>
      * Example:
      * <pre>{@code
-     * CompletableFuture<List<Grouped<String, String>>> result = Stream.of(t1, t2, t3)
+     * CompletableFuture<List<Group<String, String>>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelBy(Task::groupId, t -> compute(t), 64, toList()));
      * }</pre>
      *
@@ -735,14 +737,14 @@ public final class ParallelCollectors {
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper, int parallelism,
-      Collector<Grouped<K, R>, ?, RR> collector) {
+      Collector<Group<K, R>, ?, RR> collector) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(collector, "collector cannot be null");
 
         return Factory.collectingBy(
           classifier,
-          (Function<Stream<Grouped<K, R>>, RR>) s -> s.collect(collector),
+          (Function<Stream<Group<K, R>>, RR>) s -> s.collect(collector),
           mapper,
           c -> c.parallelism(parallelism));
     }
@@ -784,20 +786,20 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input elements
      * using the provided {@code classifier}, applying the given {@code mapper}, and emitting
-     * {@link Grouped} entries representing each batch.
+     * {@link Group} entries representing each batch.
      * <p>
      * This overload is a convenience for applying an easy parallelism cap. This method does not expose
      * additional configuration (such as ordered emission, batching, or a custom executor). For more
      * options, use the overload accepting a {@link StreamingConfigurer}.
      *
-     * <p><b>Ordering:</b> This collector emits {@link Grouped} elements in an <em>arbitrary</em> order.
+     * <p><b>Ordering:</b> This collector emits {@link Group} elements in an <em>arbitrary</em> order.
      * To preserve encounter order, use the {@link StreamingConfigurer} overload and configure
      * {@link StreamingConfigurer#ordered()}.
      *
      * <br>
      * Example:
      * <pre>{@code
-     * Stream<Grouped<String, String>> result = Stream.of(t1, t2, t3)
+     * Stream<Group<String, String>> result = Stream.of(t1, t2, t3)
      *   .collect(parallelToStreamBy(Task::groupId, t -> compute(t), 64));
      * }</pre>
      *
@@ -812,7 +814,7 @@ public final class ParallelCollectors {
      *
      * @since 4.0.0
      */
-    public static <T, K, R> Collector<T, ?, Stream<Grouped<K, R>>> parallelToStreamBy(
+    public static <T, K, R> Collector<T, ?, Stream<Group<K, R>>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper, int parallelism) {
         Objects.requireNonNull(classifier, "classifier cannot be null");
