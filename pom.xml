@@ -236,9 +236,9 @@
                         <version>0.10.0</version>
                         <extensions>true</extensions>
                         <configuration>
+                            <autoPublish>true</autoPublish>
                             <publishingServerId>central</publishingServerId>
-                            <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/
-                            </centralSnapshotsUrl>
+                            <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
                         </configuration>
                     </plugin>
                 </plugins>
