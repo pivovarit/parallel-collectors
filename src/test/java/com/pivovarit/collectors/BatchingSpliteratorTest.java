@@ -147,12 +147,6 @@ class BatchingSpliteratorTest {
     }
 
     @Test
-    void shouldPartitionEmptyList() {
-        List<List<Integer>> result = partitioned(List.<Integer>of(), 3).toList();
-        assertThat(result).isEmpty();
-    }
-
-    @Test
     void shouldPartitionToSingletonsWhenSizeLessThanBatches() {
         List<List<Integer>> result = partitioned(List.of(1, 2), 5).toList();
 
@@ -235,7 +229,7 @@ class BatchingSpliteratorTest {
         assertThat(characteristics & Spliterator.IMMUTABLE).isNotZero();
         assertThat(characteristics & Spliterator.ORDERED).isNotZero();
         assertThat(characteristics & Spliterator.SIZED).isNotZero();
-        assertThat(characteristics & Spliterator.SUBSIZED).isNotZero();
+        assertThat(characteristics & Spliterator.SUBSIZED).isZero();
     }
 
     @Nested

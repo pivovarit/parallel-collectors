@@ -44,7 +44,7 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
             throw new IllegalArgumentException("batches can't be lower than one");
         }
         source = list;
-        chunks = list.isEmpty() ? 0 : batches;
+        chunks = list.isEmpty() ? 0 : Math.min(batches, list.size());
         chunkSize = (int) Math.ceil(((double) source.size()) / batches);
     }
 
@@ -116,13 +116,11 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
 
     @Override
     public long estimateSize() {
-        return chunks == 0
-          ? 0
-          : Math.max(1, (int) Math.ceil((double) (source.size() - consumed) / chunkSize));
+        return chunks;
     }
 
     @Override
     public int characteristics() {
-        return IMMUTABLE | ORDERED | SIZED | SUBSIZED;
+        return IMMUTABLE | ORDERED | SIZED;
     }
 }
