@@ -128,6 +128,28 @@ public final class StreamingConfigurer {
         return this;
     }
 
+    /**
+     * Decorates each individual task before it is submitted to the executor.
+     * <p>
+     * The decorator receives the {@link Runnable} representing a single unit of work and returns a
+     * wrapped replacement that runs in its place. This is useful for propagating thread-local context
+     * (e.g. MDC entries, OpenTelemetry spans, {@code SecurityContext}) into worker threads, or for
+     * per-task instrumentation, without replacing the executor entirely.
+     *
+     * <p>Unlike {@link #executorDecorator(UnaryOperator)}, which wraps the executor as a whole,
+     * this decorator is applied to each task individually and runs on the worker thread.
+     *
+     * @param decorator a function that wraps each submitted task
+     *
+     * @return this configurer instance for fluent chaining
+     */
+    public StreamingConfigurer taskDecorator(UnaryOperator<Runnable> decorator) {
+        Objects.requireNonNull(decorator, "task decorator can't be null");
+
+        addOnce(new ConfigProcessor.Option.TaskDecorator(decorator));
+        return this;
+    }
+
     List<ConfigProcessor.Option> getConfig() {
         return Collections.unmodifiableList(modifiers);
     }

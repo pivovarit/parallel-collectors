@@ -30,7 +30,7 @@ final class ConfigProcessor {
       .name("parallel-collectors-", 0)
       .factory());
 
-    record Config(boolean ordered, boolean batching, int parallelism, Executor executor) {
+    record Config(boolean ordered, boolean batching, int parallelism, Executor executor, UnaryOperator<Runnable> taskDecorator) {
         Config {
             Objects.requireNonNull(executor, "executor can't be null");
         }
@@ -44,6 +44,7 @@ final class ConfigProcessor {
         Integer parallelism = null;
         Executor executor = null;
         UnaryOperator<Executor> decorator = null;
+        UnaryOperator<Runnable> taskDecorator = null;
 
         for (var option : options) {
             switch (option) {
@@ -52,6 +53,7 @@ final class ConfigProcessor {
                 case Option.ThreadPool(var e) -> executor = e;
                 case Option.Ordered ignored -> ordered = true;
                 case Option.ExecutorDecorator(var d) -> decorator = d;
+                case Option.TaskDecorator(var d) -> taskDecorator = d;
             }
         }
 
@@ -60,12 +62,18 @@ final class ConfigProcessor {
             resolvedExecutor = decorator.apply(resolvedExecutor);
             Preconditions.requireValidExecutor(resolvedExecutor);
         }
+        if (taskDecorator != null) {
+            var td = taskDecorator;
+            var delegate = resolvedExecutor;
+            resolvedExecutor = r -> delegate.execute(td.apply(r));
+        }
 
         return new Config(
           Objects.requireNonNullElse(ordered, false),
           Objects.requireNonNullElse(batching, false),
           Objects.requireNonNullElse(parallelism, 0),
-          resolvedExecutor);
+          resolvedExecutor,
+          taskDecorator);
     }
 
     static String toHumanReadableString(Option option) {
@@ -75,6 +83,7 @@ final class ConfigProcessor {
             case Option.ThreadPool ignored -> "executor";
             case Option.Ordered ignored -> "ordered";
             case Option.ExecutorDecorator ignored -> "executor decorator";
+            case Option.TaskDecorator ignored -> "task decorator";
         };
     }
 
@@ -102,6 +111,12 @@ final class ConfigProcessor {
 
         record ExecutorDecorator(UnaryOperator<Executor> decorator) implements Option {
             public ExecutorDecorator {
+                Objects.requireNonNull(decorator, "decorator can't be null");
+            }
+        }
+
+        record TaskDecorator(UnaryOperator<Runnable> decorator) implements Option {
+            public TaskDecorator {
                 Objects.requireNonNull(decorator, "decorator can't be null");
             }
         }
