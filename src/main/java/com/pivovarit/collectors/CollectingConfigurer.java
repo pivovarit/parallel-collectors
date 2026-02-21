@@ -19,8 +19,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.function.UnaryOperator;
 
 /**
  * Fluent configuration builder for collectors that <em>collect</em> all results (i.e. non-streaming).
@@ -85,6 +87,29 @@ public final class CollectingConfigurer {
         Preconditions.requireValidExecutor(executor);
 
         addOnce(new ConfigProcessor.Option.ThreadPool(executor));
+        return this;
+    }
+
+    /**
+     * Decorates the executor used for running tasks.
+     * <p>
+     * The decorator receives the resolved executor (either the default virtual-thread executor or
+     * the one provided via {@link #executor(Executor)}) and returns a wrapped replacement.
+     * This is useful for augmenting the executor with cross-cutting concerns such as context
+     * propagation (MDC, OpenTelemetry spans, etc.) or monitoring, without replacing the executor entirely.
+     *
+     * <p><b>Note:</b> The executor returned by the decorator must not <em>drop</em> tasks on rejection.
+     * Dropping tasks will cause the collector to wait for results that will never be produced,
+     * which can lead to deadlocks.
+     *
+     * @param decorator a function that wraps the resolved executor
+     *
+     * @return this configurer instance for fluent chaining
+     */
+    public CollectingConfigurer executorDecorator(UnaryOperator<Executor> decorator) {
+        Objects.requireNonNull(decorator, "executor decorator can't be null");
+
+        addOnce(new ConfigProcessor.Option.ExecutorDecorator(decorator));
         return this;
     }
 

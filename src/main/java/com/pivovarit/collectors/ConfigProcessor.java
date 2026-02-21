@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.UnaryOperator;
 
 import static java.util.Objects.requireNonNull;
 
@@ -42,6 +43,7 @@ final class ConfigProcessor {
         Boolean ordered = null;
         Integer parallelism = null;
         Executor executor = null;
+        UnaryOperator<Executor> decorator = null;
 
         for (var option : options) {
             switch (option) {
@@ -49,14 +51,21 @@ final class ConfigProcessor {
                 case Option.Parallelism(var p) -> parallelism = p;
                 case Option.ThreadPool(var e) -> executor = e;
                 case Option.Ordered ignored -> ordered = true;
+                case Option.ExecutorDecorator(var d) -> decorator = d;
             }
+        }
+
+        var resolvedExecutor = Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR);
+        if (decorator != null) {
+            resolvedExecutor = decorator.apply(resolvedExecutor);
+            Preconditions.requireValidExecutor(resolvedExecutor);
         }
 
         return new Config(
           Objects.requireNonNullElse(ordered, false),
           Objects.requireNonNullElse(batching, false),
           Objects.requireNonNullElse(parallelism, 0),
-          Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR));
+          resolvedExecutor);
     }
 
     static String toHumanReadableString(Option option) {
@@ -65,6 +74,7 @@ final class ConfigProcessor {
             case Option.Parallelism ignored -> "parallelism";
             case Option.ThreadPool ignored -> "executor";
             case Option.Ordered ignored -> "ordered";
+            case Option.ExecutorDecorator ignored -> "executor decorator";
         };
     }
 
@@ -87,6 +97,12 @@ final class ConfigProcessor {
         record Parallelism(int parallelism) implements Option {
             public Parallelism {
                 Preconditions.requireValidParallelism(parallelism);
+            }
+        }
+
+        record ExecutorDecorator(UnaryOperator<Executor> decorator) implements Option {
+            public ExecutorDecorator {
+                Objects.requireNonNull(decorator, "decorator can't be null");
             }
         }
     }

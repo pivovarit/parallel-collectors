@@ -86,4 +86,34 @@ class OptionTest {
           .hasMessageContaining("'ordered' can only be configured once");
     }
 
+    @Test
+    void shouldThrowOnNullExecutorDecorator() {
+        assertThatThrownBy(() -> new CollectingConfigurer().executorDecorator(null))
+          .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowOnNullExecutorDecoratorStreaming() {
+        assertThatThrownBy(() -> new StreamingConfigurer().executorDecorator(null))
+          .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowOnDuplicateExecutorDecorator() {
+        var configurer = new CollectingConfigurer();
+        configurer.executorDecorator(e -> e);
+        assertThatThrownBy(() -> configurer.executorDecorator(e -> e))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'executor decorator' can only be configured once");
+    }
+
+    @Test
+    void shouldThrowOnDuplicateExecutorDecoratorStreaming() {
+        var configurer = new StreamingConfigurer();
+        configurer.executorDecorator(e -> e);
+        assertThatThrownBy(() -> configurer.executorDecorator(e -> e))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'executor decorator' can only be configured once");
+    }
+
 }
