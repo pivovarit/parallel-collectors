@@ -49,8 +49,7 @@ final class Factory {
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(configurer, "configurer cannot be null");
 
-        // evaluate eagerly
-        configurer.accept(new CollectingConfigurer());
+        var config = ConfigProcessor.process(collecting(configurer).getConfig());
 
         return Collectors.collectingAndThen(
           Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
@@ -59,7 +58,7 @@ final class Factory {
             .collect(collecting(finalizer,
               e -> new Group<>(e.getKey(), e.getValue().stream()
                 .map(mapper.andThen(a -> (R) a))
-                .toList()), configurer))
+                .toList()), config))
         );
     }
 
@@ -71,8 +70,14 @@ final class Factory {
         requireNonNull(mapper, "mapper cannot be null");
         requireNonNull(configurer, "configurer cannot be null");
 
-        var config = ConfigProcessor.process(collecting(configurer).getConfig());
+        return collecting(finalizer, mapper, ConfigProcessor.process(collecting(configurer).getConfig()));
+    }
 
+    private static <T, R, C> Collector<T, ?, CompletableFuture<C>> collecting(
+      Function<Stream<R>, C> finalizer,
+      Function<? super T, ? extends R> mapper,
+      ConfigProcessor.Config config
+    ) {
         return select(mapper, config, new ModeFactory<T, R, CompletableFuture<C>>() {
             @Override
             public Collector<T, ?, CompletableFuture<C>> async(Function<? super T, ? extends R> mapper, Executor executor) {
@@ -99,8 +104,7 @@ final class Factory {
         Objects.requireNonNull(mapper, "mapper cannot be null");
         Objects.requireNonNull(configurer, "configurer cannot be null");
 
-        // evaluate eagerly
-        configurer.accept(new StreamingConfigurer());
+        var config = ConfigProcessor.process(streaming(configurer).getConfig());
 
         return Collectors.collectingAndThen(
           Collectors.groupingBy(classifier, LinkedHashMap::new, Collectors.toList()),
@@ -108,7 +112,7 @@ final class Factory {
             .stream()
             .collect(streaming(e -> new Group<>(e.getKey(), e.getValue().stream()
               .map(mapper.andThen(a -> (R) a))
-              .toList()), configurer))
+              .toList()), config))
         );
     }
 
@@ -118,8 +122,12 @@ final class Factory {
         requireNonNull(mapper, "mapper cannot be null");
         requireNonNull(configurer, "configurer cannot be null");
 
-        var config = ConfigProcessor.process(streaming(configurer).getConfig());
+        return streaming(mapper, ConfigProcessor.process(streaming(configurer).getConfig()));
+    }
 
+    private static <T, R> Collector<T, ?, Stream<R>> streaming(
+      Function<? super T, ? extends R> mapper,
+      ConfigProcessor.Config config) {
         return select(mapper, config, new ModeFactory<T, R, Stream<R>>() {
             @Override
             public Collector<T, ?, Stream<R>> async(Function<? super T, ? extends R> m, Executor ex) {
