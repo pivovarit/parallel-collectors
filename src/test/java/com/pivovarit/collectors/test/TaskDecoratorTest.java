@@ -106,10 +106,10 @@ class TaskDecoratorTest {
           .collect(ParallelCollectors.parallel(i -> i, c -> c
             .taskDecorator(task -> () -> {
                 contextValue.set(snapshot);
+                captured.add(contextValue.get());
                 try {
                     task.run();
                 } finally {
-                    captured.add(contextValue.get());
                     contextValue.remove();
                 }
             }), toList()))
