@@ -106,6 +106,8 @@ Additionally, you can customize:
 - grouping by key via `parallelBy(...)` / `parallelToStreamBy(...)` methods
 - ordered streaming via the `ordered()` configurer option (streaming collectors only)
 - a custom downstream `Collector` (`ParallelCollectors.parallel` only)
+- executor decoration via `executorDecorator()` to wrap the resolved executor
+- task decoration via `taskDecorator()` to wrap each individual task
 
 All configuration is done via the `CollectingConfigurer` (for `parallel`/`parallelBy`) or `StreamingConfigurer` (for `parallelToStream`/`parallelToStreamBy`) passed as a `Consumer`:
 
@@ -169,6 +171,40 @@ The `parallelBy(...)` and `parallelToStreamBy(...)` methods allow you to classif
       .collect(parallelBy(Task::groupId, t -> compute(t), toList()));
 
 The `Group<K, V>` record provides `key()` and `values()` accessors, plus a `map()` method for transforming values while preserving the grouping key.
+
+#### Decorators
+
+Two decorator options let you add cross-cutting behavior without replacing the executor:
+
+**`executorDecorator(UnaryOperator<Executor>)`** wraps the resolved executor (the virtual-thread default or a custom one) and returns a replacement. It is invoked once per collector, before any tasks are submitted. This is a natural fit for intercepting every `execute()` call, for example to plug in a monitoring layer.
+
+The returned executor must not drop or discard tasks — doing so will cause the collector to wait indefinitely for results that will never arrive.
+
+    list.stream()
+      .collect(parallel(i -> foo(i), c -> c
+        .executorDecorator(exec -> task -> {
+            metrics.incrementAndGet();
+            exec.execute(task);
+        }),
+      toList()));
+
+**`taskDecorator(UnaryOperator<Runnable>)`** wraps each individual task before it is handed to the executor. Unlike the executor decorator, it runs on the worker thread and is re-applied for every element. This makes it the right tool for propagating thread-local context (MDC, OpenTelemetry spans, `SecurityContext`) into worker threads:
+
+    var snapshot = MDC.getCopyOfContextMap();
+
+    list.stream()
+      .collect(parallel(i -> foo(i), c -> c
+        .taskDecorator(task -> () -> {
+            MDC.setContextMap(snapshot);
+            try {
+                task.run();
+            } finally {
+                MDC.clear();
+            }
+        }),
+      toList()));
+
+Both decorators can be combined and each may be specified at most once per configurer.
 
 ### Leveraging CompletableFuture
 
@@ -241,6 +277,34 @@ What's more, since JDK9, [you can even provide your own timeout easily](https://
         .executor(executor)
         .parallelism(64)
         .batching(),
+      toList()));
+
+##### 8. Propagate MDC context into worker threads via `taskDecorator`
+
+    var snapshot = MDC.getCopyOfContextMap();
+
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(parallel(i -> foo(i), c -> c
+        .taskDecorator(task -> () -> {
+            MDC.setContextMap(snapshot);
+            try {
+                task.run();
+            } finally {
+                MDC.clear();
+            }
+        }),
+      toList()));
+
+##### 9. Instrument every task submission via `executorDecorator`
+
+    var submitted = new AtomicInteger();
+
+    CompletableFuture<List<String>> result = list.stream()
+      .collect(parallel(i -> foo(i), c -> c
+        .executorDecorator(exec -> task -> {
+            submitted.incrementAndGet();
+            exec.execute(task);
+        }),
       toList()));
 
 ## Rationale
