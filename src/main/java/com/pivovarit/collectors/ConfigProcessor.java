@@ -30,7 +30,7 @@ final class ConfigProcessor {
       .name("parallel-collectors-", 0)
       .factory());
 
-    record Config(boolean ordered, boolean batching, int parallelism, Executor executor, UnaryOperator<Runnable> taskDecorator) {
+    record Config(boolean ordered, boolean batching, int parallelism, Executor executor) {
         Config {
             Objects.requireNonNull(executor, "executor can't be null");
         }
@@ -72,8 +72,7 @@ final class ConfigProcessor {
           Objects.requireNonNullElse(ordered, false),
           Objects.requireNonNullElse(batching, false),
           Objects.requireNonNullElse(parallelism, 0),
-          resolvedExecutor,
-          taskDecorator);
+          resolvedExecutor);
     }
 
     static String toHumanReadableString(Option option) {
