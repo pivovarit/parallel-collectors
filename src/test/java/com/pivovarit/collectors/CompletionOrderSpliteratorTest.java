@@ -103,6 +103,19 @@ class CompletionOrderSpliteratorTest {
     }
 
     @Test
+    void shouldHandleNullResults() {
+        List<CompletableFuture<String>> futures = asList(
+          CompletableFuture.completedFuture(null),
+          CompletableFuture.completedFuture("a"),
+          CompletableFuture.completedFuture(null)
+        );
+
+        var results = StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList();
+
+        assertThat(results).containsExactly(null, "a", null);
+    }
+
+    @Test
     void shouldRestoreInterrupt() {
         Thread executorThread = new Thread(() -> {
             Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(List.of(new CompletableFuture<>()));

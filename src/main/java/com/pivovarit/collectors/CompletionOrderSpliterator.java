@@ -68,6 +68,6 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     @Override
     public int characteristics() {
-        return SIZED | IMMUTABLE | NONNULL;
+        return SIZED | IMMUTABLE;
     }
 }
