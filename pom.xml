@@ -16,8 +16,6 @@
     <version>4.0.1-SNAPSHOT</version>
     <url>https://github.com/pivovarit/parallel-collectors</url>
 
-    <packaging>jar</packaging>
-
     <name>parallel-collectors</name>
     <description>Parallel collection processing with customizable thread pools</description>
 
@@ -38,11 +36,10 @@
         <awaitility.version>4.3.0</awaitility.version>
         <jmh.version>1.37</jmh.version>
         <jmh.generator>default</jmh.generator>
+        <archunit.version>1.4.1</archunit.version>
     </properties>
 
     <build>
-        <finalName>${project.artifactId}-${project.version}</finalName>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -387,13 +384,13 @@
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5-api</artifactId>
-            <version>1.4.1</version>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5-engine</artifactId>
-            <version>1.4.1</version>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
