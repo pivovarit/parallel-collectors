@@ -6,7 +6,7 @@ Overcoming limitations of standard Parallel Streams
 [![Maven Central Version](https://img.shields.io/maven-central/v/com.pivovarit/parallel-collectors)](https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors/versions)
 [![javadoc](https://javadoc.io/badge2/com.pivovarit/parallel-collectors/4.0.0/javadoc.svg)](https://javadoc.io/doc/com.pivovarit/parallel-collectors/4.0.0)
 
-![](docs/logo.png)
+![](docs/pc.png)
 
 [![Stargazers over time](https://starchart.cc/pivovarit/parallel-collectors.svg?variant=adaptive)](https://starchart.cc/pivovarit/parallel-collectors)
 
