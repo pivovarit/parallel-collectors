@@ -23,6 +23,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -821,6 +822,135 @@ public final class ParallelCollectors {
         Objects.requireNonNull(mapper, "mapper cannot be null");
 
         return Factory.streamingBy(classifier, mapper, c -> c.parallelism(parallelism));
+    }
+
+    // parallelForEach
+
+    /**
+     * A convenience {@link Collector} for performing a parallel side-effecting operation
+     * on each element using Virtual Threads.
+     * <p>
+     * Unlike {@link #parallel(Function)}, this collector does not produce mapped results.
+     * Instead, the provided {@code action} is executed for its side effects (e.g. sending
+     * notifications, writing to external systems, updating shared state).
+     * The returned {@link CompletableFuture} completes when all actions have finished.
+     *
+     * <p><b>Note:</b> This collector does not limit parallelism in any way (it may spawn work for every
+     * element). As a result, it is not suitable for processing huge streams.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<Void> result = Stream.of(1, 2, 3)
+     *   .collect(parallelForEach(i -> sendNotification(i)));
+     * }</pre>
+     *
+     * @param action the side-effecting operation to perform on each element
+     * @param <T>    the input element type
+     *
+     * @return a {@code Collector} producing a {@link CompletableFuture} that completes
+     * when all actions have finished
+     *
+     * @since 4.1.0
+     */
+    public static <T> Collector<T, ?, CompletableFuture<@Nullable Void>> parallelForEach(
+      Consumer<? super T> action) {
+        Objects.requireNonNull(action, "action cannot be null");
+
+        return Factory.collecting(consumeAndReturn(), asFunction(action), c -> {});
+    }
+
+    /**
+     * A convenience {@link Collector} for performing a parallel side-effecting operation
+     * on each element (by default on Virtual Threads), with additional configuration applied
+     * via the provided {@code configurer}.
+     * <p>
+     * Unlike {@link #parallel(Function, Consumer)}, this collector does not produce mapped results.
+     * Instead, the provided {@code action} is executed for its side effects. The {@code configurer}
+     * can be used to set a custom executor, parallelism level, batching, or decorators.
+     *
+     * <p><b>Note:</b> Unless the {@code configurer} explicitly limits parallelism (e.g. via
+     * {@link CollectingConfigurer#parallelism(int)}), this collector does not limit parallelism in any
+     * way (it may spawn work for every element). As a result, it is not suitable for processing huge
+     * streams.
+     *
+     * <p><b>Note:</b> For more information on available configuration options, see
+     * {@link CollectingConfigurer}.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<Void> result = Stream.of(1, 2, 3)
+     *   .collect(parallelForEach(i -> sendNotification(i), c -> c
+     *     .parallelism(64)
+     *     .batching()
+     *   ));
+     * }</pre>
+     *
+     * @param action     the side-effecting operation to perform on each element
+     * @param configurer callback used to configure execution (see {@link CollectingConfigurer})
+     * @param <T>        the input element type
+     *
+     * @return a {@code Collector} producing a {@link CompletableFuture} that completes
+     * when all actions have finished
+     *
+     * @since 4.1.0
+     */
+    public static <T> Collector<T, ?, CompletableFuture<@Nullable Void>> parallelForEach(
+      Consumer<? super T> action,
+      Consumer<CollectingConfigurer> configurer) {
+        Objects.requireNonNull(action, "action cannot be null");
+        Objects.requireNonNull(configurer, "configurer cannot be null");
+
+        return Factory.collecting(consumeAndReturn(), asFunction(action), configurer);
+    }
+
+    /**
+     * A convenience {@link Collector} for performing a parallel side-effecting operation
+     * on each element using Virtual Threads, with a maximum parallelism level.
+     * <p>
+     * This overload is a convenience for applying an easy parallelism cap. For additional configuration
+     * options (e.g. batching or a custom {@link java.util.concurrent.Executor}), use the overload
+     * accepting a {@link CollectingConfigurer}.
+     *
+     * <br>
+     * Example:
+     * <pre>{@code
+     * CompletableFuture<Void> result = Stream.of(1, 2, 3)
+     *   .collect(parallelForEach(i -> sendNotification(i), 64));
+     * }</pre>
+     *
+     * @param action      the side-effecting operation to perform on each element
+     * @param parallelism maximum parallelism (must be positive)
+     * @param <T>         the input element type
+     *
+     * @return a {@code Collector} producing a {@link CompletableFuture} that completes
+     * when all actions have finished
+     *
+     * @since 4.1.0
+     */
+    public static <T> Collector<T, ?, CompletableFuture<@Nullable Void>> parallelForEach(
+      Consumer<? super T> action, int parallelism) {
+        Objects.requireNonNull(action, "action cannot be null");
+
+        return Factory.collecting(
+          consumeAndReturn(),
+          asFunction(action),
+          c -> c.parallelism(parallelism));
+    }
+
+    private static <T> Function<T, @Nullable Void> asFunction(Consumer<? super T> action) {
+        return t -> {
+            action.accept(t);
+            return null;
+        };
+    }
+
+    private static <T> Function<Stream<T>, @Nullable Void> consumeAndReturn() {
+        return s -> {
+            s.forEach(__ -> {});
+            return null;
+        };
     }
 
     /**
