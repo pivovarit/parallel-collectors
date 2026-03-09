@@ -58,6 +58,7 @@ class ArchitectureTest {
       .and().areNotNestedClasses()
       .should().haveSimpleName("ParallelCollectors")
       .orShould().haveSimpleName("Group")
+      .orShould().haveSimpleName("Configurer")
       .orShould().haveSimpleName("StreamingConfigurer")
       .orShould().haveSimpleName("CollectingConfigurer")
       .as("limit public API surface")
