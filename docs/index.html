@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Parallel Collectors — Parallel processing for Java Stream API</title>
 <meta name="description" content="Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.">
+<meta name="keywords" content="Java, parallel streams, CompletableFuture, Virtual Threads, concurrent collections, parallel processing, Java Stream API, collectors, pivovarit">
+<link rel="canonical" href="https://pcollectors.pivovarit.com">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pcollectors.pivovarit.com">
+<meta property="og:title" content="Parallel Collectors — Parallel processing for Java Stream API">
+<meta property="og:description" content="Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.">
+<meta property="og:site_name" content="Parallel Collectors">
+<meta property="og:image" content="https://pcollectors.pivovarit.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Parallel Collectors — Parallel processing for Java Stream API">
+<meta name="twitter:description" content="Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.">
+<meta name="twitter:image" content="https://pcollectors.pivovarit.com/og-image.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
@@ -626,6 +645,56 @@
     border-radius: 4px;
   }
 
+  /* ── Maintainer ── */
+  .maintainer {
+    border-top: 1px solid var(--border);
+  }
+
+  .maintainer-inner {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 40px 36px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .maintainer-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--border-accent);
+    flex-shrink: 0;
+    object-fit: cover;
+  }
+
+  .maintainer-text h3 {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+
+  .maintainer-text h3 a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .maintainer-text h3 a:hover { color: var(--accent); }
+
+  .maintainer-text p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 480px) {
+    .maintainer-inner { flex-direction: column; align-items: flex-start; padding: 28px 24px; }
+  }
+
   /* ── Sponsor ── */
   .sponsor {
     border-top: 1px solid var(--border);
@@ -778,6 +847,26 @@
     transform: translateY(0);
   }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Parallel Collectors",
+  "description": "Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.",
+  "url": "https://pcollectors.pivovarit.com",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "JDK 21+",
+  "softwareVersion": "4.0.0",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "author": {
+    "@type": "Person",
+    "name": "Grzegorz Piwowarek",
+    "url": "https://github.com/pivovarit"
+  },
+  "codeRepository": "https://github.com/pivovarit/parallel-collectors",
+  "programmingLanguage": "Java"
+}
+</script>
 </head>
 <body>
 
@@ -790,8 +879,7 @@
       <li><a href="#examples">Examples</a></li>
       <li><a href="#api">API</a></li>
       <li><a href="#install">Install</a></li>
-      <li><a href="https://github.com/pivovarit/parallel-collectors">GitHub</a></li>
-      <li><a href="https://github.com/sponsors/pivovarit" class="nav-sponsor">Sponsor</a></li>
+      <li><a href="https://github.com/pivovarit/parallel-collectors" rel="noopener noreferrer">GitHub</a></li>
     </ul>
   </div>
 </nav>
@@ -809,11 +897,11 @@
         Get Started
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </a>
-      <a href="https://github.com/pivovarit/parallel-collectors" class="btn btn-ghost">
+      <a href="https://github.com/pivovarit/parallel-collectors" class="btn btn-ghost" rel="noopener noreferrer">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
       </a>
-      <a href="https://javadoc.io/doc/com.pivovarit/parallel-collectors" class="btn btn-ghost">
+      <a href="https://javadoc.io/doc/com.pivovarit/parallel-collectors" class="btn btn-ghost" rel="noopener noreferrer">
         Javadoc
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M9 2h5v5M14 2L7 9"/></svg>
       </a>
@@ -1044,6 +1132,20 @@ urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">c
   </div>
 </section>
 
+<!-- ── Maintainer ── -->
+<section class="maintainer" id="maintainer">
+  <div class="container">
+    <div class="maintainer-inner reveal">
+      <img src="https://github.com/pivovarit.png" alt="Grzegorz Piwowarek" class="maintainer-avatar">
+      <div class="maintainer-text">
+        <div class="section-label">Maintainer</div>
+        <h3><a href="https://pivovarit.com/" target="_blank" rel="noopener noreferrer">Grzegorz Piwowarek</a></h3>
+        <p>Java Champion, Oracle ACE, and WarsawJUG Leader</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ── Sponsor ── -->
 <section class="sponsor" id="sponsor">
   <div class="container">
@@ -1052,7 +1154,7 @@ urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">c
         <h3>Support this project</h3>
         <p>Parallel Collectors is free, open-source, and maintained in spare time. If it saves you time, consider sponsoring to help keep it going.</p>
       </div>
-      <a href="https://github.com/sponsors/pivovarit" class="btn-sponsor">
+      <a href="https://github.com/sponsors/pivovarit" class="btn-sponsor" rel="noopener noreferrer">
         <svg viewBox="0 0 16 16"><path d="M4.25 2.5c-1.336 0-2.75 1.164-2.75 3 0 2.15 1.58 4.144 3.365 5.682A20.565 20.565 0 008 13.393a20.561 20.561 0 003.135-2.211C12.92 9.644 14.5 7.65 14.5 5.5c0-1.836-1.414-3-2.75-3-1.373 0-2.609.986-3.029 2.456a.75.75 0 01-1.442 0C6.859 3.486 5.623 2.5 4.25 2.5z"/></svg>
         Sponsor on GitHub
       </a>
@@ -1064,13 +1166,13 @@ urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">c
 <footer>
   <div class="container">
     <div class="footer-left">
-      Apache 2.0 &middot; <a href="https://github.com/pivovarit">Grzegorz Piwowarek</a>
+      Apache 2.0 &middot; <a href="https://github.com/pivovarit" rel="noopener noreferrer">Grzegorz Piwowarek</a>
     </div>
     <ul class="footer-links">
-      <li><a href="https://github.com/pivovarit/parallel-collectors">GitHub</a></li>
-      <li><a href="https://javadoc.io/doc/com.pivovarit/parallel-collectors">Javadoc</a></li>
-      <li><a href="https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors">Maven Central</a></li>
-      <li><a href="https://github.com/sponsors/pivovarit" style="color:#db61a2">&#9825; Sponsor</a></li>
+      <li><a href="https://github.com/pivovarit/parallel-collectors" rel="noopener noreferrer">GitHub</a></li>
+      <li><a href="https://javadoc.io/doc/com.pivovarit/parallel-collectors" rel="noopener noreferrer">Javadoc</a></li>
+      <li><a href="https://central.sonatype.com/artifact/com.pivovarit/parallel-collectors" rel="noopener noreferrer">Maven Central</a></li>
+      <li><a href="https://github.com/sponsors/pivovarit" style="color:#db61a2" rel="noopener noreferrer">&#9825; Sponsor</a></li>
     </ul>
   </div>
 </footer>
