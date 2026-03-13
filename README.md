@@ -27,6 +27,11 @@ They are:
 - non-invasive (they are just custom implementations of `Collector` interface, no magic inside, zero-dependencies, no Stream API internals hacking)
 - versatile (enables easy integration with existing Stream API `Collectors`)
 
+### Used by
+
+- [Jenkins JUnit Plugin](https://github.com/jenkinsci/junit-plugin) — the official Jenkins plugin for publishing JUnit test results
+- [LinkedIn Avro Util](https://github.com/linkedin/avro-util) — LinkedIn's utilities for working across multiple Apache Avro versions
+
 ### Maven Dependencies
 
 #### JDK 21+:

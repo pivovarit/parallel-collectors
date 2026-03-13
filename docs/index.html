@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parallel Collectors — Parallel processing for Java Stream API</title>
+<title>Parallel Collectors - Parallel processing for Java Stream API</title>
 <meta name="description" content="Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.">
 <meta name="keywords" content="Java, parallel streams, CompletableFuture, Virtual Threads, concurrent collections, parallel processing, Java Stream API, collectors, pivovarit">
 <link rel="canonical" href="https://pcollectors.pivovarit.com">
@@ -11,7 +11,7 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://pcollectors.pivovarit.com">
-<meta property="og:title" content="Parallel Collectors — Parallel processing for Java Stream API">
+<meta property="og:title" content="Parallel Collectors - Parallel processing for Java Stream API">
 <meta property="og:description" content="Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.">
 <meta property="og:site_name" content="Parallel Collectors">
 <meta property="og:image" content="https://pcollectors.pivovarit.com/og-image.png">
@@ -20,7 +20,7 @@
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Parallel Collectors — Parallel processing for Java Stream API">
+<meta name="twitter:title" content="Parallel Collectors - Parallel processing for Java Stream API">
 <meta name="twitter:description" content="Custom java.util.stream.Collector implementations enabling parallel processing with CompletableFutures and Virtual Threads. Zero dependencies.">
 <meta name="twitter:image" content="https://pcollectors.pivovarit.com/og-image.png">
 
@@ -771,6 +771,61 @@
     }
   }
 
+  /* ── Used by ── */
+  .used-by {
+    border-top: 1px solid var(--border);
+  }
+
+  .used-by-header {
+    margin-bottom: 48px;
+  }
+
+  .used-by-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .used-by-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 32px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.25s;
+  }
+
+  .used-by-card:hover {
+    background: var(--bg-elevated);
+    border-color: var(--border-accent);
+  }
+
+  .used-by-icon {
+    flex-shrink: 0;
+  }
+
+  .used-by-info h3 {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+
+  .used-by-info p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  @media (max-width: 768px) {
+    .used-by-grid { grid-template-columns: 1fr; }
+  }
+
   /* ── Footer ── */
   footer {
     border-top: 1px solid var(--border);
@@ -879,6 +934,7 @@
       <li><a href="#examples">Examples</a></li>
       <li><a href="#api">API</a></li>
       <li><a href="#install">Install</a></li>
+      <li><a href="#used-by">Used by</a></li>
       <li><a href="https://github.com/pivovarit/parallel-collectors" rel="noopener noreferrer">GitHub</a></li>
     </ul>
   </div>
@@ -887,7 +943,7 @@
 <!-- ── Hero ── -->
 <section class="hero">
   <div class="container">
-    <div class="hero-badge">v4.0.0 — Virtual Threads</div>
+    <div class="hero-badge">v4.0.0 - Virtual Threads</div>
     <h1>Parallel<br><span class="thin">Collectors</span></h1>
     <p class="hero-sub">
       Custom <strong>java.util.stream.Collector</strong> implementations for parallel processing with <strong>CompletableFutures</strong> and <strong>Virtual Threads</strong>. Zero dependencies.
@@ -921,7 +977,7 @@
     <div class="features-header reveal">
       <div class="section-label">Features</div>
       <h2 class="section-title">Built for real-world<br>parallel workloads</h2>
-      <p class="section-desc">Standard parallel streams use the shared ForkJoinPool — terrible for I/O-bound work. Parallel Collectors fix that.</p>
+      <p class="section-desc">Standard parallel streams use the shared ForkJoinPool - terrible for I/O-bound work. Parallel Collectors fix that.</p>
     </div>
     <div class="features-grid reveal">
       <div class="feature-card">
@@ -932,7 +988,7 @@
       <div class="feature-card">
         <div class="feature-icon" aria-hidden="true">&#9096;</div>
         <h3>Non-blocking</h3>
-        <p>Returns CompletableFuture — the calling thread never blocks. Compose, chain, and add timeouts freely.</p>
+        <p>Returns CompletableFuture - the calling thread never blocks. Compose, chain, and add timeouts freely.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon" aria-hidden="true">&#9881;</div>
@@ -1014,7 +1070,7 @@ urls<span class="op">.</span><span class="mt">stream</span>()
     <div class="api-header reveal">
       <div class="section-label">API</div>
       <h2 class="section-title">Core collectors</h2>
-      <p class="section-desc">Static factory methods on <code style="font-family:var(--font-mono);color:var(--syn-type);background:var(--bg-elevated);padding:2px 6px;border-radius:4px;font-size:14px">ParallelCollectors</code> — follows <code style="font-family:var(--font-mono);color:var(--syn-type);background:var(--bg-elevated);padding:2px 6px;border-radius:4px;font-size:14px">java.util.stream.Collectors</code> conventions.</p>
+      <p class="section-desc">Static factory methods on <code style="font-family:var(--font-mono);color:var(--syn-type);background:var(--bg-elevated);padding:2px 6px;border-radius:4px;font-size:14px">ParallelCollectors</code> - follows <code style="font-family:var(--font-mono);color:var(--syn-type);background:var(--bg-elevated);padding:2px 6px;border-radius:4px;font-size:14px">java.util.stream.Collectors</code> conventions.</p>
     </div>
     <div class="api-grid reveal">
       <div class="api-card">
@@ -1048,7 +1104,7 @@ urls<span class="op">.</span><span class="mt">stream</span>()
       <div class="code-block-wrap">
         <div class="code-panels" style="border-top:1px solid var(--border)">
           <div class="code-panel active">
-<pre><code><span class="cm">// The Configurer API — fluent configuration for all collectors</span>
+<pre><code><span class="cm">// The Configurer API - fluent configuration for all collectors</span>
 urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">collect</span>(<span class="mt">parallel</span>(url <span class="op">-&gt;</span> <span class="mt">fetch</span>(url), c <span class="op">-&gt;</span> c
     <span class="op">.</span><span class="mt">executor</span>(myExecutor)       <span class="cm">// custom Executor (default: Virtual Threads)</span>
     <span class="op">.</span><span class="mt">parallelism</span>(<span class="nm">32</span>)           <span class="cm">// max concurrent tasks</span>
@@ -1127,7 +1183,33 @@ urls<span class="op">.</span><span class="mt">stream</span>().<span class="mt">c
       </div>
     </div>
     <div class="install-note reveal">
-      <strong>JDK 21+</strong> recommended — version <code>3.x</code> uses Virtual Threads by default. Version <code>2.x</code> supports JDK 8+ with platform threads.
+      <strong>JDK 21+</strong> recommended - version <code>3.x</code> uses Virtual Threads by default. Version <code>2.x</code> supports JDK 8+ with platform threads.
+    </div>
+  </div>
+</section>
+
+<!-- ── Used by ── -->
+<section class="used-by" id="used-by">
+  <div class="container">
+    <div class="used-by-header reveal">
+      <div class="section-label">Used by</div>
+      <h2 class="section-title">Trusted in production</h2>
+    </div>
+    <div class="used-by-grid reveal">
+      <a href="https://github.com/jenkinsci/junit-plugin" class="used-by-card" target="_blank" rel="noopener noreferrer">
+        <div class="used-by-icon"><img src="https://github.com/jenkinsci.png" alt="Jenkins" width="36" height="36" style="border-radius:8px"></div>
+        <div class="used-by-info">
+          <h3>Jenkins JUnit Plugin</h3>
+          <p>The official Jenkins plugin for publishing JUnit test results - one of the most widely installed Jenkins plugins.</p>
+        </div>
+      </a>
+      <a href="https://github.com/linkedin/avro-util" class="used-by-card" target="_blank" rel="noopener noreferrer">
+        <div class="used-by-icon"><img src="https://github.com/linkedin.png" alt="LinkedIn" width="36" height="36" style="border-radius:8px"></div>
+        <div class="used-by-info">
+          <h3>LinkedIn Avro Util</h3>
+          <p>LinkedIn's utilities for working across multiple Apache Avro versions. Used internally at LinkedIn scale.</p>
+        </div>
+      </a>
     </div>
   </div>
 </section>
