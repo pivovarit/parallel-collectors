@@ -37,7 +37,7 @@ jobs:
         run: mvn package -Djunit.jupiter.execution.parallel.enabled=false
 
       - name: Verify class file versions
-        uses: pivovarit/verify-jar-action@v1.2.0
+        uses: pivovarit/verify-jar-action@v1.3.0
         with:
           java-version: '21'
 
