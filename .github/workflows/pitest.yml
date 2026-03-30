@@ -44,7 +44,7 @@ jobs:
       - name: Prepare deployment
         run: mkdir -p docs/pitest && cp -r ./target/pit-reports/* docs/pitest/
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
