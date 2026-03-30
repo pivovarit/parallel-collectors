@@ -90,6 +90,8 @@ By default, collectors use Virtual Threads, but you can optionally provide a cus
 
 All parallel collectors are one-off and must not be reused.
 
+**Important:** `parallel(mapper)` returns `CompletableFuture<Stream<R>>`, not `CompletableFuture<List<R>>`. If you want a `List`, pass a downstream collector explicitly: `parallel(mapper, toList())`. The same applies to `parallelBy`.
+
 ## Choosing the Right Collector
 
 ```mermaid
