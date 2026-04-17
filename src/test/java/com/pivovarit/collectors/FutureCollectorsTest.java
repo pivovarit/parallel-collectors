@@ -16,6 +16,7 @@
 package com.pivovarit.collectors;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 class FutureCollectorsTest {
@@ -80,5 +82,22 @@ class FutureCollectorsTest {
                 }
             });
         }
+    }
+
+    @Test
+    void shouldCancelSiblingsOnFirstFailure() {
+        var futures = new ArrayList<CompletableFuture<Integer>>();
+        for (int i = 0; i < 10; i++) {
+            int idx = i;
+            futures.add(idx == 0
+              ? CompletableFuture.failedFuture(new RuntimeException("boom"))
+              : new CompletableFuture<>());
+        }
+
+        var result = futures.stream().collect(ParallelCollectors.toFuture(toList()));
+
+        assertThat(result).isCompletedExceptionally();
+        await().atMost(Duration.ofSeconds(1))
+          .until(() -> futures.stream().skip(1).allMatch(CompletableFuture::isCancelled));
     }
 }
