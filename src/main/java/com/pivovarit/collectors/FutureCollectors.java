@@ -44,6 +44,14 @@ final class FutureCollectors {
                 });
             }
 
+            future.whenComplete((v, ex) -> {
+                if (ex != null) {
+                    for (var f : list) {
+                        f.cancel(true);
+                    }
+                }
+            });
+
             return future;
         });
     }
