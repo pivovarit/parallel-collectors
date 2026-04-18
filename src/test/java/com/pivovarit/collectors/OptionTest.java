@@ -116,4 +116,54 @@ class OptionTest {
           .hasMessageContaining("'executor decorator' can only be configured once");
     }
 
+    @Test
+    void collectingConfigurerShouldRejectBatchingWithoutParallelism() {
+        var configurer = new CollectingConfigurer();
+        configurer.batching();
+        assertThatThrownBy(configurer::validate)
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("batching")
+          .hasMessageContaining("parallelism");
+    }
+
+    @Test
+    void streamingConfigurerShouldRejectBatchingWithoutParallelism() {
+        var configurer = new StreamingConfigurer();
+        configurer.batching();
+        assertThatThrownBy(configurer::validate)
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("batching")
+          .hasMessageContaining("parallelism");
+    }
+
+    @Test
+    void collectingConfigurerValidateShouldAcceptBatchingWithParallelism() {
+        var configurer = new CollectingConfigurer();
+        configurer.batching().parallelism(2);
+        configurer.validate();
+    }
+
+    @Test
+    void streamingConfigurerValidateShouldAcceptBatchingWithParallelism() {
+        var configurer = new StreamingConfigurer();
+        configurer.batching().parallelism(2);
+        configurer.validate();
+    }
+
+    @Test
+    void parallelCollectorShouldFailFastOnBatchingWithoutParallelism() {
+        assertThatThrownBy(() -> ParallelCollectors.parallel(i -> i, c -> c.batching()))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("batching")
+          .hasMessageContaining("parallelism");
+    }
+
+    @Test
+    void parallelToStreamShouldFailFastOnBatchingWithoutParallelism() {
+        assertThatThrownBy(() -> ParallelCollectors.parallelToStream(i -> i, c -> c.batching()))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("batching")
+          .hasMessageContaining("parallelism");
+    }
+
 }

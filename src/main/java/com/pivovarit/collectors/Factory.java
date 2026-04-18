@@ -156,9 +156,6 @@ final class Factory {
         }
 
         if (config.batching()) {
-            if (config.parallelism() == 0) {
-                throw new IllegalArgumentException("it's obligatory to provide parallelism when using batching");
-            }
             return factory.batching(mapper, config.executor(), config.parallelism());
         }
 
@@ -180,12 +177,14 @@ final class Factory {
     static StreamingConfigurer streaming(Consumer<StreamingConfigurer> consumer) {
         var c = new StreamingConfigurer();
         consumer.accept(c);
+        c.validate();
         return c;
     }
 
     static CollectingConfigurer collecting(Consumer<CollectingConfigurer> consumer) {
         var c = new CollectingConfigurer();
         consumer.accept(c);
+        c.validate();
         return c;
     }
 }

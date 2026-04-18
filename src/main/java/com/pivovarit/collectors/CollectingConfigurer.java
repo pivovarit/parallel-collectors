@@ -139,6 +139,12 @@ public final class CollectingConfigurer {
         return Collections.unmodifiableList(modifiers);
     }
 
+    void validate() {
+        if (seen.contains(ConfigProcessor.Option.Batched.class) && !seen.contains(ConfigProcessor.Option.Parallelism.class)) {
+            throw new IllegalStateException("parallelism must be configured when batching is enabled");
+        }
+    }
+
     private void addOnce(ConfigProcessor.Option option) {
         if (!seen.add(option.getClass())) {
             throw new IllegalArgumentException("'%s' can only be configured once".formatted(ConfigProcessor.toHumanReadableString(option)));
