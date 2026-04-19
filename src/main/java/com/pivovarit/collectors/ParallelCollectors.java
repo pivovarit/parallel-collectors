@@ -15,13 +15,12 @@
  */
 package com.pivovarit.collectors;
 
-import org.jspecify.annotations.NullMarked;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NullMarked;
 
 /**
  * An umbrella class exposing static factory methods for instantiating parallel {@link Collector}s
@@ -39,36 +38,36 @@ public final class ParallelCollectors {
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
       Function<? super T, ? extends R> mapper,
       Collector<R, ?, RR> collector) {
-        return null;
+        return Factory.async(mapper, ConfigProcessor.empty(), collector);
     }
 
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(
       Function<? super T, ? extends R> mapper) {
-        return null;
+        return Factory.async(mapper, ConfigProcessor.empty());
     }
 
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Group<K, R>>>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper) {
-        return null;
+        return Factory.asyncGrouping(classifier, mapper, ConfigProcessor.empty());
     }
 
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Collector<Group<K, R>, ?, RR> collector) {
-        return null;
+        return Factory.asyncGrouping(classifier, mapper, ConfigProcessor.empty(), collector);
     }
 
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(
       Function<? super T, ? extends R> mapper) {
-        return null;
+        return Factory.streaming(mapper, ConfigProcessor.empty());
     }
 
     public static <T, K, R> Collector<T, ?, Stream<Group<K, R>>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper) {
-        return null;
+        return Factory.streamingGrouping(classifier, mapper, ConfigProcessor.empty());
     }
 
     // configurers
@@ -76,21 +75,21 @@ public final class ParallelCollectors {
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer) {
-        return null;
+        return Factory.async(mapper, ConfigProcessor.fromCollecting(configurer));
     }
 
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer,
       Collector<R, ?, RR> collector) {
-        return null;
+        return Factory.async(mapper, ConfigProcessor.fromCollecting(configurer), collector);
     }
 
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Group<K, R>>>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer) {
-        return null;
+        return Factory.asyncGrouping(classifier, mapper, ConfigProcessor.fromCollecting(configurer));
     }
 
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
@@ -98,56 +97,56 @@ public final class ParallelCollectors {
       Function<? super T, ? extends R> mapper,
       Consumer<CollectingConfigurer> configurer,
       Collector<Group<K, R>, ?, RR> collector) {
-        return null;
+        return Factory.asyncGrouping(classifier, mapper, ConfigProcessor.fromCollecting(configurer), collector);
     }
 
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(
       Function<? super T, ? extends R> mapper,
       Consumer<StreamingConfigurer> configurer) {
-        return null;
+        return Factory.streaming(mapper, ConfigProcessor.fromStreaming(configurer));
     }
 
     public static <T, K, R> Collector<T, ?, Stream<Group<K, R>>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper,
       Consumer<StreamingConfigurer> configurer) {
-        return null;
+        return Factory.streamingGrouping(classifier, mapper, ConfigProcessor.fromStreaming(configurer));
     }
 
     // convenience (defaults + parallelism)
 
     public static <T, R> Collector<T, ?, CompletableFuture<Stream<R>>> parallel(
       Function<? super T, ? extends R> mapper, int parallelism) {
-        return null;
+        return Factory.async(mapper, ConfigProcessor.collectingWithParallelism(parallelism));
     }
 
     public static <T, R, RR> Collector<T, ?, CompletableFuture<RR>> parallel(
       Function<? super T, ? extends R> mapper,
       int parallelism, Collector<R, ?, RR> collector) {
-        return null;
+        return Factory.async(mapper, ConfigProcessor.collectingWithParallelism(parallelism), collector);
     }
 
     public static <T, K, R> Collector<T, ?, CompletableFuture<Stream<Group<K, R>>>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper, int parallelism) {
-        return null;
+        return Factory.asyncGrouping(classifier, mapper, ConfigProcessor.collectingWithParallelism(parallelism));
     }
 
     public static <T, K, R, RR> Collector<T, ?, CompletableFuture<RR>> parallelBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper, int parallelism,
       Collector<Group<K, R>, ?, RR> collector) {
-        return null;
+        return Factory.asyncGrouping(classifier, mapper, ConfigProcessor.collectingWithParallelism(parallelism), collector);
     }
 
     public static <T, R> Collector<T, ?, Stream<R>> parallelToStream(
       Function<? super T, ? extends R> mapper, int parallelism) {
-        return null;
+        return Factory.streaming(mapper, ConfigProcessor.streamingWithParallelism(parallelism));
     }
 
     public static <T, K, R> Collector<T, ?, Stream<Group<K, R>>> parallelToStreamBy(
       Function<? super T, ? extends K> classifier,
       Function<? super T, ? extends R> mapper, int parallelism) {
-        return null;
+        return Factory.streamingGrouping(classifier, mapper, ConfigProcessor.streamingWithParallelism(parallelism));
     }
 }
