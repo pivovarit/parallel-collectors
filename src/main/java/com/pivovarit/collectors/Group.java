@@ -18,6 +18,13 @@ package com.pivovarit.collectors;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Represents a grouping of values under a specific key, produced by the {@code parallelBy} /
+ * {@code parallelToStreamBy} collectors.
+ *
+ * @param <K> the type of the key
+ * @param <R> the type of the values
+ */
 public class Group<K, R> {
 
     private final K key;
@@ -28,10 +35,23 @@ public class Group<K, R> {
         this.values = values;
     }
 
+    /**
+     * Creates a new {@code Group} instance with the given key and values.
+     *
+     * @param i          the key
+     * @param integers   the list of values
+     *
+     * @return a new {@code Group} instance
+     */
     public static Group<Integer, Integer> of(int i, List<Integer> integers) {
         return new Group<>(i, integers);
     }
 
+    /**
+     * Returns the values associated with this group's key.
+     *
+     * @return the list of values in this group
+     */
     public List<R> values() {
         return values;
     }
