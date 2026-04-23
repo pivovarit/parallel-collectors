@@ -15,6 +15,15 @@
  */
 package com.pivovarit.collectors;
 
-enum CompletionStrategy {
-    ORDERED, UNORDERED
+import java.util.concurrent.Executor;
+import java.util.function.Function;
+
+record Config(
+    Integer parallelism,
+    Executor executor,
+    boolean batching,
+    boolean ordered,
+    Function<Runnable, Runnable> taskDecorator,
+    Function<Executor, Executor> executorDecorator
+) {
 }

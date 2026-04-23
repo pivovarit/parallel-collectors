@@ -18,46 +18,53 @@ package com.pivovarit.collectors;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
-/**
- * @author Grzegorz Piwowarek
- */
-final class CompletionOrderSpliterator<T> implements Spliterator<T> {
+final class CompletionOrderSpliterator<R> implements Spliterator<R> {
 
-    private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
+    private final BlockingQueue<CompletableFuture<R>> completed = new LinkedBlockingQueue<>();
     private int remaining;
 
-    CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
+    CompletionOrderSpliterator(List<CompletableFuture<R>> futures) {
         this.remaining = futures.size();
-        futures.forEach(f -> f.whenComplete((__, ___) -> completed.add(f)));
+        for (CompletableFuture<R> f : futures) {
+            f.whenComplete((v, e) -> completed.offer(f));
+        }
     }
 
     @Override
-    public boolean tryAdvance(Consumer<? super T> action) {
-        if (remaining <= 0) {
-            return false;
-        }
-        action.accept(nextCompleted().join());
-        return true;
-    }
-
-    private CompletableFuture<T> nextCompleted() {
-        try {
-            var next = completed.take();
+    public boolean tryAdvance(Consumer<? super R> action) {
+        while (remaining > 0) {
+            CompletableFuture<R> next;
+            try {
+                next = completed.take();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new CompletionException(e);
+            }
             remaining--;
-            return next;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-
-            throw new RuntimeException(e);
+            try {
+                R value = next.join();
+                action.accept(value);
+                return true;
+            } catch (CancellationException ce) {
+                continue;
+            } catch (CompletionException ce) {
+                if (ce.getCause() instanceof CancellationException) {
+                    continue;
+                }
+                throw ce;
+            }
         }
+        return false;
     }
 
     @Override
-    public Spliterator<T> trySplit() {
+    public Spliterator<R> trySplit() {
         return null;
     }
 
@@ -68,6 +75,6 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     @Override
     public int characteristics() {
-        return SIZED | IMMUTABLE;
+        return NONNULL;
     }
 }

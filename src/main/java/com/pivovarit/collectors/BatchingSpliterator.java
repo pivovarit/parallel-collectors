@@ -17,112 +17,26 @@ package com.pivovarit.collectors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Spliterator;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
-import static java.util.stream.Stream.empty;
-import static java.util.stream.Stream.of;
-import static java.util.stream.StreamSupport.stream;
+final class BatchingSpliterator {
 
-/**
- * @author Grzegorz Piwowarek
- */
-final class BatchingSpliterator<T> implements Spliterator<List<T>> {
+    private BatchingSpliterator() {
+    }
 
-    private final List<T> source;
-
-    private int chunks;
-    private int chunkSize;
-    private int consumed;
-
-    BatchingSpliterator(List<T> list, int batches) {
-        Objects.requireNonNull(list, "list can't be null");
-        if (batches < 1) {
-            throw new IllegalArgumentException("batches can't be lower than one");
+    static <T> List<List<T>> partition(List<T> items, int batches) {
+        if (items.isEmpty()) {
+            return List.of();
         }
-        source = list;
-        chunks = list.isEmpty() ? 0 : Math.min(batches, list.size());
-        chunkSize = (int) Math.ceil(((double) source.size()) / batches);
-    }
-
-    static <T> Stream<List<T>> partitioned(List<T> list, int numberOfParts) {
-        int size = list.size();
-
-        if (size == 0) {
-            return empty();
-        } else if (numberOfParts == 1) {
-            return of(list);
-        } else if (size <= numberOfParts) {
-            return asSingletonListStream(list);
-        } else {
-            return stream(new BatchingSpliterator<>(list, numberOfParts), false);
+        int count = Math.min(batches, items.size());
+        int base = items.size() / count;
+        int remainder = items.size() % count;
+        List<List<T>> result = new ArrayList<>(count);
+        int offset = 0;
+        for (int i = 0; i < count; i++) {
+            int size = base + (i < remainder ? 1 : 0);
+            result.add(new ArrayList<>(items.subList(offset, offset + size)));
+            offset += size;
         }
-    }
-
-    private static <T> Stream<List<T>> asSingletonListStream(List<T> list) {
-        Stream.Builder<List<T>> acc = Stream.builder();
-        for (T t : list) {
-            acc.add(List.of(t));
-        }
-        return acc.build();
-    }
-
-    static <T, R> Function<List<T>, List<R>> batching(Function<? super T, R> mapper) {
-        return batch -> {
-            List<R> list = new ArrayList<>(batch.size());
-            for (T t : batch) {
-                list.add(mapper.apply(t));
-            }
-            return list;
-        };
-    }
-
-    @Override
-    public boolean tryAdvance(Consumer<? super List<T>> action) {
-        if (consumed < source.size() && chunks != 0) {
-            int end = Math.min(source.size(), consumed + chunkSize);
-            List<T> batch = source.subList(consumed, end);
-            consumed += batch.size();
-            if (--chunks > 0) {
-                chunkSize = (int) Math.ceil(((double) (source.size() - consumed)) / chunks);
-            }
-            action.accept(batch);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public Spliterator<List<T>> trySplit() {
-        int remaining = source.size() - consumed;
-        if (remaining <= chunkSize || chunks <= 1) {
-            return null;
-        }
-
-        int midChunks = chunks / 2;
-        int midSize = Math.min(midChunks * chunkSize, source.size() - consumed);
-
-        var subList = source.subList(consumed, consumed + midSize);
-        var split = new BatchingSpliterator<>(subList, midChunks);
-
-        consumed += midSize;
-        chunks -= midChunks;
-        chunkSize = (int) Math.ceil(((double) (source.size() - consumed)) / chunks);
-
-        return split;
-    }
-
-    @Override
-    public long estimateSize() {
-        return chunks;
-    }
-
-    @Override
-    public int characteristics() {
-        return IMMUTABLE | ORDERED | SIZED;
+        return result;
     }
 }

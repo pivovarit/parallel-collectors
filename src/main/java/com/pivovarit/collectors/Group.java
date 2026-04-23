@@ -17,59 +17,67 @@ package com.pivovarit.collectors;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
 
 /**
- * Represents a grouping of values under a specific key.
+ * Represents a grouping of values under a specific key, produced by the {@code parallelBy} /
+ * {@code parallelToStreamBy} collectors.
  *
- * @param <T>    the type of the key
- * @param <V>    the type of the values
- * @param key    the key of this group, must not be null
- * @param values the list of values, must not be null
+ * @param <K> the type of the key
+ * @param <R> the type of the values
  */
-public record Group<T, V>(T key, List<V> values) {
+public class Group<K, R> {
 
-    /**
-     * Constructs a new {@code Group} instance ensuring key and values are not null.
-     *
-     * @param key    the key, must not be null
-     * @param values the list of values, must not be null
-     */
-    public Group {
-        Objects.requireNonNull(key, "key cannot be null");
-        Objects.requireNonNull(values, "values cannot be null");
+    private final K key;
+    private final List<R> values;
+
+    Group(K key, List<R> values) {
+        this.key = key;
+        this.values = values;
     }
 
     /**
      * Creates a new {@code Group} instance with the given key and values.
      *
-     * @param key    the key, must not be null
-     * @param values the list of values, must not be null
-     * @param <T>    the type of the key
-     * @param <V>    the type of the values
+     * @param i          the key
+     * @param integers   the list of values
      *
      * @return a new {@code Group} instance
      */
-    public static <T, V> Group<T, V> of(T key, List<V> values) {
-        return new Group<>(key, values);
+    public static Group<Integer, Integer> of(int i, List<Integer> integers) {
+        return new Group<>(i, integers);
     }
 
     /**
-     * Transforms the values in this group using the provided mapper function.
-     * <p>
-     * The mapper receives both the group's key and each value, allowing transformations
-     * that depend on the grouping key.
+     * Returns the values associated with this group's key.
      *
-     * @param mapper the mapping function receiving (key, value), must not be null
-     * @param <R>    the target type of the mapped values
-     *
-     * @return a new {@code Group} instance with the same key and the values produced by applying
-     * {@code mapper} to the key and each value in this group
+     * @return the list of values in this group
      */
-    public <R> Group<T, R> map(BiFunction<? super T, ? super V, ? extends R> mapper) {
-        Objects.requireNonNull(mapper, "mapper cannot be null");
-        return new Group<>(key, values.stream()
-          .map(v -> (R) mapper.apply(key, v))
-          .toList());
+    public List<R> values() {
+        return values;
+    }
+
+    K key() {
+        return key;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Group<?, ?> other)) {
+            return false;
+        }
+        return Objects.equals(key, other.key) && Objects.equals(values, other.values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key, values);
+    }
+
+    @Override
+    public String toString() {
+        return "Group[key=" + key + ", values=" + values + "]";
     }
 }

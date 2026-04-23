@@ -15,14 +15,9 @@
  */
 package com.pivovarit.collectors;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.function.UnaryOperator;
+import java.util.function.Function;
 
 /**
  * Fluent configuration builder for collectors that <em>collect</em> all results (i.e. non-streaming).
@@ -32,10 +27,47 @@ import java.util.function.UnaryOperator;
  */
 public final class CollectingConfigurer {
 
-    private final List<ConfigProcessor.Option> modifiers = new ArrayList<>();
-    private final Set<Class<? extends ConfigProcessor.Option>> seen = new HashSet<>();
+    Integer parallelism;
+    Executor executor;
+    boolean batching;
+    Function<Runnable, Runnable> taskDecorator;
+    Function<Executor, Executor> executorDecorator;
 
     CollectingConfigurer() {
+    }
+
+    /**
+     * Sets the maximum level of parallelism.
+     * <p>
+     * This limits the number of tasks submitted to the worker queue at once, effectively bounding
+     * the amount of in-flight work and the maximum concurrency used by the collector.
+     *
+     * @param p the desired parallelism level (must be positive)
+     *
+     * @return this configurer instance for fluent chaining
+     */
+    public CollectingConfigurer parallelism(int p) {
+        if (p < 1) {
+            throw new IllegalArgumentException("parallelism must be greater than 0");
+        }
+        this.parallelism = p;
+        return this;
+    }
+
+    /**
+     * Sets the {@link Executor} used for running tasks.
+     *
+     * <p><b>Note:</b> The provided executor must not <em>drop</em> tasks on rejection (e.g. using a
+     * {@code RejectedExecutionHandler} that discards submitted work). Dropping tasks will cause the
+     * collector to wait for results that will never be produced, which can lead to deadlocks.
+     *
+     * @param e the executor to use
+     *
+     * @return this configurer instance for fluent chaining
+     */
+    public CollectingConfigurer executor(Executor e) {
+        this.executor = Objects.requireNonNull(e, "executor can't be null");
+        return this;
     }
 
     /**
@@ -51,104 +83,41 @@ public final class CollectingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public CollectingConfigurer batching() {
-        addOnce(ConfigProcessor.Option.Batched.INSTANCE);
+        this.batching = true;
         return this;
     }
 
     /**
-     * Sets the maximum level of parallelism.
+     * Wraps each task with the provided decorator before submission.
      * <p>
-     * This limits the number of tasks submitted to the worker queue at once, effectively bounding
-     * the amount of in-flight work and the maximum concurrency used by the collector.
+     * Useful for propagating thread-local context, adding instrumentation, or applying cross-cutting
+     * concerns (e.g. logging, tracing) around the execution of each mapper invocation.
      *
-     * @param parallelism the desired parallelism level (must be positive)
-     *
-     * @return this configurer instance for fluent chaining
-     */
-    public CollectingConfigurer parallelism(int parallelism) {
-        Preconditions.requireValidParallelism(parallelism);
-
-        addOnce(new ConfigProcessor.Option.Parallelism(parallelism));
-        return this;
-    }
-
-    /**
-     * Sets the {@link Executor} used for running tasks.
-     *
-     * <p><b>Note:</b> The provided executor must not <em>drop</em> tasks on rejection (e.g. using a
-     * {@code RejectedExecutionHandler} that discards submitted work). Dropping tasks will cause the
-     * collector to wait for results that will never be produced, which can lead to deadlocks.
-     *
-     * @param executor the executor to use
+     * @param decorator function that wraps the original {@code Runnable}
      *
      * @return this configurer instance for fluent chaining
      */
-    public CollectingConfigurer executor(Executor executor) {
-        Preconditions.requireValidExecutor(executor);
-
-        addOnce(new ConfigProcessor.Option.ThreadPool(executor));
-        return this;
-    }
-
-    /**
-     * Decorates the executor used for running tasks.
-     * <p>
-     * The decorator receives the resolved executor (either the default virtual-thread executor or
-     * the one provided via {@link #executor(Executor)}) and returns a wrapped replacement.
-     * This is useful for augmenting the executor with cross-cutting concerns such as context
-     * propagation (MDC, OpenTelemetry spans, etc.) or monitoring, without replacing the executor entirely.
-     *
-     * <p><b>Note:</b> The executor returned by the decorator must not <em>drop</em> tasks on rejection.
-     * Dropping tasks will cause the collector to wait for results that will never be produced,
-     * which can lead to deadlocks.
-     *
-     * @param decorator a function that wraps the resolved executor
-     *
-     * @return this configurer instance for fluent chaining
-     */
-    public CollectingConfigurer executorDecorator(UnaryOperator<Executor> decorator) {
-        Objects.requireNonNull(decorator, "executor decorator can't be null");
-
-        addOnce(new ConfigProcessor.Option.ExecutorDecorator(decorator));
-        return this;
-    }
-
-    /**
-     * Decorates each individual task before it is submitted to the executor.
-     * <p>
-     * The decorator receives the {@link Runnable} representing a single unit of work and returns a
-     * wrapped replacement that runs in its place. This is useful for propagating thread-local context
-     * (e.g. MDC entries, OpenTelemetry spans, {@code SecurityContext}) into worker threads, or for
-     * per-task instrumentation, without replacing the executor entirely.
-     *
-     * <p>Unlike {@link #executorDecorator(UnaryOperator)}, which wraps the executor as a whole,
-     * this decorator is applied to each task individually and runs on the worker thread.
-     *
-     * @param decorator a function that wraps each submitted task
-     *
-     * @return this configurer instance for fluent chaining
-     */
-    public CollectingConfigurer taskDecorator(UnaryOperator<Runnable> decorator) {
+    public CollectingConfigurer taskDecorator(Function<Runnable, Runnable> decorator) {
         Objects.requireNonNull(decorator, "task decorator can't be null");
-
-        addOnce(new ConfigProcessor.Option.TaskDecorator(decorator));
+        if (this.taskDecorator != null) {
+            throw new IllegalArgumentException("task decorator already set");
+        }
+        this.taskDecorator = decorator;
         return this;
     }
 
-    List<ConfigProcessor.Option> getConfig() {
-        return Collections.unmodifiableList(modifiers);
-    }
-
-    void validate() {
-        if (seen.contains(ConfigProcessor.Option.Batched.class) && !seen.contains(ConfigProcessor.Option.Parallelism.class)) {
-            throw new IllegalStateException("parallelism must be configured when batching is enabled");
-        }
-    }
-
-    private void addOnce(ConfigProcessor.Option option) {
-        if (!seen.add(option.getClass())) {
-            throw new IllegalArgumentException("'%s' can only be configured once".formatted(ConfigProcessor.toHumanReadableString(option)));
-        }
-        modifiers.add(option);
+    /**
+     * Wraps the underlying {@link Executor} with the provided decorator.
+     * <p>
+     * Useful for instrumenting or augmenting the executor (e.g. with structured concurrency scopes
+     * or custom scheduling policies) without replacing it entirely.
+     *
+     * @param o function that wraps the original {@code Executor}
+     *
+     * @return this configurer instance for fluent chaining
+     */
+    public CollectingConfigurer executorDecorator(Function<Executor, Executor> o) {
+        this.executorDecorator = Objects.requireNonNull(o, "executor decorator can't be null");
+        return this;
     }
 }

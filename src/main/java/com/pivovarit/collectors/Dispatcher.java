@@ -15,193 +15,139 @@
  */
 package com.pivovarit.collectors;
 
-import java.util.Objects;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
-import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
+final class Dispatcher {
 
-/**
- * @author Grzegorz Piwowarek
- */
-final class Dispatcher<T> {
-
-    private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
-    private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
-
-    private final ThreadFactory dispatcherThreadFactory = Thread.ofVirtual()
-      .name("parallel-collectors-dispatcher-", 0)
-      .factory();
-
-    private final Consumer<Thread> dispatcherThreadHook;
+    private static final Runnable END = () -> {
+    };
 
     private final Executor executor;
     private final Semaphore limiter;
+    private final Function<Runnable, Runnable> taskDecorator;
+    private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
+    private final Map<CompletableFuture<?>, Thread> running = new ConcurrentHashMap<>();
+    private final AtomicBoolean failed = new AtomicBoolean();
+    private final AtomicReference<Throwable> primaryException = new AtomicReference<>();
 
-    // UNSTARTED -> RUNNING -> SHUTTING_DOWN
-    enum State {
-        UNSTARTED, RUNNING, SHUTTING_DOWN
-    }
-
-    private final AtomicReference<State> state = new AtomicReference<>(State.UNSTARTED);
-
-    Dispatcher(Executor executor, int permits, Consumer<Thread> dispatcherThreadHook) {
-        requireValidExecutor(executor);
+    Dispatcher(Executor executor, Integer parallelism, Function<Runnable, Runnable> taskDecorator) {
         this.executor = executor;
-        this.dispatcherThreadHook = dispatcherThreadHook;
-        this.limiter = new Semaphore(permits);
-    }
-
-    Dispatcher(Executor executor, int permits) {
-        this(executor, permits, c -> {});
-    }
-
-    Dispatcher(Executor executor) {
-        this(executor, c -> {});
-    }
-
-    Dispatcher(Executor executor, Consumer<Thread> dispatcherThreadHook) {
-        requireValidExecutor(executor);
-        this.executor = executor;
-        this.dispatcherThreadHook = dispatcherThreadHook;
-        this.limiter = null;
+        this.limiter = parallelism != null ? new Semaphore(parallelism) : null;
+        this.taskDecorator = taskDecorator;
     }
 
     void start() {
-        if (state.compareAndSet(State.UNSTARTED, State.RUNNING)) {
-            var thread = dispatcherThreadFactory.newThread(() -> {
-                try {
-                    while (true) {
-                        switch (workingQueue.take()) {
-                            case DispatchItem.Task(Runnable task) -> {
-                                try {
-                                    if (limiter != null) {
-                                        limiter.acquire();
-                                    }
-                                } catch (InterruptedException e) {
-                                    completionSignaller.completeExceptionally(e);
-                                    return;
-                                }
-                                try {
-                                    retry(() -> executor.execute(() -> {
-                                        try {
-                                            task.run();
-                                        } finally {
-                                            if (limiter != null) {
-                                                limiter.release();
-                                            }
-                                        }
-                                    }));
-                                } catch (RejectedExecutionException e) {
-                                    if (limiter != null) {
-                                        limiter.release();
-                                    }
-
-                                    throw e;
-                                }
-                            }
-                            case DispatchItem.Stop ignored -> {
-                                return;
-                            }
-                        }
-                    }
-                } catch (Throwable e) {
-                    completionSignaller.completeExceptionally(e);
-                }
-            });
-            dispatcherThreadHook.accept(thread);
-            thread.start();
-        }
+        Thread.startVirtualThread(this::run);
     }
 
-    void stop() {
-        if (state.compareAndSet(State.RUNNING, State.SHUTTING_DOWN)) {
+    <R> CompletableFuture<R> enqueue(Callable<R> task) {
+        CompletableFuture<R> cf = new CompletableFuture<>();
+        if (failed.get()) {
+            cf.completeExceptionally(new CancellationException());
+            return cf;
+        }
+        queue.offer(() -> dispatch(task, cf));
+        return cf;
+    }
+
+    void close() {
+        queue.offer(END);
+    }
+
+    Throwable primaryException() {
+        return primaryException.get();
+    }
+
+    private <R> void dispatch(Callable<R> task, CompletableFuture<R> cf) {
+        if (failed.get()) {
+            cf.completeExceptionally(new CancellationException());
+            return;
+        }
+
+        if (limiter != null) {
             try {
-                workingQueue.put(DispatchItem.Stop.POISON_PILL);
+                limiter.acquire();
             } catch (InterruptedException e) {
-                completionSignaller.completeExceptionally(e);
+                Thread.currentThread().interrupt();
+                cf.completeExceptionally(e);
+                return;
             }
         }
-    }
 
-    boolean wasStarted() {
-        return switch (state.get()) {
-            case UNSTARTED -> false;
-            case RUNNING, SHUTTING_DOWN -> true;
-        };
-    }
-
-    boolean wasShutdown() {
-        return switch (state.get()) {
-            case UNSTARTED, RUNNING -> false;
-            case SHUTTING_DOWN -> true;
-        };
-    }
-
-    CompletableFuture<T> submit(Supplier<T> supplier) {
-        InterruptibleCompletableFuture<T> future = new InterruptibleCompletableFuture<>();
-        completionSignaller.whenComplete((result, ex) -> {
-            if (ex != null) {
-                future.completeExceptionally(ex);
-                future.cancel(true);
+        if (failed.get()) {
+            if (limiter != null) {
+                limiter.release();
             }
-        });
-        var task = new FutureTask<>(() -> {
+            cf.completeExceptionally(new CancellationException());
+            return;
+        }
+
+        Runnable body = () -> {
+            Thread self = Thread.currentThread();
+            running.put(cf, self);
             try {
-                future.complete(supplier.get());
-            } catch (Throwable e) {
-                completionSignaller.completeExceptionally(e);
+                if (failed.get()) {
+                    cf.completeExceptionally(new CancellationException());
+                    return;
+                }
+                cf.complete(task.call());
+            } catch (Throwable t) {
+                cf.completeExceptionally(t);
+                onFailure(t);
+            } finally {
+                running.remove(cf);
+                if (limiter != null) {
+                    limiter.release();
+                }
             }
-        }, null);
-        future.completedBy(task);
-        workingQueue.add(new DispatchItem.Task(task));
-        return future;
-    }
+        };
 
-    static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
-
-        private volatile FutureTask<?> backingTask;
-
-        private void completedBy(FutureTask<?> task) {
-            backingTask = task;
+        if (taskDecorator != null) {
+            body = taskDecorator.apply(body);
         }
 
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (backingTask != null) {
-                backingTask.cancel(mayInterruptIfRunning);
-            }
-            return super.cancel(mayInterruptIfRunning);
-        }
-    }
-
-    private static void retry(Runnable runnable) {
         try {
-            runnable.run();
-        } catch (RejectedExecutionException e) {
-            Thread.onSpinWait();
-            runnable.run();
+            executor.execute(body);
+        } catch (Throwable t) {
+            if (limiter != null) {
+                limiter.release();
+            }
+            cf.completeExceptionally(t);
+            onFailure(t);
         }
     }
 
-    sealed interface DispatchItem permits DispatchItem.Task, DispatchItem.Stop {
-        record Task(FutureTask<?> task) implements DispatchItem {
-            public Task {
-                Objects.requireNonNull(task);
+    private void onFailure(Throwable cause) {
+        if (failed.compareAndSet(false, true)) {
+            primaryException.set(cause);
+            for (Thread t : running.values()) {
+                t.interrupt();
             }
         }
+    }
 
-        enum Stop implements DispatchItem {
-            POISON_PILL
+    private void run() {
+        try {
+            while (true) {
+                Runnable action = queue.take();
+                if (action == END) {
+                    return;
+                }
+                action.run();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }

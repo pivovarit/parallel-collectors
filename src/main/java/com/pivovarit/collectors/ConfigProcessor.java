@@ -15,109 +15,87 @@
  */
 package com.pivovarit.collectors;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.UnaryOperator;
-
-import static java.util.Objects.requireNonNull;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Consumer;
 
 final class ConfigProcessor {
 
-    private static final ExecutorService DEFAULT_EXECUTOR = Executors.newThreadPerTaskExecutor(Thread.ofVirtual()
-      .name("parallel-collectors-", 0)
-      .factory());
+    private ConfigProcessor() {
+    }
 
-    record Config(boolean ordered, boolean batching, int parallelism, Executor executor) {
-        Config {
-            Objects.requireNonNull(executor, "executor can't be null");
+    static Config fromCollecting(Consumer<CollectingConfigurer> configurer) {
+        var cfg = new CollectingConfigurer();
+        configurer.accept(cfg);
+        validate(cfg.batching, cfg.parallelism);
+        return new Config(cfg.parallelism, cfg.executor, cfg.batching, false, cfg.taskDecorator, cfg.executorDecorator);
+    }
+
+    static Config fromStreaming(Consumer<StreamingConfigurer> configurer) {
+        var cfg = new StreamingConfigurer();
+        configurer.accept(cfg);
+        validate(cfg.batching, cfg.parallelism);
+        return new Config(cfg.parallelism, cfg.executor, cfg.batching, cfg.ordered, cfg.taskDecorator, cfg.executorDecorator);
+    }
+
+    static Config collectingWithParallelism(int parallelism) {
+        requirePositive(parallelism);
+        return new Config(parallelism, null, false, false, null, null);
+    }
+
+    static Config streamingWithParallelism(int parallelism) {
+        requirePositive(parallelism);
+        return new Config(parallelism, null, false, false, null, null);
+    }
+
+    static Config empty() {
+        return new Config(null, null, false, false, null, null);
+    }
+
+    static Executor resolveExecutor(Config config) {
+        Executor base = config.executor() != null ? config.executor() : VirtualThreadExecutor.INSTANCE;
+        validateExecutor(base);
+        if (config.executorDecorator() != null) {
+            Executor decorated = config.executorDecorator().apply(base);
+            Objects.requireNonNull(decorated, "executor decorator returned null");
+            validateExecutor(decorated);
+            return decorated;
+        }
+        return base;
+    }
+
+    private static void validate(boolean batching, Integer parallelism) {
+        if (batching && parallelism == null) {
+            throw new IllegalArgumentException("parallelism must be set when batching is enabled");
         }
     }
 
-    static Config process(List<Option> options) {
-        requireNonNull(options, "options can't be null");
-
-        Boolean batching = null;
-        Boolean ordered = null;
-        Integer parallelism = null;
-        Executor executor = null;
-        UnaryOperator<Executor> decorator = null;
-        UnaryOperator<Runnable> taskDecorator = null;
-
-        for (var option : options) {
-            switch (option) {
-                case Option.Batched ignored -> batching = true;
-                case Option.Parallelism(var p) -> parallelism = p;
-                case Option.ThreadPool(var e) -> executor = e;
-                case Option.Ordered ignored -> ordered = true;
-                case Option.ExecutorDecorator(var d) -> decorator = d;
-                case Option.TaskDecorator(var d) -> taskDecorator = d;
-            }
+    private static void requirePositive(int parallelism) {
+        if (parallelism < 1) {
+            throw new IllegalArgumentException("parallelism must be greater than 0");
         }
-
-        var resolvedExecutor = Objects.requireNonNullElse(executor, DEFAULT_EXECUTOR);
-        if (decorator != null) {
-            resolvedExecutor = decorator.apply(resolvedExecutor);
-            Preconditions.requireValidExecutor(resolvedExecutor);
-        }
-        if (taskDecorator != null) {
-            var td = taskDecorator;
-            var delegate = resolvedExecutor;
-            resolvedExecutor = r -> delegate.execute(td.apply(r));
-        }
-
-        return new Config(
-          Objects.requireNonNullElse(ordered, false),
-          Objects.requireNonNullElse(batching, false),
-          Objects.requireNonNullElse(parallelism, 0),
-          resolvedExecutor);
     }
 
-    static String toHumanReadableString(Option option) {
-        return switch (option) {
-            case Option.Batched ignored -> "batching";
-            case Option.Parallelism ignored -> "parallelism";
-            case Option.ThreadPool ignored -> "executor";
-            case Option.Ordered ignored -> "ordered";
-            case Option.ExecutorDecorator ignored -> "executor decorator";
-            case Option.TaskDecorator ignored -> "task decorator";
-        };
+    private static void validateExecutor(Executor e) {
+        if (e instanceof ThreadPoolExecutor tpe) {
+            var policy = tpe.getRejectedExecutionHandler();
+            if (policy instanceof ThreadPoolExecutor.DiscardPolicy
+                || policy instanceof ThreadPoolExecutor.DiscardOldestPolicy) {
+                throw new IllegalArgumentException("executor can't discard tasks");
+            }
+        }
     }
 
-    public sealed interface Option {
+    static final class VirtualThreadExecutor implements Executor {
+        static final VirtualThreadExecutor INSTANCE = new VirtualThreadExecutor();
 
-        enum Ordered implements Option {
-            INSTANCE
+        private VirtualThreadExecutor() {
         }
 
-        enum Batched implements Option {
-            INSTANCE
-        }
-
-        record ThreadPool(Executor executor) implements Option {
-            public ThreadPool {
-                Preconditions.requireValidExecutor(executor);
-            }
-        }
-
-        record Parallelism(int parallelism) implements Option {
-            public Parallelism {
-                Preconditions.requireValidParallelism(parallelism);
-            }
-        }
-
-        record ExecutorDecorator(UnaryOperator<Executor> decorator) implements Option {
-            public ExecutorDecorator {
-                Objects.requireNonNull(decorator, "decorator can't be null");
-            }
-        }
-
-        record TaskDecorator(UnaryOperator<Runnable> decorator) implements Option {
-            public TaskDecorator {
-                Objects.requireNonNull(decorator, "decorator can't be null");
-            }
+        @Override
+        public void execute(Runnable command) {
+            Thread.startVirtualThread(command);
         }
     }
 }
