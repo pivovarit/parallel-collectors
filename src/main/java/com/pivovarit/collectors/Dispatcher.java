@@ -148,6 +148,9 @@ final class Dispatcher<T> {
     }
 
     CompletableFuture<T> submit(Supplier<T> supplier) {
+        if (state.get() == State.SHUTTING_DOWN) {
+            throw new IllegalStateException("collector was already used and cannot be reused");
+        }
         InterruptibleCompletableFuture<T> future = new InterruptibleCompletableFuture<>();
         completionSignaller.whenComplete((result, ex) -> {
             if (ex != null) {
