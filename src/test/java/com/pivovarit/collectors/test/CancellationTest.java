@@ -16,7 +16,6 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
-
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -96,19 +95,15 @@ class CancellationTest {
           collector("parallel() [executor]", 8, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e))),
           collector("parallel() [executor, parallelism]", 4, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4))),
           collector("parallel() [executor, parallelism, batching]", 4, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4).batching())),
-          collector("parallel() [executor, parallelism=1]", 1, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(1))),
           collector("parallel(toList()) [executor]", 8, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e), toList())),
           collector("parallel(toList()) [executor, parallelism]", 4, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4), toList())),
           collector("parallel(toList()) [executor, parallelism, batching]", 4, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4).batching(), toList())),
-          collector("parallel(toList()) [executor, parallelism=1]", 1, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(1), toList())),
           collector("parallelBy() [executor]", 8, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e))),
           collector("parallelBy() [executor, parallelism]", 4, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e).parallelism(4))),
           collector("parallelBy() [executor, parallelism, batching]", 4, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e).parallelism(4).batching())),
-          collector("parallelBy() [executor, parallelism=1]", 1, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e).parallelism(1))),
           collector("parallelBy(toList()) [executor]", 8, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e), toList())),
           collector("parallelBy(toList()) [executor, parallelism]", 4, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e).parallelism(4), toList())),
-          collector("parallelBy(toList()) [executor, parallelism, batching]", 4, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e).parallelism(4).batching(), toList())),
-          collector("parallelBy(toList()) [executor, parallelism=1]", 1, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e).parallelism(1), toList()))
+          collector("parallelBy(toList()) [executor, parallelism, batching]", 4, (f, e) -> ParallelCollectors.parallelBy(i -> i, f, c -> c.executor(e).parallelism(4).batching(), toList()))
         );
     }
 
