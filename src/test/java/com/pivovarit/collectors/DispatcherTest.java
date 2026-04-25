@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 class DispatcherTest {
@@ -62,6 +63,18 @@ class DispatcherTest {
         assertThat(limiter.tryAcquire(100, TimeUnit.MILLISECONDS))
           .as("no permit should be leaked on stop")
           .isTrue();
+    }
+
+    @Test
+    void shouldRejectSubmitAfterShutdown() {
+        var dispatcher = new Dispatcher<Integer>(Executors.newCachedThreadPool(), 1);
+        dispatcher.start();
+        dispatcher.submit(() -> 42);
+        dispatcher.stop();
+
+        assertThatThrownBy(() -> dispatcher.submit(() -> 43))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("reused");
     }
 
     private static Semaphore extractSemaphore(Dispatcher<?> dispatcher) throws Exception {

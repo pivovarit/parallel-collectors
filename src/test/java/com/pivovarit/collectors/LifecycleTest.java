@@ -56,4 +56,5 @@ class LifecycleTest {
         }
         await().until(dispatcher::wasShutdown);
     }
+
 }
