@@ -58,7 +58,15 @@ final class AsyncParallelCollector<T, R, C> extends AbstractParallelCollector<T,
                 });
             }
 
-            return combined.thenApply(finalizer);
+            var result = combined.thenApply(finalizer);
+            result.whenComplete((__, ex) -> {
+                if (ex != null) {
+                    for (var future : futures) {
+                        future.cancel(true);
+                    }
+                }
+            });
+            return result;
         };
     }
 

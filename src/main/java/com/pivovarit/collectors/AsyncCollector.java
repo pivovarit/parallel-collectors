@@ -18,6 +18,7 @@ package com.pivovarit.collectors;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -48,16 +49,49 @@ record AsyncCollector<T, R, RR>(Function<? super T, ? extends R> mapper, Functio
     @Override
     public Function<Stream.Builder<T>, CompletableFuture<RR>> finisher() {
         return acc -> {
+            var result = new InterruptibleCompletableFuture<RR>();
+            var task = new FutureTask<>(() -> {
+                try {
+                    var mapped = acc.build().map(mapper).map(e -> (R) e).toList();
+                    result.complete(processor.apply(mapped.stream()));
+                } catch (Throwable e) {
+                    result.completeExceptionally(e);
+                }
+            }, null);
+            result.completedBy(task);
+            result.whenComplete((__, ex) -> {
+                if (ex != null) {
+                    task.cancel(true);
+                }
+            });
             try {
-                return CompletableFuture.supplyAsync(() -> processor.apply(acc.build().map(mapper)), executor);
+                executor.execute(task);
             } catch (Exception e) {
-                return CompletableFuture.failedFuture(e);
+                result.completeExceptionally(e);
             }
+            return result;
         };
     }
 
     @Override
     public Set<Characteristics> characteristics() {
         return Set.of();
+    }
+
+    private static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
+
+        private volatile FutureTask<?> backingTask;
+
+        private void completedBy(FutureTask<?> task) {
+            backingTask = task;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            if (backingTask != null) {
+                backingTask.cancel(mayInterruptIfRunning);
+            }
+            return super.cancel(mayInterruptIfRunning);
+        }
     }
 }
