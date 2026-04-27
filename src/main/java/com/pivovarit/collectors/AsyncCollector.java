@@ -25,7 +25,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-record AsyncCollector<T, R, RR>(Function<? super T, ? extends R> mapper, Function<Stream<R>, RR> processor, Executor executor)
+record AsyncCollector<T, R, RR>(
+  Function<? super T, ? extends R> mapper,
+  Function<Stream<R>, RR> processor,
+  Executor executor)
   implements Collector<T, Stream.Builder<T>, CompletableFuture<RR>> {
 
     @Override
@@ -49,7 +52,9 @@ record AsyncCollector<T, R, RR>(Function<? super T, ? extends R> mapper, Functio
     public Function<Stream.Builder<T>, CompletableFuture<RR>> finisher() {
         return acc -> {
             try {
-                return CompletableFuture.supplyAsync(() -> processor.apply(acc.build().map(mapper)), executor);
+                return CompletableFuture.supplyAsync(() -> processor.apply(acc.build()
+                  .map(mapper).toList().stream()
+                  .map(r -> r)), executor);
             } catch (Exception e) {
                 return CompletableFuture.failedFuture(e);
             }

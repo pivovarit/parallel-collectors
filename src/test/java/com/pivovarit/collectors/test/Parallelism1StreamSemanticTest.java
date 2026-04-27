@@ -27,17 +27,6 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Tests demonstrating that parallel(mapper) with parallelism(1) returns a lazy stream
- * inside the CompletableFuture. The mapper does not run inside the async task — it runs
- * later on the caller's thread when the stream is consumed. This breaks several contracts:
- *
- * <ul>
- *   <li>Mapper execution bypasses the configured executor</li>
- *   <li>Mapper exceptions escape the CompletableFuture</li>
- *   <li>orTimeout does not cover mapper execution</li>
- * </ul>
- */
 class Parallelism1StreamSemanticTest {
 
     @Test
