@@ -91,7 +91,7 @@ class StreamingConfigurerTest {
     Stream<DynamicTest> shouldCollectInCompletionOrder() {
         return allCompletionOrderStreaming()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              var result = of(300, 200, 0, 400)
+              var result = of(750, 250, 0, 1000)
                 .collect(c.factory().collector(i -> returnWithDelay(i, ofMillis(i))))
                 .toList();
 
