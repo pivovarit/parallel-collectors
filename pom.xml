@@ -13,7 +13,7 @@
 
     <groupId>com.pivovarit</groupId>
     <artifactId>parallel-collectors</artifactId>
-    <version>4.1.0</version>
+    <version>4.1.1-SNAPSHOT</version>
     <url>https://github.com/pivovarit/parallel-collectors</url>
 
     <name>parallel-collectors</name>
@@ -23,7 +23,7 @@
         <url>https://github.com/pivovarit/parallel-collectors</url>
         <connection>scm:git:git@github.com:pivovarit/parallel-collectors.git</connection>
         <developerConnection>scm:git:git@github.com:pivovarit/parallel-collectors.git</developerConnection>
-        <tag>v4.1.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
