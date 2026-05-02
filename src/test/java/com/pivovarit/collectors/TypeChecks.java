@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 
@@ -42,6 +43,12 @@ final class TypeChecks {
     }
 
     static final class Covariance {
+
+        record Consumers(
+          Consumer<SuperClass> superConsumer,
+          Consumer<SubClass> subConsumer
+        ) {
+        }
 
         record Functions(
           Function<SubClass, SuperClass> subToSuper,
@@ -105,12 +112,28 @@ final class TypeChecks {
                 expectCollector(ParallelCollectors.parallelToStreamBy(f.subToSub, f.subToSub, c -> {}));
             }
         }
+
+        record ParallelForEach(Consumers cons) {
+            ParallelForEach {
+                // Consumer<SuperClass> should be accepted for Collector<SubClass, ...>
+                expectCollector(ParallelCollectors.<SubClass>parallelForEach(cons.superConsumer));
+                expectCollector(ParallelCollectors.<SubClass>parallelForEach(cons.subConsumer));
+
+                expectCollector(ParallelCollectors.<SubClass>parallelForEach(cons.superConsumer, c -> {}));
+                expectCollector(ParallelCollectors.<SubClass>parallelForEach(cons.subConsumer, c -> {}));
+
+                expectCollector(ParallelCollectors.<SubClass>parallelForEach(cons.superConsumer, 42));
+                expectCollector(ParallelCollectors.<SubClass>parallelForEach(cons.subConsumer, 42));
+            }
+        }
     }
 
     static final class Contravariance {
 
         private static final Function<SuperClass, SubClass> superToSub = x -> new SubClass();
         private static final Function<Object, SubClass> objToSub = x -> new SubClass();
+        private static final Consumer<SuperClass> superConsumer = x -> {};
+        private static final Consumer<Object> objConsumer = x -> {};
 
         record Parallel() {
             Parallel {
@@ -163,6 +186,19 @@ final class TypeChecks {
                 expectCollector(ParallelCollectors.parallelToStreamBy(superToSub, objToSub, c -> {}));
                 expectCollector(ParallelCollectors.parallelToStreamBy(objToSub, superToSub, c -> {}));
                 expectCollector(ParallelCollectors.parallelToStreamBy(objToSub, objToSub, c -> {}));
+            }
+        }
+
+        record ParallelForEach() {
+            ParallelForEach {
+                expectCollector(ParallelCollectors.parallelForEach(superConsumer));
+                expectCollector(ParallelCollectors.parallelForEach(objConsumer));
+
+                expectCollector(ParallelCollectors.parallelForEach(superConsumer, c -> {}));
+                expectCollector(ParallelCollectors.parallelForEach(objConsumer, c -> {}));
+
+                expectCollector(ParallelCollectors.parallelForEach(superConsumer, 42));
+                expectCollector(ParallelCollectors.parallelForEach(objConsumer, 42));
             }
         }
     }
