@@ -151,7 +151,7 @@ final class Dispatcher<T> {
         if (state.get() == State.SHUTTING_DOWN) {
             throw new IllegalStateException("collector was already used and cannot be reused");
         }
-        InterruptibleCompletableFuture<T> future = new InterruptibleCompletableFuture<>();
+        var future = new InterruptibleCompletableFuture<T>();
         completionSignaller.whenComplete((result, ex) -> {
             if (ex != null) {
                 future.completeExceptionally(ex);
@@ -168,23 +168,6 @@ final class Dispatcher<T> {
         future.completedBy(task);
         workingQueue.add(new DispatchItem.Task(task));
         return future;
-    }
-
-    static final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
-
-        private volatile FutureTask<?> backingTask;
-
-        private void completedBy(FutureTask<?> task) {
-            backingTask = task;
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (backingTask != null) {
-                backingTask.cancel(mayInterruptIfRunning);
-            }
-            return super.cancel(mayInterruptIfRunning);
-        }
     }
 
     private static void retry(Runnable runnable) {
