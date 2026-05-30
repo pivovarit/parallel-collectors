@@ -92,6 +92,8 @@ class CancellationTest {
 
     private static Stream<CancellableCollector> allCancellableCollectors() {
         return Stream.of(
+          collector("parallel() [executor, parallelism(1)]", 1, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(1))),
+          collector("parallel(toList()) [executor, parallelism(1)]", 1, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(1), toList())),
           collector("parallel() [executor]", 8, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e))),
           collector("parallel() [executor, parallelism]", 4, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4))),
           collector("parallel() [executor, parallelism, batching]", 4, (f, e) -> ParallelCollectors.parallel(f, c -> c.executor(e).parallelism(4).batching())),

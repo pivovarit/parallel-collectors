@@ -74,6 +74,15 @@ public final class StreamingConfigurer {
      * This limits the number of tasks submitted to the worker queue at once, effectively bounding
      * the amount of in-flight work and the maximum concurrency used by the collector.
      *
+     * <p><b>Note:</b> {@code parallelism(1)} streaming runs the mapper <em>synchronously on the calling
+     * thread</em> as elements are accumulated, rather than dispatching work to an executor. As a
+     * consequence, any {@link #executor(Executor)}, {@link #executorDecorator(UnaryOperator)} or
+     * {@link #taskDecorator(UnaryOperator)} configured alongside {@code parallelism(1)} is ignored.
+     * This is asymmetric with the collecting collectors (e.g. {@code parallel(...)}), where
+     * {@code parallelism(1)} still executes on the configured executor — keep this in mind for
+     * thread-isolation or context-propagation (MDC, OpenTelemetry, {@code SecurityContext}) use cases,
+     * which require {@code parallelism(2)} or higher when streaming.
+     *
      * @param parallelism the desired parallelism level (must be positive)
      *
      * @return this configurer instance for fluent chaining
@@ -93,6 +102,9 @@ public final class StreamingConfigurer {
      * <p><b>Note:</b> The provided executor must not <em>drop</em> tasks on rejection (e.g. using a
      * {@code RejectedExecutionHandler} that discards submitted work). Dropping tasks will cause the
      * stream to wait for results that will never be produced, which can lead to deadlocks.
+     *
+     * <p><b>Note:</b> The executor is ignored at {@code parallelism(1)}, which runs synchronously on the
+     * calling thread — see {@link #parallelism(int)}.
      *
      * @param executor the executor to use
      *
@@ -117,6 +129,9 @@ public final class StreamingConfigurer {
      * Dropping tasks will cause the stream to wait for results that will never be produced,
      * which can lead to deadlocks.
      *
+     * <p><b>Note:</b> The decorator is ignored at {@code parallelism(1)}, which runs synchronously on the
+     * calling thread — see {@link #parallelism(int)}.
+     *
      * @param decorator a function that wraps the resolved executor
      *
      * @return this configurer instance for fluent chaining
@@ -138,6 +153,9 @@ public final class StreamingConfigurer {
      *
      * <p>Unlike {@link #executorDecorator(UnaryOperator)}, which wraps the executor as a whole,
      * this decorator is applied to each task individually and runs on the worker thread.
+     *
+     * <p><b>Note:</b> The decorator is ignored at {@code parallelism(1)}, which runs synchronously on the
+     * calling thread — see {@link #parallelism(int)}.
      *
      * @param decorator a function that wraps each submitted task
      *

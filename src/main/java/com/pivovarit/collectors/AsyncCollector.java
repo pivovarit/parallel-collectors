@@ -18,6 +18,7 @@ package com.pivovarit.collectors;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -51,13 +52,26 @@ record AsyncCollector<T, R, RR>(
     @Override
     public Function<Stream.Builder<T>, CompletableFuture<RR>> finisher() {
         return acc -> {
+            var future = new InterruptibleCompletableFuture<RR>();
+            var task = new FutureTask<>(() -> {
+                try {
+                    future.complete(processor.apply(acc.build().map(mapper).toList().stream().map(r -> r)));
+                } catch (Throwable e) {
+                    future.completeExceptionally(e);
+                }
+            }, null);
+            future.completedBy(task);
+            future.whenComplete((__, ex) -> {
+                if (ex != null) {
+                    task.cancel(true);
+                }
+            });
             try {
-                return CompletableFuture.supplyAsync(() -> processor.apply(acc.build()
-                  .map(mapper).toList().stream()
-                  .map(r -> r)), executor);
+                executor.execute(task);
             } catch (Exception e) {
                 return CompletableFuture.failedFuture(e);
             }
+            return future;
         };
     }
 
