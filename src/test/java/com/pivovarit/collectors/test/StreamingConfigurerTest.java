@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.Factory.e;
@@ -36,6 +37,7 @@ import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+@Isolated
 class StreamingConfigurerTest {
 
     static <T, R> Factory.GenericCollector<StreamingCollectorFactory<T, R>> streamingCollector(String name, StreamingCollectorFactory<T, R> collector) {
