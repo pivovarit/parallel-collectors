@@ -18,6 +18,7 @@ package com.pivovarit.collectors.test;
 import com.pivovarit.collectors.ParallelCollectors;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -35,6 +36,7 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 @Isolated
@@ -112,6 +114,17 @@ class StreamingConfigurerTest {
 
               assertThat(result).containsExactlyElementsOf(source);
           }));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldPropagateExceptionFromCount() {
+        return allCompletionOrderStreaming()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> assertThatThrownBy(() -> of(1, 2, 3, 4)
+            .collect(c.factory().collector(i -> {
+                throw new IllegalStateException("boom");
+            }))
+            .count())
+            .isInstanceOf(CompletionException.class)));
     }
 
     @Test
