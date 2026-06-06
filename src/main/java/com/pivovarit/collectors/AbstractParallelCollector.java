@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.lang.ref.Cleaner;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +37,8 @@ sealed abstract class AbstractParallelCollector<T, A, R>
     protected final Dispatcher<A> dispatcher;
     protected final Function<? super T, ? extends A> task;
 
+    private volatile Cleaner.Cleanable terminationGuard;
+
     protected AbstractParallelCollector(Function<? super T, ? extends A> task, Dispatcher<A> dispatcher) {
         this.task = task;
         this.dispatcher = dispatcher;
@@ -47,7 +50,7 @@ sealed abstract class AbstractParallelCollector<T, A, R>
     public final Supplier<List<CompletableFuture<A>>> supplier() {
         return () -> {
             var container = new ArrayList<CompletableFuture<A>>();
-            dispatcher.registerTerminationGuard(container);
+            terminationGuard = dispatcher.registerTerminationGuard(container);
             return container;
         };
     }
@@ -73,6 +76,9 @@ sealed abstract class AbstractParallelCollector<T, A, R>
     public final Function<List<CompletableFuture<A>>, R> finisher() {
         return list -> {
             dispatcher.stop();
+            if (terminationGuard != null) {
+                terminationGuard.clean();
+            }
             return finalizer().apply(list);
         };
     }
