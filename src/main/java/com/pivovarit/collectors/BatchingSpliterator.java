@@ -104,7 +104,9 @@ final class BatchingSpliterator<T> implements Spliterator<List<T>> {
         }
 
         int midChunks = chunks / 2;
-        int midSize = Math.min(midChunks * chunkSize, source.size() - consumed);
+        int floor = remaining / chunks;
+        int larger = remaining % chunks;
+        int midSize = Math.min(midChunks, larger) * (floor + 1) + Math.max(0, midChunks - larger) * floor;
 
         var subList = source.subList(consumed, consumed + midSize);
         var split = new BatchingSpliterator<>(subList, midChunks);
