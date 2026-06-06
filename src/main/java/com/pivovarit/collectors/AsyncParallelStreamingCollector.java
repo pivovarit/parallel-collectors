@@ -51,7 +51,7 @@ final class AsyncParallelStreamingCollector<T, R> extends AbstractParallelCollec
     @Override
     public Function<List<CompletableFuture<R>>, Stream<R>> finalizer() {
         return acc -> switch (completionStrategy) {
-            case ORDERED -> acc.stream().map(CompletableFuture::join);
+            case ORDERED -> acc.stream().map(CompletableFuture::join).filter(__ -> true);
             case UNORDERED -> StreamSupport.stream(new CompletionOrderSpliterator<>(acc), false);
         };
     }
