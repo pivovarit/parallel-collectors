@@ -118,7 +118,7 @@ class StreamingConfigurerTest {
 
     @TestFactory
     Stream<DynamicTest> shouldPropagateExceptionFromCount() {
-        return allCompletionOrderStreaming()
+        return allStreaming()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> assertThatThrownBy(() -> of(1, 2, 3, 4)
             .collect(c.factory().collector(i -> {
                 throw new IllegalStateException("boom");
