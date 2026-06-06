@@ -299,5 +299,54 @@ class BatchingSpliteratorTest {
 
             assertThat(spliterator.estimateSize()).isZero();
         }
+
+        @Test
+        void shouldNotOvercountRemainderAfterUnevenTrySplit() {
+            List<Integer> list = IntStream.range(0, 5).boxed().toList();
+            BatchingSpliterator<Integer> spliterator = new BatchingSpliterator<>(list, 4);
+
+            Spliterator<List<Integer>> split = spliterator.trySplit();
+            assertThat(split).isNotNull();
+
+            long remainderEstimate = spliterator.estimateSize();
+            long remainderActual = count(spliterator);
+
+            assertThat(remainderActual).isEqualTo(remainderEstimate);
+        }
+
+        @Test
+        void shouldHonourSizedContractAcrossPartialAdvanceAndSplitCombinations() {
+            for (int size = 1; size <= 16; size++) {
+                List<Integer> list = IntStream.range(0, size).boxed().toList();
+                for (int batches = 1; batches <= size; batches++) {
+                    for (int advances = 0; advances <= batches; advances++) {
+                        BatchingSpliterator<Integer> spliterator = new BatchingSpliterator<>(list, batches);
+                        for (int i = 0; i < advances; i++) {
+                            spliterator.tryAdvance(batch -> {
+                            });
+                        }
+                        verifyAndCount(spliterator,
+                          String.format("size=%d batches=%d advances=%d", size, batches, advances));
+                    }
+                }
+            }
+        }
+
+        private static <T> long count(Spliterator<List<T>> spliterator) {
+            long[] count = {0};
+            while (spliterator.tryAdvance(batch -> count[0]++)) {
+            }
+            return count[0];
+        }
+
+        private static <T> long verifyAndCount(Spliterator<List<T>> spliterator, String label) {
+            long estimate = spliterator.estimateSize();
+            Spliterator<List<T>> prefix = spliterator.trySplit();
+            long yielded = (prefix == null ? 0 : verifyAndCount(prefix, label)) + count(spliterator);
+            assertThat(yielded)
+              .withFailMessage("%s: estimateSize()=%d but yielded %d batches", label, estimate, yielded)
+              .isEqualTo(estimate);
+            return yielded;
+        }
     }
 }
