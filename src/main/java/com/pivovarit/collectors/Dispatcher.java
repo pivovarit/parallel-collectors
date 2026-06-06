@@ -136,8 +136,20 @@ final class Dispatcher<T> {
         }
     }
 
-    void registerTerminationGuard(Object guard) {
-        CLEANER.register(guard, this::stop);
+    Cleaner.Cleanable registerTerminationGuard(Object guard) {
+        var queue = workingQueue;
+        var currentState = state;
+        var signaller = completionSignaller;
+
+        return CLEANER.register(guard, () -> {
+            if (currentState.compareAndSet(State.RUNNING, State.SHUTTING_DOWN)) {
+                try {
+                    queue.put(DispatchItem.Stop.POISON_PILL);
+                } catch (InterruptedException e) {
+                    signaller.completeExceptionally(e);
+                }
+            }
+        });
     }
 
     boolean wasStarted() {
