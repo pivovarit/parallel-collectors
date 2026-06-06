@@ -45,7 +45,11 @@ sealed abstract class AbstractParallelCollector<T, A, R>
 
     @Override
     public final Supplier<List<CompletableFuture<A>>> supplier() {
-        return ArrayList::new;
+        return () -> {
+            var container = new ArrayList<CompletableFuture<A>>();
+            dispatcher.registerTerminationGuard(container);
+            return container;
+        };
     }
 
     @Override

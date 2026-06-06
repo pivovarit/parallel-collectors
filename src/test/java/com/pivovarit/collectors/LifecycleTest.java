@@ -16,6 +16,7 @@
 package com.pivovarit.collectors;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 class LifecycleTest {
@@ -55,6 +57,28 @@ class LifecycleTest {
             assertThat(result).containsExactlyInAnyOrder(1, 2, 3);
         }
         await().until(dispatcher::wasShutdown);
+    }
+
+    @Test
+    void shouldTerminateDispatcherWhenUpstreamThrowsMidTraversal() {
+        var threadHolder = new AtomicReference<Thread>();
+        var dispatcher = new Dispatcher<Integer>(Executors.newCachedThreadPool(), 2, threadHolder::set);
+
+        assertThatThrownBy(() -> Stream.of(1, 2, 3, 4, 5)
+          .peek(i -> {
+              if (i == 3) {
+                  throw new IllegalStateException("boom");
+              }
+          })
+          .collect(new AsyncParallelCollector<>(i -> i, dispatcher, Stream::toList)))
+          .isInstanceOf(IllegalStateException.class);
+
+        await().untilAsserted(() -> {
+            System.gc();
+            assertThat(threadHolder.get())
+              .as("dispatcher thread must terminate after an aborted traversal")
+              .matches(t -> t == null || !t.isAlive());
+        });
     }
 
 }
