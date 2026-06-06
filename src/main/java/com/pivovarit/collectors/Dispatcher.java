@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.lang.ref.Cleaner;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +35,8 @@ import static com.pivovarit.collectors.Preconditions.requireValidExecutor;
  * @author Grzegorz Piwowarek
  */
 final class Dispatcher<T> {
+
+    private static final Cleaner CLEANER = Cleaner.create();
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
     private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
@@ -131,6 +134,10 @@ final class Dispatcher<T> {
                 completionSignaller.completeExceptionally(e);
             }
         }
+    }
+
+    void registerTerminationGuard(Object guard) {
+        CLEANER.register(guard, this::stop);
     }
 
     boolean wasStarted() {
