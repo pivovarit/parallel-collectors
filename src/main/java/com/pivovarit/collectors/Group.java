@@ -22,12 +22,12 @@ import java.util.function.BiFunction;
 /**
  * Represents a grouping of values under a specific key.
  *
- * @param <T>    the type of the key
+ * @param <K>    the type of the key
  * @param <V>    the type of the values
  * @param key    the key of this group, must not be null
  * @param values the list of values, must not be null
  */
-public record Group<T, V>(T key, List<V> values) {
+public record Group<K, V>(K key, List<V> values) {
 
     /**
      * Constructs a new {@code Group} instance ensuring key and values are not null.
@@ -45,12 +45,12 @@ public record Group<T, V>(T key, List<V> values) {
      *
      * @param key    the key, must not be null
      * @param values the list of values, must not be null
-     * @param <T>    the type of the key
+     * @param <K>    the type of the key
      * @param <V>    the type of the values
      *
      * @return a new {@code Group} instance
      */
-    public static <T, V> Group<T, V> of(T key, List<V> values) {
+    public static <K, V> Group<K, V> of(K key, List<V> values) {
         return new Group<>(key, values);
     }
 
@@ -66,7 +66,7 @@ public record Group<T, V>(T key, List<V> values) {
      * @return a new {@code Group} instance with the same key and the values produced by applying
      * {@code mapper} to the key and each value in this group
      */
-    public <R> Group<T, R> map(BiFunction<? super T, ? super V, ? extends R> mapper) {
+    public <R> Group<K, R> map(BiFunction<? super K, ? super V, ? extends R> mapper) {
         Objects.requireNonNull(mapper, "mapper cannot be null");
         return new Group<>(key, values.stream()
           .map(v -> (R) mapper.apply(key, v))
