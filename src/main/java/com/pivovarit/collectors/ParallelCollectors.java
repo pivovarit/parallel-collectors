@@ -672,7 +672,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input elements
      * using the provided {@code classifier}, applying the given {@code mapper}, and emitting
-     * {@link Group} entries representing each batch.
+     * {@link Group} entries representing each group.
      * <p>
      * This overload is a convenience for applying an easy parallelism cap. For additional configuration
      * options (e.g. batching or a custom {@link java.util.concurrent.Executor}), use the overload
@@ -685,7 +685,7 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t), 64));
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
+     * @param classifier  function that assigns a grouping key to each element
      * @param mapper      transformation applied to each element
      * @param parallelism maximum parallelism (must be positive)
      * @param <T>         the input element type
@@ -708,7 +708,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input elements
      * using the provided {@code classifier}, applying the given {@code mapper}, emitting {@link Group}
-     * entries representing each batch, and then reducing them using the user-provided {@code collector}.
+     * entries representing each group, and then reducing them using the user-provided {@code collector}.
      * <p>
      * This overload is a convenience for applying an easy parallelism cap. For additional configuration
      * options (e.g. batching or a custom {@link java.util.concurrent.Executor}), use the overload
@@ -721,7 +721,7 @@ public final class ParallelCollectors {
      *   .collect(parallelBy(Task::groupId, t -> compute(t), 64, toList()));
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
+     * @param classifier  function that assigns a grouping key to each element
      * @param mapper      transformation applied to each element
      * @param parallelism maximum parallelism (must be positive)
      * @param collector   the {@code Collector} describing the reduction for grouped results
@@ -786,7 +786,7 @@ public final class ParallelCollectors {
     /**
      * A convenience {@link Collector} that performs parallel computations by classifying input elements
      * using the provided {@code classifier}, applying the given {@code mapper}, and emitting
-     * {@link Group} entries representing each batch.
+     * {@link Group} entries representing each group.
      * <p>
      * This overload is a convenience for applying an easy parallelism cap. This method does not expose
      * additional configuration (such as ordered emission, batching, or a custom executor). For more
@@ -803,7 +803,7 @@ public final class ParallelCollectors {
      *   .collect(parallelToStreamBy(Task::groupId, t -> compute(t), 64));
      * }</pre>
      *
-     * @param classifier  function that groups elements into batches
+     * @param classifier  function that assigns a grouping key to each element
      * @param mapper      transformation applied to each element
      * @param parallelism maximum parallelism (must be positive)
      * @param <T>         the input element type

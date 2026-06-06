@@ -32,9 +32,6 @@ final class InterruptibleCompletableFuture<T> extends CompletableFuture<T> {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        // Mark this future cancelled *before* interrupting the backing task. The interrupt can make a
-        // task that swallows InterruptedException run to completion and call complete(...); doing it
-        // first guarantees that completion is a no-op and that cancel() reflects the real outcome.
         var cancelled = super.cancel(mayInterruptIfRunning);
         if (backingTask != null) {
             backingTask.cancel(mayInterruptIfRunning);
