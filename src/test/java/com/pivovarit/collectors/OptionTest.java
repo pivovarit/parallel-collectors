@@ -15,11 +15,13 @@
  */
 package com.pivovarit.collectors;
 
+import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class OptionTest {
@@ -164,6 +166,55 @@ class OptionTest {
           .isInstanceOf(IllegalStateException.class)
           .hasMessageContaining("batching")
           .hasMessageContaining("parallelism");
+    }
+
+    @Test
+    void shouldThrowOnNullTimeoutDuration() {
+        assertThatThrownBy(() -> new ConfigProcessor.Option.Timeout(null))
+          .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowOnZeroTimeout() {
+        assertThatThrownBy(() -> Preconditions.requireValidTimeout(0, SECONDS))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Timeout");
+    }
+
+    @Test
+    void shouldThrowOnNegativeTimeout() {
+        assertThatThrownBy(() -> Preconditions.requireValidTimeout(-1, SECONDS))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Timeout");
+    }
+
+    @Test
+    void shouldThrowOnNullTimeUnit() {
+        assertThatThrownBy(() -> Preconditions.requireValidTimeout(1, null))
+          .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowOnNonPositiveTimeoutDuration() {
+        assertThatThrownBy(() -> new ConfigProcessor.Option.Timeout(Duration.ZERO))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Timeout");
+    }
+
+    @Test
+    void shouldThrowOnDuplicateTimeoutStreaming() {
+        var configurer = new StreamingConfigurer();
+        configurer.timeout(1, SECONDS);
+        assertThatThrownBy(() -> configurer.timeout(2, SECONDS))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'timeout' can only be configured once");
+    }
+
+    @Test
+    void shouldThrowOnInvalidTimeoutStreaming() {
+        assertThatThrownBy(() -> new StreamingConfigurer().timeout(0, SECONDS))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Timeout");
     }
 
 }

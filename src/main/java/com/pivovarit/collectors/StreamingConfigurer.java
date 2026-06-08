@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
 
 /**
@@ -91,6 +93,33 @@ public final class StreamingConfigurer {
         Preconditions.requireValidParallelism(parallelism);
 
         addOnce(new ConfigProcessor.Option.Parallelism(parallelism));
+        return this;
+    }
+
+    /**
+     * Sets a total-operation timeout for streaming results.
+     * <p>
+     * The timeout budget starts on the first pull from the returned stream. If the next result is not
+     * available within the remaining budget, stream traversal throws a
+     * {@link java.util.concurrent.CompletionException} wrapping a
+     * {@link java.util.concurrent.TimeoutException}.
+     *
+     * <p><b>Note:</b> When the timeout trips, stream traversal stops with an exception, but any
+     * in-flight tasks are <em>not</em> cancelled and keep running to completion in the background.
+     *
+     * <p><b>Note:</b> The timeout is ignored at {@code parallelism(1)}, which runs the mapper
+     * synchronously on the calling thread and therefore cannot be interrupted by a timeout — see
+     * {@link #parallelism(int)}.
+     *
+     * @param duration the timeout duration (must be positive)
+     * @param unit     the time unit of the {@code duration} argument
+     *
+     * @return this configurer instance for fluent chaining
+     */
+    public StreamingConfigurer timeout(long duration, TimeUnit unit) {
+        Preconditions.requireValidTimeout(duration, unit);
+
+        addOnce(new ConfigProcessor.Option.Timeout(Duration.ofNanos(unit.toNanos(duration))));
         return this;
     }
 

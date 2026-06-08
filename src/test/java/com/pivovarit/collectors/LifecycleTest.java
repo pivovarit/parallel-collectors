@@ -49,7 +49,7 @@ class LifecycleTest {
     @ValueSource(booleans = { true, false })
     void shouldTerminateStreamingDispatcher(boolean ordered) {
         var result = Stream.of(1, 2, 3)
-          .collect(new AsyncParallelStreamingCollector<>(i -> i, dispatcher, ordered)).toList();
+          .collect(new AsyncParallelStreamingCollector<>(i -> i, dispatcher, ordered, null)).toList();
 
         if (ordered) {
             assertThat(result).containsExactly(1, 2, 3);

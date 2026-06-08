@@ -136,12 +136,12 @@ final class Factory {
 
             @Override
             public Collector<T, ?, Stream<R>> batching(Function<? super T, ? extends R> m, Executor ex, int p) {
-                return new AsyncParallelStreamingCollector.BatchingCollector<>(m, ex, p, config.ordered());
+                return new AsyncParallelStreamingCollector.BatchingCollector<>(m, ex, p, config.ordered(), config.timeout());
             }
 
             @Override
             public Collector<T, ?, Stream<R>> parallel(Function<? super T, ? extends R> m, Dispatcher<R> d) {
-                return new AsyncParallelStreamingCollector<>(m, d, config.ordered());
+                return new AsyncParallelStreamingCollector<>(m, d, config.ordered(), config.timeout());
             }
         });
     }

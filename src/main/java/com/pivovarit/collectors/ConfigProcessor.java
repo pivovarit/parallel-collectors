@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -30,7 +31,7 @@ final class ConfigProcessor {
       .name("parallel-collectors-", 0)
       .factory());
 
-    record Config(boolean ordered, boolean batching, int parallelism, Executor executor) {
+    record Config(boolean ordered, boolean batching, int parallelism, Executor executor, Duration timeout) {
         Config {
             Objects.requireNonNull(executor, "executor can't be null");
         }
@@ -45,6 +46,7 @@ final class ConfigProcessor {
         Executor executor = null;
         UnaryOperator<Executor> decorator = null;
         UnaryOperator<Runnable> taskDecorator = null;
+        Duration timeout = null;
 
         for (var option : options) {
             switch (option) {
@@ -54,6 +56,7 @@ final class ConfigProcessor {
                 case Option.Ordered ignored -> ordered = true;
                 case Option.ExecutorDecorator(var d) -> decorator = d;
                 case Option.TaskDecorator(var d) -> taskDecorator = d;
+                case Option.Timeout(var d) -> timeout = d;
             }
         }
 
@@ -72,7 +75,8 @@ final class ConfigProcessor {
           Objects.requireNonNullElse(ordered, false),
           Objects.requireNonNullElse(batching, false),
           Objects.requireNonNullElse(parallelism, 0),
-          resolvedExecutor);
+          resolvedExecutor,
+          timeout);
     }
 
     static String toHumanReadableString(Option option) {
@@ -83,6 +87,7 @@ final class ConfigProcessor {
             case Option.Ordered ignored -> "ordered";
             case Option.ExecutorDecorator ignored -> "executor decorator";
             case Option.TaskDecorator ignored -> "task decorator";
+            case Option.Timeout ignored -> "timeout";
         };
     }
 
@@ -117,6 +122,15 @@ final class ConfigProcessor {
         record TaskDecorator(UnaryOperator<Runnable> decorator) implements Option {
             public TaskDecorator {
                 Objects.requireNonNull(decorator, "decorator can't be null");
+            }
+        }
+
+        record Timeout(Duration duration) implements Option {
+            public Timeout {
+                Objects.requireNonNull(duration, "duration can't be null");
+                if (duration.isZero() || duration.isNegative()) {
+                    throw new IllegalArgumentException("Timeout duration must be greater than 0");
+                }
             }
         }
     }
