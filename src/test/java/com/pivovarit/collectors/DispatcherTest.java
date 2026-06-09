@@ -96,6 +96,49 @@ class DispatcherTest {
     }
 
     @Test
+    void shouldStopWhenCallingThreadIsInterrupted() throws Exception {
+        var holder = new AtomicReference<Thread>();
+        var dispatcher = new Dispatcher<Integer>(Executors.newCachedThreadPool(), 1, holder::set);
+        dispatcher.start();
+        var future = dispatcher.submit(() -> 42);
+
+        var interruptPreserved = new AtomicBoolean(false);
+        var stopper = Thread.ofVirtual().start(() -> {
+            Thread.currentThread().interrupt();
+            dispatcher.stop();
+            interruptPreserved.set(Thread.currentThread().isInterrupted());
+        });
+        stopper.join();
+
+        assertThat(interruptPreserved)
+          .as("interrupt status should be preserved")
+          .isTrue();
+        assertThat(future.get(5, TimeUnit.SECONDS)).isEqualTo(42);
+        await().untilAsserted(() -> assertThat(holder.get().isAlive()).isFalse());
+    }
+
+    @Test
+    void shouldStopWhenTerminationGuardCleanedOnInterruptedThread() throws Exception {
+        var holder = new AtomicReference<Thread>();
+        var dispatcher = new Dispatcher<Integer>(Executors.newCachedThreadPool(), 1, holder::set);
+        dispatcher.start();
+        var cleanable = dispatcher.registerTerminationGuard(new Object());
+
+        var interruptPreserved = new AtomicBoolean(false);
+        var cleaner = Thread.ofVirtual().start(() -> {
+            Thread.currentThread().interrupt();
+            cleanable.clean();
+            interruptPreserved.set(Thread.currentThread().isInterrupted());
+        });
+        cleaner.join();
+
+        assertThat(interruptPreserved)
+          .as("interrupt status should be preserved")
+          .isTrue();
+        await().untilAsserted(() -> assertThat(holder.get().isAlive()).isFalse());
+    }
+
+    @Test
     void shouldRejectSubmitAfterShutdown() {
         var dispatcher = new Dispatcher<Integer>(Executors.newCachedThreadPool(), 1);
         dispatcher.start();

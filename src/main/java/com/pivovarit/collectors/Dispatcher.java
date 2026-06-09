@@ -128,26 +128,17 @@ final class Dispatcher<T> {
 
     void stop() {
         if (state.compareAndSet(State.RUNNING, State.SHUTTING_DOWN)) {
-            try {
-                workingQueue.put(DispatchItem.Stop.POISON_PILL);
-            } catch (InterruptedException e) {
-                completionSignaller.completeExceptionally(e);
-            }
+            workingQueue.add(DispatchItem.Stop.POISON_PILL);
         }
     }
 
     Cleaner.Cleanable registerTerminationGuard(Object guard) {
         var queue = workingQueue;
         var currentState = state;
-        var signaller = completionSignaller;
 
         return CLEANER.register(guard, () -> {
             if (currentState.compareAndSet(State.RUNNING, State.SHUTTING_DOWN)) {
-                try {
-                    queue.put(DispatchItem.Stop.POISON_PILL);
-                } catch (InterruptedException e) {
-                    signaller.completeExceptionally(e);
-                }
+                queue.add(DispatchItem.Stop.POISON_PILL);
             }
         });
     }
