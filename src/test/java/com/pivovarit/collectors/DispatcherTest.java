@@ -67,6 +67,35 @@ class DispatcherTest {
     }
 
     @Test
+    void shouldNotExecuteTasksSubmittedAfterFailure() throws Exception {
+        var executor = Executors.newCachedThreadPool();
+        var dispatcherThread = new AtomicReference<Thread>();
+        var dispatcher = new Dispatcher<Integer>(executor, dispatcherThread::set);
+        dispatcher.start();
+
+        var failed = dispatcher.submit(() -> {
+            throw new IllegalStateException("boom");
+        });
+        assertThatThrownBy(failed::join).hasCauseInstanceOf(IllegalStateException.class);
+
+        var executed = new AtomicBoolean();
+        var straggler = dispatcher.submit(() -> {
+            executed.set(true);
+            return 42;
+        });
+
+        dispatcher.stop();
+        dispatcherThread.get().join();
+        executor.shutdown();
+        assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+
+        assertThat(straggler).isCompletedExceptionally();
+        assertThat(executed)
+          .as("task submitted after failure should not execute")
+          .isFalse();
+    }
+
+    @Test
     void shouldStopWhenCallingThreadIsInterrupted() throws Exception {
         var holder = new AtomicReference<Thread>();
         var dispatcher = new Dispatcher<Integer>(Executors.newCachedThreadPool(), 1, holder::set);
