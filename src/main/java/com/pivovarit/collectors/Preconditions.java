@@ -18,6 +18,7 @@ package com.pivovarit.collectors;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 final class Preconditions {
 
@@ -27,6 +28,13 @@ final class Preconditions {
     static void requireValidParallelism(int parallelism) {
         if (parallelism < 1) {
             throw new IllegalArgumentException("Parallelism can't be lower than 1");
+        }
+    }
+
+    static void requireValidTimeout(long duration, TimeUnit unit) {
+        Objects.requireNonNull(unit, "unit can't be null");
+        if (duration <= 0) {
+            throw new IllegalArgumentException("Timeout duration must be greater than 0");
         }
     }
 

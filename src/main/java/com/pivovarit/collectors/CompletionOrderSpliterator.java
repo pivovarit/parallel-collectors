@@ -19,7 +19,10 @@ import java.util.List;
 import java.util.Spliterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
@@ -28,10 +31,16 @@ import java.util.function.Consumer;
 final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     private final BlockingQueue<CompletableFuture<T>> completed = new LinkedBlockingQueue<>();
+    private final Deadline deadline;
     private int remaining;
 
     CompletionOrderSpliterator(List<CompletableFuture<T>> futures) {
+        this(futures, null);
+    }
+
+    CompletionOrderSpliterator(List<CompletableFuture<T>> futures, Deadline deadline) {
         this.remaining = futures.size();
+        this.deadline = deadline;
         futures.forEach(f -> f.whenComplete((__, ___) -> completed.add(f)));
     }
 
@@ -46,7 +55,13 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
 
     private CompletableFuture<T> nextCompleted() {
         try {
-            var next = completed.take();
+            CompletableFuture<T> next = deadline == null
+              ? completed.take()
+              : completed.poll(deadline.remainingNanos(), TimeUnit.NANOSECONDS);
+
+            if (next == null) {
+                throw new CompletionException(new TimeoutException("Timeout while streaming results"));
+            }
             remaining--;
             return next;
         } catch (InterruptedException e) {

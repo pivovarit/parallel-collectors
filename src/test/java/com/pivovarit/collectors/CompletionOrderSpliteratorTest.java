@@ -21,6 +21,8 @@ import java.util.Optional;
 import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
@@ -68,6 +70,17 @@ class CompletionOrderSpliteratorTest {
         assertThatThrownBy(() -> StreamSupport.stream(new CompletionOrderSpliterator<>(futures), false).toList())
           .isInstanceOf(CompletionException.class)
           .hasCauseExactlyInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void shouldTimeoutWhenNoElementBecomesAvailable() {
+        var neverCompletes = new CompletableFuture<Integer>();
+        var spliterator = new CompletionOrderSpliterator<>(List.of(neverCompletes), new Deadline(TimeUnit.MILLISECONDS.toNanos(200)));
+
+        assertThatThrownBy(() -> StreamSupport.stream(spliterator, false).toList())
+          .isInstanceOf(CompletionException.class)
+          .hasCauseInstanceOf(TimeoutException.class)
+          .hasMessageContaining("Timeout");
     }
 
     private static void sleep(int millis) {
