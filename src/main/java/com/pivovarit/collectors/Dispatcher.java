@@ -128,7 +128,6 @@ final class Dispatcher<T> {
 
     void stop() {
         if (state.compareAndSet(State.RUNNING, State.SHUTTING_DOWN)) {
-            // add() and not put(): the queue is unbounded, and put() would lose the pill on an interrupted thread
             workingQueue.add(DispatchItem.Stop.POISON_PILL);
         }
     }
@@ -139,7 +138,6 @@ final class Dispatcher<T> {
 
         return CLEANER.register(guard, () -> {
             if (currentState.compareAndSet(State.RUNNING, State.SHUTTING_DOWN)) {
-                // add() and not put(): the queue is unbounded, and put() would lose the pill on an interrupted thread
                 queue.add(DispatchItem.Stop.POISON_PILL);
             }
         });
