@@ -42,4 +42,14 @@ class DeadlineTest {
 
         assertThat(second).isGreaterThan(0).isLessThan(first);
     }
+
+    @Test
+    void shouldNotReturnNegativeAfterDeadlinePassed() throws InterruptedException {
+        var deadline = new Deadline(TimeUnit.MILLISECONDS.toNanos(10));
+
+        deadline.remainingNanos();
+        Thread.sleep(50);
+
+        assertThat(deadline.remainingNanos()).isZero();
+    }
 }

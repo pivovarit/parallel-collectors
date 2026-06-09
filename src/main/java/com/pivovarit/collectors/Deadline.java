@@ -30,6 +30,6 @@ final class Deadline {
             deadlineNanos = System.nanoTime() + timeoutNanos;
             started = true;
         }
-        return deadlineNanos - System.nanoTime();
+        return Math.max(0, deadlineNanos - System.nanoTime());
     }
 }
