@@ -18,7 +18,6 @@ package com.pivovarit.collectors;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -44,7 +43,7 @@ import static java.util.Collections.emptySet;
  */
 final class AsyncParallelStreamingCollector<T, R> extends AbstractParallelCollector<T, R, Stream<R>> {
 
-    private static final EnumSet<Characteristics> UNORDERED_CHARACTERISTICS = EnumSet.of(Characteristics.UNORDERED);
+    private static final Set<Characteristics> UNORDERED_CHARACTERISTICS = Set.of(Characteristics.UNORDERED);
 
     private final CompletionStrategy completionStrategy;
     private final Duration timeout;

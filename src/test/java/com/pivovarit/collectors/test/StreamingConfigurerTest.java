@@ -127,6 +127,30 @@ class StreamingConfigurerTest {
             .isInstanceOf(CompletionException.class)));
     }
 
+    @TestFactory
+    Stream<DynamicTest> shouldReturnUnmodifiableCharacteristics() {
+        return allStreaming()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
+              var characteristics = c.factory().collector(i -> i).characteristics();
+
+              assertThat(characteristics).isUnmodifiable();
+          }));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldReportUnorderedCharacteristic() {
+        return allCompletionOrderStreaming()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> assertThat(c.factory().collector(i -> i).characteristics())
+            .containsExactly(Collector.Characteristics.UNORDERED)));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> shouldNotReportUnorderedCharacteristicWhenOrdered() {
+        return allOrderedStreaming()
+          .map(c -> DynamicTest.dynamicTest(c.name(), () -> assertThat(c.factory().collector(i -> i).characteristics())
+            .isEmpty()));
+    }
+
     @Test
     void shouldUseSyncFallback() {
         var result = Stream.of(1, 2, 3, 4)
