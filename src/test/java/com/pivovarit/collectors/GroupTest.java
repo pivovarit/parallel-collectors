@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,27 @@ class GroupTest {
             assertThatThrownBy(() -> new Group<>("key", null))
               .isInstanceOf(NullPointerException.class)
               .hasMessage("values cannot be null");
+        }
+
+        @Test
+        void constructorShouldCopyValues() {
+            var values = new ArrayList<>(List.of(1, 2));
+
+            Group<String, Integer> g = new Group<>("k", values);
+            values.add(3);
+
+            assertThat(g.values()).containsExactly(1, 2);
+        }
+
+        @Test
+        void constructorShouldAcceptNullElements() {
+            var values = new ArrayList<Integer>();
+            values.add(1);
+            values.add(null);
+
+            Group<String, Integer> g = new Group<>("k", values);
+
+            assertThat(g.values()).containsExactly(1, null);
         }
     }
 
