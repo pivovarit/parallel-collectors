@@ -15,6 +15,8 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -51,5 +53,28 @@ class DeadlineTest {
         Thread.sleep(50);
 
         assertThat(deadline.remainingNanos()).isZero();
+    }
+
+    @Test
+    void shouldNotObserveSpuriousTimeoutWhenCalledConcurrently() throws InterruptedException {
+        int threads = 16;
+        var deadline = new Deadline(TimeUnit.HOURS.toNanos(1));
+        var results = new long[threads];
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var barrier = new CyclicBarrier(threads);
+            for (int i = 0; i < threads; i++) {
+                int idx = i;
+                executor.submit(() -> {
+                    barrier.await();
+                    results[idx] = deadline.remainingNanos();
+                    return null;
+                });
+            }
+        }
+
+        for (long remaining : results) {
+            assertThat(remaining).isGreaterThan(TimeUnit.MINUTES.toNanos(59));
+        }
     }
 }
