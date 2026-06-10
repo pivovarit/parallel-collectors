@@ -76,7 +76,7 @@ final class AsyncParallelStreamingCollector<T, R> extends AbstractParallelCollec
         try {
             return future.get(deadline.remainingNanos(), TimeUnit.NANOSECONDS);
         } catch (TimeoutException e) {
-            throw new CompletionException(new TimeoutException("Timeout while streaming results").initCause(e));
+            throw new CompletionException(new TimeoutException("Timeout while streaming results"));
         } catch (ExecutionException e) {
             throw new CompletionException(e.getCause());
         } catch (InterruptedException e) {

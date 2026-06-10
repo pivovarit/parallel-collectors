@@ -68,7 +68,7 @@ class TimeoutStreamingTest {
           .collect(parallelToStream(i -> hangIf(i, 1), c -> c.parallelism(2).ordered().timeout(200, MILLISECONDS)))
           .toList())
           .isInstanceOf(CompletionException.class)
-          .hasCauseInstanceOf(TimeoutException.class);
+          .cause().isInstanceOf(TimeoutException.class).hasNoCause();
     }
 
     @Test

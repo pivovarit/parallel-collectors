@@ -67,7 +67,7 @@ final class CompletionOrderSpliterator<T> implements Spliterator<T> {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
 
-            throw new RuntimeException(e);
+            throw new CompletionException(e);
         }
     }
 
