@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static com.pivovarit.collectors.BatchingSpliterator.batching;
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static java.util.concurrent.CompletableFuture.allOf;
 
@@ -99,13 +100,7 @@ final class AsyncParallelCollector<T, R, C> extends AbstractParallelCollector<T,
                       .collect((Collector<T, ?, CompletableFuture<C>>) new AsyncParallelCollector<T, R, C>(task, new Dispatcher<>(executor, parallelism), finalizer));
                 } else {
                     return partitioned(items, parallelism)
-                      .collect((Collector<List<T>, ?, CompletableFuture<C>>) new AsyncParallelCollector<List<T>, List<R>, C>((Function<? super List<T>, ? extends List<R>>) batch -> {
-                          List<R> list = new ArrayList<>(batch.size());
-                          for (T t : batch) {
-                              list.add(task.apply(t));
-                          }
-                          return list;
-                      }, new Dispatcher<>(executor, parallelism), r -> finalizer.apply(r.flatMap(Collection::stream))));
+                      .collect((Collector<List<T>, ?, CompletableFuture<C>>) new AsyncParallelCollector<List<T>, List<R>, C>(batching(task), new Dispatcher<>(executor, parallelism), r -> finalizer.apply(r.flatMap(Collection::stream))));
                 }
             };
         }
