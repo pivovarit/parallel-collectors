@@ -129,6 +129,19 @@ class CompletionOrderSpliteratorTest {
     }
 
     @Test
+    void shouldWrapInterruptInCompletionException() {
+        var spliterator = new CompletionOrderSpliterator<>(List.of(new CompletableFuture<Integer>()));
+        try {
+            Thread.currentThread().interrupt();
+            assertThatThrownBy(() -> spliterator.tryAdvance(i -> {}))
+              .isInstanceOf(CompletionException.class)
+              .hasCauseInstanceOf(InterruptedException.class);
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     void shouldRestoreInterrupt() {
         Thread executorThread = new Thread(() -> {
             Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(List.of(new CompletableFuture<>()));
