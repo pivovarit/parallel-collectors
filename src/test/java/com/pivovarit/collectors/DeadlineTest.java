@@ -15,7 +15,10 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLongArray;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,5 +54,28 @@ class DeadlineTest {
         Thread.sleep(50);
 
         assertThat(deadline.remainingNanos()).isZero();
+    }
+
+    @Test
+    void shouldNotObserveSpuriousTimeoutWhenCalledConcurrently() {
+        int threads = 16;
+        var deadline = new Deadline(TimeUnit.HOURS.toNanos(1));
+        var results = new AtomicLongArray(threads);
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var barrier = new CyclicBarrier(threads);
+            for (int i = 0; i < threads; i++) {
+                int idx = i;
+                executor.submit(() -> {
+                    barrier.await();
+                    results.set(idx, deadline.remainingNanos());
+                    return null;
+                });
+            }
+        }
+
+        for (int i = 0; i < threads; i++) {
+            assertThat(results.get(i)).isGreaterThan(TimeUnit.MINUTES.toNanos(59));
+        }
     }
 }

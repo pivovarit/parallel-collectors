@@ -15,21 +15,25 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 final class Deadline {
 
+    private static final long UNSET = Long.MIN_VALUE;
+
     private final long timeoutNanos;
-    private long deadlineNanos;
-    private boolean started;
+    private final AtomicLong deadlineNanos = new AtomicLong(UNSET);
 
     Deadline(long timeoutNanos) {
         this.timeoutNanos = timeoutNanos;
     }
 
     long remainingNanos() {
-        if (!started) {
-            deadlineNanos = System.nanoTime() + timeoutNanos;
-            started = true;
+        long deadline = deadlineNanos.get();
+        if (deadline == UNSET) {
+            long candidate = System.nanoTime() + timeoutNanos;
+            deadline = deadlineNanos.compareAndSet(UNSET, candidate) ? candidate : deadlineNanos.get();
         }
-        return Math.max(0, deadlineNanos - System.nanoTime());
+        return Math.max(0, deadline - System.nanoTime());
     }
 }
