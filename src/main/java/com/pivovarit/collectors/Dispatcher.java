@@ -167,6 +167,7 @@ final class Dispatcher<T> {
                 future.complete(supplier.get());
             } catch (Throwable e) {
                 completionSignaller.completeExceptionally(e);
+                Thread.interrupted();
             }
         }, null);
         future.completedBy(task);

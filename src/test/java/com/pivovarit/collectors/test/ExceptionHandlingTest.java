@@ -21,8 +21,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 
+import static com.pivovarit.collectors.ParallelCollectors.parallel;
 import static com.pivovarit.collectors.TestUtils.incrementAndThrow;
 import static com.pivovarit.collectors.test.Factory.all;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,5 +64,20 @@ class ExceptionHandlingTest {
 
               assertThat(counter.longValue()).isLessThan(elements.size());
           }));
+    }
+
+    @Test
+    void shouldNotLeaveCallerThreadInterruptedOnException() {
+        assertThatThrownBy(() -> Stream.of(1, 2, 3)
+          .collect(parallel(i -> {
+              throw new IllegalArgumentException();
+          }, c -> c.executor(Runnable::run).parallelism(1)))
+          .join())
+          .isInstanceOf(CompletionException.class)
+          .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+
+        assertThat(Thread.interrupted())
+          .as("caller-runs executor thread should not be left interrupted")
+          .isFalse();
     }
 }

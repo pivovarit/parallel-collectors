@@ -58,6 +58,7 @@ record AsyncCollector<T, R, RR>(
                     future.complete(processor.apply(acc.build().map(mapper).toList().stream().map(r -> r)));
                 } catch (Throwable e) {
                     future.completeExceptionally(e);
+                    Thread.interrupted();
                 }
             }, null);
             future.completedBy(task);
