@@ -16,6 +16,7 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -39,7 +40,7 @@ public record Group<K, V>(K key, List<V> values) {
     public Group {
         Objects.requireNonNull(key, "key cannot be null");
         Objects.requireNonNull(values, "values cannot be null");
-        values = new ArrayList<>(values);
+        values = Collections.unmodifiableList(new ArrayList<>(values));
     }
 
     /**

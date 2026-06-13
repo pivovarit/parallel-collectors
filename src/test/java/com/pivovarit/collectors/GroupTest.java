@@ -62,6 +62,14 @@ class GroupTest {
 
             assertThat(g.values()).containsExactly(1, null);
         }
+
+        @Test
+        void valuesShouldRejectMutation() {
+            Group<String, Integer> g = new Group<>("k", List.of(1, 2));
+
+            assertThatThrownBy(() -> g.values().add(3))
+              .isInstanceOf(UnsupportedOperationException.class);
+        }
     }
 
     @Nested
