@@ -124,6 +124,30 @@ public final class StreamingConfigurer {
     }
 
     /**
+     * Sets a total-operation timeout for streaming results.
+     * <p>
+     * The timeout budget starts on the first pull from the returned stream. If the next result is not
+     * available within the remaining budget, stream traversal throws a
+     * {@link java.util.concurrent.CompletionException} wrapping a
+     * {@link java.util.concurrent.TimeoutException}.
+     *
+     * <p><b>Note:</b> When the timeout trips, stream traversal stops with an exception, but any
+     * in-flight tasks are <em>not</em> cancelled and keep running to completion in the background.
+     *
+     * <p><b>Note:</b> The timeout is ignored at {@code parallelism(1)}, which runs the mapper
+     * synchronously on the calling thread and therefore cannot be interrupted by a timeout — see
+     * {@link #parallelism(int)}.
+     *
+     * @param duration the timeout duration (must be positive)
+     *
+     * @return this configurer instance for fluent chaining
+     */
+    public StreamingConfigurer timeout(Duration duration) {
+        addOnce(new ConfigProcessor.Option.Timeout(duration));
+        return this;
+    }
+
+    /**
      * Sets the {@link Executor} used for running tasks.
      * <p>
      * Use this to supply a custom execution strategy (for example, a dedicated thread pool).

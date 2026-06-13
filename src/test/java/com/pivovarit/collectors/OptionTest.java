@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class OptionTest {
@@ -215,6 +216,36 @@ class OptionTest {
         assertThatThrownBy(() -> new StreamingConfigurer().timeout(0, SECONDS))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("Timeout");
+    }
+
+    @Test
+    void shouldConfigureTimeoutFromDuration() {
+        var configurer = new StreamingConfigurer();
+        configurer.timeout(Duration.ofSeconds(1));
+        assertThat(configurer.getConfig())
+          .contains(new ConfigProcessor.Option.Timeout(Duration.ofSeconds(1)));
+    }
+
+    @Test
+    void shouldThrowOnNullTimeoutDurationStreaming() {
+        assertThatThrownBy(() -> new StreamingConfigurer().timeout(null))
+          .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowOnInvalidTimeoutDurationStreaming() {
+        assertThatThrownBy(() -> new StreamingConfigurer().timeout(Duration.ZERO))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Timeout");
+    }
+
+    @Test
+    void shouldThrowOnDuplicateTimeoutDurationStreaming() {
+        var configurer = new StreamingConfigurer();
+        configurer.timeout(Duration.ofSeconds(1));
+        assertThatThrownBy(() -> configurer.timeout(Duration.ofSeconds(2)))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("'timeout' can only be configured once");
     }
 
 }
