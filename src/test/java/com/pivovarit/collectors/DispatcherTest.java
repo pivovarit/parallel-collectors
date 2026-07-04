@@ -17,11 +17,13 @@ package com.pivovarit.collectors;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
@@ -170,6 +172,59 @@ class DispatcherTest {
             await().untilAsserted(() -> assertThat(interrupted.get())
               .as("executor thread should not observe a leaked interrupt flag")
               .isFalse());
+        } finally {
+            running.set(false);
+        }
+    }
+
+    @Test
+    void shouldNotLeakInterruptionIntoExecutorThreadOnSiblingCancellation() throws Exception {
+        var tasks = new ConcurrentLinkedQueue<Runnable>();
+        var running = new AtomicBoolean(true);
+        var leaked = new AtomicBoolean(false);
+        var completedRuns = new AtomicInteger();
+
+        for (int i = 0; i < 2; i++) {
+            Thread.ofPlatform().start(() -> {
+                while (running.get()) {
+                    var task = tasks.poll();
+                    if (task != null) {
+                        task.run();
+                        if (Thread.interrupted()) {
+                            leaked.set(true);
+                        }
+                        completedRuns.incrementAndGet();
+                    } else {
+                        Thread.onSpinWait();
+                    }
+                }
+            });
+        }
+
+        try {
+            var dispatcher = new Dispatcher<Integer>(tasks::add, 2);
+            dispatcher.start();
+
+            var siblingStarted = new CountDownLatch(1);
+            dispatcher.submit(() -> {
+                siblingStarted.countDown();
+                while (!Thread.currentThread().isInterrupted()) {
+                    Thread.onSpinWait();
+                }
+                return 42;
+            });
+            siblingStarted.await();
+
+            var failed = dispatcher.submit(() -> {
+                throw new IllegalStateException("boom");
+            });
+            assertThatThrownBy(failed::join).hasCauseInstanceOf(IllegalStateException.class);
+            dispatcher.stop();
+
+            await().untilAsserted(() -> assertThat(completedRuns.get()).isEqualTo(2));
+            assertThat(leaked)
+              .as("executor thread should not observe a leaked interrupt flag after sibling cancellation")
+              .isFalse();
         } finally {
             running.set(false);
         }
