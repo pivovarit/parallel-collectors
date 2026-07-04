@@ -17,8 +17,10 @@ package com.pivovarit.collectors;
 
 import java.lang.ref.Cleaner;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -39,6 +41,7 @@ final class Dispatcher<T> {
     private static final Cleaner CLEANER = Cleaner.create();
 
     private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
+    private final Set<InterruptibleCompletableFuture<T>> pendingFutures = ConcurrentHashMap.newKeySet();
     private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
 
     private final ThreadFactory dispatcherThreadFactory = Thread.ofVirtual()
@@ -91,7 +94,7 @@ final class Dispatcher<T> {
                                         limiter.acquire();
                                     }
                                 } catch (InterruptedException e) {
-                                    completionSignaller.completeExceptionally(e);
+                                    abort(e);
                                     return;
                                 }
                                 try {
@@ -118,7 +121,7 @@ final class Dispatcher<T> {
                         }
                     }
                 } catch (Throwable e) {
-                    completionSignaller.completeExceptionally(e);
+                    abort(e);
                 }
             });
             dispatcherThreadHook.accept(thread);
@@ -166,19 +169,32 @@ final class Dispatcher<T> {
             try {
                 future.complete(supplier.get());
             } catch (Throwable e) {
-                completionSignaller.completeExceptionally(e);
+                abort(e);
                 Thread.interrupted();
             }
         }, null);
         future.completedBy(task);
-        completionSignaller.whenComplete((result, ex) -> {
-            if (ex != null) {
-                future.completeExceptionally(ex);
-                future.cancel(true);
-            }
-        });
+        pendingFutures.add(future);
+        future.whenComplete((result, ex) -> pendingFutures.remove(future));
+
+        if (completionSignaller.isCompletedExceptionally()) {
+            completionSignaller.whenComplete((result, ex) -> abort(future, ex));
+        }
         workingQueue.add(new DispatchItem.Task(task));
         return future;
+    }
+
+    private void abort(Throwable e) {
+        if (completionSignaller.completeExceptionally(e)) {
+            for (var future : pendingFutures) {
+                abort(future, e);
+            }
+        }
+    }
+
+    private static void abort(InterruptibleCompletableFuture<?> future, Throwable e) {
+        future.completeExceptionally(e);
+        future.cancel(true);
     }
 
     private static void retry(Runnable runnable) {
