@@ -88,7 +88,7 @@ final class Dispatcher<T> {
                 try {
                     while (true) {
                         switch (workingQueue.take()) {
-                            case DispatchItem.Task(Runnable task) -> {
+                            case DispatchItem.Task(FutureTask<?> task) -> {
                                 try {
                                     if (limiter != null) {
                                         limiter.acquire();
@@ -102,6 +102,9 @@ final class Dispatcher<T> {
                                         try {
                                             task.run();
                                         } finally {
+                                            if (task.isCancelled()) {
+                                                Thread.interrupted();
+                                            }
                                             if (limiter != null) {
                                                 limiter.release();
                                             }
