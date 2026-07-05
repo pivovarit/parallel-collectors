@@ -15,6 +15,7 @@
  */
 package com.pivovarit.collectors;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -57,6 +58,67 @@ class LifecycleTest {
             assertThat(result).containsExactlyInAnyOrder(1, 2, 3);
         }
         await().until(dispatcher::wasShutdown);
+    }
+
+    @Test
+    void shouldRejectReuseAfterAbortedTraversal() {
+        var collector = new AsyncParallelCollector<Integer, Integer, List<Integer>>(i -> i, dispatcher, Stream::toList);
+
+        assertThatThrownBy(() -> Stream.of(1, 2, 3)
+          .peek(i -> {
+              if (i == 2) {
+                  throw new RuntimeException("boom");
+              }
+          })
+          .collect(collector))
+          .isExactlyInstanceOf(RuntimeException.class)
+          .hasMessage("boom");
+
+        assertThatThrownBy(() -> Stream.of(1, 2, 3).collect(collector))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("reused");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void shouldRejectStreamingReuseAfterAbortedTraversal(boolean ordered) {
+        var collector = new AsyncParallelStreamingCollector<Integer, Integer>(i -> i, dispatcher, ordered, null);
+
+        assertThatThrownBy(() -> Stream.of(1, 2, 3)
+          .peek(i -> {
+              if (i == 2) {
+                  throw new RuntimeException("boom");
+              }
+          })
+          .collect(collector))
+          .isExactlyInstanceOf(RuntimeException.class)
+          .hasMessage("boom");
+
+        assertThatThrownBy(() -> Stream.of(1, 2, 3).collect(collector))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("reused");
+    }
+
+    @Test
+    void shouldRejectReuseAfterEmptyTraversal() {
+        var collector = new AsyncParallelCollector<Integer, Integer, List<Integer>>(i -> i, dispatcher, Stream::toList);
+
+        assertThat(Stream.<Integer>empty().collect(collector).join()).isEmpty();
+
+        assertThatThrownBy(() -> Stream.of(1, 2, 3).collect(collector))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("reused");
+    }
+
+    @Test
+    void shouldRejectReuseAfterCompletedTraversal() {
+        var collector = new AsyncParallelCollector<Integer, Integer, List<Integer>>(i -> i, dispatcher, Stream::toList);
+
+        assertThat(Stream.of(1, 2, 3).collect(collector).join()).containsExactly(1, 2, 3);
+
+        assertThatThrownBy(() -> Stream.of(1, 2, 3).collect(collector))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("reused");
     }
 
     @Test

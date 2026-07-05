@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -39,6 +40,10 @@ sealed abstract class AbstractParallelCollector<T, A, R>
 
     private volatile Cleaner.Cleanable terminationGuard;
 
+    private final AtomicInteger traversals = new AtomicInteger();
+
+    private volatile boolean finished;
+
     protected AbstractParallelCollector(Function<? super T, ? extends A> task, Dispatcher<A> dispatcher) {
         this.task = task;
         this.dispatcher = dispatcher;
@@ -49,6 +54,10 @@ sealed abstract class AbstractParallelCollector<T, A, R>
     @Override
     public final Supplier<List<CompletableFuture<A>>> supplier() {
         return () -> {
+            if (finished) {
+                throw new IllegalStateException("collector was already used and cannot be reused");
+            }
+            traversals.incrementAndGet();
             var container = new ArrayList<CompletableFuture<A>>();
             terminationGuard = dispatcher.registerTerminationGuard(container);
             return container;
@@ -75,9 +84,13 @@ sealed abstract class AbstractParallelCollector<T, A, R>
     @Override
     public final Function<List<CompletableFuture<A>>, R> finisher() {
         return list -> {
+            finished = true;
             dispatcher.stop();
             if (terminationGuard != null) {
                 terminationGuard.clean();
+            }
+            if (traversals.get() > 1) {
+                throw new IllegalStateException("collector was already used and cannot be reused");
             }
             return finalizer().apply(list);
         };
