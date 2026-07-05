@@ -65,10 +65,21 @@ final class AsyncParallelStreamingCollector<T, R> extends AbstractParallelCollec
 
     private Stream<R> orderedStream(List<CompletableFuture<R>> acc) {
         if (timeout == null) {
-            return acc.stream().map(CompletableFuture::join).filter(__ -> true);
+            return acc.stream().map(AsyncParallelStreamingCollector::joinInterruptibly).filter(__ -> true);
         }
         var deadline = new Deadline(timeout.toNanos());
         return acc.stream().map(future -> joinWithin(future, deadline)).filter(__ -> true);
+    }
+
+    private static <R> R joinInterruptibly(CompletableFuture<R> future) {
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            throw new CompletionException(e.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CompletionException(e);
+        }
     }
 
     private static <R> R joinWithin(CompletableFuture<R> future, Deadline deadline) {
