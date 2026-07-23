@@ -65,9 +65,7 @@ class ExecutorPollutionTest {
     }
 
     private static ThreadPoolExecutor warmedUp(ThreadPoolExecutor e) {
-        for (int i = 0; i < e.getCorePoolSize(); i++) {
-            CompletableFuture.runAsync(() -> {}).join();
-        }
+        e.prestartAllCoreThreads();
         return e;
     }
 }

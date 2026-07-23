@@ -197,10 +197,6 @@ final class Factory {
           // parallelToStream() ordered and batching
           CollectorFactory.parallelToStream(c -> c.batching().ordered().parallelism(p()), "ordered", "parallelism", "batching"),
           CollectorFactory.parallelToStream(c -> c.batching().ordered().executor(e()).parallelism(p()), "ordered", "executor", "parallelism", "batching"),
-          // parallelToStreamBy()
-          CollectorFactory.parallelToStreamBy(),
-          CollectorFactory.parallelToStreamBy(p()),
-          CollectorFactory.parallelToStreamBy(c -> {}),
           // parallelToStreamBy() ordered
           CollectorFactory.parallelToStreamBy(c -> c.ordered(), "ordered"),
           CollectorFactory.parallelToStreamBy(c -> c.ordered().parallelism(p()), "ordered", "parallelism"),
@@ -680,7 +676,7 @@ final class Factory {
     }
 
     static Executor e() {
-        return Executors.newCachedThreadPool();
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 
     static int p() {

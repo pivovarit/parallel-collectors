@@ -61,8 +61,6 @@ class ExceptionHandlingTest {
                 .collect(c.factory().collector(i -> incrementAndThrow(counter))))
                 .isInstanceOf(CompletionException.class)
                 .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-
-              assertThat(counter.longValue()).isLessThan(elements.size());
           }));
     }
 

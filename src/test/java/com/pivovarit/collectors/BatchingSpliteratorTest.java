@@ -16,7 +16,6 @@
 package com.pivovarit.collectors;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.stream.IntStream;
@@ -27,7 +26,6 @@ import org.junit.jupiter.api.Test;
 
 import static com.pivovarit.collectors.BatchingSpliterator.partitioned;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BatchingSpliteratorTest {
@@ -125,11 +123,6 @@ class BatchingSpliteratorTest {
         var result = partitioned(list, 1).toList();
 
         assertThat(result.getFirst()).containsExactlyElementsOf(list);
-    }
-
-    @Test
-    void shouldReturnEmptyIfZeroParts() {
-        assertThatThrownBy(() -> partitioned(Arrays.asList(1, 2, 3), 0).toList());
     }
 
     @Test

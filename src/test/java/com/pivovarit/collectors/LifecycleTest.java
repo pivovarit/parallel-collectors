@@ -135,10 +135,12 @@ class LifecycleTest {
           .collect(new AsyncParallelCollector<>(i -> i, dispatcher, Stream::toList)))
           .isInstanceOf(IllegalStateException.class);
 
-        System.gc();
-        await().untilAsserted(() -> assertThat(threadHolder.get())
-          .as("dispatcher thread must terminate after an aborted traversal")
-          .matches(t -> t == null || !t.isAlive()));
+        await().untilAsserted(() -> {
+            System.gc();
+            assertThat(threadHolder.get())
+              .as("dispatcher thread must terminate after an aborted traversal")
+              .matches(t -> t == null || !t.isAlive());
+        });
     }
 
 }

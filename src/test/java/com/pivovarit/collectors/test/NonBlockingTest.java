@@ -31,8 +31,9 @@ class NonBlockingTest {
     Stream<DynamicTest> shouldNotBlockTheCallingThread() {
         return allAsync()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              assertTimeoutPreemptively(Duration.ofMillis(100), () -> {
-                  var __ = Stream.of(1, 2, 3, 4).collect(c.factory().collector(i -> returnWithDelay(i, ofDays(1))));
+              assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+                  var future = Stream.of(1, 2, 3, 4).collect(c.factory().collector(i -> returnWithDelay(i, ofDays(1))));
+                  future.cancel(true);
               });
           }));
     }

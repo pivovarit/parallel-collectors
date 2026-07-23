@@ -19,7 +19,9 @@ import com.pivovarit.collectors.ParallelCollectors;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.IntStream;
@@ -33,7 +35,6 @@ import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.Factory.e;
 import static com.pivovarit.collectors.test.Factory.p;
 import static java.time.Duration.ofMillis;
-import static java.time.Duration.ofSeconds;
 import static java.util.stream.Stream.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -77,17 +78,42 @@ class StreamingConfigurerTest {
     Stream<DynamicTest> shouldPushElementsAsSoonAsTheyAreReady() {
         return allStreaming()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
+              var release = new CountDownLatch(1);
               var counter = new AtomicInteger();
-              Thread.startVirtualThread(() -> {
-                  Stream.concat(Stream.of(0), IntStream.range(1, 10).boxed())
-                    .collect(c.factory().collector(i -> returnWithDelay(i, ofSeconds(i))))
-                    .forEach(__ -> counter.incrementAndGet());
+              var failure = new AtomicReference<Throwable>();
+
+              var background = Thread.startVirtualThread(() -> {
+                  try {
+                      Stream.concat(Stream.of(0), IntStream.range(1, 10).boxed())
+                        .collect(c.factory().collector(i -> {
+                            if (i > 0) {
+                                try {
+                                    release.await();
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                            return i;
+                        }))
+                        .forEach(__ -> counter.incrementAndGet());
+                  } catch (Throwable t) {
+                      failure.set(t);
+                  }
               });
 
-              await()
-                .pollInterval(Duration.ofMillis(10))
-                .atMost(Duration.ofMillis(100))
-                .until(() -> counter.get() > 0);
+              try {
+                  await()
+                    .atMost(Duration.ofSeconds(5))
+                    .until(() -> counter.get() > 0);
+              } finally {
+                  release.countDown();
+                  assertThat(background.join(Duration.ofSeconds(30)))
+                    .as("background collection must finish after release")
+                    .isTrue();
+                  if (failure.get() != null) {
+                      throw new AssertionError("background collection failed", failure.get());
+                  }
+              }
           }));
     }
 
@@ -95,7 +121,7 @@ class StreamingConfigurerTest {
     Stream<DynamicTest> shouldCollectInCompletionOrder() {
         return allCompletionOrderStreaming()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              var result = of(750, 250, 0, 1000)
+              var result = of(1500, 500, 0, 1000)
                 .collect(c.factory().collector(i -> returnWithDelay(i, ofMillis(i))))
                 .toList();
 

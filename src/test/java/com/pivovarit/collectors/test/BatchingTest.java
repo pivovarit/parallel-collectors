@@ -16,8 +16,10 @@
 package com.pivovarit.collectors.test;
 
 import com.pivovarit.collectors.ParallelCollectors;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
@@ -35,27 +37,33 @@ class BatchingTest {
     Stream<DynamicTest> shouldProcessOnExactlyNThreads() {
         return allBatching()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              var threads = new ConcurrentSkipListSet<>();
+              var threads = ConcurrentHashMap.<Thread>newKeySet();
               var parallelism = 4;
+              var barrier = new CyclicBarrier(parallelism);
 
               var ignored = Stream.generate(() -> 42)
                 .limit(100)
                 .collect(c.factory().collector(i -> {
-                    threads.add(Thread.currentThread().getName());
+                    threads.add(Thread.currentThread());
+                    try {
+                        barrier.await(5, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                     return i;
                 }, parallelism));
 
-              assertThat(threads).hasSizeLessThanOrEqualTo(parallelism);
+              assertThat(threads).hasSize(parallelism);
           }));
     }
 
     @Test
     void shouldCollectInCompletionOrder() {
-        var result = of(300, 200, 0, 400)
+        var result = of(900, 300, 0, 600)
           .collect(ParallelCollectors.parallelToStream(i -> returnWithDelay(i, ofMillis(i)), c -> c.batching().executor(Executors.newVirtualThreadPerTaskExecutor()).parallelism(2)))
           .toList();
 
-        assertThat(result).containsExactly(0, 400, 300, 200);
+        assertThat(result).containsExactly(0, 600, 900, 300);
     }
 
     @Test

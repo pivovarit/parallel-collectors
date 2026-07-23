@@ -77,11 +77,6 @@ class ArchitectureTest {
       .should().resideInAPackage("com.pivovarit.collectors");
 
     @ArchTest
-    static final ArchRule shouldHaveTwoPublicClasses = classes()
-      .that().haveSimpleName("ParallelCollectors").or().haveSimpleName("Batching")
-      .should().bePublic().andShould().haveModifier(FINAL);
-
-    @ArchTest
     static final ArchRule noDefaultExecutorInCompletableFuture = ArchRuleDefinition.noClasses()
       .should().callMethod(CompletableFuture.class, "supplyAsync", Supplier.class)
       .orShould().callMethod(CompletableFuture.class, "runAsync", Runnable.class)

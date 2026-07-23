@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 
@@ -75,12 +76,10 @@ class FutureCollectorsTest {
               }, e))
               .collect(ParallelCollectors.toFuture(toList()));
 
-            assertTimeout(Duration.ofMillis(100), () -> {
-                try {
-                    result.join();
-                } catch (CompletionException ex) {
-                }
-            });
+            assertTimeout(Duration.ofMillis(500), () ->
+              assertThatThrownBy(result::join)
+                .isInstanceOf(CompletionException.class)
+                .hasCauseInstanceOf(RuntimeException.class));
         }
     }
 

@@ -63,7 +63,7 @@ class BasicParallelismTest {
                     .collect(c.factory().collector(i -> {
                         int value = counter.incrementAndGet();
                         if (value > parallelism) {
-                            throw new IllegalStateException("more than two tasks executing at once!");
+                            throw new IllegalStateException("more than " + parallelism + " tasks executing at once!");
                         }
                         Integer result = TestUtils.returnWithDelay(i, Duration.ofMillis(10));
                         counter.decrementAndGet();

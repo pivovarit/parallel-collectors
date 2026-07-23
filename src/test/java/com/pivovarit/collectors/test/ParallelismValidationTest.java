@@ -99,7 +99,7 @@ class ParallelismValidationTest {
     }
 
     static Executor e() {
-        return Executors.newCachedThreadPool();
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 
     private static <K, V> Function<Stream<Group<K, V>>, List<V>> ungrouped() {

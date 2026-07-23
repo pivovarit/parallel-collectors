@@ -27,7 +27,7 @@ import org.junit.jupiter.api.TestFactory;
 
 import static com.pivovarit.collectors.test.Factory.allWithCustomExecutors;
 import static com.pivovarit.collectors.test.Factory.allWithCustomExecutorsParallelismOne;
-import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Stream.of;
@@ -51,13 +51,16 @@ class TaskRejectionTest {
     Stream<DynamicTest> shouldHandleRejection() {
         return allWithCustomExecutors()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              assertThatThrownBy(() -> {
-                  try (var e = new ThreadPoolExecutor(2, 2, 0L, MILLISECONDS,
-                    new LinkedBlockingQueue<>(1), new ThreadPoolExecutor.AbortPolicy())) {
-                      assertTimeoutPreemptively(ofMillis(100), () -> of(1, 2, 3, 4)
-                        .collect(c.factory().collector(i -> TestUtils.sleepAndReturn(1_000, i), e)));
-                  }
-              }).isExactlyInstanceOf(CompletionException.class);
+              var e = new ThreadPoolExecutor(2, 2, 0L, MILLISECONDS,
+                new LinkedBlockingQueue<>(1), new ThreadPoolExecutor.AbortPolicy());
+              try {
+                  assertThatThrownBy(() ->
+                    assertTimeoutPreemptively(ofSeconds(2), () -> of(1, 2, 3, 4)
+                      .collect(c.factory().collector(i -> TestUtils.sleepAndReturn(10_000, i), e))))
+                    .isExactlyInstanceOf(CompletionException.class);
+              } finally {
+                  e.shutdownNow();
+              }
           }));
     }
     @TestFactory
@@ -65,12 +68,16 @@ class TaskRejectionTest {
         return allWithCustomExecutorsParallelismOne()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               var e = new ThreadPoolExecutor(1, 1, 0L, SECONDS, new LinkedBlockingQueue<>(1));
-              e.submit(() -> TestUtils.sleepAndReturn(10_000, 42));
-              e.submit(() -> TestUtils.sleepAndReturn(10_000, 42));
-              assertThatThrownBy(() -> {
-                  assertTimeoutPreemptively(ofMillis(100), () -> of(1, 2, 3, 4)
-                    .collect(c.factory().collector(i -> TestUtils.sleepAndReturn(1_000, i), e)));
-              }).isExactlyInstanceOf(CompletionException.class);
+              try {
+                  e.submit(() -> TestUtils.sleepAndReturn(10_000, 42));
+                  e.submit(() -> TestUtils.sleepAndReturn(10_000, 42));
+                  assertThatThrownBy(() ->
+                    assertTimeoutPreemptively(ofSeconds(2), () -> of(1, 2, 3, 4)
+                      .collect(c.factory().collector(i -> TestUtils.sleepAndReturn(10_000, i), e))))
+                    .isExactlyInstanceOf(CompletionException.class);
+              } finally {
+                  e.shutdownNow();
+              }
           }));
     }
 }
