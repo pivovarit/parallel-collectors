@@ -15,20 +15,18 @@
  */
 package com.pivovarit.collectors.test;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-import static com.pivovarit.collectors.TestUtils.returnWithDelay;
 import static com.pivovarit.collectors.test.Factory.all;
 import static com.pivovarit.collectors.test.Factory.allOrdered;
-import static java.time.Duration.ofSeconds;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -60,7 +58,7 @@ class BasicProcessingTest {
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
               var list = IntStream.range(0, 100).boxed().toList();
               List<Integer> result = list.stream().collect(c.factory().collector(i -> i));
-              assertThat(result).containsAnyElementsOf(list);
+              assertThat(result).containsExactlyElementsOf(list);
           }));
     }
 
@@ -68,18 +66,41 @@ class BasicProcessingTest {
     Stream<DynamicTest> shouldStartProcessingImmediately() {
         return all()
           .map(c -> DynamicTest.dynamicTest(c.name(), () -> {
-              var counter = new AtomicInteger();
+              var started = new CountDownLatch(1);
+              var release = new CountDownLatch(1);
+              var failure = new AtomicReference<Throwable>();
 
-              Thread.startVirtualThread(() -> {
-                  var ignored = Stream.iterate(0, i -> i + 1)
-                    .limit(100)
-                    .collect(c.factory().collector(i -> returnWithDelay(counter.incrementAndGet(), ofSeconds(1))));
+              var background = Thread.startVirtualThread(() -> {
+                  try {
+                      var ignored = Stream.iterate(0, i -> i + 1)
+                        .limit(100)
+                        .collect(c.factory().collector(i -> {
+                            started.countDown();
+                            try {
+                                release.await();
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                            return i;
+                        }));
+                  } catch (Throwable t) {
+                      failure.set(t);
+                  }
               });
 
-              await()
-                .pollInterval(1, MILLISECONDS)
-                .atMost(500, MILLISECONDS)
-                .until(() -> counter.get() > 0);
+              try {
+                  assertThat(started.await(5, SECONDS))
+                    .as("processing should start before the terminal operation completes")
+                    .isTrue();
+              } finally {
+                  release.countDown();
+                  assertThat(background.join(Duration.ofSeconds(30)))
+                    .as("background collection must finish after release")
+                    .isTrue();
+                  if (failure.get() != null) {
+                      throw new AssertionError("background collection failed", failure.get());
+                  }
+              }
           }));
     }
 
@@ -107,7 +128,7 @@ class BasicProcessingTest {
                 })))
                 .hasCauseExactlyInstanceOf(NullPointerException.class);
 
-              await().atMost(1, SECONDS).until(() -> counter.get() == size - 1);
+              await().atMost(5, SECONDS).until(() -> counter.get() == size - 1);
           }));
     }
 }

@@ -21,8 +21,10 @@ import java.util.Optional;
 import java.util.Spliterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
@@ -30,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Awaitility.await;
 
 class CompletionOrderSpliteratorTest {
 
@@ -142,24 +143,27 @@ class CompletionOrderSpliteratorTest {
     }
 
     @Test
-    void shouldRestoreInterrupt() {
-        Thread executorThread = new Thread(() -> {
+    void shouldRestoreInterrupt() throws InterruptedException {
+        var interrupted = new AtomicBoolean();
+        var done = new CountDownLatch(1);
+
+        var thread = new Thread(() -> {
             Spliterator<Integer> spliterator = new CompletionOrderSpliterator<>(List.of(new CompletableFuture<>()));
             try {
                 spliterator.tryAdvance(i -> {});
             } catch (Exception e) {
-                while (true) {
-                    Thread.onSpinWait();
-                }
+                interrupted.set(Thread.currentThread().isInterrupted());
+            } finally {
+                done.countDown();
             }
         });
 
-        executorThread.start();
+        thread.setDaemon(true);
+        thread.start();
+        thread.interrupt();
 
-        executorThread.interrupt();
-
-        await()
-          .until(executorThread::isInterrupted);
+        assertThat(done.await(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(interrupted).isTrue();
     }
 
     static class ResultHolder<T> implements Consumer<T> {

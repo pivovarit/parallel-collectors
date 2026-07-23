@@ -19,7 +19,6 @@ import com.pivovarit.collectors.ParallelCollectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -34,15 +33,15 @@ class Parallelism1StreamSemanticTest {
         var callerThread = Thread.currentThread();
         var mapperThreads = new CopyOnWriteArrayList<Thread>();
 
-        Executor executor = Executors.newSingleThreadExecutor();
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            CompletableFuture<Stream<Integer>> future = Stream.of(1, 2, 3)
+              .collect(ParallelCollectors.parallel(i -> {
+                  mapperThreads.add(Thread.currentThread());
+                  return i;
+              }, c -> c.executor(executor).parallelism(1)));
 
-        CompletableFuture<Stream<Integer>> future = Stream.of(1, 2, 3)
-          .collect(ParallelCollectors.parallel(i -> {
-              mapperThreads.add(Thread.currentThread());
-              return i;
-          }, c -> c.executor(executor).parallelism(1)));
-
-        future.join().toList();
+            future.join().toList();
+        }
 
         assertThat(mapperThreads)
           .isNotEmpty()
@@ -51,34 +50,34 @@ class Parallelism1StreamSemanticTest {
 
     @Test
     void shouldWrapMapperExceptionInCompletionException() {
-        Executor executor = Executors.newSingleThreadExecutor();
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            CompletableFuture<Stream<Integer>> future = Stream.of(1, 2, 3)
+              .collect(ParallelCollectors.parallel(i -> {
+                  if (i == 2) {
+                      throw new IllegalArgumentException("boom");
+                  }
+                  return i;
+              }, c -> c.executor(executor).parallelism(1)));
 
-        CompletableFuture<Stream<Integer>> future = Stream.of(1, 2, 3)
-          .collect(ParallelCollectors.parallel(i -> {
-              if (i == 2) {
-                  throw new IllegalArgumentException("boom");
-              }
-              return i;
-          }, c -> c.executor(executor).parallelism(1)));
-
-        assertThatThrownBy(() -> future.join().toList())
-          .isInstanceOf(CompletionException.class)
-          .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> future.join().toList())
+              .isInstanceOf(CompletionException.class)
+              .hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+        }
     }
 
     @Test
     void shouldCompleteExceptionallyBeforeStreamConsumed() {
-        Executor executor = Executors.newSingleThreadExecutor();
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            CompletableFuture<Stream<Integer>> future = Stream.of(1, 2, 3)
+              .collect(ParallelCollectors.parallel(i -> {
+                  throw new IllegalArgumentException("boom");
+              }, c -> c.executor(executor).parallelism(1)));
 
-        CompletableFuture<Stream<Integer>> future = Stream.of(1, 2, 3)
-          .collect(ParallelCollectors.parallel(i -> {
-              throw new IllegalArgumentException("boom");
-          }, c -> c.executor(executor).parallelism(1)));
-
-        assertThat(future)
-          .failsWithin(java.time.Duration.ofSeconds(5))
-          .withThrowableThat()
-          .havingCause()
-          .isInstanceOf(IllegalArgumentException.class);
+            assertThat(future)
+              .failsWithin(java.time.Duration.ofSeconds(5))
+              .withThrowableThat()
+              .havingCause()
+              .isInstanceOf(IllegalArgumentException.class);
+        }
     }
 }

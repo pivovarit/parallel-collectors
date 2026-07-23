@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStream;
 import static com.pivovarit.collectors.ParallelCollectors.parallelToStreamBy;
+import static com.pivovarit.collectors.TestUtils.returnWithDelay;
+import static java.time.Duration.ofMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,7 +103,7 @@ class TimeoutStreamingTest {
     @Test
     void shouldIgnoreTimeoutAtParallelismOne() {
         var result = Stream.of(1, 2, 3)
-          .collect(parallelToStream(i -> i + 1, c -> c.parallelism(1).timeout(1, MILLISECONDS)))
+          .collect(parallelToStream(i -> returnWithDelay(i + 1, ofMillis(50)), c -> c.parallelism(1).timeout(1, MILLISECONDS)))
           .toList();
 
         assertThat(result).containsExactly(2, 3, 4);

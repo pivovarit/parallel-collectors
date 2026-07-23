@@ -35,6 +35,7 @@ public final class TestUtils {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
         return value;
@@ -50,11 +51,12 @@ public final class TestUtils {
         return value;
     }
 
-    public synchronized static Integer incrementAndThrow(AtomicInteger counter) {
-        if (counter.get() >= 10) {
+    public static Integer incrementAndThrow(AtomicInteger counter) {
+        int witness = counter.getAndUpdate(c -> c >= 10 ? c : c + 1);
+        if (witness >= 10) {
             throw new IllegalArgumentException();
         }
 
-        return counter.incrementAndGet();
+        return witness + 1;
     }
 }

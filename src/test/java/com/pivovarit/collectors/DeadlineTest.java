@@ -29,7 +29,8 @@ class DeadlineTest {
     void shouldNotStartUntilFirstRemainingCall() throws InterruptedException {
         var deadline = new Deadline(TimeUnit.SECONDS.toNanos(1));
 
-        Thread.sleep(50);
+        // 500ms exceeds the 100ms assertion slack: an eager-start Deadline would report ~500ms remaining and fail
+        Thread.sleep(500);
 
         long remaining = deadline.remainingNanos();
         assertThat(remaining).isGreaterThan(TimeUnit.MILLISECONDS.toNanos(900));
