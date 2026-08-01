@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1414" height="560" viewBox="0 0 1414 560" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif">
 <defs>
 <marker id="ah-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2563EB"/></marker>
 <marker id="ah-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#D97706"/></marker>
 </defs>
-<rect width="1600" height="560" fill="#FFFFFF"/>
+<rect width="1414" height="560" fill="#FFFFFF"/>
+<g transform="translate(-93 0)">
 <text x="96" y="108" font-size="58" font-weight="700" letter-spacing="-1.4" fill="#0B1220">Parallel Collectors</text>
 <text x="96" y="152" font-size="22" fill="#33415C">Concurrency for the Java Stream API — without the parallel-stream compromises.</text>
 <text x="96" y="250" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="12" letter-spacing="1.7" fill="#5B6B84">STREAM</text>
@@ -41,4 +42,5 @@
 <text x="530" y="504" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="16" fill="#5B6B84">parallelBy()</text>
 <rect x="618.0" y="480" width="224" height="36" rx="10" fill="none" stroke="#E1E7EF" stroke-width="1.5"/>
 <text x="730" y="504" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="16" fill="#5B6B84">parallelToStreamBy()</text>
+</g>
 </svg>

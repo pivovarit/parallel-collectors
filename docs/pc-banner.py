@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate the Parallel Collectors README banner (dark + light) as SVG."""
 
-W, H = 1600, 560
-M = 96                      # side margin
+M = 96                      # layout gutter — cropped off the final canvas, see build()
+BLEED = 3                   # ...all but this, so the end shapes' 1.5px strokes stay inside
+W, H = 1600 - 2 * (M - BLEED), 560   # content runs edge to edge, aligning with the README text
 CY = 352                    # diagram centre line
 LANE_DY = 56                # lane spacing
 LABEL_Y = 250
@@ -87,6 +88,9 @@ def build(t):
             f'markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="{col}"/></marker>')
     add('</defs>')
     add(f'<rect width="{W}" height="{H}" fill="{c["bg"]}"/>')
+    # everything below is laid out on a 1600-wide grid, then shifted so the gutter falls
+    # outside the canvas — no dead band on either side
+    add(f'<g transform="translate({-(M - BLEED)} 0)">')
 
     # --- masthead ---
     add(f'<text x="{M}" y="108" font-size="58" font-weight="700" letter-spacing="-1.4" '
@@ -152,6 +156,7 @@ def build(t):
             f'font-family="{MONO}" font-size="{CHIP_FS}" fill="{c["muted"]}">{s}</text>')
         x += w + CHIP_GAP
 
+    add('</g>')
     add('</svg>')
     return "\n".join(o)
 
