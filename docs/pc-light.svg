@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif">
+<defs>
+<marker id="ah-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2563EB"/></marker>
+<marker id="ah-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#D97706"/></marker>
+</defs>
+<rect width="1600" height="560" fill="#FFFFFF"/>
+<text x="96" y="108" font-size="58" font-weight="700" letter-spacing="-1.4" fill="#0B1220">Parallel Collectors</text>
+<text x="96" y="152" font-size="22" fill="#33415C">Concurrency for the Java Stream API — without the parallel-stream compromises.</text>
+<text x="96" y="250" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="12" letter-spacing="1.7" fill="#5B6B84">STREAM</text>
+<text x="346" y="250" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="12" letter-spacing="1.7" fill="#5B6B84">PARALLEL COLLECTOR</text>
+<text x="720" y="250" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="12" letter-spacing="1.7" fill="#5B6B84">CONCURRENT TASKS · VIRTUAL THREADS</text>
+<text x="1164" y="250" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="12" letter-spacing="1.7" fill="#5B6B84">SINGLE RESULT</text>
+<line x1="96" y1="352" x2="342" y2="352" stroke="#2563EB" stroke-width="2" opacity="0.55" marker-end="url(#ah-blue)"/>
+<rect x="96" y="338" width="28" height="28" rx="8" fill="#2563EB" opacity="0.500"/>
+<rect x="144" y="338" width="28" height="28" rx="8" fill="#2563EB" opacity="0.625"/>
+<rect x="192" y="338" width="28" height="28" rx="8" fill="#2563EB" opacity="0.750"/>
+<rect x="240" y="338" width="28" height="28" rx="8" fill="#2563EB" opacity="0.875"/>
+<rect x="288" y="338" width="28" height="28" rx="8" fill="#2563EB" opacity="1.000"/>
+<rect x="346" y="310" width="290" height="84" rx="14" fill="rgba(37,99,235,0.07)" stroke="rgba(37,99,235,0.40)" stroke-width="1.5"/>
+<text x="491" y="359" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="19" fill="#1D4ED8">collect(parallel(…))</text>
+<path d="M 636 352 C 675.0 352, 675.0 296, 714 296" fill="none" stroke="#2563EB" stroke-width="2" opacity="0.55" marker-end="url(#ah-blue)"/>
+<path d="M 636 352 C 675.0 352, 675.0 352, 714 352" fill="none" stroke="#2563EB" stroke-width="2" opacity="0.55" marker-end="url(#ah-blue)"/>
+<path d="M 636 352 C 675.0 352, 675.0 408, 714 408" fill="none" stroke="#2563EB" stroke-width="2" opacity="0.55" marker-end="url(#ah-blue)"/>
+<line x1="720" y1="296" x2="1080" y2="296" stroke="#E4E9F0" stroke-width="4" stroke-linecap="round"/>
+<rect x="720" y="278" width="300" height="36" rx="10" fill="#D97706"/>
+<line x1="720" y1="352" x2="1080" y2="352" stroke="#E4E9F0" stroke-width="4" stroke-linecap="round"/>
+<rect x="720" y="334" width="210" height="36" rx="10" fill="#D97706"/>
+<line x1="720" y1="408" x2="1080" y2="408" stroke="#E4E9F0" stroke-width="4" stroke-linecap="round"/>
+<rect x="720" y="390" width="258" height="36" rx="10" fill="#D97706"/>
+<path d="M 1080 296 C 1100.0 296, 1100.0 352, 1120 352" fill="none" stroke="#D97706" stroke-width="2" opacity="0.6"/>
+<path d="M 1080 352 C 1100.0 352, 1100.0 352, 1120 352" fill="none" stroke="#D97706" stroke-width="2" opacity="0.6"/>
+<path d="M 1080 408 C 1100.0 408, 1100.0 352, 1120 352" fill="none" stroke="#D97706" stroke-width="2" opacity="0.6"/>
+<line x1="1120" y1="352" x2="1158" y2="352" stroke="#D97706" stroke-width="2" opacity="0.6" marker-end="url(#ah-amber)"/>
+<rect x="1164" y="310" width="340" height="84" rx="14" fill="rgba(217,119,6,0.09)" stroke="rgba(217,119,6,0.42)" stroke-width="1.5"/>
+<text x="1334" y="358" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="17" fill="#B45309">CompletableFuture&lt;List&lt;R&gt;&gt;</text>
+<rect x="96" y="480" width="128" height="36" rx="10" fill="none" stroke="#E1E7EF" stroke-width="1.5"/>
+<text x="160" y="504" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="16" fill="#5B6B84">parallel()</text>
+<rect x="238.0" y="480" width="205" height="36" rx="10" fill="none" stroke="#E1E7EF" stroke-width="1.5"/>
+<text x="340" y="504" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="16" fill="#5B6B84">parallelToStream()</text>
+<rect x="456.79999999999995" y="480" width="147" height="36" rx="10" fill="none" stroke="#E1E7EF" stroke-width="1.5"/>
+<text x="530" y="504" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="16" fill="#5B6B84">parallelBy()</text>
+<rect x="618.0" y="480" width="224" height="36" rx="10" fill="none" stroke="#E1E7EF" stroke-width="1.5"/>
+<text x="730" y="504" text-anchor="middle" font-family="'SF Mono', ui-monospace, Menlo, Monaco, 'Courier New', monospace" font-size="16" fill="#5B6B84">parallelToStreamBy()</text>
+</svg>
