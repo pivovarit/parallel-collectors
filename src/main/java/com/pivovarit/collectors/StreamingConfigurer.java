@@ -16,12 +16,7 @@
 package com.pivovarit.collectors;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.UnaryOperator;
@@ -34,8 +29,7 @@ import java.util.function.UnaryOperator;
  */
 public final class StreamingConfigurer {
 
-    private final List<ConfigProcessor.Option> modifiers = new ArrayList<>();
-    private final Set<Class<? extends ConfigProcessor.Option>> seen = new HashSet<>();
+    private final ConfigurerState state = new ConfigurerState();
 
     StreamingConfigurer() {
     }
@@ -49,7 +43,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer ordered() {
-        addOnce(ConfigProcessor.Option.Ordered.INSTANCE);
+        state.ordered();
         return this;
     }
 
@@ -66,7 +60,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer batching() {
-        addOnce(ConfigProcessor.Option.Batched.INSTANCE);
+        state.batching();
         return this;
     }
 
@@ -90,9 +84,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer parallelism(int parallelism) {
-        Preconditions.requireValidParallelism(parallelism);
-
-        addOnce(new ConfigProcessor.Option.Parallelism(parallelism));
+        state.parallelism(parallelism);
         return this;
     }
 
@@ -117,9 +109,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer timeout(long duration, TimeUnit unit) {
-        Preconditions.requireValidTimeout(duration, unit);
-
-        addOnce(new ConfigProcessor.Option.Timeout(Duration.ofNanos(unit.toNanos(duration))));
+        state.timeout(duration, unit);
         return this;
     }
 
@@ -143,7 +133,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer timeout(Duration duration) {
-        addOnce(new ConfigProcessor.Option.Timeout(duration));
+        state.timeout(duration);
         return this;
     }
 
@@ -164,9 +154,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer executor(Executor executor) {
-        Preconditions.requireValidExecutor(executor);
-
-        addOnce(new ConfigProcessor.Option.ThreadPool(executor));
+        state.executor(executor);
         return this;
     }
 
@@ -190,9 +178,7 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer executorDecorator(UnaryOperator<Executor> decorator) {
-        Objects.requireNonNull(decorator, "executor decorator can't be null");
-
-        addOnce(new ConfigProcessor.Option.ExecutorDecorator(decorator));
+        state.executorDecorator(decorator);
         return this;
     }
 
@@ -215,26 +201,15 @@ public final class StreamingConfigurer {
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer taskDecorator(UnaryOperator<Runnable> decorator) {
-        Objects.requireNonNull(decorator, "task decorator can't be null");
-
-        addOnce(new ConfigProcessor.Option.TaskDecorator(decorator));
+        state.taskDecorator(decorator);
         return this;
     }
 
     List<ConfigProcessor.Option> getConfig() {
-        return Collections.unmodifiableList(modifiers);
+        return state.getConfig();
     }
 
     void validate() {
-        if (seen.contains(ConfigProcessor.Option.Batched.class) && !seen.contains(ConfigProcessor.Option.Parallelism.class)) {
-            throw new IllegalStateException("parallelism must be configured when batching is enabled");
-        }
-    }
-
-    private void addOnce(ConfigProcessor.Option option) {
-        if (!seen.add(option.getClass())) {
-            throw new IllegalArgumentException("'%s' can only be configured once".formatted(ConfigProcessor.toHumanReadableString(option)));
-        }
-        modifiers.add(option);
+        state.validate();
     }
 }
