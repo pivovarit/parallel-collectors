@@ -36,21 +36,7 @@ final class FutureCollectors {
                 .map(CompletableFuture::join)
                 .collect(collector));
 
-            for (var f : list) {
-                f.whenComplete((__, throwable) -> {
-                    if (throwable != null) {
-                        future.completeExceptionally(throwable);
-                    }
-                });
-            }
-
-            future.whenComplete((v, ex) -> {
-                if (ex != null) {
-                    for (var f : list) {
-                        f.cancel(true);
-                    }
-                }
-            });
+            propagateFailureAndCancelOnFailure(list, future, future);
 
             return future;
         });
@@ -58,5 +44,26 @@ final class FutureCollectors {
 
     static <T> Collector<CompletableFuture<T>, ?, CompletableFuture<List<T>>> toFuture() {
         return toFuture(toList());
+    }
+
+    static <T> void propagateFailureAndCancelOnFailure(
+      List<? extends CompletableFuture<T>> futures,
+      CompletableFuture<?> failureTarget,
+      CompletableFuture<?> cancellationTrigger) {
+        for (var f : futures) {
+            f.whenComplete((__, ex) -> {
+                if (ex != null) {
+                    failureTarget.completeExceptionally(ex);
+                }
+            });
+        }
+
+        cancellationTrigger.whenComplete((__, ex) -> {
+            if (ex != null) {
+                for (var f : futures) {
+                    f.cancel(true);
+                }
+            }
+        });
     }
 }

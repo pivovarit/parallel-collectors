@@ -51,22 +51,8 @@ final class AsyncParallelCollector<T, R, C> extends AbstractParallelCollector<T,
             var combined = allOf(futures.toArray(CompletableFuture[]::new))
               .thenApply(__ -> futures.stream().map(CompletableFuture::join));
 
-            for (var future : futures) {
-                future.whenComplete((o, ex) -> {
-                    if (ex != null) {
-                        combined.completeExceptionally(ex);
-                    }
-                });
-            }
-
             var result = combined.thenApply(finalizer);
-            result.whenComplete((__, ex) -> {
-                if (ex != null) {
-                    for (var future : futures) {
-                        future.cancel(true);
-                    }
-                }
-            });
+            FutureCollectors.propagateFailureAndCancelOnFailure(futures, combined, result);
             return result;
         };
     }
