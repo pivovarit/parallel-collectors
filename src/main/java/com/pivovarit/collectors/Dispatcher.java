@@ -40,7 +40,7 @@ final class Dispatcher<T> {
 
     private static final Cleaner CLEANER = Cleaner.create();
 
-    private final CompletableFuture<Void> completionSignaller = new CompletableFuture<>();
+    private final AtomicReference<Throwable> failure = new AtomicReference<>();
     private final Set<InterruptibleCompletableFuture<T>> pendingFutures = ConcurrentHashMap.newKeySet();
     private final BlockingQueue<DispatchItem> workingQueue = new LinkedBlockingQueue<>();
 
@@ -180,15 +180,16 @@ final class Dispatcher<T> {
         pendingFutures.add(future);
         future.whenComplete((result, ex) -> pendingFutures.remove(future));
 
-        if (completionSignaller.isCompletedExceptionally()) {
-            completionSignaller.whenComplete((result, ex) -> abort(future, ex));
+        var e = failure.get();
+        if (e != null) {
+            abort(future, e);
         }
         workingQueue.add(new DispatchItem.Task(task));
         return future;
     }
 
     private void abort(Throwable e) {
-        if (completionSignaller.completeExceptionally(e)) {
+        if (failure.compareAndSet(null, e)) {
             for (var future : pendingFutures) {
                 abort(future, e);
             }
