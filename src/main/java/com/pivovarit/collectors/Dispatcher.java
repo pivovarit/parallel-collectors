@@ -183,6 +183,7 @@ final class Dispatcher<T> {
         var e = failure.get();
         if (e != null) {
             abort(future, e);
+            return future;
         }
         workingQueue.add(new DispatchItem.Task(task));
         return future;
