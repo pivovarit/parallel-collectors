@@ -57,6 +57,9 @@ public final class StreamingConfigurer {
      * <p><b>Note:</b> Depending on batch sizing and workload skew, batching may reduce load balancing and
      * can lead to thread starvation (some workers become idle while others remain overloaded).
      *
+     * <p><b>Note:</b> Requires {@link #parallelism(int)} to also be configured; batching without a
+     * bounded parallelism level is rejected at collection time.
+     *
      * @return this configurer instance for fluent chaining
      */
     public StreamingConfigurer batching() {

@@ -281,8 +281,9 @@ public final class ParallelCollectors {
      * <p>
      * Each element is transformed using the provided {@code mapper} in parallel. Unless overridden via
      * {@link CollectingConfigurer#executor(java.util.concurrent.Executor)}, tasks are executed on
-     * Virtual Threads. The {@code configurer} can also be used to enable batching and/or set a maximum
-     * parallelism level.
+     * Virtual Threads. The {@code configurer} can also be used to set a maximum parallelism level and,
+     * on top of that, enable batching ({@link CollectingConfigurer#batching()} requires
+     * {@link CollectingConfigurer#parallelism(int)} to also be configured).
      *
      * <p><b>Note:</b> Unless the {@code configurer} explicitly limits parallelism (e.g. via
      * {@link CollectingConfigurer#parallelism(int)}), this collector does not limit parallelism in any
@@ -329,8 +330,9 @@ public final class ParallelCollectors {
      * Each element is transformed using the provided {@code mapper} in parallel, and the results are
      * reduced according to the supplied {@code collector}. Unless overridden via
      * {@link CollectingConfigurer#executor(java.util.concurrent.Executor)}, tasks are executed on
-     * Virtual Threads. The {@code configurer} can also be used to enable batching and/or limit the
-     * maximum parallelism.
+     * Virtual Threads. The {@code configurer} can also be used to limit the maximum parallelism and,
+     * on top of that, enable batching ({@link CollectingConfigurer#batching()} requires
+     * {@link CollectingConfigurer#parallelism(int)} to also be configured).
      *
      * <p><b>Note:</b> Unless the {@code configurer} explicitly limits parallelism (e.g. via
      * {@link CollectingConfigurer#parallelism(int)}), this collector does not limit parallelism in any
@@ -383,7 +385,9 @@ public final class ParallelCollectors {
      * parallel. Unless overridden via {@link CollectingConfigurer#executor(java.util.concurrent.Executor)},
      * tasks are executed on Virtual Threads. The resulting grouped entries are exposed as a
      * {@link CompletableFuture} of {@code Stream<Group<K, R>>}. The {@code configurer} can also be used
-     * to enable batching and/or set a maximum parallelism level.
+     * to set a maximum parallelism level and, on top of that, enable batching
+     * ({@link CollectingConfigurer#batching()} requires {@link CollectingConfigurer#parallelism(int)}
+     * to also be configured).
      *
      * <p><b>Note:</b> Unless the {@code configurer} explicitly limits parallelism (e.g. via
      * {@link CollectingConfigurer#parallelism(int)}), this collector does not limit parallelism in any
@@ -437,7 +441,9 @@ public final class ParallelCollectors {
      * {@link CollectingConfigurer#executor(java.util.concurrent.Executor)}). Each group is processed
      * independently, and every group is guaranteed to be processed on a single thread.
      * The reduction is applied to the grouped results rather than to the raw mapped elements.
-     * The {@code configurer} can also be used to enable batching and/or set a maximum parallelism level.
+     * The {@code configurer} can also be used to set a maximum parallelism level and, on top of that,
+     * enable batching ({@link CollectingConfigurer#batching()} requires
+     * {@link CollectingConfigurer#parallelism(int)} to also be configured).
      *
      * <p><b>Note:</b> Unless the {@code configurer} explicitly limits parallelism (e.g. via
      * {@link CollectingConfigurer#parallelism(int)}), this collector does not limit parallelism in any
@@ -496,7 +502,9 @@ public final class ParallelCollectors {
      * <p>
      * Each element is transformed using the provided {@code mapper} in parallel. Unless overridden via
      * {@link StreamingConfigurer#executor(java.util.concurrent.Executor)}, tasks are executed on Virtual
-     * Threads. The {@code configurer} can also be used to enable batching and/or cap parallelism.
+     * Threads. The {@code configurer} can also be used to cap parallelism and, on top of that, enable
+     * batching ({@link StreamingConfigurer#batching()} requires {@link StreamingConfigurer#parallelism(int)}
+     * to also be configured).
      *
      * <p><b>Ordering:</b> By default, this collector emits elements in an <em>arbitrary</em> order.
      * To preserve encounter order, configure ordered emission via {@link StreamingConfigurer#ordered()}.
