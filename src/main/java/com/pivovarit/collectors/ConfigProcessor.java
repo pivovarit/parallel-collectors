@@ -131,6 +131,11 @@ final class ConfigProcessor {
                 if (duration.isZero() || duration.isNegative()) {
                     throw new IllegalArgumentException("Timeout duration must be greater than 0");
                 }
+                try {
+                    duration.toNanos();
+                } catch (ArithmeticException e) {
+                    throw new IllegalArgumentException("Timeout duration is too large to convert to nanoseconds", e);
+                }
             }
         }
     }

@@ -203,6 +203,13 @@ class OptionTest {
     }
 
     @Test
+    void shouldThrowOnTimeoutDurationTooLargeToConvertToNanos() {
+        assertThatThrownBy(() -> new ConfigProcessor.Option.Timeout(Duration.ofSeconds(Long.MAX_VALUE)))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Timeout");
+    }
+
+    @Test
     void shouldThrowOnDuplicateTimeoutStreaming() {
         var configurer = new StreamingConfigurer();
         configurer.timeout(1, SECONDS);
